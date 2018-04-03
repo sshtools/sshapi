@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+	title="Frequently Asked Questions" toplink="false">
+	<part id="install">
+		<title>Installation</title>
+		<faq id="java-required">
+			<question>What version of Java does SSHAPI work with?</question>
+			<answer>
+				<p>The core library itself and the providers bridges will work
+					currently on any version of Java from 1.2 and above. However,
+					some
+					providers themselves may have different requirements, or may have
+					in the future. See the individual provider documentation
+					for more
+					information.</p>
+			</answer>
+		</faq>
+		<faq id="jars-required">
+			<question>What Jars do I need to use the API?</question>
+			<answer>
+				<p>You will need at least 3 Jar files to use SSHAPI, the first two .</p>
+				<ul>
+					<li>
+						The core API library,
+						<i>sshapi.jar</i>
+						. Unless you are directly using classes from one of the provider
+						bridges or
+						the provider itself, this is all that is required to be
+						able to compile your
+						application against this API.
+					</li>
+					<li>
+						At least one provider bridge library. For example,
+						<i>sshapi-ganymed.jar</i>
+						. This does not contain the provider itself.
+					</li>
+					<li>Any Jars require for the provider itself. This may be a single
+						Jar, or
+						multiple libraries. Some providers may offer additional
+						functionality when
+						additional
+						libraries are added.</li>
+				</ul>
+				<p>Check the individual module documentation for information on the
+					provider
+					versions currently supported.</p>
+			</answer>
+		</faq>
+		<faq id="maven">
+			<question>Can I use Maven with SSHAPI?</question>
+			<answer>
+				<p>Yes! SSHAPI is developed using Maven, and there is a 
+					repository host in Sourceforge's SVN that
+					contains the API core and provider bridge libraries.
+					The  provider implementations are hosted there, but
+					any libraries required by the providers are not, so
+					these must be pulled from either the central
+					repository, or installed
+					your own
+					local repository.</p>
+				<p>To use the Sourceforge repository, add the following to your POM :-
+				</p>
+				<source><![CDATA[<repositories>
+  ..
+    <repository>
+      <id>sshtools</id>
+ 	  <url>
+ 	    http://svn.code.sf.net/p/sshapi/svn/sshapi-mvn/releases
+ 	  </url>
+	  <releases />
+	  <snapshots>
+	    <enabled>false</enabled>
+	  </snapshots>
+    </repository>
+  ..
+</repositories>]]></source>
+				<p>Then add at least one of the provider bridge libraries to your
+					dependencies.</p>
+				<source><![CDATA[..
+<dependency>
+  <groupId>net.sf.sshapi</groupId>
+  <artifactId>sshapi-ganymed</artifactId>
+  <version>0.9.5</version>
+</dependency>
+..]]></source>
+				<p>You can just add the API core to your project, which will allow
+					you to compile your project, but
+					the provider bridge libraries and
+					provider implementations will have
+					to be added to your CLASSPATH at
+					runtime.</p>
+				<source><![CDATA[..
+<dependency>
+  <groupId>net.sf.sshapi</groupId>
+  <artifactId>sshapi</artifactId>
+  <version>0.9.5</version>
+</dependency>
+..]]></source>
+			</answer>
+		</faq>
+	</part>
+
+	<part id="providers">
+		<title>Providers</title>
+		<faq id="automatic">
+			<question>How is the provider chosen at run time?</question>
+			<answer>
+				<p>
+					One of the goals of SSHAPI is to make this is simple and flexible
+					as possible. For normal use, you
+					simply use
+					<i>DefaultProviderFactory</i>
+					whenever you want to create a new client connection :-
+				</p>
+				<source><![CDATA[SshConfiguration configuration = new SshConfiguration();
+SshProvider provider = 
+      DefaultProviderFactory.getInstance().createProvider(configuration);
+SshClient client = provider.createClient(configuration);
+client.connect("me", "localhost", 22);]]></source>
+				<p>DefaultProviderFactory will then search all available providers
+					for one that supports the provided
+					configuration and return the
+					first one it finds (unless override by a system
+					property, see
+					below).</p>
+				<p>Once created, you may use a provider instance to create as many
+					client instances as you wish.</p>
+			</answer>
+		</faq>
+
+		<faq id="runtime">
+			<question>How do I select a provider at run time?</question>
+			<answer>
+				<p>
+					You may wish to allow you user to chose the provider at runtime. To
+					do this,
+					simple set the system property
+					<i>net.sf.sshapi.provider</i>
+					to be the class name
+					of the provider bridge implementation. For
+					example, to select
+					<i>Jsch</i>
+					, you
+					would invoke java with the following options :-
+				</p>
+				<source><![CDATA[java -Dnet.sf.sshapi.provider=net.sf.sshapi.jsch.JschSshProvider \
+    com.mycompany.myapp.MyApp]]></source>
+				<p>
+					This then forces
+					<i>DefaultProviderFactory</i>
+					to always return an instance of this provider, throwing
+					an exception
+					if the provider is not available or cannot be used with
+					the supplied
+					configuration.
+				</p>
+			</answer>
+		</faq>
+		<faq id="in-code">
+			<question>How do I hard-code a provider to use </question>
+			<answer>
+				<p>
+					While this is not really recommended, you can simply not use
+					<i>DefaultClientFactory</i>
+					and instantiate the provider directly :-
+				</p>
+				<source><![CDATA[SshConfiguration configuration = new SshConfiguration();
+SshProvider provider = new MaverickSshProvider();
+SshClient client =
+provider.createClient(configuration);
+client.connect("me", "localhost", 22);]]></source>
+			</answer>
+		</faq>
+		<faq id="multiple">
+			<question>Can I use multiple providers at the same time?</question>
+			<answer>
+				<p>
+					Yes, simply avoid using
+					<i>DefaultProviderFactory</i>
+					and create all the providers you wish.
+				</p>
+				<source><![CDATA[SshConfiguration configuration = new SshConfiguration();
+SshProvider maverickProvider = new MaverickSshProvider();
+SshProvider jschProvider = new JschSshProvider();
+SshClient mavClient = maverickProvider.createClient(configuration);
+SshClient jschClient = jschProvider.createClient(configuration);
+mavClient.connect("me", "localhost", 22);
+jschClient.connect("me", "localhost", 22);]]></source>
+			</answer>
+		</faq>
+	</part>
+	<part id="general">
+		<title>General</title>
+
+
+		<faq id="configuration">
+			<question>What Is Per-connection Configuration</question>
+			<answer>
+				<p>
+					SSHAPI tries to allow as much configuration as possible to be at
+					the
+					<i>Connection</i>
+					level. However,
+					an implementation may only support
+					<i>Global</i>
+					configuration for some items. For example, the
+					preferred cipher may
+					only be selectable globally.
+				</p>
+
+				<p>In practice, currently only JSch has some configuration that may
+					only be globally set. If you try and
+					create a second client when
+					using this provider, a warning message will
+					be displayed on the
+					console.
+					You may also query the provider to see if it supports this
+					capability.
+				</p>
+				<source><![CDATA[SshConfiguration configuration = new SshConfiguration();
+SshProvider provider =
+DefaultProviderFactory.getInstance().createProvider(configuration);
+SshClient client = provider.createClient(configuration);
+
+// Do something with client1
+
+// Create a 2nd client
+if(provider.getCapabilities().contains(
+	Capability.PER_CONNECTION_CONFIGURATION)) {
+	SshConfiguration configuration2 = new SshConfiguration();
+	SshClient client2 = provider.createClient(configuration2);
+	
+	// Do something with client2
+}]]></source>
+			</answer>
+		</faq>
+	</part>
+</faqs>

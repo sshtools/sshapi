@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<sourceRelease>1.5</sourceRelease>
+		<targetRelease>1.5</targetRelease>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>sshapi-libssh</artifactId>
+	<name>SSHAPI libssh </name>
+	<description>libssh is a C library that enables you to write a program that uses the SSH protocol. With it, you can remotely execute programs, transfer files, or use a secure and transparent tunnel for your remote programs. The SSH protocol is encrypted, ensures data integrity, and provides strong means of authenticating both the server of the client. The library hides a lot of technical details from the SSH protocol, but this does not mean that you should not try to know about and understand these details.
+
+This is the SSHAPI provider bridge for libssh, and uses JNA. 
+
+Downloads and more information about JSch may be found at http://api.libssh.org/master/index.html.</description>
+	<parent>
+		<artifactId>sshapi-group</artifactId>
+		<groupId>net.sf.sshapi</groupId>
+		<version>1.1.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<url>${scmWebRoot}/${project.artifactId}/</url>
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<targetPath>.</targetPath>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+		<plugins>
+			<plugin>
+				<groupId>com.nativelibs4java</groupId>
+				<artifactId>maven-jnaerator-plugin</artifactId>
+				<version>0.11</version>
+			</plugin>
+		</plugins>
+
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>net.sf.sshapi</groupId>
+			<artifactId>sshapi-core</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>3.2.7</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.nativelibs4java</groupId>
+			<artifactId>jnaerator-runtime</artifactId>
+			<version>0.11</version>
+		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>sonatype</id>
+			<name>Sonatype OSS Snapshots Repository</name>
+			<url>http://oss.sonatype.org/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>nativelibs4java-repo</id>
+			<url>http://nativelibs4java.sourceforge.net/maven</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>sonatype</id>
+			<name>Sonatype OSS Snapshots Repository</name>
+			<url>http://oss.sonatype.org/content/groups/public</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>nativelibs4java-repo</id>
+			<url>http://nativelibs4java.sourceforge.net/maven</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+</project>

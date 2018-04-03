@@ -1,0 +1,20 @@
+<html>
+<body>
+<p>JSch is a pure Java implementation of SSH2. JSch allows you to connect to an sshd server and
+ use port forwarding, X11 forwarding, file transfer, etc., and you can integrate its functionality 
+ into your own Java programs. JSch is licensed under BSD style license.</p>
+
+<p>Downloads and more information about JSch may be found at <a href="http://www.jcraft.com/jsch/">http://www.jcraft.com/jsch/.</a></p>
+</p>
+<h2>Known Issues</h2>
+<ul>
+	<li>JSch does not actually support separate connect / authenticate
+	phases, so the connect() method does not actually connect to anything,
+	and no exceptions will be thrown. The actual connection occurs during
+	the authenticate() method.</li>
+	<li>Again, because JSch does not actually support separate connect
+	/ authenticate phases, an accurate value for getRemoteIdentification()
+	will not be available until after authenticated.</li>
+</ul>
+</body>
+</html>

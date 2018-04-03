@@ -1,0 +1,89 @@
+<component-set>
+  <components>
+  
+  	<!-- 
+    <component>
+      <role>com.jcraft.jsch.UIKeyboardInteractive</role>
+      <implementation>org.apache.maven.wagon.providers.ssh.jsch.interactive.PrompterUIKeyboardInteractive</implementation>
+      <description>UIKeyboardInteractive that use plexus-prompter.</description>
+      <requirements>
+        <requirement>
+          <role>org.codehaus.plexus.components.interactivity.Prompter</role>
+          <role-hint>default</role-hint>
+          <field-name>prompter</field-name>
+        </requirement>
+      </requirements>
+    </component>
+    <component>
+      <role>org.apache.maven.wagon.CommandExecutor</role>
+      <role-hint>scp</role-hint>
+      <implementation>org.apache.maven.wagon.providers.ssh.jsch.ScpCommandExecutor</implementation>
+      <instantiation-strategy>per-lookup</instantiation-strategy>
+      <description>ScpCommandExecutor - bridge class for plexus:descriptor</description>
+      <requirements>
+        <requirement>
+          <role>org.apache.maven.wagon.providers.ssh.knownhost.KnownHostsProvider</role>
+          <role-hint>file</role-hint>
+          <field-name>knownHostsProvider</field-name>
+        </requirement>
+        <requirement>
+          <role>org.apache.maven.wagon.providers.ssh.interactive.InteractiveUserInfo</role>
+          <field-name>interactiveUserInfo</field-name>
+        </requirement>
+        <requirement>
+          <role>com.jcraft.jsch.UIKeyboardInteractive</role>
+          <field-name>uIKeyboardInteractive</field-name>
+        </requirement>
+      </requirements>
+    </component>x
+    <component>
+      <role>org.apache.maven.wagon.Wagon</role>
+      <role-hint>scp</role-hint>
+      <implementation>org.apache.maven.wagon.providers.ssh.jsch.ScpWagon</implementation>
+      <instantiation-strategy>per-lookup</instantiation-strategy>
+      <description>SCP protocol wagon.</description>
+      <requirements>
+        <requirement>
+          <role>org.apache.maven.wagon.providers.ssh.knownhost.KnownHostsProvider</role>
+          <role-hint>file</role-hint>
+          <field-name>knownHostsProvider</field-name>
+        </requirement>
+        <requirement>
+          <role>org.apache.maven.wagon.providers.ssh.interactive.InteractiveUserInfo</role>
+          <field-name>interactiveUserInfo</field-name>
+        </requirement>
+        <requirement>
+          <role>com.jcraft.jsch.UIKeyboardInteractive</role>
+          <field-name>uIKeyboardInteractive</field-name>
+        </requirement>
+      </requirements>
+    </component>
+-->
+	    <component>
+			<role>org.apache.maven.wagon.Wagon</role>
+			<role-hint>sftp</role-hint>
+			<implementation>net.sf.sshapi.maven.wagon.SftpWagon</implementation>
+			<instantiation-strategy>per-lookup</instantiation-strategy>
+			<description>SFTP protocol wagon.</description>
+			<requirements>
+				<requirement>
+					<role>org.apache.maven.wagon.providers.ssh.knownhost.KnownHostsProvider
+					</role>
+					<role-hint>file</role-hint>
+					<field-name>knownHostsProvider</field-name>
+				</requirement>
+				<requirement>
+					<role>org.apache.maven.wagon.providers.ssh.interactive.InteractiveUserInfo
+					</role>
+					<field-name>interactiveUserInfo</field-name>
+				</requirement>
+				<!-- 
+				<requirement>
+					<role>com.jcraft.jsch.UIKeyboardInteractive</role>
+					<field-name>uIKeyboardInteractive</field-name>
+				</requirement>
+				 -->
+			</requirements>
+		</component>
+	</components>
+</component-set>

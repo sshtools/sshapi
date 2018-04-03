@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>sshapi-group</artifactId>
+		<groupId>net.sf.sshapi</groupId>
+		<version>1.1.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>sshapi-core</artifactId>
+	<url>${scmWebRoot}/${project.artifactId}/</url>
+	<name>SSHAPI Core</name>
+	<description>This library is the core of SSHAPI, and implements no actual provider bridges. 
+	
+	This is all you need to compile an application, but at least one provider bridge and provider
+	library will be required at run-time.
+	
+	It also contains
+	a number of utility classes that are used by the various implementations.</description>
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<targetPath>.</targetPath>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<inherited>false</inherited>
+				<configuration>
+					<siteDirectory>${project.basedir}/src/site</siteDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<configuration>
+						<siteDirectory>${project.parent.basedir}/src/site</siteDirectory>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

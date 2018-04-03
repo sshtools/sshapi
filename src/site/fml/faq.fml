@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd" title="Frequently Asked Questions"
+	toplink="false">
+	<part id="install">
+		<title>Installation</title>
+		<faq id="how-install">
+			<question>How do I install and use the API</question>
+			<answer>
+				<p>To use the API </p>
+			</answer>
+		</faq>
+	</part>
+	<part id="general">
+		<title>General</title>
+		<faq id="locating-providers">
+			<question> How does SSHAPI locate the provider to use</question>
+			<answer>
+				<p>
+					When using DefaultClientFactory, it will first look at the system property
+					<i>net.sf.api.provider</i>
+					. If this property contains the name of a class that implements net.sf.sshapi.SshProvider, it will be loaded and used as the
+					provider for all connections.
+				</p>
+				<p> If the property is not set, then a search for the resource /sshapi-providers.properties will be performed. Each provider Jar
+					will contain this resource, which itself contains a single property, net.sf.sshapi.SshProvider whose value will be the name of
+					the class the implements net.sf.sshapi.SshProvider</p>
+				<source>some source code</source>
+			</answer>
+		</faq>
+		<faq id="installation">
+			<question>How do I install and use the API</question>
+			<answer>
+				<p>some markup goes here</p>
+			</answer>
+		</faq>
+	</part>
+</faqs>

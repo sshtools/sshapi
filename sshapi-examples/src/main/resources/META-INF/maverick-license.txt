@@ -1,0 +1,16 @@
+Paste the following code into your application placing it before any calls to the J2SSH Maverick API.
+
+com.maverick.ssh.LicenseManager.addLicense("----BEGIN 3SP LICENSE----\r\n"
+                      + "Product : J2SSH Maverick\r\n"
+                      + "Licensee: SSHTOOLS Limited\r\n"
+                      + "Comments: Uncategorised Project\r\n"
+                      + "Type    : Enterprise License\r\n"
+                      + "Created : 28-Mar-2014\r\n"
+                      + "\r\n"
+                      + "3787204C41B567DBA600F3CF9CCEF4C8737003DD8B9A19BC\r\n"
+                      + "35E2EA33431082D6D79B9D6529F1705AEC10311DCF9CBE55\r\n"
+                      + "107AA833E8146210A99CCE2AEE5E2044DCCE06F15BE17823\r\n"
+                      + "DC749A56D78E9D3120AD2FE1D9155EA3DD924AFDA790C536\r\n"
+                      + "A4C24696D8EF1AAD6BB245D69356B0F1B6CA7D0A67314B34\r\n"
+                      + "347174CB9AAAD7B8562E15DA058E879FE7D929CE510DE934\r\n"
+                      + "----END 3SP LICENSE----\r\n");

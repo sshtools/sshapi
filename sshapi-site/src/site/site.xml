@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/DECORATION/1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+	<bannerLeft>
+		<name>${project.name}</name>
+		<src>images/header.jpg</src>
+		<alt>${project.name}</alt>
+		<href>http://sshapi.sourceforge.net</href>
+	</bannerLeft>
+	<body>
+		<head>
+			<link rel="stylesheet" href="css/site.css" type="text/css" />
+		</head>
+		<menu name="Overview">
+			<item name="Introduction" href="index.html" />
+			<item name="Features" href="features.html" />
+			<item name="Downloads" href="downloads.html" />
+			<item name="Links" href="links.html" />
+			<item name="SourceForge project" href="https://sourceforge.net/p/sshapi" />
+		</menu>
+		<menu name="Help And Support">
+			<item name="FAQ" href="faq.html" />
+			<item name="API Documentation" href="sshapi-core/apidocs/index.html" />
+			<item name="Examples" href="sshapi-examples/index.html" />
+			<item name="Forums" href="https://sourceforge.net/p/sshapi/discussion/" />
+			<item name="Report / View Bugs" href="https://sourceforge.net/p/sshapi/tickets" />
+		</menu>
+		<menu name="Providers">
+			<item name="Maverick" href="sshapi-maverick/index.html" />
+			<item name="J2SSH" href="sshapi-j2ssh/index.html" />
+			<item name="Ganymed" href="sshapi-ganymed/index.html" />
+			<item name="JSch" href="sshapi-jsch/index.html" />
+		</menu>
+		<menu name="Projects">
+			<item name="SSHAPI Core" href="sshapi-core/index.html" />
+			<item name="SSHAPI VFS" href="sshapi-commons-vfs/index.html" />
+		</menu>
+	</body>
+</project>

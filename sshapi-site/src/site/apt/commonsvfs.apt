@@ -1,0 +1,11 @@
+ -----
+ Introduction
+ -----
+ Commons VFS File System
+ ------
+ 2010-07-08
+ ------
+
+Commons VFS Provider
+
+ Also provided is a {{{http://commons.apache.org/vfs/}Commons VFS}} provider that uses SSHAPI instead of a specific SSH implementation. 

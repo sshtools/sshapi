@@ -1,0 +1,114 @@
+<html>
+
+<body>
+<h1>SSHAPI</h1>
+
+<p>SSHAPI serves as a simple facade or abstract for various SSH
+client implementations (or providers as they are known in this API) such
+as Maverick SSH or JSch.</p>
+
+<p>It allows the user to plug in the required provider at deployment
+time depending on their needs, for example because of specific
+performance or licensing requirements.</p>
+
+<p>SSHAPI will search the CLASSPATH for providers, and choose the 
+best one for the requested configuration (or just a default). The 
+behavior of the discovery can be configured using system properties</p>
+
+<p>Specific providers can also be chosen manually at connection time. This
+makes it possible to use different providers depending on configuration
+of the connection, yet still use a single API for your application.</p>
+
+<h2>Official Providers</h2>
+
+<p>The SSHAPI project maintains a number of providers as sub-projects.
+These providers will track the SSHAPI core and be released at the same
+time.</p>
+
+<table border="1">
+	<thead style="font-weight: bold">
+		<tr>
+			<td>Name</td>
+			<td>Class</td>
+			<td>License</td>
+			<td>Vendor</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Maverick SSH</td>
+			<td>net.sf.sshapi.impl.maverick.MaverickSshProvider</td>
+			<td>BSD / Commercial*</td>
+			<td><a href="http://www.javassh.com/content/">http://www.javassh.com/content/</a></td>
+		</tr>
+		<tr>
+			<td>JSch</td>
+			<td>net.sf.sshapi.impl.jsch.JschSshProvider</td>
+			<td>BSD</td>
+			<td><a href="http://www.jcraft.com/jsch/">http://www.jcraft.com/jsch/</a></td>
+		</tr>
+		<tr>
+			<td>J2SSH</td>
+			<td>net.sf.sshapi.impl.j2ssh.J2SshProvider</td>
+			<td>GPL</td>
+			<td><a href="http://sourceforge.net/projects/sshtools/">http://sourceforge.net/projects/sshtools/</a></td>
+		</tr>
+		<tr>
+			<td>Ganymed</td>
+			<td>net.sf.sshapi.impl.ganymed.GanymedProvider</td>
+			<td>BSD</td>
+			<td><a href="http://www.ganymed.ethz.ch/ssh2/">http://www.ganymed.ethz.ch/ssh2/</a></td>
+		</tr>
+	</tbody>
+</table>
+<p>* The provider implementation is licensed as BSD, but you will
+require a commercial license for Maverick SSH itself</p>
+
+<h2>Quick Example</h2>
+
+<pre>
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import net.sf.sshapi.DefaultClientFactory;
+import net.sf.sshapi.SshClient;
+import net.sf.sshapi.SshSession;
+import net.sf.sshapi.SshShell;
+import net.sf.sshapi.util.SimpleSshAuthenticator;
+
+/**
+ * This example demonstrates the simplest use of the API, opening up a
+ * connection, creating a shell, and joining the channel streams to standard
+ * input / output to create a simple remote shell application.
+ */
+public class Shell {
+	public static void main(String[] arg) throws Exception {
+	
+		// Set the basic configuration for this connection
+		// Put your own detains in here
+		
+		String username = "CHANGE_THIS";
+		String hostname = "CHANGE_THIS";
+		char[] password = "CHANGE_THIS".toCharArray();
+		int port = 22;
+		
+		// Create a new session and authenticate it
+		SshConfiguration configuration = new SshConfiguration();
+		SshClient client = configuration.createClient();
+		SshSession session = client.connect(username, hostname, port);
+		session.authenticate(new SimplePasswordAuthenticator(password));
+		
+		// Create a shell on the server and join it to the console
+		SshShell shell = session.openShell("ansi", 80, 24, 0, 0));
+		
+		// You can now get the input and output streams from the shell
+		// object and do what you want with them!
+		..
+		..
+		..
+	}
+}
+</pre>
+</body>
+</html>

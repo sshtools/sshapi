@@ -1,0 +1,20 @@
+# Required
+password=CHANGEME
+
+# Optional, defaults to current username
+#username=myuser
+
+# Optional, defaults to 'localhost'
+# ostname=localhost
+
+# Optional, defaults to 22
+#port=22
+
+# Optional, names of providers to include, defaults to ALL
+#include=
+
+# Optional, names of providers to exclude, defaults to NONE
+#exclude
+
+# Test file size, defaults to 65536
+#fileSize=65536

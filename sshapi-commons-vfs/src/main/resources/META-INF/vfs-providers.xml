@@ -1,0 +1,6 @@
+<providers>
+	<provider class-name="net.sf.sshapi.vfs.SftpFileProvider">
+		<scheme name="sftp" />
+        <if-available class-name="net.sf.sshapi.sftp.SftpClient"/>
+	</provider>
+</providers>

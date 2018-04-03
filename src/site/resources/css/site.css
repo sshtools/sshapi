@@ -1,0 +1,20 @@
+body {
+	font-family: "Tahoma","Verdana";
+	font-size: 10pt;
+}
+
+#leftColumn {
+	margin: 5px 0 0 5px;
+  	border: 1px solid #999;
+	background-color: #aaaaff;
+}
+
+#leftColumn ul {
+	padding: 0px 0px 0px 20px;
+	margin: 0;
+}
+
+#leftColumn h5 {
+	margin: 0;
+	padding: 0;
+}

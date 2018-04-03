@@ -1,0 +1,42 @@
+ -----
+ Downloads
+ -----
+ JavaSSH Team
+ ------
+ 2010-07-07
+ ------
+
+Downloads
+
+*Binary
+
+ The current release of SSHAPI is ${applicationVersion}. Binary downloads
+ include the SSHAPI core library, all provider bridge libraries, documentation and 
+ example source.
+ 
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.zip/download}sshapi-${applicationVersion}-bin.zip}}
+ 
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.tar.gz/download}sshapi-${applicationVersion}-bin.tar.gz}} 
+ 
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.tar.bz2/download}sshapi-${applicationVersion}-bin.tar.bz2}} 
+
+[]
+ 
+ <Note, no provider implementations are provided. You must download
+ at least one of these from the appropriate vendors site and include them on
+ your CLASSPATH. See {{{./links.html}Links}} for a list of supported
+ providers and links to where you can download the required libraries.>
+
+*Source
+ 
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.zip/download}sshapi-${applicationVersion}-src.zip}}
+ 
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.tar.gz/download}sshapi-${applicationVersion}-src.tar.gz}}
+  
+ * {{{${assemblyDownloadLocation}/sshapi-${applicationVersion}-bin.tar.bz2/download}sshapi-${applicationVersion}-src.tar.bz2}}
+ 
+* SVN
+
+ SSHAPI uses Subversion to manage its source code. 
+ You can browse the source tree {{{http://sourceforge.net/p/sshapi/svn/LATEST/tree/trunk/}here}}.
+ For more detailed instructions, see {{{./source-repository.html}here}}.

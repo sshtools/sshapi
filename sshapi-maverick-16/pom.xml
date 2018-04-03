@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<maverickHome>${user.home}/maverick</maverickHome>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>sshapi-maverick-16</artifactId>
+	<name>SSHAPI Maverick 1.6+</name>
+	<description>This version uses the Mavenized 1.6/1.7 branch of Maverick. It will probably eventually become the default Maverick provider implementation, but until such a time it will be a separate module. Using this version we pull the Maverick jars from the SSHTools repository and build directly
+
+Maverick is the definitive solution for total SSH compatibility on the Java™ platform. The library is designed to support SSH1 and SSH2 using any version of the Java Development Kit from 1.1 and above, and the API is also now J2ME-ready1 in anticipation of the new breed of interconnected mobile devices 
+
+Downloads and more information about Maverick may be found at http://www.sshtools.co.uk/en/j2ssh-maverick/.
+
+This library is the provider bridge for SSHAPI.</description>
+	<parent>
+		<artifactId>sshapi-group</artifactId>
+		<groupId>net.sf.sshapi</groupId>
+		<version>1.1.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<url>${scmWebRoot}/${project.artifactId}/</url>
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<targetPath>.</targetPath>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>net.sf.sshapi</groupId>
+			<artifactId>sshapi-core</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick</artifactId>
+			<version>${maverickVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>oro</groupId>
+			<artifactId>oro</artifactId>
+			<version>2.0.8</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,69 @@
+ -----
+ Introduction
+ -----
+ JavaSSH Team
+ ------
+ 2010-07-08
+ ------
+
+SSHAPI
+
+*What Is It?
+
+ SSHAPI is yet another {{{http://www.java.com}Java}} library that enable connections to be made to 
+ {{{http://en.wikipedia.org/wiki/Secure_Shell}SSH}} servers. It provides access
+ to all of the common functions, such as remote shell, file transfer and port
+ forwarding, as well as some more advanced features such as GSSAPI authentication.
+ 
+*Why Is It Different?
+
+ SSHAPI is actually useless on its own! Instead, it is made up of a collection of
+ interfaces that must be implemented by a <Provider Bridge>. It serves as a simple facade or 
+ abstraction for various SSH client implementations (or <Providers> as they are known
+ in this API) such as Maverick SSH or JSch. Think of it like {{{http://www.slf4j.org/}SLF4J}}, 
+ but for SSH instead of logging.
+ 
+ We currently provide 4 provider bridge implementations. See the list on the 
+ menu on the left hand side.
+ 
+*Why Would I Want To Use It?
+
+ SSHAPI will allow your application to plug-in the required provider at deployment
+ time or even run time depending on it's needs.
+ 
+ There are a number of reasons you may wish to do this, including :- 
+ 
+ * Licensing requirements. SSHAPI itself and the provider bridges are 
+   licensed under a commercial-friendly MIT style license. However,
+   the various providers use a number of different licenses, including 
+   Commercial. By using SSHAPI, you can provide alternatives for those who
+   can't use your preferred provider.
+   
+ * Cryptography export limitations. You can provide the most appropriate
+   provider if affected by local cryptography export laws.  
+ 
+ * Specific feature requirements. Some providers for example implement more
+   ciphers that others. If the preferred provider used will vary, then you
+   can use SSHAPI's capability query features to gracefully degrade your
+   application depending on what is supported by the provider.
+   
+ * You are somewhat protected if a provider becomes unmaintained, or a 
+   security issue is found. You can easily switch the provider used without
+   changing your application.
+   
+*When Shouldn't I use SSHAPI
+
+ If you require low-level access to the SSH protocol, or wish to extend 
+ it some other way, SSHAPI is not for you. 
+ 
+ Some support for a lower level API may be provided in the future, but
+ it is likely to be very dependent on the provider. 
+
+*Getting Started
+
+ * See the {{{./faq.html}FAQ}} for how to download, install and configure SSHAPI for use 
+   in your project. 
+ 
+ * Check out the {{{./sshapi-examples/index.html}Examples}}. 
+ 
+ * Browse the {{{./sshapi-core/apidocs/index.html}Javadoc}}.

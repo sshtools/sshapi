@@ -1,0 +1,26 @@
+ -----
+ Introduction
+ -----
+ Links
+ ------
+ 2010-07-08
+ ------
+
+Links 
+
+*Providers
+
+ * J2SSH Maverick. Commercially licensed library that evolved from the original J2SSH open source
+   API. Available at {{http://www.sshtools.co.uk/en/j2ssh-maverick/}}.
+   
+ * J2SSH Open Source. GPL licensed library available from {{http://sourceforge.net/projects/sshtools/}}. 
+   
+ * Ganymed. BSD licensed library available from {{http://www.cleondris.ch/opensource/ssh2/}}.
+   
+ * JSch. BSD licensed library available from {{http://www.jcraft.com/jsch/}}.
+ 
+*Users
+ 
+ SSHTools is currently porting its {{{http://www.sshtools.co.uk/en/unitty/}UniTTY}} application to use SSHAPI. 
+ UniTTY was used as a reference application for development of SSHAPI, and makes use of all of its features. 
+ UniTTY is currently a no-cost application, although will become open source in the future. 

@@ -1,0 +1,130 @@
+body {
+	font-family: "Tahoma","Verdana";
+	font-size: 10pt;
+	margin-left: auto;
+	margin-right: auto;
+	width: 800px;
+}
+
+#leftColumn {
+	margin: 0px 0 0 0px;
+  	border: 0;
+	color: white;
+	font-size: large;
+	background-color: #234585;
+	font-weight: bold;
+	width: 200px;
+}
+
+#leftColumn ul {
+	padding: 0px 0px 0px 20px;
+	margin: 0;
+}
+
+#leftColumn h5 {
+	color: #aaaaaa;
+}
+
+#leftColumn a {
+	color: #cccccc;
+}
+
+#leftColumn a:visited {
+	color: #aaaaee;
+}
+
+#leftColumn a:hover {
+	color: #eeeeee;
+}
+
+.section dl a {
+	color: #234585;
+}
+
+.section dl a:visited {
+	color: #234585;
+}
+
+.section dl a:hover {
+	color: #345696;
+}
+
+h2,h3, h4, caption {
+	color: #234585;
+	background-color: white;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	border: 0px;
+}
+
+h4 {
+	font-size: small;
+}
+
+caption {
+	margin-top:  4px;
+	margin-bottom: 4px;
+	float: left;
+	font-size: large;
+}
+
+#bodyColumn {
+	margin-left: 208px;
+	/*margin-right: 0px;*/
+}
+
+#breadcrumbs {
+	color: white;
+	font-size: large;
+	background-color: #234585;
+	font-weight: bold;
+	border: 0;
+	margin: 1px 0px 2px 0px;
+}
+
+#leftColumn h5 {
+	margin: 0;
+	padding: 0;
+}
+
+dl {
+	background-color: white;
+	border: 0;
+}
+
+.section {
+	padding: 0;
+}
+
+.source {
+	background-color: #c4d8ff;	
+	font-size: small;
+}
+
+table.bodyTable {
+	border: 0;
+	padding: 0;
+	margin: 4px 0 0 0;
+}
+
+table.bodyTable th {
+	color: white;
+	font-weight: bold;
+	background-color: #234585;
+	border: 1px solid #234585;
+}
+
+table.bodyTable .a {
+	background-color: #c4d8ff;
+}
+
+table.bodyTable .b {
+	background-color: #e6faff;
+}
+
+table.bodyTable tr {
+}
+	
+table.bodyTable td {
+	border: 1px solid #234585;
+}
