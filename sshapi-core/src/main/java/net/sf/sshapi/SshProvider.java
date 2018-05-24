@@ -25,6 +25,7 @@ package net.sf.sshapi;
 
 import java.util.List;
 
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -155,6 +156,24 @@ public interface SshProvider {
 	 *             not valid
 	 */
 	SshClient createClient(SshConfiguration configuration);
+
+	/**
+	 * Create a connection to the local agent.
+	 * <p>
+	 * 
+	 * @param application
+	 *            the application connecting
+	 * @param location
+	 *            the location of the agent, in the form "localhost:port"
+	 * @param socketType
+	 *            the type of socket. One of
+	 *            {@link SshAgent#TCPIP_AGENT_SOCKET_TYPE} or
+	 *            {@link SshAgent#UNIX_DOMAIN_AGENT_SOCKET_TYPE}.
+	 * @return connected agent client
+	 * @throws UnsupportedOperationException
+	 *             if the provider configuration is not valid
+	 */
+	SshAgent connectToLocalAgent(String application, String location, int socketType) throws SshException;
 
 	/**
 	 * Seed the random number generator.

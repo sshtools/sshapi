@@ -47,13 +47,13 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>net.sf.sshapi</groupId>
 			<artifactId>sshapi-maverick</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>net.sf.sshapi</groupId>
 			<artifactId>sshapi-maverick-16</artifactId>
@@ -80,6 +80,11 @@
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.15</version>
 		</dependency>
 	</dependencies>
 

@@ -28,7 +28,7 @@ public class E99ChoosingAProvider {
 		 * system property to use a specific provider and run it
 		 */
 		System.setProperty(DefaultProviderFactory.PROVIDER_CLASS_NAME, provider.getClass().getName());
-		  E01Shell.main(arg);
+//		  E01Shell.main(arg);
 //		 E02ShellWithConsolePrompts.main(arg);
 		// E05X11Forwarding.main(arg);
 		// E03ShellWithGUIPrompts.main(arg);
@@ -36,7 +36,7 @@ public class E99ChoosingAProvider {
 		// E06LocalForwarding.main(arg);
 //		E06bLocalForwardingAndShell.main(arg);
 		// E07RemoteForwarding.main(arg);
-		// E10PublicKeyAuthentication.main(arg);
+		 E10PublicKeyAuthentication.main(arg);
 //		 E11KeyboardInteractiveAuthentication.main(arg);
 		// E14HostKeyManagement.main(arg);
 		// E15SCP.main(arg);

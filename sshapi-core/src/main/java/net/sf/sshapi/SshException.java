@@ -116,6 +116,16 @@ public class SshException extends Exception {
 	 */
 	public final static Code FAILED_TO_OPEN_SHELL = new Code("failedToOpenShell");
 
+	/**
+	 * No agent could be found.
+	 */
+	public final static Code NO_AGENT = new Code("noAgent");
+
+	/**
+	 * There is an agent, but failed to connect to it.
+	 */
+	public final static Code FAILED_TO_CONNECT_TO_AGENT = new Code("failedToConnectToAgent");
+
 	private static final long serialVersionUID = 1L;
 
 	// Private instance variables

@@ -158,6 +158,10 @@ public class Capability {
 	 * The provider supports channel handlers. See {@link SshChannelHandler}.
 	 */
 	public final static Capability CHANNEL_HANDLERS = new Capability("channelHandlers");
+	/**
+	 * The provider supports an SSH agent for key authentcation.
+	 */
+	public final static Capability AGENT = new Capability("agent");
 
 	private String name;
 

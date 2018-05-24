@@ -38,32 +38,7 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
-import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.AbstractDataProducingComponent;
-import net.sf.sshapi.AbstractSocket;
-import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshChannel.ChannelData;
-import net.sf.sshapi.SshChannelHandler;
-import net.sf.sshapi.SshChannelListener;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshExtendedStreamChannel;
-import net.sf.sshapi.SshProxyServerDetails;
-import net.sf.sshapi.SshSCPClient;
-import net.sf.sshapi.SshShell;
-import net.sf.sshapi.auth.SshAuthenticator;
-import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
-import net.sf.sshapi.auth.SshPasswordAuthenticator;
-import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
-import net.sf.sshapi.forwarding.AbstractPortForward;
-import net.sf.sshapi.forwarding.SshPortForward;
-import net.sf.sshapi.forwarding.SshPortForwardTunnel;
-import net.sf.sshapi.hostkeys.AbstractHostKey;
-import net.sf.sshapi.hostkeys.SshHostKeyValidator;
-import net.sf.sshapi.identity.SshPublicKeySubsystem;
-import net.sf.sshapi.sftp.SftpClient;
-import net.sf.sshapi.util.Util;
-
+import com.maverick.agent.client.Ssh2AgentAuthentication;
 import com.maverick.ssh.ChannelEventListener;
 import com.maverick.ssh.ChannelOpenException;
 import com.maverick.ssh.HostKeyVerification;
@@ -100,6 +75,34 @@ import com.sshtools.net.SocksProxyTransport;
 import com.sshtools.publickey.InvalidPassphraseException;
 import com.sshtools.publickey.SshPrivateKeyFile;
 import com.sshtools.publickey.SshPrivateKeyFileFactory;
+
+import net.sf.sshapi.AbstractClient;
+import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSocket;
+import net.sf.sshapi.Capability;
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshChannel.ChannelData;
+import net.sf.sshapi.SshChannelHandler;
+import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
+import net.sf.sshapi.SshExtendedStreamChannel;
+import net.sf.sshapi.SshProxyServerDetails;
+import net.sf.sshapi.SshSCPClient;
+import net.sf.sshapi.SshShell;
+import net.sf.sshapi.auth.SshAgentAuthenticator;
+import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
+import net.sf.sshapi.auth.SshPasswordAuthenticator;
+import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
+import net.sf.sshapi.forwarding.AbstractPortForward;
+import net.sf.sshapi.forwarding.SshPortForward;
+import net.sf.sshapi.forwarding.SshPortForwardTunnel;
+import net.sf.sshapi.hostkeys.AbstractHostKey;
+import net.sf.sshapi.hostkeys.SshHostKeyValidator;
+import net.sf.sshapi.identity.SshPublicKeySubsystem;
+import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.Util;
 
 class MaverickSshClient extends AbstractClient implements ForwardingClientListener {
 	private final SshConnector con;
@@ -200,7 +203,11 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	public void addChannelHandler(final SshChannelHandler channelFactory) throws net.sf.sshapi.SshException {
-		if (client instanceof Ssh2Client) {
+		if(client == null) {
+			// TODO does this really need to be true?
+			throw new IllegalStateException("Must be connected to add a channel handler.");
+		}
+		else if (client instanceof Ssh2Client) {
 			try {
 				MaverickChannelFactoryAdapter factory = new MaverickChannelFactoryAdapter(channelFactory);
 				((Ssh2Client) client).addChannelFactory(factory);
@@ -432,7 +439,14 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		if (client instanceof Ssh1Client) {
 			return new String[] { "password", "rhosts", "publickey", "challenge" };
 		} else {
-			return ((Ssh2Client) client).getAuthenticationMethods(client.getUsername());
+			String[] authenticationMethods = ((Ssh2Client) client).getAuthenticationMethods(client.getUsername());
+			if(getProvider().getCapabilities().contains(Capability.AGENT)) {
+				String[] a = new String[authenticationMethods.length + 1];
+				System.arraycopy(authenticationMethods, 0, a, 1, authenticationMethods.length);
+				a[0] = "agent";
+				authenticationMethods = a;
+			}
+			return authenticationMethods;
 		}
 	}
 
@@ -492,7 +506,11 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 
 	private SshAuthentication createAuthentication(final SshAuthenticator authenticator, String type)
 			throws net.sf.sshapi.SshException {
-		if (authenticator instanceof SshPasswordAuthenticator) {
+		if(authenticator instanceof SshAgentAuthenticator) {
+			SshAgentAuthenticator aa = (SshAgentAuthenticator)authenticator;
+			return new Ssh2AgentAuthentication(((MaverickAgent)aa.getAgent()).getAgent());
+		}
+		else if (authenticator instanceof SshPasswordAuthenticator) {
 			return new PasswordAuthentication() {
 				public String getPassword() {
 					char[] answer = ((SshPasswordAuthenticator) authenticator)

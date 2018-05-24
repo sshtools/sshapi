@@ -15,7 +15,7 @@
 		<assemblyDownloadLocation>http://sourceforge.net/projects/sshapi/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick bridge (New public 1.6) -->
-		<maverickVersion>1.7.14-SNAPSHOT</maverickVersion>
+		<maverickVersion>1.7.15-SNAPSHOT</maverickVersion>
 		<!-- To compile Maverick bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>

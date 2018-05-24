@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import net.sf.sshapi.AbstractProvider;
@@ -35,6 +36,7 @@ import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -69,6 +71,17 @@ public class MaverickSshProvider extends AbstractProvider {
 	 */
 	public static final String CFG_SFTP_MAX_VERSION = "sshapi.maverick.sftp.maxVersion";
 
+
+	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
+			Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
+			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
+			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.GSSAPI_AUTHENTICATION,
+			Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS,
+			Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM,
+			Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
+			Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
+			Capability.CHANNEL_HANDLERS };
+	
 	private SshConnector con;
 
 	static {
@@ -136,15 +149,15 @@ public class MaverickSshProvider extends AbstractProvider {
 	}
 
 	public List getCapabilities() {
-		return Arrays.asList(new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
-				Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
-				Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.GSSAPI_AUTHENTICATION,
-				Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS,
-				Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM,
-				Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
-				Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
-				Capability.CHANNEL_HANDLERS });
+		List caps = Arrays.asList(DEFAULT_CAPS);
+		try {
+			Class.forName("com.maverick.agent.client.SshAgentClient");
+			caps = new ArrayList(caps);
+			caps.add(Capability.AGENT);
+			caps = Collections.unmodifiableList(caps);
+		} catch (ClassNotFoundException cnfe) {
+		}
+		return caps;
 	}
 
 	public List getSupportedCiphers(int protocolVersion) {
@@ -222,5 +235,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		} catch (NoSuchAlgorithmException e) {
 			SshConfiguration.getLogger().log(Level.ERROR, "Failed to set seed.", e);
 		}
+	}
+
+	public SshAgent connectToLocalAgent(String application, String location, int socketType)
+			throws net.sf.sshapi.SshException {
+		return new MaverickAgent(application, location, socketType);
 	}
 }

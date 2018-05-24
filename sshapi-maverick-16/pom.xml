@@ -52,6 +52,11 @@ This library is the provider bridge for SSHAPI.</description>
 			<version>${maverickVersion}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-agent</artifactId>
+			<version>${maverickVersion}</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
 			<version>1.1.2</version>

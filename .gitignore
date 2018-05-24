@@ -23,3 +23,7 @@ hs_err_pid*
 **/.settings/
 **/.project
 **/.classpath
+**/build.xml
+**/maven-build.properties
+**/maven-build.xml
+/target/

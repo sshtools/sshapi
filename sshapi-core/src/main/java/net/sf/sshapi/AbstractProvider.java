@@ -25,6 +25,7 @@ package net.sf.sshapi;
 
 import java.util.List;
 
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -108,6 +109,10 @@ public abstract class AbstractProvider implements SshProvider {
 	}
 
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	public SshAgent connectToLocalAgent(String application, String location, int socketType) throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
