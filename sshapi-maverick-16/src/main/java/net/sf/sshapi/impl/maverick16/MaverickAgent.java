@@ -1,5 +1,6 @@
 package net.sf.sshapi.impl.maverick16;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -13,9 +14,9 @@ import com.maverick.util.IOUtil;
 
 import net.sf.sshapi.DefaultChannelData;
 import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshDataProducingComponent;
-import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleComponent;
 import net.sf.sshapi.SshLifecycleListener;
@@ -28,17 +29,69 @@ public class MaverickAgent implements SshAgent {
 	private String location;
 	private AgentSocketType agentSocketType;
 
-	public MaverickAgent(String application, String location, int socketType) throws SshException {
+	public MaverickAgent(String application, String location, int socketType, int protocol) throws SshException {
 		AgentSocketType agentSocketType = AgentSocketType.TCPIP;
+
+		/* If location is blank, get if from environment variable */
+		if (location == null || location.equals(""))
+			location = System.getenv("SSH_AUTH_SOCK");
+
+		/* If it's still blank, and we are on windows, assume to be the default */
+		boolean windows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+		if ((location == null || location.equals("")) && windows)
+			location = SshAgentClient.WINDOWS_SSH_AGENT_SERVICE;
+
+		/* Detect socket type */
+		if (socketType == SshAgent.AUTO_AGENT_SOCKET_TYPE) {
+			if (!windows && location != null && !location.equals("")) {
+				File fileLoc = new File(location);
+				if (fileLoc.exists()) {
+					/* Not on windows, standard file that exists, assume to be a domain socket */
+					socketType = SshAgent.UNIX_DOMAIN_AGENT_SOCKET_TYPE;
+				}
+			} else if (!windows && location != null && !location.equals("") && location.startsWith("\\")
+					|| location.equals(SshAgentClient.WINDOWS_SSH_AGENT_SERVICE)) {
+				/*
+				 * Windows, and we do have a location starting with \, assume to be a named pipe
+				 */
+				socketType = SshAgent.NAMED_PIPED_AGENT_SOCKET_TYPE;
+			} else {
+				socketType = SshAgent.TCPIP_AGENT_SOCKET_TYPE;
+			}
+		}
+
+		/*
+		 * If have no location, and using TCPIP_AGENT_SOCKET_TYPE, then assume to be
+		 * localhost. TODO: Do we need a port here?
+		 */
+		if ((location == null || location.equals("")) && socketType == SshAgent.TCPIP_AGENT_SOCKET_TYPE)
+			location = "localhost";
 		this.location = location;
-		if (socketType == UNIX_DOMAIN_AGENT_SOCKET_TYPE)
-			agentSocketType = AgentSocketType.UNIX_DOMAIN;
+
+		/* Get the native socket type */
+		agentSocketType = getAgentSocketType(socketType);
+
 		try {
-			sshAgent = SshAgentClient.connectLocalAgent(application, location, agentSocketType);
+			if (protocol == SshAgent.RFC_PROTOCOL)
+				sshAgent = SshAgentClient.connectLocalAgent(application, location, agentSocketType, true);
+			else
+				/* NOTE: We can't actually auto-detect protocol at the moment */
+				sshAgent = SshAgentClient.connectLocalAgent(application, location, agentSocketType, false);
 		} catch (AgentNotAvailableException e) {
 			throw new SshException(SshException.NO_AGENT, e);
 		} catch (IOException e) {
 			throw new SshException(SshException.FAILED_TO_CONNECT_TO_AGENT, e);
+		}
+	}
+
+	private AgentSocketType getAgentSocketType(int socketType) {
+		switch (socketType) {
+		case SshAgent.UNIX_DOMAIN_AGENT_SOCKET_TYPE:
+			return AgentSocketType.UNIX_DOMAIN;
+		case SshAgent.NAMED_PIPED_AGENT_SOCKET_TYPE:
+			return AgentSocketType.WINDOWS_NAMED_PIPE;
+		default:
+			return AgentSocketType.TCPIP;
 		}
 	}
 

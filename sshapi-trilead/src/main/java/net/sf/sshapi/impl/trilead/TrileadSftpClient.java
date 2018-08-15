@@ -21,7 +21,7 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package net.sf.sshapi.impl.ganymed;
+package net.sf.sshapi.impl.trilead;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,28 +33,29 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ch.ethz.ssh2.Connection;
-import ch.ethz.ssh2.SFTPException;
-import ch.ethz.ssh2.SFTPv3Client;
-import ch.ethz.ssh2.SFTPv3DirectoryEntry;
-import ch.ethz.ssh2.SFTPv3FileAttributes;
-import ch.ethz.ssh2.SFTPv3FileHandle;
-import ch.ethz.ssh2.packets.TypesReader;
-import ch.ethz.ssh2.packets.TypesWriter;
-import ch.ethz.ssh2.sftp.ErrorCodes;
-import ch.ethz.ssh2.sftp.Packet;
+import com.trilead.ssh2.Connection;
+import com.trilead.ssh2.SFTPException;
+import com.trilead.ssh2.SFTPv3Client;
+import com.trilead.ssh2.SFTPv3DirectoryEntry;
+import com.trilead.ssh2.SFTPv3FileAttributes;
+import com.trilead.ssh2.SFTPv3FileHandle;
+import com.trilead.ssh2.packets.TypesReader;
+import com.trilead.ssh2.packets.TypesWriter;
+import com.trilead.ssh2.sftp.ErrorCodes;
+import com.trilead.ssh2.sftp.Packet;
+
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
 
-class GanymedSftpClient extends AbstractSftpClient {
+class TrileadSftpClient extends AbstractSftpClient {
 
 	private final Connection session;
 	private SFTPv3Client client;
 
-	public GanymedSftpClient(Connection session) {
+	public TrileadSftpClient(Connection session) {
 		this.session = session;
 	}
 
@@ -295,8 +296,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 		SFTPv3FileAttributes attributes = entry.attributes;
 		SftpFile file = new SftpFile(convertType(attributes), fullPath,
 				attributes.size == null ? 0 : attributes.size.longValue(),
-				convertIntDate(attributes.mtime), 0,
-				convertIntDate(attributes.atime), toInt(attributes.gid),
+				convertToMs(attributes.mtime), 0,
+				convertToMs(attributes.atime), toInt(attributes.gid),
 				toInt(attributes.uid), toInt(attributes.permissions));
 		return file;
 	}
@@ -305,8 +306,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 		return i == null ? 0 : i.intValue();
 	}
 
-	long convertIntDate(Integer date) {
-		return date == null ? 0 : date.intValue() * 1000l;
+	long convertToMs(Long date) {
+		return date == null ? 0 : date.longValue() * 1000l;
 	}
 
 	public void onOpen() throws SshException {
@@ -371,7 +372,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 	public void setLastModified(String path, long modtime) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
-			entry.mtime = Integer.valueOf((int) (modtime / 1000));
+			entry.mtime = Long.valueOf((int) (modtime / 1000));
 			client.setstat(path, entry);
 		} catch (SFTPException sftpE) {
 			throw new SftpException(sftpE.getServerErrorCode(),
@@ -384,8 +385,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 
 	private SftpFile entryToFile(String path, SFTPv3FileAttributes entry) {
 		return new SftpFile(convertType(entry), path, entry.size == null ? 0
-				: entry.size.longValue(), convertIntDate(entry.mtime), 0,
-				convertIntDate(entry.atime), toInt(entry.gid),
+				: entry.size.longValue(), convertToMs(entry.mtime), 0,
+				convertToMs(entry.atime), toInt(entry.gid),
 				toInt(entry.uid), toInt(entry.permissions));
 	}
 

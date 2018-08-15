@@ -28,17 +28,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.jcraft.jsch.JSch;
+
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.util.Util;
-
-import com.jcraft.jsch.JSch;
 
 /**
  * Provider implementation for JSch

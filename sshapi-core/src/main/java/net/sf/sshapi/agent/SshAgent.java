@@ -31,8 +31,39 @@ import net.sf.sshapi.SshChannelHandler;
  * the server, authentication, and access to the sub-systems
  */
 public interface SshAgent extends SshChannelHandler {
+	/**
+	 * OpenSSH and the de-facto standard
+	 */
+	public final static int OPENSSH_PROTOCOL = 0;
+	/**
+	 * RFC agent protocol.
+	 */
+	public final static int RFC_PROTOCOL = 1;
+	/**
+	 * Attempt to determine protocol automatically, falling back to
+	 * {@link #OPENSSH_PROTOCOL} if not possible. NOTE: No providers can currently
+	 * implement auto-detection due to a code clash used by the two different
+	 * protocols. Both use code 9, with the RFC version using it as the FIRST
+	 * request to determine protocol version. However, OpenSSH uses the code for
+	 * removing all keys! This makes detection of protocol in use hard.
+	 */
+	public final static int AUTO_PROTOCOL = 2;
 
-	public final static int TCPIP_AGENT_SOCKET_TYPE = 0;
-	public final static int UNIX_DOMAIN_AGENT_SOCKET_TYPE = 1;
+	/**
+	 * Try to automatically determine the socket type.
+	 */
+	public final static int AUTO_AGENT_SOCKET_TYPE = 0;
+	/**
+	 * Use a TCP/IP socket for communication with agent.
+	 */
+	public final static int TCPIP_AGENT_SOCKET_TYPE = 1;
+	/**
+	 * Use a domain socket for communication with agent.
+	 */
+	public final static int UNIX_DOMAIN_AGENT_SOCKET_TYPE = 2;
+	/**
+	 * Use a windows named pipe for communication with agent.
+	 */
+	public final static int NAMED_PIPED_AGENT_SOCKET_TYPE = 3;
 
 }

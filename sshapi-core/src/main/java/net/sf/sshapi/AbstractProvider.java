@@ -112,8 +112,16 @@ public abstract class AbstractProvider implements SshProvider {
 		throw new UnsupportedOperationException();
 	}
 
-	public SshAgent connectToLocalAgent(String application, String location, int socketType) throws SshException {
+	public SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol) throws SshException {
 		throw new UnsupportedOperationException();
+	}
+
+	public SshAgent connectToLocalAgent(String application, int protocol) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	public SshAgent connectToLocalAgent(String application) throws SshException {
+		return connectToLocalAgent(application, SshAgent.AUTO_PROTOCOL);
 	}
 
 	static boolean check(String name, List list) {

@@ -154,6 +154,8 @@ public class MaverickSshProvider extends AbstractProvider {
 			Class.forName("com.maverick.agent.client.SshAgentClient");
 			caps = new ArrayList(caps);
 			caps.add(Capability.AGENT);
+			caps.add(Capability.OPENSSH_AGENT);
+			caps.add(Capability.RFC_AGENT);
 			caps = Collections.unmodifiableList(caps);
 		} catch (ClassNotFoundException cnfe) {
 		}
@@ -237,8 +239,13 @@ public class MaverickSshProvider extends AbstractProvider {
 		}
 	}
 
-	public SshAgent connectToLocalAgent(String application, String location, int socketType)
+	public SshAgent connectToLocalAgent(String application, int protocol)
 			throws net.sf.sshapi.SshException {
-		return new MaverickAgent(application, location, socketType);
+		return new MaverickAgent(application, null, SshAgent.AUTO_AGENT_SOCKET_TYPE, protocol);
+	}
+
+	public SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol)
+			throws net.sf.sshapi.SshException {
+		return new MaverickAgent(application, location, socketType, protocol);
 	}
 }

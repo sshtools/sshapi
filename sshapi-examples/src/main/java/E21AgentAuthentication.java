@@ -30,7 +30,7 @@ public class E21AgentAuthentication {
 		// Locate and connect to agent
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
 		System.out.println("Connecting to agent.");
-		SshAgent agent = provider.connectToLocalAgent("Test", System.getenv("SSH_AUTH_SOCK"), SshAgent.UNIX_DOMAIN_AGENT_SOCKET_TYPE);
+		SshAgent agent = provider.connectToLocalAgent("Test");
 		System.out.println("Connected to agent.");
 
 		// Create the client using that configuration
