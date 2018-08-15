@@ -109,7 +109,7 @@
 				<plugin>
 					<groupId>com.mycila</groupId>
 					<artifactId>license-maven-plugin</artifactId>
-					<version>2.3</version>
+					<version>3.0</version>
 					<configuration>
 						<header>templates/Apache-2.txt</header>
 						<properties>
@@ -155,7 +155,7 @@
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-project-info-reports-plugin</artifactId>
-							<version>2.4</version>
+							<version>3.0.0</version>
 							<reportSets>
 								<reportSet>
 									<reports>
@@ -299,9 +299,6 @@
 					</execution>
 				</executions>
 				<configuration>
-					<links>
-						<link>http://java.sun.com/javase/7/docs/api/</link>
-					</links>
 					<failOnError>false</failOnError>
 				</configuration>
 			</plugin>
