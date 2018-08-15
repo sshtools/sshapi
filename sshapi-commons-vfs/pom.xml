@@ -8,8 +8,8 @@
 Note, this Commons VF provider is for Commons VFS 2.0.</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
-		<groupId>net.sf.sshapi</groupId>
-		<version>1.1.0-SNAPSHOT</version>
+		<groupId>com.sshtools</groupId>
+		<version>1.1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
@@ -64,7 +64,7 @@ Note, this Commons VF provider is for Commons VFS 2.0.</description>
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-core</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>

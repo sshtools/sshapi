@@ -12,14 +12,26 @@
 
 This is the SSHAPI provider bridge for libssh, and uses JNA. 
 
-Downloads and more information about JSch may be found at http://api.libssh.org/master/index.html.</description>
+Downloads and more information about libssh may be found at http://api.libssh.org/master/index.html.
+
+This library is deployed to SSHTools own Maven repository.</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
-		<groupId>net.sf.sshapi</groupId>
-		<version>1.1.0-SNAPSHOT</version>
+		<groupId>com.sshtools</groupId>
+		<version>1.1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
+	<distributionManagement>
+		<repository>
+			<id>opensource-releases</id>
+			<url>http://artifactory.javassh.com/opensource-releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>opensource-snapshots</id>
+			<url>http://artifactory.javassh.com/opensource-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
@@ -43,18 +55,12 @@ Downloads and more information about JSch may be found at http://api.libssh.org/
 				<artifactId>maven-jnaerator-plugin</artifactId>
 				<version>0.11</version>
 			</plugin>
-			<plugin>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
 		</plugins>
 
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-core</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>

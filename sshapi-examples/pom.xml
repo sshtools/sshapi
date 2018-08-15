@@ -9,8 +9,8 @@
 	<description>A suite of examples that demonstrate many of the features of SSHAPI. Most can be used with any provider, and there are some example usage of the capability query features.</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
-		<groupId>net.sf.sshapi</groupId>
-		<version>1.1.0-SNAPSHOT</version>
+		<groupId>com.sshtools</groupId>
+		<version>1.1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
@@ -34,48 +34,48 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-core</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<!-- <dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency> -->
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-16</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-ganymed</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-j2ssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.sshapi</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-libssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
