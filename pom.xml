@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
@@ -10,9 +11,9 @@
 		<releasesRepositoryDeploymentLocation>file:///${basedir}/../sshapi-mvn/releases</releasesRepositoryDeploymentLocation>
 		<snapshotsRepositoryDeploymentLocation>file:///${basedir}/../sshapi-mvn/snapshots</snapshotsRepositoryDeploymentLocation>
 		<scmWebRoot>http://sourceforge.net/p/sshapi/svn/LATEST/tree/trunk</scmWebRoot>
-		<siteDeploymentLocation>scp://${sfUser},sshapi@shell.sourceforge.net/home/project-web/sshapi/htdocs</siteDeploymentLocation>
-		<assemblyDeploymentLocation>sftp://${sfUser},sshapi@frs.sourceforge.net:/home/frs/project/s/ss/sshapi</assemblyDeploymentLocation>
-		<assemblyDownloadLocation>http://sourceforge.net/projects/sshapi/files/${project.version}</assemblyDownloadLocation>
+		<siteDeploymentLocation>scp://localhost/var/www/maven-sites/sshapi/</siteDeploymentLocation>
+		<assemblyDeploymentLocation>scp://localhost/var/www/maven-assembly/sshapi</assemblyDeploymentLocation>
+		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick bridge (New public 1.6) -->
 		<maverickVersion>1.7.17-SNAPSHOT</maverickVersion>
@@ -23,7 +24,7 @@
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<name>SSHAPI Group</name>
 	<description>Parent project for all SSHAPI modules</description>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
@@ -62,10 +63,16 @@
 	</scm>
 	<build>
 		<extensions>
+			<!-- Let's see if SSHAPI can now use itself to publish -->
 			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh</artifactId>
-				<version>2.2</version>
+				<groupId>com.sshtools</groupId>
+				<artifactId>wagon-sshapi</artifactId>
+				<version>1.1.0</version>
+			</extension>
+			<extension>
+				<groupId>com.sshtools</groupId>
+				<artifactId>sshapi-maverick</artifactId>
+				<version>1.1.0</version>
 			</extension>
 		</extensions>
 		<pluginManagement>
@@ -149,74 +156,24 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<reportPlugins>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-project-info-reports-plugin</artifactId>
-							<version>3.0.0</version>
-							<reportSets>
-								<reportSet>
-									<reports>
-										<report>index</report>
-										<report>dependencies</report>
-										<report>dependency-convergence</report>
-										<report>project-team</report>
-										<!-- <report>project-summary</report> -->
-										<report>issue-tracking</report>
-										<report>license</report>
-										<report>scm</report>
-									</reports>
-								</reportSet>
-							</reportSets>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-surefire-plugin</artifactId>
-							<version>2.11</version>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-clover-plugin</artifactId>
-							<version>2.4</version>
-						</plugin>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>cobertura-maven-plugin</artifactId>
-							<version>2.5.1</version>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-pmd-plugin</artifactId>
-							<version>2.6</version>
-							<configuration>
-								<targetJdk>${reportTargetRelease}</targetJdk>
-								<rulesets>
-									<ruleset>/rulesets/basic.xml</ruleset>
-									<ruleset>/rulesets/controversial.xml</ruleset>
-								</rulesets>
-								<format>xml</format>
-								<linkXref>true</linkXref>
-								<sourceEncoding>utf-8</sourceEncoding>
-								<minimumTokens>100</minimumTokens>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-resources-plugin</artifactId>
-							<version>2.5</version>
-							<configuration>
-								<encoding>UTF-8</encoding>
-							</configuration>
-						</plugin>
-					</reportPlugins>
-				</configuration>
+				<version>3.7.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.sshtools</groupId>
+						<artifactId>wagon-sshapi</artifactId>
+						<version>1.1.0</version>
+					</dependency>
+					<dependency>
+						<groupId>com.sshtools</groupId>
+						<artifactId>sshapi-maverick</artifactId>
+						<version>1.1.0</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
-				<version>2.2.2</version>
+				<version>2.5.3</version>
 				<configuration>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
@@ -241,7 +198,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>2.3.5</version>
+				<version>3.5.1</version>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
@@ -253,7 +210,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.8.0</version>
 				<configuration>
 					<source>${sourceRelease}</source>
 					<target>${targetRelease}</target>
@@ -262,7 +219,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
+				<version>3.1.0</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -277,7 +234,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
+				<version>3.0.1</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -304,6 +261,68 @@
 			</plugin>
 		</plugins>
 	</build>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>3.0.0</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>index</report>
+							<report>dependencies</report>
+							<report>dependency-convergence</report>
+							<report>project-team</report>
+							<!-- <report>project-summary</report> -->
+							<report>issue-tracking</report>
+							<report>license</report>
+							<report>scm</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clover-plugin</artifactId>
+				<version>2.4</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.7</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>3.10.0</version>
+				<configuration>
+					<targetJdk>${reportTargetRelease}</targetJdk>
+					<rulesets>
+						<ruleset>/rulesets/basic.xml</ruleset>
+						<ruleset>/rulesets/controversial.xml</ruleset>
+					</rulesets>
+					<format>xml</format>
+					<linkXref>true</linkXref>
+					<sourceEncoding>utf-8</sourceEncoding>
+					<minimumTokens>100</minimumTokens>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
 	<repositories>
 	</repositories>
 	<modules>
@@ -318,9 +337,9 @@
 		<module>sshapi-trilead</module>
 		<module>sshapi-commons-vfs</module>
 		<module>sshapi-cli</module>
+		<module>sshapi-site</module>
 		<module>wagon-sshapi</module>
-		<!-- <module>../sshapi-assembly</module> <module>../sshapi-site</module> 
-			 -->
+		<!-- <module>../sshapi-assembly</module> <module>../sshapi-site</module> -->
 	</modules>
 	<profiles>
 		<profile>
@@ -336,7 +355,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -346,6 +364,10 @@
 								</goals>
 							</execution>
 						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
 					</plugin>
 				</plugins>
 			</build>

@@ -1,6 +1,12 @@
 package net.sf.sshapi.agent;
 
+import java.io.Closeable;
+import java.util.Map;
+
 import net.sf.sshapi.SshChannelHandler;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshPublicKey;
+import net.sf.sshapi.identity.SshKeyPair;
 
 /* 
  * Copyright (c) 2018 The JavaSSH Project
@@ -30,7 +36,7 @@ import net.sf.sshapi.SshChannelHandler;
  * Client implementations are responsible for maintaining the connection with
  * the server, authentication, and access to the sub-systems
  */
-public interface SshAgent extends SshChannelHandler {
+public interface SshAgent extends SshChannelHandler, Closeable {
 	/**
 	 * OpenSSH and the de-facto standard
 	 */
@@ -66,4 +72,112 @@ public interface SshAgent extends SshChannelHandler {
 	 */
 	public final static int NAMED_PIPED_AGENT_SOCKET_TYPE = 3;
 
+	/**
+	 * Add a key to the agent.
+	 * 
+	 * @param keypair
+	 *            keypair
+	 * @param description
+	 *            description
+	 * @throws UnsupportedOperationException
+	 *             if keys cannot be added using this API
+	 */
+	void addKey(SshKeyPair keyPair, String description) throws SshException, UnsupportedOperationException;
+
+	/**
+	 * List all the keys on the agent.
+	 * 
+	 * @return a map of public keys and descriptions (key is SshPublicKey, value is
+	 *         String)
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	Map listKeys() throws SshException;
+
+	/**
+	 * Lock the agent
+	 * 
+	 * @param password
+	 *            password that will be required to unlock
+	 * 
+	 * @return true if the agent was locked, otherwise false
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	boolean lockAgent(String password) throws SshException;
+
+	/**
+	 * Unlock the agent
+	 * 
+	 * @param password
+	 *            the password to unlock
+	 * 
+	 * @return true if the agent was unlocked, otherwise false
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	boolean unlockAgent(String password) throws SshException;
+
+	/**
+	 * Request some random data from the remote side
+	 * 
+	 * @param count
+	 *            the number of bytes needed
+	 * 
+	 * @return the random data received
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	byte[] getRandomData(int count) throws SshException;
+
+	/**
+	 * Delete a key held by the agent
+	 * 
+	 * @param key
+	 *            the public key of the private key to delete
+	 * @param description
+	 *            the description of the key
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	void deleteKey(SshPublicKey key, String description) throws SshException;
+
+	/**
+	 * Request a hash and sign operation be performed for a given public key.
+	 * 
+	 * @param key
+	 *            the public key of the required private key
+	 * @param data
+	 *            the data to has and sign
+	 * 
+	 * @return the hashed and signed data
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	byte[] hashAndSign(SshPublicKey key, byte[] data) throws SshException;
+
+	/**
+	 * Delete all the keys held by the agent.
+	 * 
+	 * @throws SshException
+	 *             if an error occurs
+	 */
+	void deleteAllKeys() throws SshException;
+
+	/**
+	 * Ping the remote side with some random padding data
+	 * 
+	 * @param padding
+	 *            the padding data
+	 * 
+	 * @throws IOException
+	 *             if an IO error occurs
+	 */
+	void ping(byte[] padding) throws SshException;
 }

@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
@@ -37,12 +38,14 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedStreamChannel;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
 import net.sf.sshapi.util.ConsolePasswordAuthenticator;
+import net.sf.sshapi.util.DefaultAgentAuthenticator;
 import net.sf.sshapi.util.PEMFilePublicKeyAuthenticator;
 
 import org.apache.maven.wagon.CommandExecutionException;
@@ -88,6 +91,7 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 	private InteractiveUserInfo interactiveUserInfo;
 
 	private SshKeyboardInteractiveAuthenticator uIKeyboardInteractive;
+	private SshAgent agent;
 
 	private static final int SOCKS5_PROXY_PORT = 1080;
 
@@ -175,6 +179,16 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		} else {
 			config.setHostKeyValidator(new ConsoleHostKeyValidator(null));
 		}
+		
+		String authSock = System.getenv("SSH_AUTH_SOCK");
+		if(provider.getCapabilities().contains(Capability.AGENT) && authSock != null && authSock.length() > 0) {
+			try {
+				agent = provider.connectToLocalAgent("Maven");
+			} catch (SshException e) {
+				e.printStackTrace();
+			}
+		}
+		
 
 		session = provider.createClient(config);
 
@@ -207,8 +221,26 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 			throw new AuthenticationException("Cannot connect. Reason: " + e.getMessage(), e);
 		}
 
+		// Connect the client to the agent
+		if(agent != null)
+			try {
+				session.addChannelHandler(agent);
+			} catch (SshException e1) {
+				e1.printStackTrace();
+				try {
+					agent.close();
+				} catch (IOException e) {
+				}
+				agent = null;
+			}
+
 		// Authenticate
 		List authenticators = new ArrayList();
+		
+		if(agent != null) {
+			fireSessionDebug("Using agent: " + agent);
+			authenticators.add(new DefaultAgentAuthenticator(agent));
+		}
 
 		if (privateKey != null && privateKey.exists()) {
 			fireSessionDebug("Using private key: " + privateKey);
@@ -258,6 +290,13 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 			} catch (SshException e) {
 			}
 			session = null;
+		}
+		if(agent != null) {
+			try {
+				agent.close();
+			} catch (IOException e) {
+			}
+			agent = null;
 		}
 	}
 

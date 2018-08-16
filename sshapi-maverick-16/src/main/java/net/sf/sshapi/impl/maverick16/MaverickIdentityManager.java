@@ -31,7 +31,6 @@ import java.util.List;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshPrivateKey;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
@@ -91,7 +90,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	private SshKeyPair convertPair(net.sf.sshapi.identity.SshKeyPair pair) {
 		final MaverickPublicKey publicKey = (MaverickPublicKey) pair.getPublicKey();
 		final MaverickPrivateKey privateKey = (MaverickPrivateKey) pair.getPrivateKey();
-		return SshKeyPair.getKeyPair(privateKey.privateKey, publicKey.publicKey);
+		return SshKeyPair.getKeyPair(privateKey.privateKey, publicKey.getPublicKey());
 	}
 
 	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
@@ -152,7 +151,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 		com.sshtools.publickey.SshPublicKeyFile publicKeyFile;
 		try {
-			publicKeyFile = SshPublicKeyFileFactory.create(pk.publicKey, options, comment, type); 
+			publicKeyFile = SshPublicKeyFileFactory.create(pk.getPublicKey(), options, comment, type); 
 		} catch (IOException e) {
 			throw new SshException(e);
 		}
@@ -263,72 +262,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			} catch (com.maverick.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
-		}
-	}
-
-	class MaverickPrivateKey implements SshPrivateKey {
-
-		private com.maverick.ssh.components.SshPrivateKey privateKey;
-
-		public MaverickPrivateKey(com.maverick.ssh.components.SshPrivateKey privateKey) {
-			this.privateKey = privateKey;
-		}
-
-		public byte[] sign(byte[] data) throws SshException {
-			try {
-				return privateKey.sign(data);
-			} catch (IOException e) {
-				throw new SshException(SshException.IO_ERROR, e);
-			}
-		}
-	}
-
-	class MaverickPublicKey implements SshPublicKey {
-
-		private byte[] key;
-		private String fingerPrint;
-		private String algorithm;
-		private int bitLength;
-		private com.maverick.ssh.components.SshPublicKey publicKey;
-
-		public MaverickPublicKey(com.sshtools.publickey.SshPublicKeyFile publicKeyFile) throws com.maverick.ssh.SshException,
-				IOException {
-			init(publicKeyFile.toPublicKey());
-		}
-
-		private void init(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
-			this.publicKey = publicKey;
-			key = publicKey.getEncoded();
-			algorithm = publicKey.getAlgorithm();
-			fingerPrint = publicKey.getFingerprint();
-			bitLength = publicKey.getBitLength();
-		}
-
-		public MaverickPublicKey(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
-			init(publicKey);
-		}
-
-		public MaverickPublicKey(SshPublicKey publicKey) throws SshException {
-			key = publicKey.getEncodedKey();
-			fingerPrint = publicKey.getFingerprint();
-			algorithm = publicKey.getAlgorithm();
-			bitLength = publicKey.getBitLength();
-		}
-
-		public String getAlgorithm() {
-			return algorithm;
-		}
-
-		public String getFingerprint() {
-			return fingerPrint;
-		}
-
-		public byte[] getEncodedKey() {
-			return key;
-		}
-
-		public int getBitLength() {
-			return bitLength;
 		}
 	}
 

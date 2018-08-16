@@ -29,6 +29,15 @@ package net.sf.sshapi;
 public interface SshPrivateKey {
 
 	/**
+	 * Get the private key algorithm used. Will be one of
+	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA},
+	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA}
+	 * 
+	 * @return algorithm
+	 */
+	String getAlgorithm();
+
+	/**
 	 * Sign the data using this private key.
 	 * 
 	 * @param data

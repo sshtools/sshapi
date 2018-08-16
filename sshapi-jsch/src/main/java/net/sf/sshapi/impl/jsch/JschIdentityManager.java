@@ -46,6 +46,7 @@ import net.sf.sshapi.util.Util;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
+import com.jcraft.jsch.KeyPairDSA;
 
 class JschIdentityManager implements SshIdentityManager {
 
@@ -233,6 +234,21 @@ class JschIdentityManager implements SshIdentityManager {
 
 		public byte[] sign(byte[] data) {
 			throw new UnsupportedOperationException();
+		}
+
+		public String getAlgorithm() {
+			switch(kpair.getKeyType()) {
+			case KeyPair.DSA:
+				return "dsa";
+			case KeyPair.ECDSA:
+				return "ecdsa";
+			case KeyPair.RSA:
+				return "rsa";
+			case KeyPair.ERROR:
+				return "error";
+			default:
+				return "unknown";
+			}
 		}
 
 	}

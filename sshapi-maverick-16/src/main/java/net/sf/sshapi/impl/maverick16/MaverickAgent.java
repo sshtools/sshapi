@@ -3,10 +3,14 @@ package net.sf.sshapi.impl.maverick16;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.maverick.agent.KeyConstraints;
 import com.maverick.agent.client.AgentSocketType;
 import com.maverick.agent.client.SshAgentClient;
 import com.maverick.agent.exceptions.AgentNotAvailableException;
@@ -20,7 +24,9 @@ import net.sf.sshapi.SshDataProducingComponent;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleComponent;
 import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.agent.SshAgent;
+import net.sf.sshapi.identity.SshKeyPair;
 
 public class MaverickAgent implements SshAgent {
 	final static Logger LOG = LoggerFactory.getLogger(MaverickAgent.class);
@@ -158,4 +164,91 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	public void close() throws IOException {
+		sshAgent.close();
+	}
+
+	public void addKey(SshKeyPair keyPair, String description) throws SshException {
+		KeyConstraints keyConstraints = new KeyConstraints();
+		try {
+			sshAgent.addKey(new MaverickSshPrivateKey(keyPair.getPrivateKey()),
+					new MaverickSshPublicKey(keyPair.getPublicKey()), description, keyConstraints);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public Map listKeys() throws SshException {
+		try {
+			Map nativeKeys = sshAgent.listKeys();
+			Map keys = new HashMap();
+			for (Iterator it = nativeKeys.keySet().iterator(); it.hasNext();) {
+				com.maverick.ssh.components.SshPublicKey pk = (com.maverick.ssh.components.SshPublicKey) it.next();
+				try {
+					keys.put(new MaverickPublicKey(pk), nativeKeys.get(pk));
+				} catch (com.maverick.ssh.SshException e) {
+					throw new SshException(SshException.GENERAL, "Failed to convert key to SSHAPI.", e);
+				}
+			}
+			return keys;
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public boolean lockAgent(String password) throws SshException {
+		try {
+			return sshAgent.lockAgent(password);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public boolean unlockAgent(String password) throws SshException {
+		try {
+			return sshAgent.unlockAgent(password);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public byte[] getRandomData(int count) throws SshException {
+		try {
+			return sshAgent.getRandomData(count);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public void deleteKey(SshPublicKey key, String description) throws SshException {
+		try {
+			sshAgent.deleteKey(new MaverickSshPublicKey(key), description);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public byte[] hashAndSign(SshPublicKey key, byte[] data) throws SshException {
+		try {
+			return sshAgent.hashAndSign(new MaverickSshPublicKey(key), data);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public void deleteAllKeys() throws SshException {
+		try {
+			sshAgent.deleteAllKeys();
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	public void ping(byte[] padding) throws SshException {
+		try {
+			sshAgent.ping(padding);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
 }

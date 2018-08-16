@@ -11,7 +11,7 @@
 	</bannerLeft>
 	<body>
 		<head>
-			<link rel="stylesheet" href="../css/site.css" type="text/css" />
+			<![CDATA[<link rel="stylesheet" href="../css/site.css" type="text/css"/>]]>
 		</head>
 		<menu name="Overview">
 			<item name="Introduction" href="index.html" />

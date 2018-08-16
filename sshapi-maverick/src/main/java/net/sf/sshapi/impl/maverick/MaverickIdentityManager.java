@@ -282,6 +282,10 @@ public class MaverickIdentityManager implements SshIdentityManager {
 				throw new SshException(SshException.IO_ERROR, e);
 			}
 		}
+
+		public String getAlgorithm() {
+			return privateKey.getAlgorithm();
+		}
 	}
 
 	class MaverickPublicKey implements SshPublicKey {
