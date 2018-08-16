@@ -24,7 +24,7 @@
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1.1</version>
+	<version>1.1.2</version>
 	<name>SSHAPI Group</name>
 	<description>Parent project for all SSHAPI modules</description>
 	<url>${scmWebRoot}/${project.artifactId}/</url>

@@ -55,7 +55,7 @@ public class MaverickAgent implements SshAgent {
 					/* Not on windows, standard file that exists, assume to be a domain socket */
 					socketType = SshAgent.UNIX_DOMAIN_AGENT_SOCKET_TYPE;
 				}
-			} else if (!windows && location != null && !location.equals("") && location.startsWith("\\")
+			} else if (windows && location != null && !location.equals("") && location.startsWith("\\")
 					|| location.equals(SshAgentClient.WINDOWS_SSH_AGENT_SERVICE)) {
 				/*
 				 * Windows, and we do have a location starting with \, assume to be a named pipe

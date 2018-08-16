@@ -18,7 +18,7 @@ This library is deployed to SSHTools own Maven repository.</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
 		<groupId>com.sshtools</groupId>
-		<version>1.1.1</version>
+		<version>1.1.2</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
