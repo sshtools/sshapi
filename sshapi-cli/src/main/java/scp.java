@@ -502,7 +502,7 @@ public class scp implements SshFileTransferListener, Logger {
 
 	public void log(Level level, String message) {
 		if (isLevelEnabled(level)) {
-			System.err.println(level.getName() + ": " + message);
+			System.err.println(level.name() + ": " + message);
 		}
 	}
 

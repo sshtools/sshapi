@@ -88,8 +88,9 @@ public class E08Sftp {
 									} else {
 										System.out.println("Not a directory!");
 									}
-								} catch (FileNotFoundException fnfe) {
-									System.out.println("Directory " + newCwd + " not found");
+								} catch (SftpException sftpe) {
+									if(sftpe.getCode().equals(SftpException.SSH_FX_NO_SUCH_FILE))
+										System.out.println("Directory " + newCwd + " not found");
 								}
 							} else {
 								cwd = sftp.getDefaultPath();

@@ -23,11 +23,9 @@
  */
 package net.sf.sshapi.impl.ganymed;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +56,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public InputStream get(String path, final long filePointer) throws SshException, FileNotFoundException {
+	public InputStream get(String path, final long filePointer) throws SshException {
 		final SftpFile file = stat(path);
 		try {
 			final SFTPv3FileHandle handle = client.openFileRO(path);
@@ -105,12 +103,12 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public InputStream get(String path) throws SshException, FileNotFoundException {
+	public InputStream get(String path) throws SshException {
 		return get(path, 0);
 	}
 
 	@Override
-	public void get(String path, OutputStream out, long filePointer) throws SshException, FileNotFoundException {
+	public void get(String path, OutputStream out, long filePointer) throws SshException {
 		SftpFile file = stat(path);
 		try {
 			SFTPv3FileHandle handle = client.openFileRO(path);
@@ -127,25 +125,24 @@ class GanymedSftpClient extends AbstractSftpClient {
 				client.closeFile(handle);
 			}
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to open file", path, sftpe))
-				throw new FileNotFoundException(String.format("Could not open file. %s", path));
+			throw new GanymedSftpException(sftpe, String.format("Could not open file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
 
 	@Override
-	public void get(String path, OutputStream out) throws SshException, FileNotFoundException {
+	public void get(String path, OutputStream out) throws SshException {
 		get(path, out, 0l);
 	}
 
 	@Override
-	public OutputStream put(String path, int permissions) throws SshException, FileSystemException {
+	public OutputStream put(String path, int permissions) throws SshException {
 		return super.put(path, permissions, 0);
 	}
 
 	@Override
-	public OutputStream put(String path, int permissions, final long offset) throws SshException, FileSystemException {
+	public OutputStream put(String path, int permissions, final long offset) throws SshException {
 		SftpFile currentFile = null;
 		try {
 			currentFile = stat(path);
@@ -203,17 +200,14 @@ class GanymedSftpClient extends AbstractSftpClient {
 				}
 			};
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to write file", path, sftpe))
-				throw new FileSystemException(String.format("Could not write file. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not write file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
 
 	@Override
-	public void put(String path, InputStream in, int permissions) throws SshException, FileSystemException {
+	public void put(String path, InputStream in, int permissions) throws SshException {
 		SftpFile currentFile = null;
 		try {
 			currentFile = stat(path);
@@ -253,10 +247,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 				client.closeFile(handle);
 			}
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to write file", path, sftpe))
-				throw new FileSystemException(String.format("Could not write file. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not write file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
@@ -264,14 +255,11 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public void rename(String path, String newPath) throws SshException, FileSystemException {
+	public void rename(String path, String newPath) throws SshException {
 		try {
 			client.mv(path, newPath);
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to rename file", path, sftpe))
-				throw new FileSystemException(String.format("Could not rename file. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not rename file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
@@ -279,17 +267,14 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public SftpFile[] ls(String path) throws SshException, FileNotFoundException {
+	public SftpFile[] ls(String path) throws SshException {
 		try {
 			List<SftpFile> files = new ArrayList<>();
 			for (SFTPv3DirectoryEntry e : client.ls(path))
 				files.add(entryToFile(path, e));
 			return files.toArray(new SftpFile[files.size()]);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to list directory", path, sftpE))
-				throw new FileNotFoundException(String.format("Could not list directory. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not list directory. %s", path));
 		} catch (IOException e) {
 			throw new SshException("Failed to list directory.", e);
 		}
@@ -329,73 +314,58 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public void mkdir(String path, int permissions) throws SshException, FileSystemException {
+	public void mkdir(String path, int permissions) throws SshException {
 		try {
 			client.mkdir(path, permissions);
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to create directory", path, sftpe))
-				throw new FileSystemException(String.format("Could not create directory. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not create directory. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
 
 	@Override
-	public void rm(String path) throws SshException, FileSystemException {
+	public void rm(String path) throws SshException {
 		try {
 			client.rm(path);
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to remove file", path, sftpe))
-				throw new FileSystemException(String.format("Could not remove file. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not remove file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
 
 	@Override
-	public void rmdir(String path) throws SshException, FileSystemException {
+	public void rmdir(String path) throws SshException {
 		try {
 			client.rmdir(path);
 		} catch (SFTPException sftpe) {
-			if (translateError("Failed to remove directory", path, sftpe))
-				throw new FileSystemException(String.format("Could not remove directory. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpe);
+			throw new GanymedSftpException(sftpe, String.format("Could not remove directory. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
 
 	@Override
-	public SftpFile stat(String path) throws SshException, FileNotFoundException {
+	public SftpFile stat(String path) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
 			return entryToFile(path, entry);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to remove directory", path, sftpE))
-				throw new FileNotFoundException(String.format("Could not find file. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not find file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
 		}
 	}
 
 	@Override
-	public void setLastModified(String path, long modtime) throws SshException, FileSystemException {
+	public void setLastModified(String path, long modtime) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
 			entry.mtime = Integer.valueOf((int) (modtime / 1000));
 			client.setstat(path, entry);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to set last modified time", path, sftpE))
-				throw new FileSystemException(String.format("Could not set last modified time. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not set last modified time. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
 		}
@@ -499,58 +469,49 @@ class GanymedSftpClient extends AbstractSftpClient {
 	// }
 
 	@Override
-	public void chmod(String path, int permissions) throws SshException, FileSystemException {
+	public void chmod(String path, int permissions) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
 			entry.permissions = new Integer(permissions);
 			client.setstat(path, entry);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to set file permissions", path, sftpE))
-				throw new FileSystemException(String.format("Could not set file permissions. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not set file permissions. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, "Failed to set file permissions.", e);
 		}
 	}
 
 	@Override
-	public void chown(String path, int uid) throws SshException, FileSystemException {
+	public void chown(String path, int uid) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
 			entry.uid = new Integer(uid);
 			client.setstat(path, entry);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to set file owner", path, sftpE))
-				throw new FileSystemException(String.format("Could not set file owner. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not set file owner. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, "Failed to set file owner.", e);
 		}
 	}
 
 	@Override
-	public void chgrp(String path, int gid) throws SshException, FileSystemException {
+	public void chgrp(String path, int gid) throws SshException {
 		try {
 			SFTPv3FileAttributes entry = client.stat(path);
 			entry.gid = new Integer(gid);
 			client.setstat(path, entry);
 		} catch (SFTPException sftpE) {
-			if (translateError("Failed to set file group", path, sftpE))
-				throw new FileSystemException(String.format("Could not set file group. %s", path));
-			else
-				throw new SshException(SshException.GENERAL, sftpE);
+			throw new GanymedSftpException(sftpE, String.format("Could not set file group. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, "Failed to set file group.", e);
 		}
 	}
 
-	private boolean translateError(String message, String path, SFTPException ex) throws SshException {
-		int code = ex.getServerErrorCode();
-		if (code == 0x01)
-			return true;
-		throw new SshException(SshException.GENERAL, String.format("%s. Error %d. %s [%s]", message, code,
-				ex.getServerErrorCodeSymbol(), ex.getServerErrorCodeVerbose()));
+	@SuppressWarnings("serial")
+	class GanymedSftpException extends SftpException {
+		GanymedSftpException(SFTPException ex, String message) {
+			super(ex.getServerErrorCode(), String.format("%s. Error %d. %s [%s]", message, ex.getServerErrorCode(),
+					ex.getServerErrorCodeSymbol(), ex.getServerErrorCodeVerbose()), ex);
+		}
 	}
 }

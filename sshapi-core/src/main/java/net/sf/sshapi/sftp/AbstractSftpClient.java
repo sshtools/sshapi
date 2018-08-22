@@ -24,14 +24,12 @@
 package net.sf.sshapi.sftp;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.nio.file.FileSystemException;
 import java.util.StringTokenizer;
 
 import net.sf.sshapi.AbstractFileTransferClient;
@@ -47,7 +45,7 @@ public abstract class AbstractSftpClient
 		extends AbstractFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient> implements SftpClient {
 
 	@Override
-	public void mkdirs(String dir, int permissions) throws SshException, FileSystemException, FileNotFoundException {
+	public void mkdirs(String dir, int permissions) throws SshException {
 		StringTokenizer tokens = new StringTokenizer(dir, "/");
 		String path = dir.startsWith("/") ? "/" : "";
 
@@ -80,7 +78,7 @@ public abstract class AbstractSftpClient
 	}
 
 	@Override
-	public void get(String path, OutputStream out, long filePointer) throws SshException, FileNotFoundException {
+	public void get(String path, OutputStream out, long filePointer) throws SshException {
 		if (filePointer > 0) {
 			throw new UnsupportedOperationException(
 					"This provider does not support setting of file pointer for downloads.");
@@ -89,7 +87,7 @@ public abstract class AbstractSftpClient
 	}
 
 	@Override
-	public InputStream get(String path, long filePointer) throws SshException, FileNotFoundException {
+	public InputStream get(String path, long filePointer) throws SshException {
 		if (filePointer > 0) {
 			throw new UnsupportedOperationException(
 					"This provider does not support setting of file pointer for downloads.");
@@ -98,7 +96,7 @@ public abstract class AbstractSftpClient
 	}
 
 	@Override
-	public InputStream get(final String path) throws SshException, FileNotFoundException {
+	public InputStream get(final String path) throws SshException {
 		try {
 			final PipedOutputStream pout = new PipedOutputStream();
 			PipedInputStream pin = new PipedInputStream(pout);
@@ -107,7 +105,7 @@ public abstract class AbstractSftpClient
 				public void run() {
 					try {
 						get(path, pout);
-					} catch (SshException | FileNotFoundException sshe) {
+					} catch (SshException sshe) {
 					}
 				}
 			}.start();
@@ -118,7 +116,7 @@ public abstract class AbstractSftpClient
 	}
 
 	@Override
-	public OutputStream put(final String path, final int permissions) throws SshException, FileSystemException {
+	public OutputStream put(final String path, final int permissions) throws SshException {
 		final PipedInputStream pin = new PipedInputStream();
 		try {
 			PipedOutputStream pout = new PipedOutputStream(pin);
@@ -128,7 +126,6 @@ public abstract class AbstractSftpClient
 					try {
 						put(path, pin, permissions);
 					} catch (SshException sshe) {
-					} catch (FileSystemException e) {
 					}
 				}
 			}.start();
@@ -139,7 +136,7 @@ public abstract class AbstractSftpClient
 	}
 
 	@Override
-	public OutputStream put(final String path, final int permissions, long offset) throws SshException, FileSystemException {
+	public OutputStream put(final String path, final int permissions, long offset) throws SshException{
 		if (offset > 0) {
 			throw new UnsupportedOperationException();
 		}
