@@ -54,36 +54,28 @@ public class MaverickSshProvider extends AbstractProvider {
 	 * connection
 	 */
 	public final static String CFG_HTTP_PROXY_USER_AGENT = "sshapi.maverick.httpProxy.userAgent";
-
 	/**
 	 * Look up proxied hostnames locally
 	 */
 	public static final String CFG_SOCKS5_PROXY_LOCAL_LOOKUP = "sshapi.maverick.socks5Proxy.localLookup";
-
 	/**
 	 * SFTP mode, can be one of SFTP_ALL_MODES, SFTP_OVER_SCP or SFTP_SUBSYSTEM
 	 */
 	public static final String CFG_SFTP_MODE = "sshapi.maverick.sftp.mode";
-
 	/**
 	 * SFTP protocol maximum version (defaults to the highest supported by
 	 * Maverick)
 	 */
 	public static final String CFG_SFTP_MAX_VERSION = "sshapi.maverick.sftp.maxVersion";
-
-
 	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
 			Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
 			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.GSSAPI_AUTHENTICATION,
-			Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS,
-			Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM,
-			Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
-			Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
-			Capability.CHANNEL_HANDLERS };
-	
+			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT,
+			Capability.PORT_FORWARD_EVENTS, Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP,
+			Capability.PUBLIC_KEY_SUBSYSTEM, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE,
+			Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
+			Capability.CHANNEL_HANDLERS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL };
 	private SshConnector con;
-
 	static {
 		// Warning for slow startup on Linux / Solaris
 		if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1
@@ -92,7 +84,6 @@ public class MaverickSshProvider extends AbstractProvider {
 			SshConfiguration.getLogger().log(Level.WARN,
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
-
 	}
 
 	private synchronized void checkConnector() {
@@ -123,14 +114,17 @@ public class MaverickSshProvider extends AbstractProvider {
 		super("Maverick 1.6+");
 	}
 
+	@Override
 	public SshIdentityManager createIdentityManager(SshConfiguration configurshation) {
 		return new MaverickIdentityManager();
 	}
 
+	@Override
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws net.sf.sshapi.SshException {
 		return new MaverickHostKeyManager(configuration);
 	}
 
+	@Override
 	public SshClient doCreateClient(SshConfiguration configuration) {
 		checkConnector();
 		try {
@@ -140,19 +134,28 @@ public class MaverickSshProvider extends AbstractProvider {
 		}
 	}
 
+	@Override
 	public void doSupportsConfiguration(SshConfiguration configuration) {
 		try {
 			Class.forName("com.maverick.ssh.SshConnector", false, getClass().getClassLoader());
 		} catch (ClassNotFoundException cnfe) {
 			throw new UnsupportedOperationException("Maverick is not on the CLASSPATH");
 		}
+		try {
+			Class.forName("com.sshtools.events.J2SSHEventMessages", false, getClass().getClassLoader());
+			throw new IllegalStateException(
+					"sshapi-maverick-16 cannot be on the same CLASSPATH as sshapi-maverick as they contain usages of different versions of the same classes. Please exclude one or the other.");
+		} catch (ClassNotFoundException cnfe) {
+			// Good!
+		}
 	}
 
-	public List getCapabilities() {
-		List caps = Arrays.asList(DEFAULT_CAPS);
+	@Override
+	public List<Capability> getCapabilities() {
+		List<Capability> caps = Arrays.asList(DEFAULT_CAPS);
 		try {
 			Class.forName("com.maverick.agent.client.SshAgentClient");
-			caps = new ArrayList(caps);
+			caps = new ArrayList<>(caps);
 			caps.add(Capability.AGENT);
 			caps.add(Capability.OPENSSH_AGENT);
 			caps.add(Capability.RFC_AGENT);
@@ -162,9 +165,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		return caps;
 	}
 
-	public List getSupportedCiphers(int protocolVersion) {
+	@Override
+	public List<String> getSupportedCiphers(int protocolVersion) {
 		checkConnector();
-		List ciphers = new ArrayList();
+		List<String> ciphers = new ArrayList<>();
 		if (protocolVersion == SshConfiguration.SSH1_OR_SSH2 || protocolVersion == SshConfiguration.SSH2_ONLY) {
 			Ssh2Context ssh2Context;
 			try {
@@ -181,9 +185,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		return ciphers;
 	}
 
-	public List getSupportedCompression() {
+	@Override
+	public List<String> getSupportedCompression() {
 		checkConnector();
-		List compressions = new ArrayList();
+		List<String> compressions = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
 			compressions.addAll(Arrays.asList(ssh2Context.supportedCompressionsCS().list("").split(",")));
@@ -193,9 +198,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		return compressions;
 	}
 
-	public List getSupportedMAC() {
+	@Override
+	public List<String> getSupportedMAC() {
 		checkConnector();
-		List macs = new ArrayList();
+		List<String> macs = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
 			macs.addAll(Arrays.asList(ssh2Context.supportedMacsCS().list("").split(",")));
@@ -205,9 +211,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		return macs;
 	}
 
-	public List getSupportedKeyExchange() {
+	@Override
+	public List<String> getSupportedKeyExchange() {
 		checkConnector();
-		List kexs = new ArrayList();
+		List<String> kexs = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
 			kexs.addAll(Arrays.asList(ssh2Context.supportedKeyExchanges().list("").split(",")));
@@ -217,9 +224,10 @@ public class MaverickSshProvider extends AbstractProvider {
 		return kexs;
 	}
 
-	public List getSupportedPublicKey() {
+	@Override
+	public List<String> getSupportedPublicKey() {
 		checkConnector();
-		List pks = new ArrayList();
+		List<String> pks = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
 			pks.addAll(Arrays.asList(ssh2Context.supportedPublicKeys().list("").split(",")));
@@ -229,6 +237,7 @@ public class MaverickSshProvider extends AbstractProvider {
 		return pks;
 	}
 
+	@Override
 	public void seed(long seed) {
 		SecureRandom rnd;
 		try {
@@ -239,11 +248,12 @@ public class MaverickSshProvider extends AbstractProvider {
 		}
 	}
 
-	public SshAgent connectToLocalAgent(String application, int protocol)
-			throws net.sf.sshapi.SshException {
+	@Override
+	public SshAgent connectToLocalAgent(String application, int protocol) throws net.sf.sshapi.SshException {
 		return new MaverickAgent(application, null, SshAgent.AUTO_AGENT_SOCKET_TYPE, protocol);
 	}
 
+	@Override
 	public SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol)
 			throws net.sf.sshapi.SshException {
 		return new MaverickAgent(application, location, socketType, protocol);

@@ -26,14 +26,15 @@ package net.sf.sshapi.impl.j2ssh;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.sshtools.j2ssh.session.PseudoTerminal;
+import com.sshtools.j2ssh.session.SessionChannelClient;
+
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
-import com.sshtools.j2ssh.session.PseudoTerminal;
-import com.sshtools.j2ssh.session.SessionChannelClient;
-
-class J2SshShell extends J2SshStreamChannel implements SshShell {
+class J2SshShell extends AbstractJ2SshStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 
 	public J2SshShell(SshConfiguration configuration, SessionChannelClient session) {
 		super(configuration, session);
@@ -57,7 +58,8 @@ class J2SshShell extends J2SshStreamChannel implements SshShell {
 		}
 	}
 
-	public void requestPseudoTerminalChange(final int width, final int height, final int pixw, final int pixh) throws SshException {
+	public void requestPseudoTerminalChange(final int width, final int height, final int pixw, final int pixh)
+			throws SshException {
 		try {
 			getShellChannel().changeTerminalDimensions(new PseudoTerminal() {
 

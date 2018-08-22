@@ -23,69 +23,18 @@
  */
 package net.sf.sshapi.impl.j2ssh;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import net.sf.sshapi.AbstractDataProducingComponent;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
-import net.sf.sshapi.util.Util;
-
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
-abstract class J2SshStreamChannel extends AbstractDataProducingComponent implements SshExtendedStreamChannel {
-	private final SessionChannelClient channel;
-	private final SshConfiguration configuration;
+import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshCommand;
+
+abstract class J2SshStreamChannel
+		extends AbstractJ2SshStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
 
 	public J2SshStreamChannel(SshConfiguration configuration, SessionChannelClient channel) {
-		this.channel = channel;
-		this.configuration = configuration;
+		super(configuration, channel);
 	}
 
-	public int exitCode() throws IOException {
-		Integer i = channel.getExitCode();
-		return i == null ? -1 : i.intValue();
-	}
-
-	public InputStream getInputStream() throws IOException {
-		return channel.getInputStream();
-	}
-
-	public OutputStream getOutputStream() throws IOException {
-		return channel.getOutputStream();
-	}
-
-	public InputStream getExtendedInputStream() throws IOException {
-		return channel.getStderrInputStream();
-	}
-
-	protected SessionChannelClient getChannel() {
-		return channel;
-	}
-
-	public final void onOpen() throws SshException {
-		if (configuration.getX11Cookie() != null) {
-			byte[] x11Cookie = configuration.getX11Cookie();
-			String hexCookie = Util.formatAsHexString(x11Cookie);
-			int x11Port = configuration.getX11Port();
-			try {
-				channel.requestX11Forwarding(x11Port - 6000, hexCookie);
-			} catch (IOException e) {
-				throw new SshException(SshException.IO_ERROR, e);
-			}
-		}
-		onChannelOpen();
-	}
-
-	public void onClose() throws SshException {
-		try {
-			channel.close();
-		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, e);
-		}
-	}
-
-	protected abstract void onChannelOpen() throws SshException;
 }

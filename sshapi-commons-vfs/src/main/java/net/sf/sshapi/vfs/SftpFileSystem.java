@@ -64,7 +64,7 @@ public class SftpFileSystem extends AbstractFileSystem {
 			}
 
 			if (ssh != null) {
-				ssh.disconnect();
+				ssh.close();
 				ssh = null;
 			}
 		} catch (Exception ex) {
@@ -101,8 +101,7 @@ public class SftpFileSystem extends AbstractFileSystem {
 				sftp = this.sftp;
 				this.sftp = null;
 			} else {
-				sftp = ssh.createSftpClient();
-				sftp.open();
+				sftp = ssh.sftp();
 				home = sftp.getDefaultPath();
 			}
 			return sftp;

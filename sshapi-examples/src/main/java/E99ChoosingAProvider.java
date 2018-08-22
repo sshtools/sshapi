@@ -24,25 +24,24 @@ public class E99ChoosingAProvider {
 			+ providers.length + ")")) - 1];
 
 		/**
-		 * Now re-use the {@link ShellWithConsolePrompts} example. Set the
-		 * system property to use a specific provider and run it
+		 * Set the
+		 * system property to use a specific provider 
 		 */
 		System.setProperty(DefaultProviderFactory.PROVIDER_CLASS_NAME, provider.getClass().getName());
-//		  E01Shell.main(arg);
-//		 E02ShellWithConsolePrompts.main(arg);
-		// E05X11Forwarding.main(arg);
-		// E03ShellWithGUIPrompts.main(arg);
-		// E04ExecuteCommand.main(arg);
-		// E06LocalForwarding.main(arg);
-//		E06bLocalForwardingAndShell.main(arg);
-		// E07RemoteForwarding.main(arg);
-		 E10PublicKeyAuthentication.main(arg);
-//		 E11KeyboardInteractiveAuthentication.main(arg);
-		// E14HostKeyManagement.main(arg);
-		// E15SCP.main(arg);
-//		 E08Sftp.main(arg);
-		// E17TunneledSocketFactory.main(arg);
-		// E18IdentityManagement.main(arg);
-		// E19ShellUsingGSSAPI.main(arg);
+		  
+		String[] tests = new String[] { "E01Shell", "E02ShellWithConsolePrompts", "E03ShellWithGUIPrompts",
+					"E04ExecuteCommand", "E05X11Forwarding", "E06bLocalForwardingAndShell", "E6LocalForwarding",
+					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeybboardInteractiveAuthentication",
+					"E12ChangeKeyPassphrase", "E13ExtendedHostKeyValidation", "E14HostKeyManagement",
+					"E15SCP", "E16PublicKeySubsystem", "E17TunneledSocketFactory", "E19ShellUsingGSSAPI",
+					"E20CustomChannel", "E21AgentAuthentication" };
+		System.out.println();
+		for(int i = 0 ; i < tests.length ; i++)
+			System.out.println((i+ 1) + ". " + tests[i]);
+
+		String test = tests[Integer.parseInt(Util.prompt("\n\nEnter the test number (1-"
+			+ tests.length + ")")) - 1];
+		
+		Class.forName(test).getMethod("main", String[].class).invoke(null, (Object)arg);
 	}
 }

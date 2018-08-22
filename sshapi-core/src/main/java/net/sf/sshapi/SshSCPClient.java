@@ -29,7 +29,7 @@ import java.io.File;
  * The SCP client. Supports simple get/put operations.
  * 
  */
-public interface SshSCPClient extends SshFileTransferClient {
+ public interface SshSCPClient extends SshFileTransferClient<SshLifecycleListener<SshSCPClient>, SshSCPClient> {
 	/**
 	 * Put a file or directory to a remote path.
 	 * 

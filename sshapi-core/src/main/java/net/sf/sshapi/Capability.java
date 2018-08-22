@@ -99,6 +99,11 @@ public class Capability {
 	 */
 	public final static Capability HOST_KEY_MANAGEMENT = new Capability("hostKeyManagment");
 	/**
+	 * The provider supports host key verification. See
+	 * {@link SshProvider#createHostKeyManager(SshConfiguration)}.
+	 */
+	public final static Capability HOST_KEY_VERIFICATION = new Capability("hostKeyVerification");
+	/**
 	 * The provider supports port forwarding events. See
 	 * {@link SshClient#addPortForwardListener(net.sf.sshapi.forwarding.SshPortForwardListener)}
 	 */
@@ -174,6 +179,14 @@ public class Capability {
 	 * The provider supports an SSH agent for key authentication.
 	 */
 	public final static Capability OPENSSH_AGENT = new Capability("openssh-agent");
+	/**
+	 * The provider supports X11 forwarding.
+	 */
+	public final static Capability X11_FORWARDING = new Capability("x11-forwarding");
+	/**
+	 * The provider supports a shell.
+	 */
+	public final static Capability SHELL = new Capability("shell");
 
 	private String name;
 

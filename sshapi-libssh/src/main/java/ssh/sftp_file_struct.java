@@ -41,8 +41,11 @@ public class sftp_file_struct extends Structure<sftp_file_struct, sftp_file_stru
 		this.nonblocking = nonblocking;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_file_struct newInstance() { return new sftp_file_struct(); }
 	public static sftp_file_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_file_struct.class, arrayLength);

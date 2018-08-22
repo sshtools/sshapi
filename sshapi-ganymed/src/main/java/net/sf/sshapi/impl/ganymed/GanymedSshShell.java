@@ -26,12 +26,13 @@ package net.sf.sshapi.impl.ganymed;
 import java.io.IOException;
 import java.io.InputStream;
 
+import ch.ethz.ssh2.Session;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
-import ch.ethz.ssh2.Session;
 
-class GanymedSshShell extends GanymedStreamChannel implements SshShell {
+class GanymedSshShell extends AbstractGanymedStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	public GanymedSshShell(SshConfiguration configuration, Session channel) throws SshException {
 		super(configuration, channel);
 	}

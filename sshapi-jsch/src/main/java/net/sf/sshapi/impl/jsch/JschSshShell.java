@@ -26,14 +26,16 @@ package net.sf.sshapi.impl.jsch;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.jcraft.jsch.ChannelShell;
+
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.util.Util;
 
-import com.jcraft.jsch.ChannelShell;
-
-abstract class JschSshShell extends JschStreamChannel implements SshShell {
+abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener<SshShell>, SshShell>
+		implements SshShell {
 
 	private InputStream ext;
 
@@ -41,16 +43,14 @@ abstract class JschSshShell extends JschStreamChannel implements SshShell {
 		super(configuration, channel);
 	}
 
+	@Override
 	protected final void onChannelOpen() throws SshException {
 		try {
-			
 
-				if (!Util.nullOrTrimmedBlank(getConfiguration().getX11Host())) {
-					((ChannelShell) getChannel()).setXForwarding(true);
-				}
-			
-			
-			
+			if (!Util.nullOrTrimmedBlank(getConfiguration().getX11Host())) {
+				((ChannelShell) getChannel()).setXForwarding(true);
+			}
+
 			ext = ((ChannelShell) getChannel()).getExtInputStream();
 		} catch (Exception ioe) {
 			throw new SshException(SshException.IO_ERROR, ioe);
@@ -60,10 +60,12 @@ abstract class JschSshShell extends JschStreamChannel implements SshShell {
 
 	protected abstract void onShellOpen() throws SshException;
 
+	@Override
 	public InputStream getExtendedInputStream() throws IOException {
 		return ext;
 	}
 
+	@Override
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
 		try {
 			((ChannelShell) getChannel()).setPtySize(width, height, pixw, pixh);

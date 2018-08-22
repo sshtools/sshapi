@@ -31,8 +31,11 @@ public class sftp_packet_struct extends Structure<sftp_packet_struct, sftp_packe
 		this.payload = payload;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_packet_struct newInstance() { return new sftp_packet_struct(); }
 	public static sftp_packet_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_packet_struct.class, arrayLength);

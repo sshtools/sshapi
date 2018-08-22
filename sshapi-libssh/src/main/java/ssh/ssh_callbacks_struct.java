@@ -77,8 +77,11 @@ public class ssh_callbacks_struct extends Structure<ssh_callbacks_struct, ssh_ca
 		this.global_request_function = global_request_function;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_callbacks_struct newInstance() { return new ssh_callbacks_struct(); }
 	public static ssh_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_callbacks_struct.class, arrayLength);

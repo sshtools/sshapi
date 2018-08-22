@@ -74,8 +74,11 @@ public class ssh_socket_callbacks_struct extends Structure<ssh_socket_callbacks_
 		this.connected = connected;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_socket_callbacks_struct newInstance() { return new ssh_socket_callbacks_struct(); }
 	public static ssh_socket_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_socket_callbacks_struct.class, arrayLength);

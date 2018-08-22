@@ -72,6 +72,7 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 		hkr = jsch.getHostKeyRepository();
 	}
 
+	@Override
 	public void add(SshHostKey hostKey, boolean persist) throws SshException {
 		if (!persist) {
 			temporaryKeys.add(hostKey);
@@ -81,25 +82,31 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 					hostKey.getType().equals(SshConfiguration.PUBLIC_KEY_SSHDSA) ? HostKey.SSHDSS : HostKey.SSHRSA, hostKey
 						.getKey()), new UserInfo() {
 
+					@Override
 					public void showMessage(String message) {
 					}
 
+					@Override
 					public boolean promptYesNo(String message) {
 						return true;
 					}
 
+					@Override
 					public boolean promptPassword(String message) {
 						return false;
 					}
 
+					@Override
 					public boolean promptPassphrase(String message) {
 						return false;
 					}
 
+					@Override
 					public String getPassword() {
 						return null;
 					}
 
+					@Override
 					public String getPassphrase() {
 						return null;
 					}
@@ -110,14 +117,17 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
+	@Override
 	public boolean isWriteable() {
 		return file.canWrite();
 	}
 
+	@Override
 	public void remove(SshHostKey hostKey) {
 		hkr.remove(hostKey.getHost(), hostKey.getType());
 	}
 
+	@Override
 	public SshHostKey[] getKeys() {
 		List hostKeys = new ArrayList();
 		HostKey[] keys = hkr.getHostKey();
@@ -129,6 +139,7 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
 	}
 
+	@Override
 	protected SshHostKey[] doGetKeysForHost(String host, String type) {
 		List keys = new ArrayList();
 
@@ -158,18 +169,22 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 			this.key = key;
 		}
 
+		@Override
 		public String getHost() {
 			return key.getHost();
 		}
 
+		@Override
 		public String getType() {
 			return key.getType();
 		}
 
+		@Override
 		public String getFingerprint() {
 			return key.getFingerPrint(jsch);
 		}
 
+		@Override
 		public byte[] getKey() {
 			try {
 				Method m = Class.forName("com.jcraft.jsch.Util").getDeclaredMethod("fromBase64",

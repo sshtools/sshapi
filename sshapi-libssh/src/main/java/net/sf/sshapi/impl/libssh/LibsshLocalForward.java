@@ -10,15 +10,14 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.sun.jna.Memory;
+
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
-
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.sun.jna.Memory;
 
 public class LibsshLocalForward extends AbstractPortForward implements SshPortForward, Runnable {
 
@@ -85,8 +84,8 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 			while (!closed) {
 				selector.select();
 				// Get keys
-				Set keys = selector.selectedKeys();
-				Iterator i = keys.iterator();
+				Set<?> keys = selector.selectedKeys();
+				Iterator<?> i = keys.iterator();
 
 				// For each keys...
 				while (i.hasNext()) {

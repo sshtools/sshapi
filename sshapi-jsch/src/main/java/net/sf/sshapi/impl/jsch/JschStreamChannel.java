@@ -23,72 +23,19 @@
  */
 package net.sf.sshapi.impl.jsch;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import net.sf.sshapi.AbstractDataProducingComponent;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
-
 import com.jcraft.jsch.Channel;
 
-abstract class JschStreamChannel extends AbstractDataProducingComponent implements SshExtendedStreamChannel {
-	private final Channel channel;
-	private final SshConfiguration configuration;
+import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshCommand;
 
-	private InputStream in;
-	private OutputStream out;
-	private InputStream ext;
+abstract class JschStreamChannel
+		extends AbstractJschStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
 
 	public JschStreamChannel(SshConfiguration configuration, Channel channel) throws SshException {
-		this.channel = channel;
-		this.configuration = configuration;
+		super(configuration, channel);
 	}
 
-	public int exitCode() throws IOException {
-		return channel.getExitStatus();
-	}
-
-	public InputStream getInputStream() throws IOException {
-		return in;
-	}
-
-	public OutputStream getOutputStream() throws IOException {
-		return out;
-	}
-
-	public InputStream getExtendedInputStream() throws IOException {
-		return ext;
-	}
-
-	protected Channel getChannel() {
-		return channel;
-	}
-
-	public void onClose() throws SshException {
-		channel.disconnect();
-	}
-
-	public void onOpen() throws SshException {
-		try {
-			in = channel.getInputStream();
-			out = channel.getOutputStream();
-			ext = channel.getExtInputStream();
-			channel.connect(Integer.parseInt(configuration.getProperties().getProperty(JschSshProvider.CFG_CHANNEL_CONNECT_TIMEOUT,
-				"3000")));
-		} catch (Exception e) {
-			throw new SshException("Failed to connect channel.", e);
-		}
-		onChannelOpen();
-	}
-
-	protected SshConfiguration getConfiguration() {
-		return configuration;
-	}
-
-	protected abstract void onChannelOpen() throws SshException;
-
-	protected abstract void onChannelClose() throws SshException;
 }

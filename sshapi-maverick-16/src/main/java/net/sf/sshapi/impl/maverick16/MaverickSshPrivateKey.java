@@ -13,6 +13,7 @@ public class MaverickSshPrivateKey implements com.maverick.ssh.components.SshPri
 		this.key = key;
 	}
 
+	@Override
 	public byte[] sign(byte[] data) throws IOException {
 		try {
 			return key.sign(data);
@@ -21,10 +22,12 @@ public class MaverickSshPrivateKey implements com.maverick.ssh.components.SshPri
 		}
 	}
 
+	@Override
 	public PrivateKey getJCEPrivateKey() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public String getAlgorithm() {
 		return key.getAlgorithm();
 	}

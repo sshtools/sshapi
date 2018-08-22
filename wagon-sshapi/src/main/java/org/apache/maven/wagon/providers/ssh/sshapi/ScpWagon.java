@@ -81,14 +81,15 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 		if (channel != null) {
 			try {
 				channel.close();
-			} catch (SshException e) {
+			} catch (IOException e) {
 				fireSessionError(e);
 			}
 			channel = null;
 		}
 	}
 
-	protected void finishPutTransfer(Resource resource, InputStream input, OutputStream output) throws TransferFailedException {
+	protected void finishPutTransfer(Resource resource, InputStream input, OutputStream output)
+			throws TransferFailedException {
 		try {
 			sendEom(output);
 
@@ -127,7 +128,8 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 		}
 	}
 
-	protected void finishGetTransfer(Resource resource, InputStream input, OutputStream output) throws TransferFailedException {
+	protected void finishGetTransfer(Resource resource, InputStream input, OutputStream output)
+			throws TransferFailedException {
 		try {
 			checkAck(input);
 
@@ -141,14 +143,14 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 		if (channel != null) {
 			try {
 				channel.close();
-			} catch (SshException e) {
+			} catch (IOException e) {
 				fireSessionError(e);
 			}
 		}
 	}
 
-	protected void getTransfer(Resource resource, OutputStream output, InputStream input, boolean closeInput, int maxSize)
-			throws TransferFailedException {
+	protected void getTransfer(Resource resource, OutputStream output, InputStream input, boolean closeInput,
+			int maxSize) throws TransferFailedException {
 		super.getTransfer(resource, output, input, closeInput, (int) resource.getContentLength());
 	}
 
@@ -190,74 +192,75 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 
 		fireTransferDebug("Executing command: " + cmd);
 
-//		try {
-//			channel = session.createSCPClient();
-//
-//			// get I/O streams for remote scp
-//			channelOutputStream = channel.getOutputStream();
-//
-//			InputStream in = channel.getInputStream();
-//			inputData.setInputStream(in);
-//
-//			channel.connect();
-//
-//			sendEom(channelOutputStream);
-//
-//			int exitCode = in.read();
-//
-//			if (exitCode == 'T') {
-//				String line = readLine(in);
-//
-//				String[] times = line.split(" ");
-//
-//				resource.setLastModified(Long.valueOf(times[0]).longValue() * 1000);
-//
-//				sendEom(channelOutputStream);
-//
-//				exitCode = in.read();
-//			}
-//
-//			String line = readLine(in);
-//
-//			if (exitCode != COPY_START_CHAR) {
-//				if (exitCode == 1
-//					&& (line.indexOf("No such file or directory") != -1 || line.indexOf("no such file or directory") != 1)) {
-//					throw new ResourceDoesNotExistException(line);
-//				} else {
-//					throw new IOException("Exit code: " + exitCode + " - " + line);
-//				}
-//			}
-//
-//			if (line == null) {
-//				throw new EOFException("Unexpected end of data");
-//			}
-//
-//			String perms = line.substring(0, 4);
-//			fireTransferDebug("Remote file permissions: " + perms);
-//
-//			if (line.charAt(4) != ACK_SEPARATOR && line.charAt(5) != ACK_SEPARATOR) {
-//				throw new IOException("Invalid transfer header: " + line);
-//			}
-//
-//			int index = line.indexOf(ACK_SEPARATOR, 5);
-//			if (index < 0) {
-//				throw new IOException("Invalid transfer header: " + line);
-//			}
-//
-//			int filesize = Integer.valueOf(line.substring(5, index)).intValue();
-//			fireTransferDebug("Remote file size: " + filesize);
-//
-//			resource.setContentLength(filesize);
-//
-//			String filename = line.substring(index + 1);
-//			fireTransferDebug("Remote filename: " + filename);
-//
-//			sendEom(channelOutputStream);
-//		} catch (SshException e) {
-//			handleGetException(resource, e);
-//		} catch (IOException e) {
-//			handleGetException(resource, e);
-//		}
+		// try {
+		// channel = session.createSCPClient();
+		//
+		// // get I/O streams for remote scp
+		// channelOutputStream = channel.getOutputStream();
+		//
+		// InputStream in = channel.getInputStream();
+		// inputData.setInputStream(in);
+		//
+		// channel.connect();
+		//
+		// sendEom(channelOutputStream);
+		//
+		// int exitCode = in.read();
+		//
+		// if (exitCode == 'T') {
+		// String line = readLine(in);
+		//
+		// String[] times = line.split(" ");
+		//
+		// resource.setLastModified(Long.valueOf(times[0]).longValue() * 1000);
+		//
+		// sendEom(channelOutputStream);
+		//
+		// exitCode = in.read();
+		// }
+		//
+		// String line = readLine(in);
+		//
+		// if (exitCode != COPY_START_CHAR) {
+		// if (exitCode == 1
+		// && (line.indexOf("No such file or directory") != -1 || line.indexOf("no such
+		// file or directory") != 1)) {
+		// throw new ResourceDoesNotExistException(line);
+		// } else {
+		// throw new IOException("Exit code: " + exitCode + " - " + line);
+		// }
+		// }
+		//
+		// if (line == null) {
+		// throw new EOFException("Unexpected end of data");
+		// }
+		//
+		// String perms = line.substring(0, 4);
+		// fireTransferDebug("Remote file permissions: " + perms);
+		//
+		// if (line.charAt(4) != ACK_SEPARATOR && line.charAt(5) != ACK_SEPARATOR) {
+		// throw new IOException("Invalid transfer header: " + line);
+		// }
+		//
+		// int index = line.indexOf(ACK_SEPARATOR, 5);
+		// if (index < 0) {
+		// throw new IOException("Invalid transfer header: " + line);
+		// }
+		//
+		// int filesize = Integer.valueOf(line.substring(5, index)).intValue();
+		// fireTransferDebug("Remote file size: " + filesize);
+		//
+		// resource.setContentLength(filesize);
+		//
+		// String filename = line.substring(index + 1);
+		// fireTransferDebug("Remote filename: " + filename);
+		//
+		// sendEom(channelOutputStream);
+		// } catch (SshException e) {
+		// handleGetException(resource, e);
+		// } catch (IOException e) {
+		// handleGetException(resource, e);
+		// }
 	}
 
 	public void fillOutputData(OutputData outputData) throws TransferFailedException {
@@ -291,51 +294,54 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 		String resourceName = resource.getName();
 
 		OutputStream out = null;
-//		try {
-//			channel = (ChannelExec) session.openChannel(EXEC_CHANNEL);
-//
-//			channel.setCommand(command);
-//
-//			// get I/O streams for remote scp
-//			out = channel.getOutputStream();
-//			outputData.setOutputStream(out);
-//
-//			channelInputStream = channel.getInputStream();
-//
-//			channel.connect();
-//
-//			checkAck(channelInputStream);
-//
-//			// send "C0644 filesize filename", where filename should not include
-//			// '/'
-//			long filesize = resource.getContentLength();
-//
-//			String mode = octalMode == null ? "0644" : octalMode;
-//			command = "C" + mode + " " + filesize + " ";
-//
-//			if (resourceName.lastIndexOf(ScpHelper.PATH_SEPARATOR) > 0) {
-//				command += resourceName.substring(resourceName.lastIndexOf(ScpHelper.PATH_SEPARATOR) + 1);
-//			} else {
-//				command += resourceName;
-//			}
-//
-//			command += "\n";
-//
-//			out.write(command.getBytes());
-//
-//			out.flush();
-//
-//			checkAck(channelInputStream);
-//		} catch (SshException e) {
-//			fireTransferError(resource, e, TransferEvent.REQUEST_PUT);
-//
-//			String msg = "Error occurred while deploying '" + resourceName + "' to remote repository: " + getRepository().getUrl()
-//				+ ": " + e.getMessage();
-//
-//			throw new TransferFailedException(msg, e);
-//		} catch (IOException e) {
-//			handleIOException(resource, e);
-//		}
+		// try {
+		// channel = (ChannelExec) session.openChannel(EXEC_CHANNEL);
+		//
+		// channel.setCommand(command);
+		//
+		// // get I/O streams for remote scp
+		// out = channel.getOutputStream();
+		// outputData.setOutputStream(out);
+		//
+		// channelInputStream = channel.getInputStream();
+		//
+		// channel.connect();
+		//
+		// checkAck(channelInputStream);
+		//
+		// // send "C0644 filesize filename", where filename should not include
+		// // '/'
+		// long filesize = resource.getContentLength();
+		//
+		// String mode = octalMode == null ? "0644" : octalMode;
+		// command = "C" + mode + " " + filesize + " ";
+		//
+		// if (resourceName.lastIndexOf(ScpHelper.PATH_SEPARATOR) > 0) {
+		// command +=
+		// resourceName.substring(resourceName.lastIndexOf(ScpHelper.PATH_SEPARATOR) +
+		// 1);
+		// } else {
+		// command += resourceName;
+		// }
+		//
+		// command += "\n";
+		//
+		// out.write(command.getBytes());
+		//
+		// out.flush();
+		//
+		// checkAck(channelInputStream);
+		// } catch (SshException e) {
+		// fireTransferError(resource, e, TransferEvent.REQUEST_PUT);
+		//
+		// String msg = "Error occurred while deploying '" + resourceName + "' to remote
+		// repository: " + getRepository().getUrl()
+		// + ": " + e.getMessage();
+		//
+		// throw new TransferFailedException(msg, e);
+		// } catch (IOException e) {
+		// handleIOException(resource, e);
+		// }
 	}
 
 	private void handleIOException(Resource resource, IOException e) throws TransferFailedException {
@@ -345,7 +351,7 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 			fireTransferError(resource, e, TransferEvent.REQUEST_PUT);
 
 			String msg = "Error occurred while deploying '" + resource.getName() + "' to remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+					+ getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		}
@@ -354,7 +360,8 @@ public class ScpWagon extends AbstractSSHAPIWagon {
 	/**
 	 * Get the octal mode given a {@link RepositoryPermissions}.
 	 * 
-	 * @param permissions permissions
+	 * @param permissions
+	 *            permissions
 	 * @return octal code
 	 */
 	public String getOctalMode(RepositoryPermissions permissions) {

@@ -36,8 +36,11 @@ public class sftp_statvfs_struct extends Structure<sftp_statvfs_struct, sftp_sta
 	protected void initFieldOrder() {
 		setFieldOrder(new java.lang.String[]{"f_bsize", "f_frsize", "f_blocks", "f_bfree", "f_bavail", "f_files", "f_ffree", "f_favail", "f_fsid", "f_flag", "f_namemax"});
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_statvfs_struct newInstance() { return new sftp_statvfs_struct(); }
 	public static sftp_statvfs_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_statvfs_struct.class, arrayLength);

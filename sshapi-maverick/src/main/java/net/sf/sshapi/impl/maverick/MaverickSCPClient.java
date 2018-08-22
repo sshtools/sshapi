@@ -26,6 +26,7 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 	private String targetPath;
 	private long lastProgress;
 
+	@Override
 	protected void onClose() throws net.sf.sshapi.SshException {
 		try {
 			scpClient.exit();
@@ -35,6 +36,7 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 		super.onClose();
 	}
 
+	@Override
 	protected void onOpen() throws net.sf.sshapi.SshException {
 		try {
 			scpClient = new ScpClient(new File(System.getProperty("user.dir")), this.maverickSshClient.client);
@@ -45,6 +47,7 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 
 	}
 
+	@Override
 	public void get(String remoteFilePath, File destinationFile, boolean recursive) throws net.sf.sshapi.SshException {
 		try {
 			scpClient.get(destinationFile.getAbsolutePath(), remoteFilePath, recursive, this);
@@ -53,6 +56,7 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 		}
 	}
 
+	@Override
 	public void doPut(String remotePath, String mode, File sourceFile, boolean recursive) throws net.sf.sshapi.SshException {
 		try {
 			targetPath = remotePath;
@@ -62,20 +66,24 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 		}
 	}
 
+	@Override
 	public void completed() {
 		fireFileTransferFinished(path, targetPath);
 
 	}
 
+	@Override
 	public boolean isCancelled() {
 		return false;
 	}
 
+	@Override
 	public void progressed(long arg0) {		
 		fireFileTransferProgressed(path, targetPath, arg0 - lastProgress);
 		lastProgress = arg0;
 	}
 
+	@Override
 	public void started(long arg0, String arg1) {
 		path = arg1;
 		lastProgress = 0;

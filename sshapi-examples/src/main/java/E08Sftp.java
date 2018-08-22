@@ -1,13 +1,14 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.nio.file.FileSystemException;
 import java.text.DateFormat;
 import java.util.Date;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
@@ -24,7 +25,8 @@ public class E08Sftp {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -33,26 +35,17 @@ public class E08Sftp {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Create the client using that configuration
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
-
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
 		String host = ExampleUtilities.extractHostname(connectionSpec);
 		String user = ExampleUtilities.extractUsername(connectionSpec);
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
-		// Connect, authenticate
-		client.connect(user, host, port);
-		client.authenticate(new SshAuthenticator[] { new ConsolePasswordAuthenticator(), new ConsoleKeyboardInteractiveAuthenticator() });
-
-		try {
+		// Create the client using that configuration and connect and authenticate
+		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator(),
+				new ConsoleKeyboardInteractiveAuthenticator())) {
 			// Create and open the sftp client
-			SftpClient sftp = client.createSftpClient();
-			sftp.open();
-
-			try {
+			try (SftpClient sftp = client.sftp()) {
 				String cwd = sftp.getDefaultPath();
 				while (true) {
 					String cmd = Util.prompt("sftp");
@@ -68,12 +61,17 @@ public class E08Sftp {
 							System.out.println("put <filename> - upload local file");
 							System.out.println("rename <old> <new> - rename file");
 						} else if (cmd.equals("ls")) {
-							SftpFile[] files = sftp.ls(cwd);
-							for (int i = 0; i < files.length; i++) {
-								System.out.println(String.format("%10s %-30s %8d %15s", new Object[] {
-									Util.getPermissionsString(files[i].getType(), files[i].getPermissions()), files[i].getName(),
-									Long.valueOf(files[i].getSize()),
-									DateFormat.getDateTimeInstance().format(new Date(files[i].getLastModified()))}));
+							for (int j = 0; j< 100; j++) {
+								SftpFile[] files = sftp.ls(cwd);
+								for (int i = 0; i < files.length; i++) {
+									System.out.println(String.format("%10s %-30s %8d %15s",
+											new Object[] {
+													Util.getPermissionsString(files[i].getType(),
+															files[i].getPermissions()),
+													files[i].getName(), Long.valueOf(files[i].getSize()),
+													DateFormat.getDateTimeInstance()
+															.format(new Date(files[i].getLastModified())) }));
+								}
 							}
 						} else if (cmd.equals("exit")) {
 							break;
@@ -83,11 +81,15 @@ public class E08Sftp {
 							if (cmd.length() > 3) {
 								String newCwd = cmd.substring(3);
 								newCwd = translatePath(cwd, newCwd);
-								SftpFile file = sftp.stat(newCwd);
-								if (file.isDirectory()) {
-									cwd = newCwd;
-								} else {
-									System.out.println("Not a directory!");
+								try {
+									SftpFile file = sftp.stat(newCwd);
+									if (file.isDirectory()) {
+										cwd = newCwd;
+									} else {
+										System.out.println("Not a directory!");
+									}
+								} catch (FileNotFoundException fnfe) {
+									System.out.println("Directory " + newCwd + " not found");
 								}
 							} else {
 								cwd = sftp.getDefaultPath();
@@ -158,13 +160,13 @@ public class E08Sftp {
 						}
 					} catch (SftpException sftpe) {
 						System.out.println("ERR: " + sftpe.getCode() + " - " + sftpe.getLocalizedMessage());
+					} catch (FileNotFoundException fnfe) {
+						System.out.println("ERR: " + fnfe.getMessage());
+					} catch (FileSystemException fnfe) {
+						System.out.println("ERR: " + fnfe.getMessage());
 					}
 				}
-			} finally {
-				sftp.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 
 	}

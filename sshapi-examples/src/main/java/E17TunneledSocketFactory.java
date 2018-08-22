@@ -24,7 +24,8 @@ public class E17TunneledSocketFactory {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -33,10 +34,7 @@ public class E17TunneledSocketFactory {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Create the client using that configuration
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
-		SshClient client = provider.createClient(config);
-		ExampleUtilities.dumpClientInfo(client);
 
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
@@ -45,17 +43,15 @@ public class E17TunneledSocketFactory {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate, and start the simple shell
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
+		try (SshClient client = provider.open(config, user, host, port, new ConsolePasswordAuthenticator())) {
 
-		try {
 			SocketFactory sf = client.createTunneledSocketFactory();
 
 			/*
-			 * Make a connection back to the SSH server we are connection from
-			 * and read the first line of output. This could be any host that is
-			 * accessible from the remote SSH server, localhost:22 is just used
-			 * as we know something will be running there!
+			 * Make a connection back to the SSH server we are connection from and read the
+			 * first line of output. This could be any host that is accessible from the
+			 * remote SSH server, localhost:22 is just used as we know something will be
+			 * running there!
 			 */
 			Socket socket = sf.createSocket("localhost", 22);
 			try {
@@ -64,8 +60,6 @@ public class E17TunneledSocketFactory {
 			} finally {
 				socket.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 
 	}

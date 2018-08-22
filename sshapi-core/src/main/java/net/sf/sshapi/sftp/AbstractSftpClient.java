@@ -23,31 +23,31 @@
  */
 package net.sf.sshapi.sftp;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.nio.file.FileSystemException;
 import java.util.StringTokenizer;
 
-import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
+import net.sf.sshapi.AbstractFileTransferClient;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.util.Util;
 
 /**
  * Abstract implementation of an {@link SftpClient}, providing some common
- * methods. All provider implentations will probably want to exted this.
+ * methods. All provider implementations will probably want to extend this.
  */
-public abstract class AbstractSftpClient extends AbstractLifecycleComponentWithEvents implements SftpClient {
+public abstract class AbstractSftpClient
+		extends AbstractFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient> implements SftpClient {
 
-	/**
-	 * Default implementation of {@link #mkdirs(String, int)} that uses
-	 * {@link #mkdir(String, int)}.
-	 * 
-	 * @param path path
-	 * @param permissions permissions
-	 * @throws SshException on any error
-	 */
-	public void mkdirs(String dir, int permissions) throws SshException {
+	@Override
+	public void mkdirs(String dir, int permissions) throws SshException, FileSystemException, FileNotFoundException {
 		StringTokenizer tokens = new StringTokenizer(dir, "/");
 		String path = dir.startsWith("/") ? "/" : "";
 
@@ -67,32 +67,47 @@ public abstract class AbstractSftpClient extends AbstractLifecycleComponentWithE
 			path += "/";
 		}
 	}
-	
 
+	@Override
+	public void get(String path, File destination) throws SshException {
+		if (destination.isDirectory())
+			destination = new File(destination, Util.basename(path));
+		try (OutputStream out = new FileOutputStream(destination)) {
+			get(path, out);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
 
-	public void get(String path, OutputStream out, long filePointer) throws SshException {
-		if(filePointer > 0) {
-			throw new UnsupportedOperationException("This provider does not support setting of file pointer for downloads.");
+	@Override
+	public void get(String path, OutputStream out, long filePointer) throws SshException, FileNotFoundException {
+		if (filePointer > 0) {
+			throw new UnsupportedOperationException(
+					"This provider does not support setting of file pointer for downloads.");
 		}
 		get(path, out);
 	}
 
-	public InputStream get(String path, long filePointer) throws SshException {
-		if(filePointer > 0) {
-			throw new UnsupportedOperationException("This provider does not support setting of file pointer for downloads.");
+	@Override
+	public InputStream get(String path, long filePointer) throws SshException, FileNotFoundException {
+		if (filePointer > 0) {
+			throw new UnsupportedOperationException(
+					"This provider does not support setting of file pointer for downloads.");
 		}
 		return get(path);
 	}
 
-	public InputStream get(final String path) throws SshException {
+	@Override
+	public InputStream get(final String path) throws SshException, FileNotFoundException {
 		try {
 			final PipedOutputStream pout = new PipedOutputStream();
 			PipedInputStream pin = new PipedInputStream(pout);
 			new Thread() {
+				@Override
 				public void run() {
 					try {
 						get(path, pout);
-					} catch (SshException sshe) {
+					} catch (SshException | FileNotFoundException sshe) {
 					}
 				}
 			}.start();
@@ -102,15 +117,18 @@ public abstract class AbstractSftpClient extends AbstractLifecycleComponentWithE
 		}
 	}
 
-	public OutputStream put(final String path, final int permissions) throws SshException {
+	@Override
+	public OutputStream put(final String path, final int permissions) throws SshException, FileSystemException {
 		final PipedInputStream pin = new PipedInputStream();
 		try {
 			PipedOutputStream pout = new PipedOutputStream(pin);
 			new Thread() {
+				@Override
 				public void run() {
 					try {
 						put(path, pin, permissions);
 					} catch (SshException sshe) {
+					} catch (FileSystemException e) {
 					}
 				}
 			}.start();
@@ -119,9 +137,10 @@ public abstract class AbstractSftpClient extends AbstractLifecycleComponentWithE
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}
-	
-	public OutputStream put(final String path, final int permissions, long offset) throws SshException {
-		if(offset > 0) {
+
+	@Override
+	public OutputStream put(final String path, final int permissions, long offset) throws SshException, FileSystemException {
+		if (offset > 0) {
 			throw new UnsupportedOperationException();
 		}
 		return put(path, permissions);

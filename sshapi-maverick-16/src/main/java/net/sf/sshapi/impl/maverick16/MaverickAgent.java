@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -19,11 +18,9 @@ import com.maverick.util.IOUtil;
 import net.sf.sshapi.DefaultChannelData;
 import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshChannel.ChannelData;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshDataProducingComponent;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshLifecycleComponent;
-import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.identity.SshKeyPair;
@@ -105,23 +102,28 @@ public class MaverickAgent implements SshAgent {
 		return sshAgent;
 	}
 
+	@Override
 	public String[] getSupportChannelNames() {
 		return new String[] { "auth-agent", "auth-agent@openssh.com" };
 	}
 
+	@Override
 	public ChannelData createChannel(String channelName, byte[] requestData) {
 		return new DefaultChannelData(32768, 32768, 0, requestData);
 	}
 
+	@Override
 	public void channelCreated(SshChannel channel) throws IOException {
 
 		try {
 			final Socket socket = SshAgentClient.connectAgentSocket(location, agentSocketType);
-			channel.addListener(new SshLifecycleListener() {
+			channel.addListener(new SshChannelListener<SshChannel>() {
 
-				public void opened(SshLifecycleComponent ch) {
-					final SshChannel channel = (SshChannel) ch;
+				@Override
+				public void opened(SshChannel ch) {
+					final SshChannel channel = ch;
 					Thread t = new Thread() {
+						@Override
 						public void run() {
 							try {
 								IOUtil.copy(socket.getInputStream(), channel.getOutputStream());
@@ -129,7 +131,7 @@ public class MaverickAgent implements SshAgent {
 								LOG.error("I/O error during socket transfer", e);
 								try {
 									channel.close();
-								} catch (SshException e1) {
+								} catch (IOException e1) {
 								}
 							}
 						}
@@ -137,24 +139,18 @@ public class MaverickAgent implements SshAgent {
 
 					t.start();
 				}
-
-				public void closing(SshLifecycleComponent channel) {
-				}
-
-				public void closed(SshLifecycleComponent channel) {
-				}
 			});
-			channel.addDataListener(new SshDataListener() {
+			channel.addDataListener(new SshDataListener<SshChannel>() {
 
-				public void data(SshDataProducingComponent ch, int direction, byte[] buf, int off, int len) {
-					final SshChannel channel = (SshChannel) ch;
+				@Override
+				public void data(SshChannel ch, int direction, byte[] buf, int off, int len) {
 					try {
 						socket.getOutputStream().write(buf, off, len);
 					} catch (IOException e) {
 						LOG.error("I/O error during socket transfer", e);
 						try {
-							channel.close();
-						} catch (SshException e1) {
+							ch.close();
+						} catch (IOException e1) {
 						}
 					}
 				}
@@ -164,10 +160,12 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public void close() throws IOException {
 		sshAgent.close();
 	}
 
+	@Override
 	public void addKey(SshKeyPair keyPair, String description) throws SshException {
 		KeyConstraints keyConstraints = new KeyConstraints();
 		try {
@@ -178,14 +176,14 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
-	public Map listKeys() throws SshException {
+	@Override
+	public Map<SshPublicKey, String> listKeys() throws SshException {
 		try {
-			Map nativeKeys = sshAgent.listKeys();
-			Map keys = new HashMap();
-			for (Iterator it = nativeKeys.keySet().iterator(); it.hasNext();) {
-				com.maverick.ssh.components.SshPublicKey pk = (com.maverick.ssh.components.SshPublicKey) it.next();
+			Map<com.maverick.ssh.components.SshPublicKey, String> nativeKeys = sshAgent.listKeys();
+			Map<SshPublicKey, String> keys = new HashMap<>();
+			for (Map.Entry<com.maverick.ssh.components.SshPublicKey, String> en : nativeKeys.entrySet()) {
 				try {
-					keys.put(new MaverickPublicKey(pk), nativeKeys.get(pk));
+					keys.put(new MaverickPublicKey(en.getKey()), en.getValue());
 				} catch (com.maverick.ssh.SshException e) {
 					throw new SshException(SshException.GENERAL, "Failed to convert key to SSHAPI.", e);
 				}
@@ -196,6 +194,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public boolean lockAgent(String password) throws SshException {
 		try {
 			return sshAgent.lockAgent(password);
@@ -204,6 +203,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public boolean unlockAgent(String password) throws SshException {
 		try {
 			return sshAgent.unlockAgent(password);
@@ -212,6 +212,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public byte[] getRandomData(int count) throws SshException {
 		try {
 			return sshAgent.getRandomData(count);
@@ -220,6 +221,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public void deleteKey(SshPublicKey key, String description) throws SshException {
 		try {
 			sshAgent.deleteKey(new MaverickSshPublicKey(key), description);
@@ -228,6 +230,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public byte[] hashAndSign(SshPublicKey key, byte[] data) throws SshException {
 		try {
 			return sshAgent.hashAndSign(new MaverickSshPublicKey(key), data);
@@ -236,6 +239,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public void deleteAllKeys() throws SshException {
 		try {
 			sshAgent.deleteAllKeys();
@@ -244,6 +248,7 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	@Override
 	public void ping(byte[] padding) throws SshException {
 		try {
 			sshAgent.ping(padding);

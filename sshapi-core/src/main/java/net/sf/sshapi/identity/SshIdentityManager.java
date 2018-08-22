@@ -110,7 +110,7 @@ public interface SshIdentityManager {
 	 * 
 	 * @return supported key types
 	 */
-	List getSupportedKeyTypes();
+	List<String> getSupportedKeyTypes();
 
 	/**
 	 * Get a list of all the supported key lengths. Each element is an
@@ -118,7 +118,7 @@ public interface SshIdentityManager {
 	 * 
 	 * @return listed of supprted key lengths
 	 */
-	List getSupportedKeyLengths();
+	List<Integer> getSupportedKeyLengths();
 
 	/**
 	 * Get a list of all the supported public key file formats that may be
@@ -128,7 +128,7 @@ public interface SshIdentityManager {
 	 * @return supported public key file formats
 	 * @see SshPublicKeyFile
 	 */
-	List getSupportedPublicKeyFileFormats();
+	List<Integer> getSupportedPublicKeyFileFormats();
 
 	/**
 	 * Get a list of all the supported private key file formats that may be
@@ -138,7 +138,7 @@ public interface SshIdentityManager {
 	 * @return supported public key file formats
 	 * @see SshPublicKeyFile
 	 */
-	List getSupportedPrivateKeyFileFormats();
+	List<Integer> getSupportedPrivateKeyFileFormats();
 
 	/**
 	 * Create a Public Key File that may be used to write authorized_keys files

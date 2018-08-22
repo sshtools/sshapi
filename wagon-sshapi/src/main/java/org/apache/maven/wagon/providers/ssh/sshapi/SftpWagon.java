@@ -67,7 +67,7 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		if (channel != null) {
 			try {
 				channel.close();
-			} catch (SshException sshe) {
+			} catch (IOException sshe) {
 			}
 		}
 		super.closeConnection();
@@ -96,8 +96,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		}
 	}
 
-	private void putFile(File source, Resource resource, RepositoryPermissions permissions) throws TransferFailedException,
-			IOException, SshException {
+	private void putFile(File source, Resource resource, RepositoryPermissions permissions)
+			throws TransferFailedException, IOException, SshException {
 		resource.setContentLength(source.length());
 
 		resource.setLastModified(source.lastModified());
@@ -170,7 +170,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		}
 	}
 
-	private SftpFile changeToRepositoryDirectory(String dir, String filename) throws ResourceDoesNotExistException, SshException {
+	private SftpFile changeToRepositoryDirectory(String dir, String filename)
+			throws ResourceDoesNotExistException, SshException {
 		// This must be called first to ensure that if the file doesn't exist it
 		// throws an exception
 		SftpFile attrs;
@@ -198,8 +199,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		return attrs;
 	}
 
-	public void putDirectory(File sourceDirectory, String destinationDirectory) throws TransferFailedException,
-			ResourceDoesNotExistException, AuthorizationException {
+	public void putDirectory(File sourceDirectory, String destinationDirectory)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 		final RepositoryPermissions permissions = repository.getPermissions();
 
 		try {
@@ -211,18 +212,18 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 			mkdirs(basedir + "/", directoryMode);
 
 			fireTransferDebug("Recursively uploading directory " + sourceDirectory.getAbsolutePath() + " as "
-				+ destinationDirectory);
+					+ destinationDirectory);
 
 			mkdirs(destinationDirectory, directoryMode);
 			ftpRecursivePut(sourceDirectory, null, ScpHelper.getResourceFilename(destinationDirectory), directoryMode);
 		} catch (SshException e) {
-			String msg = "Error occurred while deploying '" + sourceDirectory.getAbsolutePath() + "' " + "to remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+			String msg = "Error occurred while deploying '" + sourceDirectory.getAbsolutePath() + "' "
+					+ "to remote repository: " + getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		} catch (IOException e) {
-			String msg = "Error occurred while deploying '" + sourceDirectory.getAbsolutePath() + "' " + "to remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+			String msg = "Error occurred while deploying '" + sourceDirectory.getAbsolutePath() + "' "
+					+ "to remote repository: " + getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		}
@@ -277,8 +278,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		return prefix;
 	}
 
-	public List getFileList(String destinationDirectory) throws TransferFailedException, ResourceDoesNotExistException,
-			AuthorizationException {
+	public List getFileList(String destinationDirectory)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 		if (destinationDirectory.length() == 0) {
 			destinationDirectory = ".";
 		}
@@ -316,7 +317,7 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 			return files;
 		} catch (SshException e) {
 			String msg = "Error occurred while listing '" + destinationDirectory + "' " + "on remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+					+ getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		}
@@ -339,7 +340,7 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 			return false;
 		} catch (SshException e) {
 			String msg = "Error occurred while looking for '" + resourceName + "' " + "on remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+					+ getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		}
@@ -353,7 +354,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		returnToParentDirectory(resource);
 	}
 
-	protected void finishPutTransfer(Resource resource, InputStream input, OutputStream output) throws TransferFailedException {
+	protected void finishPutTransfer(Resource resource, InputStream input, OutputStream output)
+			throws TransferFailedException {
 		RepositoryPermissions permissions = getRepository().getPermissions();
 
 		String filename = ScpHelper.getResourceFilename(resource.getName());
@@ -409,16 +411,17 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 			fireTransferError(resource, e, TransferEvent.REQUEST_PUT);
 
 			String msg = "Error occurred while deploying '" + resource.getName() + "' " + "to remote repository: "
-				+ getRepository().getUrl() + ": " + e.getMessage();
+					+ getRepository().getUrl() + ": " + e.getMessage();
 
 			throw new TransferFailedException(msg, e);
 		}
 	}
 
 	/**
-	 * @param permissions repository's permissions
-	 * @return the directory mode for the repository or <code>-1</code> if it
-	 *         wasn't set
+	 * @param permissions
+	 *            repository's permissions
+	 * @return the directory mode for the repository or <code>-1</code> if it wasn't
+	 *         set
 	 */
 	public int getDirectoryMode(RepositoryPermissions permissions) {
 		int ret = -1;
@@ -433,7 +436,8 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 	/**
 	 * Get the integer permission value given an octal mode string.
 	 * 
-	 * @param mode mode string
+	 * @param mode
+	 *            mode string
 	 * @return integer permission value
 	 */
 	public int getOctalMode(String mode) {

@@ -33,8 +33,11 @@ public class sftp_session_struct extends Structure<sftp_session_struct, sftp_ses
 	protected void initFieldOrder() {
 		setFieldOrder(new java.lang.String[]{"session", "channel", "server_version", "client_version", "version", "queue", "id_counter", "errnum", "handles", "ext"});
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_session_struct newInstance() { return new sftp_session_struct(); }
 	public static sftp_session_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_session_struct.class, arrayLength);

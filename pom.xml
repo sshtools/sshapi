@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
-		<sourceRelease>1.4</sourceRelease>
-		<targetRelease>1.4</targetRelease>
-		<reportTargetRelease>1.4</reportTargetRelease>
+		<sourceRelease>1.8</sourceRelease>
+		<targetRelease>1.8</targetRelease>
+		<reportTargetRelease>1.7</reportTargetRelease>
 		<!-- Distribution properties. -->
 		<sfUser>SOMEUSER</sfUser>
 		<releasesRepositoryDeploymentLocation>file:///${basedir}/../sshapi-mvn/releases</releasesRepositoryDeploymentLocation>
@@ -20,11 +20,12 @@
 		<!-- To compile Maverick bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
+		<maverickNGVersion>2.0.1-SNAPSHOT</maverickNGVersion>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1.2</version>
+	<version>2.0.0-SNAPSHOT</version>
 	<name>SSHAPI Group</name>
 	<description>Parent project for all SSHAPI modules</description>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
@@ -330,6 +331,7 @@
 		<module>sshapi-examples</module>
 		<module>sshapi-maverick</module>
 		<module>sshapi-maverick-16</module>
+		<module>sshapi-maverick-ng</module>
 		<module>sshapi-ganymed</module>
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>

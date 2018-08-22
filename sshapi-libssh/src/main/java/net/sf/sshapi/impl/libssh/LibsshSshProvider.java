@@ -28,34 +28,31 @@ import java.util.List;
 
 import com.sun.jna.CallbackProxy;
 
-import ssh.SshLibrary;
-
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import ssh.SshLibrary;
 
 public class LibsshSshProvider extends AbstractProvider {
-	
 	static class JavaThreading implements CallbackProxy {
-
 		public Object callback(Object[] args) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
-		public Class[] getParameterTypes() {
+		public Class<?>[] getParameterTypes() {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
-		public Class getReturnType() {
+		public Class<?> getReturnType() {
 			// TODO Auto-generated method stub
 			return null;
 		}
-		
 	}
 
 	static {
@@ -64,14 +61,27 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	public LibsshSshProvider() {
 		super("libssh");
+		String ver = SshLibrary.INSTANCE.ssh_version(0);
+		SshConfiguration.getLogger().log(Level.INFO, String.format("libssh version %s", ver));
 	}
 
+	long getVersion() {
+		return getVersion(SshLibrary.INSTANCE.ssh_version(0));
+	}
+
+	long getVersion(String version) {
+		String[] parts = version.split("/")[0].split("\\.");
+		return (10000 * Integer.parseInt(parts[0])) + (100 * Integer.parseInt(parts[1])) + Integer.parseInt(parts[2]);
+	}
+
+	@Override
 	protected SshClient doCreateClient(SshConfiguration configuration) {
 		SshClient client = new LibsshClient(configuration);
 		client.init(this);
 		return client;
 	}
 
+	@Override
 	public void doSupportsConfiguration(SshConfiguration configuration) {
 		try {
 			SshLibrary.INSTANCE.hashCode();
@@ -80,32 +90,43 @@ public class LibsshSshProvider extends AbstractProvider {
 		}
 	}
 
-	public List getCapabilities() {
+	public List<Capability> getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION,
-			Capability.SSH2, Capability.SSH1, Capability.SCP, Capability.SFTP, Capability.FILE_TRANSFER_EVENTS });
+				Capability.SSH2, Capability.SSH1, Capability.SCP, Capability.SFTP, Capability.FILE_TRANSFER_EVENTS,
+				Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
+				Capability.PUBLIC_KEY_AUTHENTICATION });
 	}
 
-	public List getSupportedCiphers(int protocolVersion) {
-		return Arrays.asList(new String[] { "aes128-cbc", "aes192-cbc", "aes256-cbc", "blowfish-cbc", "3des", "aes128-ctr" });
+	public List<String> getSupportedCiphers(int protocolVersion) {
+		return Arrays.asList(new String[] { "aes256-ctr", "aes192-ctr", "aes128-ctr", "aes256-cbc", "aes192-cbc", "aes128-cbc",
+				"3des-cbc", "blowfish-cbc", "none" });
 	}
 
+	@Override
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
-	public List getSupportedCompression() {
-		return Arrays.asList(new String[] { "zlib", "zlib@openssh.com" });
+	public List<String> getSupportedCompression() {
+		if (getVersion() >= getVersion("0.8.0"))
+			return Arrays.asList(new String[] { "zlib@openssh.com", "none" });
+		else
+			return Arrays.asList(new String[] { "zlib@openssh.com", "zlib", "none" });
 	}
 
-	public List getSupportedMAC() {
-		return Arrays.asList(new String[] { "hmac-md5", "hmac-sha1", "hmac-sha1-96", "hmac-md5-96" });
+	public List<String> getSupportedMAC() {
+		if (getVersion() >= getVersion("0.8.0"))
+			return Arrays.asList(new String[] { "hmac-sha2-512", "hmac-sha2-256", "hmac-sha1", "none" });
+		else
+			return Arrays.asList(new String[] { "hmac-sha1", "none" });
 	}
 
-	public List getSupportedKeyExchange() {
-		return Arrays.asList(new String[] { "diffie-hellman-group1-sha1" });
+	public List<String> getSupportedKeyExchange() {
+		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256", "diffie-hellman-group1-sha1",
+				"diffie-hellman-group14-sha1" });
 	}
 
-	public List getSupportedPublicKey() {
+	public List<String> getSupportedPublicKey() {
 		return Arrays.asList(new String[] { SshConfiguration.PUBLIC_KEY_SSHRSA, SshConfiguration.PUBLIC_KEY_SSHDSA });
 	}
 

@@ -25,6 +25,7 @@ package net.sf.sshapi.forwarding;
 
 import net.sf.sshapi.SshDataProducingComponent;
 import net.sf.sshapi.SshLifecycleComponent;
+import net.sf.sshapi.SshLifecycleListener;
 
 /**
  * Represents a single tunneled connection that is spawned as the result of a
@@ -39,9 +40,12 @@ import net.sf.sshapi.SshLifecycleComponent;
  * <p>
  * The browser will eventually time-out, and start closing all the connections
  * it made. When this happens,
- * {@link SshPortForwardListener#channelClosed(int, SshLifecycleComponent)} will be fired.
+ * {@link SshPortForwardListener#channelClosed(int, SshLifecycleComponent)} will
+ * be fired.
  */
-public interface SshPortForwardTunnel extends SshDataProducingComponent {
+
+public interface SshPortForwardTunnel
+		extends SshDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel> {
 
 	/**
 	 * Get the address the tunnel connection originated from
@@ -61,8 +65,8 @@ public interface SshPortForwardTunnel extends SshDataProducingComponent {
 
 	/**
 	 * Get the address that the tunnel will listen on. Depending on the type of
-	 * tunnel, this will either be an interface address on the the local
-	 * machine, or an interface address on the remote SSH server.
+	 * tunnel, this will either be an interface address on the the local machine, or
+	 * an interface address on the remote SSH server.
 	 * 
 	 * @return address to listen on
 	 * @see #getBindPort()
@@ -70,9 +74,9 @@ public interface SshPortForwardTunnel extends SshDataProducingComponent {
 	String getBindAddress();
 
 	/**
-	 * Get the port that the tunnel will listen on. Depending on the type of
-	 * tunnel, this will either be on an interface address on the the local
-	 * machine, or on an interface address on the remote SSH server.
+	 * Get the port that the tunnel will listen on. Depending on the type of tunnel,
+	 * this will either be on an interface address on the the local machine, or on
+	 * an interface address on the remote SSH server.
 	 * 
 	 * @return port to listen on
 	 * @see #getBindAddress()

@@ -26,9 +26,9 @@ package net.sf.sshapi.impl.maverick;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import com.sshtools.publickey.AbstractKnownHostsKeyVerification;
 import com.sshtools.ssh.components.ComponentManager;
@@ -55,7 +55,8 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	/**
 	 * Constructor.
 	 * 
-	 * @param configuration configuration
+	 * @param configuration
+	 *            configuration
 	 * @throws SshException
 	 */
 	public MaverickHostKeyManager(SshConfiguration configuration) throws SshException {
@@ -66,11 +67,14 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 	private void load(SshConfiguration configuration) throws SshException {
 		try {
-			knownHosts = new AbstractKnownHostsKeyVerification(Util.getKnownHostsFile(configuration).getAbsolutePath()) {
+			knownHosts = new AbstractKnownHostsKeyVerification(
+					Util.getKnownHostsFile(configuration).getAbsolutePath()) {
 
+				@Override
 				public void onUnknownHost(String host, SshPublicKey key) throws com.sshtools.ssh.SshException {
 				}
 
+				@Override
 				public void onHostKeyMismatch(String host, SshPublicKey allowedHostKey, SshPublicKey actualHostKey)
 						throws com.sshtools.ssh.SshException {
 				}
@@ -80,29 +84,36 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
+	@Override
 	public void add(final SshHostKey hostKey, boolean persist) throws SshException {
 		try {
 			knownHosts.allowHost(hostKey.getHost(), new SshPublicKey() {
 
+				@Override
 				public boolean verifySignature(byte[] signature, byte[] data) throws com.sshtools.ssh.SshException {
 					return false;
 				}
 
+				@Override
 				public void init(byte[] blob, int start, int len) throws com.sshtools.ssh.SshException {
 				}
 
+				@Override
 				public String getFingerprint() throws com.sshtools.ssh.SshException {
 					return hostKey.getFingerprint();
 				}
 
+				@Override
 				public byte[] getEncoded() throws com.sshtools.ssh.SshException {
 					return hostKey.getKey();
 				}
 
+				@Override
 				public int getBitLength() {
 					return 0;
 				}
 
+				@Override
 				public String getAlgorithm() {
 					return hostKey.getType();
 				}
@@ -112,37 +123,36 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
+	@Override
 	public SshHostKey[] getKeys() {
-		List hostKeys = new ArrayList();
-		// TODO need to get at temporary keys as well
-		// Hashtable hosts = knownHosts.allowedHosts(true);
-		Hashtable hosts = knownHosts.allowedHosts();
-		for (Enumeration e = hosts.keys(); e.hasMoreElements();) {
-			final String host = (String) e.nextElement();
-			Hashtable allowed = (Hashtable) hosts.get(host);
-			for (Enumeration e2 = allowed.keys(); e2.hasMoreElements();) {
-				final String algo = (String) e2.nextElement();
-				final SshPublicKey key = (SshPublicKey) allowed.get(algo);
+		List<SshHostKey> hostKeys = new ArrayList<>();
+		Hashtable<String, Hashtable<String, SshPublicKey>> hosts = knownHosts.allowedHosts();
+		for (Map.Entry<String, Hashtable<String, SshPublicKey>> en : hosts.entrySet()) {
+			for (Map.Entry<String, SshPublicKey> en2 : en.getValue().entrySet()) {
 				hostKeys.add(new AbstractHostKey() {
+					@Override
 					public String getType() {
-						return key.getAlgorithm();
+						return en2.getValue().getAlgorithm();
 					}
 
+					@Override
 					public byte[] getKey() {
 						try {
-							return key.getEncoded();
+							return en2.getValue().getEncoded();
 						} catch (com.sshtools.ssh.SshException e) {
 							throw new RuntimeException(e);
 						}
 					}
 
+					@Override
 					public String getHost() {
-						return host;
+						return en.getKey();
 					}
 
+					@Override
 					public String getFingerprint() {
 						try {
-							return key.getFingerprint();
+							return en2.getValue().getFingerprint();
 						} catch (com.sshtools.ssh.SshException e) {
 							throw new RuntimeException(e);
 						}
@@ -150,13 +160,15 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 				});
 			}
 		}
-		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshHostKey[0]);
 	}
 
+	@Override
 	public boolean isWriteable() {
 		return knownHosts.isHostFileWriteable();
 	}
 
+	@Override
 	public void remove(SshHostKey hostKey) throws SshException {
 		knownHosts.removeAllowedHost(hostKey.getHost());
 		try {
@@ -166,6 +178,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
+	@Override
 	protected boolean checkHost(String storedHostName, String hostToCheck) {
 		if (storedHostName.startsWith(HASH_MAGIC)) {
 			try {

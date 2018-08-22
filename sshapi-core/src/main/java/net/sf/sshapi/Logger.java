@@ -32,72 +32,52 @@ public interface Logger {
 	/**
 	 * Log level
 	 */
-	public class Level implements Comparable {
+	public enum Level {
 		/**
-		 * Most extreme logging, should only be required to diagnose
-		 * problems
+		 * Most extreme logging, should only be required to diagnose problems
 		 */
-		public final static Level DEBUG = new Level("DEBUG", 0);
+		DEBUG,
 		/**
 		 * Log only information, usually high level events.
 		 */
-		public final static Level INFO = new Level("INFO", 1);
+		INFO,
 		/**
 		 * Only log warnings. Unusual events or possible problems.
 		 */
-		public final static Level WARN = new Level("WARN", 2);
+		WARN,
 		/**
-		 * Only log errors. 
+		 * Only log errors.
 		 */
-		public final static Level ERROR = new Level("ERROR", 3);
-
-		private String name;
-		private int val;
-
-		Level(String name, int val) {
-			this.name = name;
-			this.val = val;
-		}
-
-		/**
-		 * Get the name of this log level.
-		 * 
-		 * @return log level name
-		 */
-		public String getName() {
-			return name;
-		}
-
-		public String toString() {
-			return getName();
-		}
-
-		public int compareTo(Object o) {
-			return new Integer(val).compareTo(new Integer(((Level) o).val));
-		}
+		ERROR
 	}
 
 	/**
 	 * Log a message at the specified level.
 	 * 
-	 * @param level level
-	 * @param message message
+	 * @param level
+	 *            level
+	 * @param message
+	 *            message
 	 */
 	void log(Level level, String message);
 
 	/**
 	 * Log a message and an optional exception at the specified level.
 	 * 
-	 * @param level level
-	 * @param message message
-	 * @param exception exception
+	 * @param level
+	 *            level
+	 * @param message
+	 *            message
+	 * @param exception
+	 *            exception
 	 */
 	void log(Level level, String message, Throwable exception);
 
 	/**
 	 * Determine if messages at the specified log level will be displayed.
 	 * 
-	 * @param required level
+	 * @param required
+	 *            level
 	 * @return level enabled
 	 */
 	boolean isLevelEnabled(Level required);

@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
 		<applicationVersion>${project.version}</applicationVersion>
 		<projectDescription>${project.description}</projectDescription>
@@ -6,11 +8,25 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-examples</artifactId>
 	<name>SSHAPI Examples</name>
-	<description>A suite of examples that demonstrate many of the features of SSHAPI. Most can be used with any provider, and there are some example usage of the capability query features.</description>
+	<description>A suite of examples that demonstrate many of the features of SSHAPI. Most can be used with any provider, and there are some example usage of the capability query features.
+
+To run the examples from source, first ensure the suite is built and installed.
+
+$ cd /path/to/sshapi
+$ mvn install
+
+The change directory into this module and run the test :-
+
+$ cd sshapi-examples
+$ mvn exec:java
+
+You can run individual examples using  :-
+
+$ mvn exec:java -DE02ShellWithConsolePrompts</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
 		<groupId>com.sshtools</groupId>
-		<version>1.1.2</version>
+		<version>2.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
@@ -31,6 +47,22 @@
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<configuration>
+					<systemProperties>
+						<systemProperty>
+							<key>org.slf4j.simpleLogger.defaultLogLevel</key>
+							<value>warn</value>
+						</systemProperty>
+					</systemProperties>
+					<mainClass>E99ChoosingAProvider</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -40,20 +72,20 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency> -->
+		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-16</artifactId>
@@ -69,6 +101,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-trilead</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-j2ssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
@@ -76,11 +114,19 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-ng</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>-->
+		
+		<dependency>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-libssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
@@ -89,41 +135,65 @@
 	</dependencies>
 
 	<profiles>
+		<!-- E01Shell -->
 		<profile>
-			<id>mac</id>
+			<id>E01Shell</id>
 			<activation>
-				<os>
-					<name>mac os x</name>
-				</os>
+				<property>
+					<name>E01Shell</name>
+				</property>
 			</activation>
-			<properties>
-				<swt.groupId>org.eclipse.swt</swt.groupId>
-				<swt.artifactId>carbon.macosx</swt.artifactId>
-			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<mainClass>E01Shell</mainClass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
+		<!-- E02ShellWithConsolePrompts -->
 		<profile>
-			<id>windows</id>
+			<id>E02ShellWithConsolePrompts</id>
 			<activation>
-				<os>
-					<family>windows</family>
-				</os>
+				<property>
+					<name>E02ShellWithConsolePrompts</name>
+				</property>
 			</activation>
-			<properties>
-				<swt.groupId>org.eclipse.swt</swt.groupId>
-				<swt.artifactId>win32.win32.x86</swt.artifactId>
-			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<mainClass>E02ShellWithConsolePrompts</mainClass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
+		<!-- E02ShellWithGUIPrompts -->
 		<profile>
-			<id>linux</id>
+			<id>E02ShellWithGUIPrompts</id>
 			<activation>
-				<os>
-					<family>linux</family>
-				</os>
+				<property>
+					<name>E02ShellWithGUIPrompts</name>
+				</property>
 			</activation>
-			<properties>
-				<swt.groupId>org.eclipse.swt</swt.groupId>
-				<swt.artifactId>gtk.linux.x86</swt.artifactId>
-			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<mainClass>E02ShellWithConsolePrompts</mainClass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 </project>

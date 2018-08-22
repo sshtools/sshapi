@@ -53,10 +53,11 @@ class J2SshSftpClient extends AbstractSftpClient {
 
 	public SftpFile[] ls(String path) throws SshException {
 		try {
-			List entries = sftpClient.ls(path);
+			@SuppressWarnings("unchecked")
+			List<com.sshtools.j2ssh.sftp.SftpFile> entries = sftpClient.ls(path);
 			SftpFile[] files = new SftpFile[entries.size()];
 			for (int i = 0; i < files.length; i++) {
-				files[i] = entryToFile(path, (com.sshtools.j2ssh.sftp.SftpFile) entries.get(i));
+				files[i] = entryToFile(path, entries.get(i));
 			}
 			return files;
 		} catch (IOException e) {

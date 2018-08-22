@@ -1,6 +1,7 @@
 import java.io.IOException;
 
 import net.sf.sshapi.SshClient;
+import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 
 class ConnectionTest extends AbstractConnectionTest {
@@ -12,11 +13,11 @@ class ConnectionTest extends AbstractConnectionTest {
 	protected void doProvider(final SshProvider provider) throws Exception {
 		time(provider, new Runnable() {
 			public void run() {
-				try {
-					SshClient client = connect(provider);
-					client.disconnect();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
+				try (SshClient client = connect(provider)) {
+				} catch (SshException e) {
+					throw new RuntimeException("Failed.", e);
+				} catch (IOException e) {
+					throw new RuntimeException("Failed.", e);
 				}
 			}
 		});

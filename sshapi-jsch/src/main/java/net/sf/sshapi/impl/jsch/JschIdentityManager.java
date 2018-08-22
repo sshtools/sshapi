@@ -46,7 +46,6 @@ import net.sf.sshapi.util.Util;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
-import com.jcraft.jsch.KeyPairDSA;
 
 class JschIdentityManager implements SshIdentityManager {
 
@@ -56,6 +55,7 @@ class JschIdentityManager implements SshIdentityManager {
 		jsch = new JSch();
 	}
 
+	@Override
 	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in) throws SshException {
 		try {
 			File file = toTemporaryFile(in, "");
@@ -68,28 +68,34 @@ class JschIdentityManager implements SshIdentityManager {
 		}
 	}
 
+	@Override
 	public SshPublicKeyFile createPublicKeyFromStream(InputStream in) throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public List getSupportedPublicKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
 			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
+	@Override
 	public List getSupportedPrivateKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
 			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
+	@Override
 	public List getSupportedKeyLengths() {
 		return Arrays.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
 	}
 
+	@Override
 	public List getSupportedKeyTypes() {
 		return Arrays.asList(new String[] { "rsa", "dsa" });
 	}
 
+	@Override
 	public SshPrivateKeyFile create(SshKeyPair pair, int format, char[] passphrase, String comment) throws SshException {
 		if (!Util.nullOrTrimmedBlank(comment)) {
 			SshConfiguration.getLogger().log(Level.WARN,
@@ -131,6 +137,7 @@ class JschIdentityManager implements SshIdentityManager {
 		}
 	}
 
+	@Override
 	public SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
 		try {
 			int type = -1;
@@ -170,12 +177,14 @@ class JschIdentityManager implements SshIdentityManager {
 			this.kpair = kpair;
 		}
 
+		@Override
 		public byte[] getFormattedKey() throws SshException {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			kpair.writePrivateKey(baos);
 			return baos.toByteArray();
 		}
 
+		@Override
 		public void changePassphrase(char[] newPassphrase) throws SshException {
 			if (kpair.isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
@@ -184,20 +193,24 @@ class JschIdentityManager implements SshIdentityManager {
 			kpair.setPassphrase(new String(newPassphrase));
 		}
 
+		@Override
 		public boolean isEncrypted() throws SshException {
 			return kpair.isEncrypted();
 		}
 
+		@Override
 		public void decrypt(char[] passphrase) throws SshException {
 			if (!kpair.decrypt(new String(passphrase))) {
 				throw new SshException(SshException.INCORRECT_PASSPHRASE, "Incorrect passphrase, could not decrypt key.");
 			}
 		}
 
+		@Override
 		public boolean supportsPassphraseChange() {
 			return true;
 		}
 
+		@Override
 		public int getFormat() {
 			try {
 				Field amF = kpair.getClass().getDeclaredField("vendor");
@@ -213,6 +226,7 @@ class JschIdentityManager implements SshIdentityManager {
 			return VENDOR_UNKNOWN;
 		}
 
+		@Override
 		public SshKeyPair toKeyPair() throws SshException {
 			if (isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
@@ -232,10 +246,12 @@ class JschIdentityManager implements SshIdentityManager {
 			this.kpair = kpair;
 		}
 
+		@Override
 		public byte[] sign(byte[] data) {
 			throw new UnsupportedOperationException();
 		}
 
+		@Override
 		public String getAlgorithm() {
 			switch(kpair.getKeyType()) {
 			case KeyPair.DSA:
@@ -263,24 +279,29 @@ class JschIdentityManager implements SshIdentityManager {
 			this.keyBits = keyBits;
 		}
 
+		@Override
 		public String getAlgorithm() {
 			return keyPair.getKeyType() == KeyPair.DSA ? SshConfiguration.PUBLIC_KEY_SSHDSA : SshConfiguration.PUBLIC_KEY_SSHRSA;
 		}
 
+		@Override
 		public String getFingerprint() throws SshException {
 			return keyPair.getFingerPrint();
 		}
 
+		@Override
 		public byte[] getEncodedKey() throws SshException {
 			return keyPair.getPublicKeyBlob();
 		}
 
+		@Override
 		public int getBitLength() {
 			return keyBits;
 		}
 
 	}
 
+	@Override
 	public SshPublicKeyFile create(final SshPublicKey key, final String options, final String comment, final int format) {
 		final JschPublicKey jschKey = (JschPublicKey) key;
 		if (format != SshPublicKeyFile.SECSH_FORMAT && format != SshPublicKeyFile.OPENSSH_FORMAT) {
@@ -288,14 +309,17 @@ class JschIdentityManager implements SshIdentityManager {
 		}
 		return new SshPublicKeyFile() {
 
+			@Override
 			public SshPublicKey getPublicKey() throws SshException {
 				return key;
 			}
 
+			@Override
 			public String getOptions() {
 				return options;
 			}
 
+			@Override
 			public byte[] getFormattedKey() throws IOException {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				switch (format) {
@@ -311,10 +335,12 @@ class JschIdentityManager implements SshIdentityManager {
 				return baos.toByteArray();
 			}
 
+			@Override
 			public String getComment() {
 				return comment;
 			}
 
+			@Override
 			public int getFormat() {
 				return format;
 			}

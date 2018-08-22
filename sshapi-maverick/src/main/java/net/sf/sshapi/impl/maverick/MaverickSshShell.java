@@ -26,21 +26,26 @@ package net.sf.sshapi.impl.maverick;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.sshtools.ssh.ChannelEventListener;
 import com.sshtools.ssh.SshSession;
 
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
-class MaverickSshShell extends MaverickSshStreamChannel implements SshShell {
+class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListener<SshShell>, SshShell>
+		implements SshShell, ChannelEventListener {
 
 	MaverickSshShell(SshSession session) {
 		super(session);
 	}
 
+	@Override
 	public InputStream getExtendedInputStream() throws IOException {
 		return ((SshSession) getChannel()).getStderrInputStream();
 	}
 
+	@Override
 	public void onChannelOpen() throws SshException {
 		try {
 			if (!((SshSession) getChannel()).startShell()) {
@@ -51,6 +56,7 @@ class MaverickSshShell extends MaverickSshStreamChannel implements SshShell {
 		}
 	}
 
+	@Override
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
 		try {
 			((SshSession) getChannel()).changeTerminalDimensions(width, height, pixw, pixw);

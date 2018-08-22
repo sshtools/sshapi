@@ -31,16 +31,22 @@ public interface SshPortForwardListener {
 	/**
 	 * A port forwarding channel has been opened.
 	 * 
-	 * @param type type (see {@link SshPortForward} for types)
-	 * @param channel the channel that was opened
+	 * @param type
+	 *            type (see {@link SshPortForward} for types)
+	 * @param channel
+	 *            the channel that was opened
 	 */
-	public void channelOpened(int type, SshPortForwardTunnel channel);
+	default void channelOpened(int type, SshPortForwardTunnel channel) {
+	}
 
 	/**
 	 * A port forwarding channel has been closed.
 	 * 
-	 * @param type type (see {@link SshPortForward} for types)
-	 * @param channel the channel that was closed
+	 * @param type
+	 *            type (see {@link SshPortForward} for types)
+	 * @param channel
+	 *            the channel that was closed
 	 */
-	public void channelClosed(int type, SshPortForwardTunnel channel);
+	default void channelClosed(int type, SshPortForwardTunnel channel) {
+	}
 }

@@ -26,9 +26,6 @@ package net.sf.sshapi.impl.trilead;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,10 +36,6 @@ import com.trilead.ssh2.SFTPv3Client;
 import com.trilead.ssh2.SFTPv3DirectoryEntry;
 import com.trilead.ssh2.SFTPv3FileAttributes;
 import com.trilead.ssh2.SFTPv3FileHandle;
-import com.trilead.ssh2.packets.TypesReader;
-import com.trilead.ssh2.packets.TypesWriter;
-import com.trilead.ssh2.sftp.ErrorCodes;
-import com.trilead.ssh2.sftp.Packet;
 
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
@@ -168,10 +161,8 @@ class TrileadSftpClient extends AbstractSftpClient {
 				handle = client.openFileRW(path);
 			}
 			final SFTPv3FileHandle finalHandle = handle;
-			final byte[] buf = new byte[32768];
 			return new OutputStream() {
 
-				private long fileOffset = offset;
 
 				public void write(int b) throws IOException {
 					try {
@@ -277,9 +268,9 @@ class TrileadSftpClient extends AbstractSftpClient {
 
 	public SftpFile[] ls(String path) throws SshException {
 		try {
-			List entries = client.ls(path);
-			List files = new ArrayList();
-			for (Iterator it = entries.iterator(); it.hasNext();) {
+			List<?> entries = client.ls(path);
+			List<SftpFile> files = new ArrayList<>();
+			for (Iterator<?> it = entries.iterator(); it.hasNext();) {
 				files.add(entryToFile(path, (SFTPv3DirectoryEntry) it.next()));
 			}
 			return (SftpFile[]) files.toArray(new SftpFile[files.size()]);
@@ -408,79 +399,79 @@ class TrileadSftpClient extends AbstractSftpClient {
 	 * this
 	 */
 
-	private void XXXXwrite(SFTPv3FileHandle handle, long fileOffset,
-			byte[] src, int srcoff, int len) throws IOException,
-			SecurityException, NoSuchMethodException, NoSuchFieldException,
-			IllegalArgumentException, IllegalAccessException,
-			InvocationTargetException, SftpException {
-		if (handle.getClient() != client)
-			throw new IOException(
-					"The file handle was created with another SFTPv3FileHandle instance.");
-
-		if (handle.isClosed())
-			throw new IOException("The file handle is closed.");
-
-		// if (len < 0) wtf?
-		while (len > 0) {
-			int writeRequestLen = len;
-
-			if (writeRequestLen > 32768)
-				writeRequestLen = 32768;
-
-			Method m = client.getClass().getDeclaredMethod(
-					"generateNextRequestID", new Class[0]);
-			m.setAccessible(true);
-			int req_id = ((Integer) m.invoke(client, null)).intValue();
-
-			TypesWriter tw = new TypesWriter();
-			Field f = handle.getClass().getDeclaredField("fileHandle");
-			f.setAccessible(true);
-			byte[] fileHandle = (byte[]) f.get(handle);
-
-			tw.writeString(fileHandle, 0, fileHandle.length);
-			tw.writeUINT64(fileOffset);
-			tw.writeString(src, srcoff, writeRequestLen);
-
-			m = client.getClass().getDeclaredMethod("sendMessage",
-					new Class[] { int.class, int.class, byte[].class });
-			m.setAccessible(true);
-			m.invoke(client,
-					new Object[] { Integer.valueOf(Packet.SSH_FXP_WRITE),
-							Integer.valueOf(req_id), tw.getBytes() });
-
-			fileOffset += writeRequestLen;
-
-			srcoff += writeRequestLen;
-			len -= writeRequestLen;
-
-			m = client.getClass().getDeclaredMethod("receiveMessage",
-					new Class[] { int.class });
-			m.setAccessible(true);
-			byte[] resp = (byte[]) m.invoke(client,
-					new Object[] { Integer.valueOf(34000) });
-
-			TypesReader tr = new TypesReader(resp);
-
-			int t = tr.readByte();
-
-			int rep_id = tr.readUINT32();
-			if (rep_id != req_id)
-				throw new IOException("The server sent an invalid id field.");
-
-			if (t != Packet.SSH_FXP_STATUS)
-				throw new IOException(
-						"The SFTP server sent an unexpected packet type (" + t
-								+ ")");
-
-			int errorCode = tr.readUINT32();
-
-			if (errorCode == ErrorCodes.SSH_FX_OK)
-				continue;
-
-			String errorMessage = tr.readString();
-			throw new SftpException(errorCode, errorMessage);
-		}
-	}
+//	private void XXXXwrite(SFTPv3FileHandle handle, long fileOffset,
+//			byte[] src, int srcoff, int len) throws IOException,
+//			SecurityException, NoSuchMethodException, NoSuchFieldException,
+//			IllegalArgumentException, IllegalAccessException,
+//			InvocationTargetException, SftpException {
+//		if (handle.getClient() != client)
+//			throw new IOException(
+//					"The file handle was created with another SFTPv3FileHandle instance.");
+//
+//		if (handle.isClosed())
+//			throw new IOException("The file handle is closed.");
+//
+//		// if (len < 0) wtf?
+//		while (len > 0) {
+//			int writeRequestLen = len;
+//
+//			if (writeRequestLen > 32768)
+//				writeRequestLen = 32768;
+//
+//			Method m = client.getClass().getDeclaredMethod(
+//					"generateNextRequestID", new Class[0]);
+//			m.setAccessible(true);
+//			int req_id = ((Integer) m.invoke(client, null)).intValue();
+//
+//			TypesWriter tw = new TypesWriter();
+//			Field f = handle.getClass().getDeclaredField("fileHandle");
+//			f.setAccessible(true);
+//			byte[] fileHandle = (byte[]) f.get(handle);
+//
+//			tw.writeString(fileHandle, 0, fileHandle.length);
+//			tw.writeUINT64(fileOffset);
+//			tw.writeString(src, srcoff, writeRequestLen);
+//
+//			m = client.getClass().getDeclaredMethod("sendMessage",
+//					new Class[] { int.class, int.class, byte[].class });
+//			m.setAccessible(true);
+//			m.invoke(client,
+//					new Object[] { Integer.valueOf(Packet.SSH_FXP_WRITE),
+//							Integer.valueOf(req_id), tw.getBytes() });
+//
+//			fileOffset += writeRequestLen;
+//
+//			srcoff += writeRequestLen;
+//			len -= writeRequestLen;
+//
+//			m = client.getClass().getDeclaredMethod("receiveMessage",
+//					new Class[] { int.class });
+//			m.setAccessible(true);
+//			byte[] resp = (byte[]) m.invoke(client,
+//					new Object[] { Integer.valueOf(34000) });
+//
+//			TypesReader tr = new TypesReader(resp);
+//
+//			int t = tr.readByte();
+//
+//			int rep_id = tr.readUINT32();
+//			if (rep_id != req_id)
+//				throw new IOException("The server sent an invalid id field.");
+//
+//			if (t != Packet.SSH_FXP_STATUS)
+//				throw new IOException(
+//						"The SFTP server sent an unexpected packet type (" + t
+//								+ ")");
+//
+//			int errorCode = tr.readUINT32();
+//
+//			if (errorCode == ErrorCodes.SSH_FX_OK)
+//				continue;
+//
+//			String errorMessage = tr.readString();
+//			throw new SftpException(errorCode, errorMessage);
+//		}
+//	}
 
 	public void chmod(String path, int permissions) throws SshException {
 		try {

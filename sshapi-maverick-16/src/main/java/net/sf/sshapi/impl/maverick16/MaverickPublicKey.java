@@ -41,18 +41,22 @@ public class MaverickPublicKey implements SshPublicKey {
 		return publicKey;
 	}
 
+	@Override
 	public String getAlgorithm() {
 		return algorithm;
 	}
 
+	@Override
 	public String getFingerprint() {
 		return fingerPrint;
 	}
 
+	@Override
 	public byte[] getEncodedKey() {
 		return key;
 	}
 
+	@Override
 	public int getBitLength() {
 		return bitLength;
 	}

@@ -40,7 +40,7 @@ import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractSCPClient;
 import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshExtendedStreamChannel;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -91,10 +91,8 @@ class J2SshClient extends AbstractClient {
 		con = new com.sshtools.j2ssh.SshClient();
 	}
 
-	public void connect(String username, String hostname, int port) throws net.sf.sshapi.SshException {
-		if (isConnected()) {
-			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.ALREADY_OPEN, "Already connected.");
-		}
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws net.sf.sshapi.SshException {
 		try {
 			SshConnectionProperties properties = new SshConnectionProperties();
 			properties.setHost(hostname);
@@ -119,7 +117,7 @@ class J2SshClient extends AbstractClient {
 
 	public void setTimeout(int timeout) throws IOException {
 		this.timeout = timeout;
-		if(con != null) {
+		if (con != null) {
 			con.setSocketTimeout(timeout);
 		}
 	}
@@ -128,9 +126,10 @@ class J2SshClient extends AbstractClient {
 		return timeout;
 	}
 
-	public boolean authenticate(SshAuthenticator[] authenticators) throws net.sf.sshapi.SshException {
-		Map authenticatorMap = createAuthenticatorMap(authenticators);
+	public boolean authenticate(SshAuthenticator... authenticators) throws net.sf.sshapi.SshException {
+		Map<String, SshAuthenticator> authenticatorMap = createAuthenticatorMap(authenticators);
 		try {
+			@SuppressWarnings("unchecked")
 			String[] methods = (String[]) con.getAvailableAuthMethods(username).toArray(new String[0]);
 
 			for (int i = 0; i < methods.length && !con.isAuthenticated(); i++) {
@@ -243,7 +242,8 @@ class J2SshClient extends AbstractClient {
 							}
 							pac.setKey(pkf.toPrivateKey(pw == null ? "" : new String(pw)));
 						} catch (InvalidSshKeyException e) {
-							AuthenticationProtocolException ape = new AuthenticationProtocolException(e.getLocalizedMessage());
+							AuthenticationProtocolException ape = new AuthenticationProtocolException(
+									e.getLocalizedMessage());
 							ape.initCause(e);
 							throw ape;
 						}
@@ -283,8 +283,8 @@ class J2SshClient extends AbstractClient {
 		throw new UnsupportedOperationException();
 	}
 
-	public SshShell createShell(String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws net.sf.sshapi.SshException {
+	public SshShell createShell(String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		try {
 			SessionChannelClient session = con.openSessionChannel();
 			if (termType != null) {
@@ -304,8 +304,8 @@ class J2SshClient extends AbstractClient {
 		}
 	}
 
-	public SshExtendedStreamChannel createCommand(final String command) throws net.sf.sshapi.SshException {
-		try { 
+	public SshCommand createCommand(final String command) throws net.sf.sshapi.SshException {
+		try {
 			final SessionChannelClient session = con.openSessionChannel();
 			return new J2SshStreamChannel(getConfiguration(), session) {
 				public void onChannelOpen() throws net.sf.sshapi.SshException {
@@ -356,8 +356,8 @@ class J2SshClient extends AbstractClient {
 	public SshPortForward createLocalForward(String localAddress, int localPort, String remoteHost, int remotePort)
 			throws net.sf.sshapi.SshException {
 
-		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), localAddress, localPort, remoteHost,
-			remotePort);
+		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), localAddress, localPort,
+				remoteHost, remotePort);
 		return new AbstractPortForward() {
 
 			protected void onOpen() throws net.sf.sshapi.SshException {
@@ -383,8 +383,8 @@ class J2SshClient extends AbstractClient {
 	public SshPortForward createRemoteForward(String remoteHost, int remotePort, String localAddress, int localPort)
 			throws net.sf.sshapi.SshException {
 
-		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), remoteHost, remotePort, localAddress,
-			localPort);
+		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), remoteHost, remotePort,
+				localAddress, localPort);
 		return new AbstractPortForward() {
 
 			protected void onOpen() throws net.sf.sshapi.SshException {
@@ -395,7 +395,7 @@ class J2SshClient extends AbstractClient {
 					throw new net.sf.sshapi.SshException("Failed to start remote port forward.", e);
 				} catch (IOException e) {
 					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR,
-						"Failed to start remote port forward.", e);
+							"Failed to start remote port forward.", e);
 				}
 			}
 
@@ -405,17 +405,17 @@ class J2SshClient extends AbstractClient {
 					forwarding.removeRemoteForwarding(fwd.getName());
 				} catch (IOException e) {
 					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR,
-						"Failed to stop remote port forward.", e);
+							"Failed to stop remote port forward.", e);
 				}
 			}
 		};
 	}
 
-	public SftpClient createSftpClient() throws net.sf.sshapi.SshException {
+	public SftpClient createSftp() throws net.sf.sshapi.SshException {
 		return new J2SshSftpClient(con);
 	}
 
-	public SshSCPClient createSCPClient() throws net.sf.sshapi.SshException {
+	public SshSCPClient createSCP() throws net.sf.sshapi.SshException {
 		return new J2SSHSCPClient();
 	}
 
@@ -506,7 +506,8 @@ class J2SshClient extends AbstractClient {
 			super.onOpen();
 		}
 
-		public void get(String remoteFilePath, File destinationFile, boolean recursive) throws net.sf.sshapi.SshException {
+		public void get(String remoteFilePath, File destinationFile, boolean recursive)
+				throws net.sf.sshapi.SshException {
 			try {
 				client.get(destinationFile.getAbsolutePath(), remoteFilePath, recursive);
 			} catch (IOException e) {
@@ -514,7 +515,8 @@ class J2SshClient extends AbstractClient {
 			}
 		}
 
-		public void doPut(String remotePath, String mode, File sourceFile, boolean recursive) throws net.sf.sshapi.SshException {
+		public void doPut(String remotePath, String mode, File sourceFile, boolean recursive)
+				throws net.sf.sshapi.SshException {
 			try {
 				client.put(sourceFile.getAbsolutePath(), remotePath, recursive);
 			} catch (IOException e) {
@@ -543,12 +545,13 @@ class J2SshClient extends AbstractClient {
 			return new RemoteSocket(host, port);
 		}
 
-		public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException,
-				UnknownHostException {
+		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+				throws IOException, UnknownHostException {
 			return new RemoteSocket(host, port);
 		}
 
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+				throws IOException {
 			return new RemoteSocket(address, port);
 		}
 
@@ -626,6 +629,7 @@ class J2SshClient extends AbstractClient {
 
 		public byte[] getChannelOpenData() {
 			try {
+				@SuppressWarnings("resource")
 				ByteArrayWriter baw = new ByteArrayWriter();
 				String host = socket.getHostName();
 				baw.writeString(host);

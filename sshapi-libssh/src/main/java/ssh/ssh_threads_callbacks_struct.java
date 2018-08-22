@@ -47,8 +47,11 @@ public class ssh_threads_callbacks_struct extends Structure<ssh_threads_callback
 		this.thread_id = thread_id;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_threads_callbacks_struct newInstance() { return new ssh_threads_callbacks_struct(); }
 	public static ssh_threads_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_threads_callbacks_struct.class, arrayLength);

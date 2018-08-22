@@ -26,6 +26,7 @@ package net.sf.sshapi;
 import java.util.List;
 
 import net.sf.sshapi.agent.SshAgent;
+import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -122,6 +123,12 @@ public abstract class AbstractProvider implements SshProvider {
 
 	public SshAgent connectToLocalAgent(String application) throws SshException {
 		return connectToLocalAgent(application, SshAgent.AUTO_PROTOCOL);
+	}
+	
+	public SshClient open(SshConfiguration configuration, String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
+		SshClient client = createClient(configuration);
+		client.connect(username, hostname, port, authenticators);
+		return client;
 	}
 
 	static boolean check(String name, List list) {

@@ -28,8 +28,11 @@ public class sftp_request_queue_struct extends Structure<sftp_request_queue_stru
 		this.message = message;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_request_queue_struct newInstance() { return new sftp_request_queue_struct(); }
 	public static sftp_request_queue_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_request_queue_struct.class, arrayLength);

@@ -35,7 +35,7 @@ import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.agent.SshAgent;
@@ -110,22 +110,21 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		SshConfiguration config = new SshConfiguration();
 		ProxyInfo proxyInfo = getProxyInfo(ProxyInfo.PROXY_SOCKS5, getRepository().getHost());
 		if (proxyInfo != null && proxyInfo.getHost() != null) {
-			config
-				.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS5, proxyInfo.getHost(), proxyInfo
-					.getPort(), proxyInfo.getUserName(), proxyInfo.getPassword() == null ? null : proxyInfo.getPassword()
-					.toCharArray()));
+			config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS5, proxyInfo.getHost(),
+					proxyInfo.getPort(), proxyInfo.getUserName(),
+					proxyInfo.getPassword() == null ? null : proxyInfo.getPassword().toCharArray()));
 		} else {
 			proxyInfo = getProxyInfo(ProxyInfo.PROXY_SOCKS4, getRepository().getHost());
 			if (proxyInfo != null && proxyInfo.getHost() != null) {
-				config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS4, proxyInfo.getHost(), proxyInfo
-					.getPort(), proxyInfo.getUserName(), proxyInfo.getPassword() == null ? null : proxyInfo.getPassword()
-					.toCharArray()));
+				config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS4, proxyInfo.getHost(),
+						proxyInfo.getPort(), proxyInfo.getUserName(),
+						proxyInfo.getPassword() == null ? null : proxyInfo.getPassword().toCharArray()));
 			} else {
 				proxyInfo = getProxyInfo(ProxyInfo.PROXY_HTTP, getRepository().getHost());
 				if (proxyInfo != null && proxyInfo.getHost() != null) {
-					config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.HTTP, proxyInfo.getHost(), proxyInfo
-						.getPort(), proxyInfo.getUserName(), proxyInfo.getPassword() == null ? null : proxyInfo.getPassword()
-						.toCharArray()));
+					config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.HTTP,
+							proxyInfo.getHost(), proxyInfo.getPort(), proxyInfo.getUserName(),
+							proxyInfo.getPassword() == null ? null : proxyInfo.getPassword().toCharArray()));
 				} else {
 					// Backwards compatibility
 					proxyInfo = getProxyInfo(getRepository().getProtocol(), getRepository().getHost());
@@ -134,13 +133,13 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 						// will
 						// use HTTP Proxy
 						if (proxyInfo.getPort() == SOCKS5_PROXY_PORT) {
-							config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS5, proxyInfo.getHost(),
-								proxyInfo.getPort(), proxyInfo.getUserName(), proxyInfo.getPassword() == null ? null : proxyInfo
-									.getPassword().toCharArray()));
+							config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.SOCKS5,
+									proxyInfo.getHost(), proxyInfo.getPort(), proxyInfo.getUserName(),
+									proxyInfo.getPassword() == null ? null : proxyInfo.getPassword().toCharArray()));
 						} else {
-							config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.HTTP, proxyInfo.getHost(),
-								proxyInfo.getPort(), proxyInfo.getUserName(), proxyInfo.getPassword() == null ? null : proxyInfo
-									.getPassword().toCharArray()));
+							config.setProxyServer(new SshProxyServerDetails(SshProxyServerDetails.Type.HTTP,
+									proxyInfo.getHost(), proxyInfo.getPort(), proxyInfo.getUserName(),
+									proxyInfo.getPassword() == null ? null : proxyInfo.getPassword().toCharArray()));
 						}
 					}
 				}
@@ -153,8 +152,8 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		// Bridge known hosts
 		if (knownHostsProvider != null) {
 			/*
-			 * We need to write out to a temporary file as SSHAPI currently only
-			 * supports real files for hosts file.
+			 * We need to write out to a temporary file as SSHAPI currently only supports
+			 * real files for hosts file.
 			 */
 			try {
 				tempHostKeyFile = File.createTempFile("hk", ".tmp");
@@ -165,7 +164,8 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 				} finally {
 					fos.close();
 				}
-				config.getProperties().setProperty(SshConfiguration.CFG_KNOWN_HOSTS_PATH, tempHostKeyFile.getAbsolutePath());
+				config.getProperties().setProperty(SshConfiguration.CFG_KNOWN_HOSTS_PATH,
+						tempHostKeyFile.getAbsolutePath());
 			} catch (IOException ioe) {
 				throw new ConnectionException("Could not configure known hosts file.", ioe);
 			}
@@ -179,16 +179,15 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		} else {
 			config.setHostKeyValidator(new ConsoleHostKeyValidator(null));
 		}
-		
+
 		String authSock = System.getenv("SSH_AUTH_SOCK");
-		if(provider.getCapabilities().contains(Capability.AGENT) && authSock != null && authSock.length() > 0) {
+		if (provider.getCapabilities().contains(Capability.AGENT) && authSock != null && authSock.length() > 0) {
 			try {
 				agent = provider.connectToLocalAgent("Maven");
 			} catch (SshException e) {
 				e.printStackTrace();
 			}
 		}
-		
 
 		session = provider.createClient(config);
 
@@ -204,7 +203,8 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		// Connect
 
 		String host = getRepository().getHost();
-		int port = repository.getPort() == WagonConstants.UNKNOWN_PORT ? ScpHelper.DEFAULT_SSH_PORT : repository.getPort();
+		int port = repository.getPort() == WagonConstants.UNKNOWN_PORT ? ScpHelper.DEFAULT_SSH_PORT
+				: repository.getPort();
 		try {
 			String userName = authenticationInfo.getUserName();
 			if (userName == null) {
@@ -222,7 +222,7 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 		}
 
 		// Connect the client to the agent
-		if(agent != null)
+		if (agent != null)
 			try {
 				session.addChannelHandler(agent);
 			} catch (SshException e1) {
@@ -236,8 +236,8 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 
 		// Authenticate
 		List authenticators = new ArrayList();
-		
-		if(agent != null) {
+
+		if (agent != null) {
 			fireSessionDebug("Using agent: " + agent);
 			authenticators.add(new DefaultAgentAuthenticator(agent));
 		}
@@ -291,7 +291,7 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 			}
 			session = null;
 		}
-		if(agent != null) {
+		if (agent != null) {
 			try {
 				agent.close();
 			} catch (IOException e) {
@@ -301,7 +301,7 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 	}
 
 	public Streams executeCommand(String command, boolean ignoreFailures) throws CommandExecutionException {
-		SshExtendedStreamChannel channel = null;
+		SshCommand channel = null;
 		BufferedReader stdoutReader = null;
 		BufferedReader stderrReader = null;
 		try {
@@ -323,9 +323,9 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 			}
 
 			return streams;
-		} catch (IOException e) {
-			throw new CommandExecutionException("Cannot execute remote command: " + command, e);
 		} catch (SshException e) {
+			throw new CommandExecutionException("Cannot execute remote command: " + command, e);
+		} catch (IOException e) {
 			throw new CommandExecutionException("Cannot execute remote command: " + command, e);
 		} finally {
 			IOUtil.close(stdoutReader);
@@ -333,7 +333,7 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 			if (channel != null) {
 				try {
 					channel.close();
-				} catch (SshException e) {
+				} catch (IOException e) {
 				}
 			}
 		}
@@ -342,19 +342,19 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 	protected void handleGetException(Resource resource, Exception e) throws TransferFailedException {
 		fireTransferError(resource, e, TransferEvent.REQUEST_GET);
 
-		String msg = "Error occurred while downloading '" + resource + "' from the remote repository:" + getRepository() + ": "
-			+ e.getMessage();
+		String msg = "Error occurred while downloading '" + resource + "' from the remote repository:" + getRepository()
+				+ ": " + e.getMessage();
 
 		throw new TransferFailedException(msg, e);
 	}
 
-	public List getFileList(String destinationDirectory) throws TransferFailedException, ResourceDoesNotExistException,
-			AuthorizationException {
+	public List getFileList(String destinationDirectory)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 		return sshTool.getFileList(destinationDirectory, repository);
 	}
 
-	public void putDirectory(File sourceDirectory, String destinationDirectory) throws TransferFailedException,
-			ResourceDoesNotExistException, AuthorizationException {
+	public void putDirectory(File sourceDirectory, String destinationDirectory)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 		sshTool.putDirectory(this, sourceDirectory, destinationDirectory);
 	}
 

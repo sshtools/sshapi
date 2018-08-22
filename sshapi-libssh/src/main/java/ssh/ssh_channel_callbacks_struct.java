@@ -88,8 +88,11 @@ public class ssh_channel_callbacks_struct extends Structure<ssh_channel_callback
 		this.channel_exit_signal_function = channel_exit_signal_function;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_channel_callbacks_struct newInstance() { return new ssh_channel_callbacks_struct(); }
 	public static ssh_channel_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_channel_callbacks_struct.class, arrayLength);

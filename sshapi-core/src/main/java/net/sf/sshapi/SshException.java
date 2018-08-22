@@ -23,26 +23,25 @@
  */
 package net.sf.sshapi;
 
+import java.io.IOException;
+
 import net.sf.sshapi.forwarding.SshPortForward;
 
 /**
  * Exception thrown during various SSH operations.
  */
-public class SshException extends Exception {
-
+public class SshException extends IOException {
 	/**
 	 * General error. The provider did not or could not provide additional
 	 * information with an error code. The actual exception will most likely be
 	 * available through {@link #getCause()}.
 	 */
 	public final static Code GENERAL = new Code("general");
-
 	/**
 	 * The implementation does not support the protocol version request by
 	 * {@link SshConfiguration#getProtocolVersion()}.
 	 */
 	public static final Code UNSUPPORTED_PROTOCOL_VERSION = new Code("unsupportedProtocolVersion");
-
 	/**
 	 * An attempt was made to 'open' a resource, an {@link SshPortForward} for
 	 * example, but the resource was already open.
@@ -53,13 +52,11 @@ public class SshException extends Exception {
 	 * example, but the resource was already closed.
 	 */
 	public final static Code NOT_OPEN = new Code("notOpen");
-
 	/**
 	 * The {@link SshConfiguration} requested use of a feature not supported by
 	 * the provider in use.
 	 */
 	public static final Code UNSUPPORTED_FEATURE = new Code("unsupportedFeature");
-
 	/**
 	 * General I/O error. Actual exception will be available through
 	 * {@link #getCause()}.
@@ -83,51 +80,45 @@ public class SshException extends Exception {
 	 * For example, changing the password on an encrypted private key.
 	 */
 	public final static Code PASSPHRASE_REQUIRED = new Code("passphraseRequired");
-
 	/**
 	 * Authentication failed. The provided credentials were not acceptable.
 	 */
 	public final static Code AUTHENTICATION_FAILED = new Code("authenticationFailed");
-
 	/**
 	 * Authentication was cancelled by user when being prompted for something
 	 * (password, passphrase etc)
 	 */
 	public final static Code AUTHENTICATION_CANCELLED = new Code("authenticationCancelled");
-
 	/**
 	 * Too many authentication attempts
 	 */
 	public final static Code AUTHENTICATION_ATTEMPTS_EXCEEDED = new Code("authenticationAttemptsExceeded");
-
 	/**
 	 * Host key was rejected. Connection will be closed.
 	 */
 	public final static Code HOST_KEY_REJECTED = new Code("hostKeyRejected");
-
 	/**
-	 * Attempt to perform an operation that required a decrypted key failed because
-	 * the key was still encrypted.
+	 * Attempt to perform an operation that required a decrypted key failed
+	 * because the key was still encrypted.
 	 */
 	public static final Code ENCRYPTED = new Code("encrypted");
-
 	/**
 	 * Failed to open shell.
 	 */
 	public final static Code FAILED_TO_OPEN_SHELL = new Code("failedToOpenShell");
-
 	/**
 	 * No agent could be found.
 	 */
 	public final static Code NO_AGENT = new Code("noAgent");
-
+	/**
+	 * Failed to start tunnel, unauthorized.
+	 */
+	public final static Code UNAUTHORIZED = new Code("unauthorized");
 	/**
 	 * There is an agent, but failed to connect to it.
 	 */
 	public final static Code FAILED_TO_CONNECT_TO_AGENT = new Code("failedToConnectToAgent");
-
 	private static final long serialVersionUID = 1L;
-
 	// Private instance variables
 	private final Code code;
 
@@ -172,7 +163,7 @@ public class SshException extends Exception {
 	 * @param code code
 	 */
 	public SshException(Code code) {
-		super();
+		super(String.format("SSHERR %s", code.id));
 		this.code = code;
 	}
 
@@ -184,7 +175,7 @@ public class SshException extends Exception {
 	 * @param cause cause
 	 */
 	public SshException(Code code, String message, Throwable cause) {
-		super(message, cause);
+		super(String.format("SSHERR %s. %s", code.id, message), cause);
 		this.code = code;
 	}
 
@@ -195,7 +186,7 @@ public class SshException extends Exception {
 	 * @param message message
 	 */
 	public SshException(Code code, String message) {
-		super(message);
+		super(String.format("SSHERR %s. %s", code.id, message));
 		this.code = code;
 	}
 
@@ -206,7 +197,7 @@ public class SshException extends Exception {
 	 * @param cause cause
 	 */
 	public SshException(Code code, Throwable cause) {
-		super(cause);
+		super(String.format("SSHERR %s", code.id),  cause);
 		this.code = code;
 	}
 

@@ -20,7 +20,8 @@ public class E13ExtendedHostKeyValidation {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -33,15 +34,10 @@ public class E13ExtendedHostKeyValidation {
 		SshHostKeyManager mgr = provider.createHostKeyManager(config);
 
 		/*
-		 * Configure a host key validator. Pass the host key manager so the
-		 * validator can add new host keys and check for mismatches against
-		 * stored ones
+		 * Configure a host key validator. Pass the host key manager so the validator
+		 * can add new host keys and check for mismatches against stored ones
 		 */
 		config.setHostKeyValidator(new ConsoleHostKeyValidator(mgr));
-
-		// Now create a client
-		SshClient client = provider.createClient(config);
-		ExampleUtilities.dumpClientInfo(client);
 
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
@@ -50,19 +46,11 @@ public class E13ExtendedHostKeyValidation {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
+		try (SshClient client = provider.open(config, user, host, port, new ConsolePasswordAuthenticator())) {
 
-		try {
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			try {
-				shell.open();
+			try (SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
-			} finally {
-				shell.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 	}
 }

@@ -13,6 +13,7 @@ class MaverickPrivateKey implements SshPrivateKey {
 		this.privateKey = privateKey;
 	}
 
+	@Override
 	public byte[] sign(byte[] data) throws SshException {
 		try {
 			return privateKey.sign(data);
@@ -21,6 +22,7 @@ class MaverickPrivateKey implements SshPrivateKey {
 		}
 	}
 
+	@Override
 	public String getAlgorithm() {
 		return privateKey.getAlgorithm();
 	}

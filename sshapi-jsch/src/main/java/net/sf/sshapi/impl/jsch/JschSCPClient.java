@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import net.sf.sshapi.AbstractSCPClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshStreamChannel;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
@@ -25,23 +26,25 @@ final class JschSCPClient extends AbstractSCPClient {
 		sshClient = jschSshClient;
 	}
 
+	@Override
 	protected void onClose() throws SshException {
 		/*
-		 * Ganymed opens and closes sessions itself when file operations are
-		 * performed
+		 * Ganymed opens and closes sessions itself when file operations are performed
 		 */
 	}
 
+	@Override
 	protected void onOpen() throws SshException {
 	}
 
+	@Override
 	protected void doPut(String remotePath, String mode, File localfile, boolean recursive) throws SshException {
 		boolean verbose = false;
 		try {
 			String command = "scp -p " + (localfile.isDirectory() ? "-d " : "") + "-t " + (recursive ? "-r " : "")
-				+ (verbose ? "-v " : "") + remotePath;
+					+ (verbose ? "-v " : "") + remotePath;
 			SshConfiguration.getLogger().log(Level.INFO, "Executing command '" + command + "'");
-			SshStreamChannel cmd = sshClient.createCommand(command);
+			SshCommand cmd = sshClient.createCommand(command);
 			try {
 				cmd.open();
 				OutputStream out = cmd.getOutputStream();
@@ -81,7 +84,8 @@ final class JschSCPClient extends AbstractSCPClient {
 		}
 	}
 
-	private void doDir(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in) throws IOException {
+	private void doDir(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in)
+			throws IOException {
 		int ack;
 		String basename = Util.basename(remotePath);
 		String command = "D" + (mode == null ? "0755" : mode) + " 0 " + basename;
@@ -94,7 +98,8 @@ final class JschSCPClient extends AbstractSCPClient {
 		}
 	}
 
-	private void doFile(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in) throws IOException {
+	private void doFile(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in)
+			throws IOException {
 		int ack;
 		String basename = Util.basename(remotePath);
 		String command = "C" + (mode == null ? "0644" : mode) + " " + sourceFile.length() + " " + basename;
@@ -132,6 +137,7 @@ final class JschSCPClient extends AbstractSCPClient {
 		}
 	}
 
+	@Override
 	public void get(final String remoteFilePath, File targetFile, boolean recursive) throws SshException {
 		SshStreamChannel cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
 		cmd.open();
@@ -153,9 +159,8 @@ final class JschSCPClient extends AbstractSCPClient {
 				int c = JschSshClient.checkAck(in);
 				switch (c) {
 				case 'T':
-					System.out.println("T: " + readLine(in));
+					readLine(in);
 				case 'C':
-					System.out.println("Writing " + targetFile);
 					FileOutputStream fos = new FileOutputStream(targetFile);
 					try {
 						// read '0644 '
@@ -169,7 +174,7 @@ final class JschSCPClient extends AbstractSCPClient {
 							}
 							if (buf[0] == ' ')
 								break;
-							filesize = filesize * 10L + (long) (buf[0] - '0');
+							filesize = filesize * 10L + buf[0] - '0';
 						}
 
 						// This is the filename terminated by 0x0a, but we
@@ -220,14 +225,19 @@ final class JschSCPClient extends AbstractSCPClient {
 					run = false;
 					break;
 				default:
-					System.out.println("!! " + c);
 					break;
 				}
 			}
 		} catch (IOException ioe) {
 			throw new SshException(SshException.IO_ERROR, ioe);
 		} finally {
-			cmd.close();
+			try {
+				cmd.close();
+			} catch (IOException e) {
+				if (e instanceof SshException)
+					throw (SshException) e;
+				throw new SshException(SshException.IO_ERROR, e);
+			}
 		}
 	}
 

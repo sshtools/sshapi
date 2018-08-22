@@ -29,7 +29,7 @@ package net.sf.sshapi;
  * <p>
  * Note, to date, not all providers will support all of these events.
  */
-public interface SshDataListener {
+public interface SshDataListener<C extends SshDataProducingComponent<?,?>> {
 
 	/**
 	 * Data was sent to the server on this channel
@@ -60,5 +60,5 @@ public interface SshDataListener {
 	 * @param off buffer offset
 	 * @param len buffer length
 	 */
-	void data(SshDataProducingComponent channel, int direction, byte[] buf, int off, int len);
+	void data(C channel, int direction, byte[] buf, int off, int len);
 }

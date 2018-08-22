@@ -23,83 +23,17 @@
  */
 package net.sf.sshapi.impl.maverick16;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import net.sf.sshapi.AbstractDataProducingComponent;
-import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
-
-import com.maverick.ssh.ChannelEventListener;
-import com.maverick.ssh.SshChannel;
 import com.maverick.ssh.SshSession;
 
-abstract class MaverickSshStreamChannel extends AbstractDataProducingComponent implements SshExtendedStreamChannel,
-		ChannelEventListener {
-	private final com.maverick.ssh.SshSession session;
+import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshCommand;
 
-	MaverickSshStreamChannel(com.maverick.ssh.SshSession session) {
-		this.session = session;
+abstract class MaverickSshStreamChannel
+		extends AbstractMaverickSshStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
+
+	public MaverickSshStreamChannel(SshSession session) {
+		super(session);
 	}
 
-	public int exitCode() throws IOException {
-		return session.exitCode();
-	}
-
-	public SshSession getMaverickSession() {
-		return session;
-	}
-
-	public InputStream getInputStream() throws IOException {
-		return session.getInputStream();
-	}
-
-	public InputStream getExtendedInputStream() throws IOException {
-		return session.getStderrInputStream();
-	}
-
-	public OutputStream getOutputStream() throws IOException {
-		return session.getOutputStream();
-	}
-
-	protected com.maverick.ssh.SshChannel getChannel() {
-		return session;
-	}
-
-	public void onClose() throws SshException {
-		session.close();
-	}
-
-	protected final void onOpen() throws SshException {
-		onChannelOpen();
-		session.addChannelEventListener(this);
-	}
-
-	protected abstract void onChannelOpen() throws SshException;
-
-	public void channelClosed(SshChannel channel) {
-	}
-
-	public void channelClosing(SshChannel channel) {
-	}
-
-	public void channelEOF(SshChannel channel) {
-	}
-
-	public void channelOpened(SshChannel channel) {
-	}
-
-	public void dataReceived(SshChannel channel, byte[] data, int off, int len) {
-		fireData(SshDataListener.RECEIVED, data, off, len);
-	}
-
-	public void dataSent(SshChannel channel, byte[] data, int off, int len) {
-		fireData(SshDataListener.SENT, data, off, len);
-	}
-
-	public void extendedDataReceived(SshChannel channel, byte[] data, int off, int len, int extendedDataType) {
-		fireData(SshDataListener.EXTENDED, data, off, len);
-	}
 }

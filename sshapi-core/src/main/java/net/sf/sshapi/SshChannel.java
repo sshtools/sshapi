@@ -4,7 +4,7 @@ package net.sf.sshapi;
  * Interface for custom channels created by {@link SshChannelHandler}
  * implementations.
  */
-public interface SshChannel extends SshStreamChannel {
+public interface SshChannel extends SshStreamChannel<SshChannelListener<SshChannel>, SshChannel> {
 
 	/**
 	 * Encapsulate details needed for channel creation

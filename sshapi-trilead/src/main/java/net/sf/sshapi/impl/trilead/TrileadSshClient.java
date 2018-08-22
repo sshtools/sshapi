@@ -60,13 +60,12 @@ import com.trilead.ssh2.transport.KexManager;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
-import net.sf.sshapi.auth.SshAgentAuthenticator;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
@@ -90,16 +89,13 @@ class TrileadSshClient extends AbstractClient {
 		this.rng = rng;
 	}
 
-	public void connect(String username, String hostname, int port) throws SshException {
-		if (isConnected()) {
-			throw new SshException(SshException.ALREADY_OPEN, "Already connected.");
-		}
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
 		SshConfiguration configuration = getConfiguration();
 		if (configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
 			throw new SshException(SshException.UNSUPPORTED_PROTOCOL_VERSION,
 					"Trilead only supports SSH2, yet SSH1 only was request.");
 		}
-
 		SshProxyServerDetails proxyServer = configuration.getProxyServer();
 		connection = new Connection(hostname, port);
 		if (proxyServer != null) {
@@ -108,7 +104,6 @@ class TrileadSshClient extends AbstractClient {
 		}
 		connection.setSecureRandom(rng);
 		configureAlgorithms(configuration);
-
 		try {
 			connection.connect(new ServerHostKeyVerifierBridge(configuration.getHostKeyValidator()));
 			connected = true;
@@ -122,11 +117,11 @@ class TrileadSshClient extends AbstractClient {
 		return new RemoteSocketFactory();
 	}
 
-	public SshSCPClient createSCPClient() throws SshException {
+	public SshSCPClient createSCP() throws SshException {
 		return new TriliadSCPClient(this);
 	}
 
-	public boolean authenticate(SshAuthenticator[] authenticators) throws SshException {
+	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
 		try {
 			if (!doAuthentication(authenticators)) {
 				return false;
@@ -139,7 +134,7 @@ class TrileadSshClient extends AbstractClient {
 	}
 
 	private boolean doAuthentication(SshAuthenticator[] authenticators) throws IOException, SshException {
-		Map authenticatorMap = createAuthenticatorMap(authenticators);
+		Map<String, SshAuthenticator> authenticatorMap = createAuthenticatorMap(authenticators);
 		while (true) {
 			String[] remainingMethods = connection.getRemainingAuthMethods(username);
 			if (remainingMethods == null || remainingMethods.length == 0) {
@@ -148,7 +143,6 @@ class TrileadSshClient extends AbstractClient {
 			for (int i = 0; i < remainingMethods.length; i++) {
 				SshAuthenticator authenticator = (SshAuthenticator) authenticatorMap.get(remainingMethods[i]);
 				if (authenticator != null) {
-
 					// Password
 					if (authenticator instanceof SshPasswordAuthenticator) {
 						char[] pw = ((SshPasswordAuthenticator) authenticator).promptForPassword(this, "Password");
@@ -159,19 +153,16 @@ class TrileadSshClient extends AbstractClient {
 							// Authenticated!
 							return true;
 						}
-
 						// Return to main loop so getRemainingMethods is called
 						// again
 						continue;
 					}
-
 					// Public key
 					if (authenticator instanceof SshPublicKeyAuthenticator) {
 						SshPublicKeyAuthenticator pka = ((SshPublicKeyAuthenticator) authenticator);
 						byte[] keyBytes = pka.getPrivateKey();
 						char[] pw = null;
 						char[] charArray = new String(keyBytes, "US-ASCII").toCharArray();
-
 						// Try to work out if key is encrypted
 						try {
 							PEMDecoder.decode(charArray, null);
@@ -182,18 +173,15 @@ class TrileadSshClient extends AbstractClient {
 								throw new SshException("Authentication cancelled.");
 							}
 						}
-
 						if (connection.authenticateWithPublicKey(username, charArray,
 								pw == null ? null : new String(pw))) {
 							// Authenticated!
 							return true;
 						}
-
 						// Return to main loop so getRemainingMethods is called
 						// again
 						continue;
 					}
-
 					// Keyboard interactive
 					if (authenticator instanceof SshKeyboardInteractiveAuthenticator) {
 						final SshKeyboardInteractiveAuthenticator kbi = (SshKeyboardInteractiveAuthenticator) authenticator;
@@ -206,12 +194,10 @@ class TrileadSshClient extends AbstractClient {
 							// Authenticated!
 							return true;
 						}
-
 						continue;
 					}
 				}
 			}
-
 			return false;
 		}
 	}
@@ -254,7 +240,6 @@ class TrileadSshClient extends AbstractClient {
 					"Trilead does not supporting binding a local port forward to a particular address.");
 		}
 		return new AbstractPortForward() {
-
 			private LocalPortForwarder localPortForwarder;
 
 			protected void onOpen() throws SshException {
@@ -310,7 +295,7 @@ class TrileadSshClient extends AbstractClient {
 		}
 	}
 
-	public SshExtendedStreamChannel createCommand(final String command) throws SshException {
+	public SshCommand createCommand(final String command) throws SshException {
 		try {
 			final Session sess = connection.openSession();
 			return new TrileadStreamChannel(getConfiguration(), sess) {
@@ -347,7 +332,7 @@ class TrileadSshClient extends AbstractClient {
 		return isConnected() && connection.isAuthenticationComplete();
 	}
 
-	public SftpClient createSftpClient() throws SshException {
+	public SftpClient createSftp() throws SshException {
 		return new TrileadSftpClient(connection);
 	}
 
@@ -379,7 +364,7 @@ class TrileadSshClient extends AbstractClient {
 				Field field = connection.getClass().getDeclaredField("cryptoWishList");
 				field.setAccessible(true);
 				CryptoWishList cwl = (CryptoWishList) field.get(connection);
-				List l = new ArrayList(Arrays.asList(cwl.kexAlgorithms));
+				List<String> l = new ArrayList<>(Arrays.asList(cwl.kexAlgorithms));
 				l.remove(preferredKeyExchange);
 				l.add(0, preferredKeyExchange);
 				cwl.kexAlgorithms = (String[]) l.toArray(new String[l.size()]);
@@ -394,21 +379,21 @@ class TrileadSshClient extends AbstractClient {
 	}
 
 	private String[] checkCipher(String cipher) {
-		List ciphers = new ArrayList(Arrays.asList(BlockCipherFactory.getDefaultCipherList()));
+		List<String> ciphers = new ArrayList<>(Arrays.asList(BlockCipherFactory.getDefaultCipherList()));
 		ciphers.remove(cipher);
 		ciphers.add(0, cipher);
 		return (String[]) ciphers.toArray(new String[ciphers.size()]);
 	}
 
 	private String[] checkMAC(String mac) {
-		List macs = new ArrayList(Arrays.asList(MAC.getMacList()));
+		List<String> macs = new ArrayList<>(Arrays.asList(MAC.getMacList()));
 		macs.remove(mac);
 		macs.add(0, mac);
 		return (String[]) macs.toArray(new String[macs.size()]);
 	}
 
 	private String[] checkPublicKey(String publicKey) {
-		List pks = new ArrayList(Arrays.asList(KexManager.getDefaultServerHostkeyAlgorithmList()));
+		List<String> pks = new ArrayList<>(Arrays.asList(KexManager.getDefaultServerHostkeyAlgorithmList()));
 		pks.remove(publicKey);
 		pks.add(0, publicKey);
 		return (String[]) pks.toArray(new String[pks.size()]);
@@ -426,7 +411,6 @@ class TrileadSshClient extends AbstractClient {
 			final String hexFingerprint = KnownHosts.createHexFingerprint(serverHostKeyAlgorithm, serverHostKey);
 			if (hostKeyValidator != null) {
 				switch (hostKeyValidator.verifyHost(new AbstractHostKey() {
-
 					public String getType() {
 						return serverHostKeyAlgorithm;
 					}
@@ -462,7 +446,7 @@ class TrileadSshClient extends AbstractClient {
 			ChannelManager cm = (ChannelManager) cmF.get(connection);
 			Field cF = cm.getClass().getDeclaredField("channels");
 			cF.setAccessible(true);
-			Vector channels = (Vector) cF.get(cm);
+			Vector<?> channels = (Vector<?>) cF.get(cm);
 			return channels == null ? 0 : channels.size();
 		} catch (Exception e) {
 			throw new UnsupportedOperationException("Could not determine number of channels open.", e);
@@ -479,7 +463,6 @@ class TrileadSshClient extends AbstractClient {
 	}
 
 	class RemoteSocketFactory extends SocketFactory {
-
 		public Socket createSocket() throws IOException {
 			return new RemoteSocket(connection);
 		}
@@ -501,11 +484,9 @@ class TrileadSshClient extends AbstractClient {
 				throws IOException {
 			return new RemoteSocket(connection, address, port);
 		}
-
 	}
 
 	class RemoteSocket extends AbstractSocket {
-
 		private LocalStreamForwarder streamForwarder;
 		private Connection connection;
 

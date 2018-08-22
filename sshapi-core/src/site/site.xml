@@ -10,9 +10,7 @@
 		<href>http://sshapi.sourceforge.net</href>
 	</bannerLeft>
 	<body>
-		<head>
-			<![CDATA[<link rel="stylesheet" href="../css/site.css" type="text/css"/>]]>
-		</head>
+		<head><![CDATA[<link rel="stylesheet" href="../css/site.css" type="text/css"/>]]></head>
 		<menu name="Overview">
 			<item name="Introduction" href="index.html" />
 			<item name="Return To Main Project" href="../index.html" />

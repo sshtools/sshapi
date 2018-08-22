@@ -50,10 +50,12 @@ class JschSftpClient extends AbstractSftpClient {
 		this.channel = channel;
 	}
 
+	@Override
 	public void onClose() throws SshException {
 		channel.disconnect();
 	}
 
+	@Override
 	public SftpFile[] ls(String path) throws SshException {
 		Vector paths;
 		try {
@@ -76,6 +78,7 @@ class JschSftpClient extends AbstractSftpClient {
 		return date * 1000l;
 	}
 
+	@Override
 	public void onOpen() throws SshException {
 		try {
 			channel.connect();
@@ -87,10 +90,12 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public String getDefaultPath() throws SshException {
 		return home;
 	}
 
+	@Override
 	public void mkdir(String path, int permissions) throws SshException {
 		try {
 			channel.mkdir(path);
@@ -101,6 +106,7 @@ class JschSftpClient extends AbstractSftpClient {
 
 	}
 
+	@Override
 	public void rm(String path) throws SshException {
 		try {
 			channel.rm(path);
@@ -109,6 +115,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rmdir(String path) throws SshException {
 		try {
 			channel.rmdir(path);
@@ -117,6 +124,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public SftpFile stat(String path) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);
@@ -137,6 +145,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void get(String path, OutputStream out) throws SshException {
 		try {
 			channel.get(path, out);
@@ -145,6 +154,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void get(String path, OutputStream out, long filePointer) throws SshException {
 		try {
 			channel.get(path, out, null, ChannelSftp.OVERWRITE, filePointer);
@@ -153,6 +163,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public InputStream get(String path, long filePointer) throws SshException {
 		try {
 			return channel.get(path, null, filePointer);
@@ -161,6 +172,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public InputStream get(String path) throws SshException {
 		try {
 			return channel.get(path);
@@ -169,6 +181,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void put(String path, InputStream in, int permissions) throws SshException {
 		try {
 			channel.put(in, path, ChannelSftp.OVERWRITE);
@@ -178,19 +191,23 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public OutputStream put(final String path, final int permissions) throws SshException {
 		return put(path, permissions, 0);
 	}
 
+	@Override
 	public OutputStream put(final String path, final int permissions, long offset) throws SshException {
 		try {
 			final OutputStream out = channel.put(path, null, ChannelSftp.OVERWRITE, offset);
 			return new FilterOutputStream(out) {
+				@Override
 				public void write(byte b[], int off, int len) throws IOException {
 					// Never did get why this is needed ???
 					out.write(b, off, len);
 				}
 
+				@Override
 				public void close() throws IOException {
 					super.close();
 					try {
@@ -207,6 +224,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void chmod(final String path, final int permissions) throws SshException {
 		try {
 			setPermissions(path, permissions);
@@ -223,6 +241,7 @@ class JschSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rename(String path, String newPath) throws SshException {
 		try {
 			channel.rename(path, newPath);
@@ -232,10 +251,11 @@ class JschSftpClient extends AbstractSftpClient {
 
 	}
 
+	@Override
 	public void setLastModified(String path, long modtime) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);
-			attrs.setACMODTIME((int) attrs.getMTime(), (int) modtime / 1000);
+			attrs.setACMODTIME(attrs.getMTime(), (int) modtime / 1000);
 			channel.setStat(path, attrs);
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
@@ -243,6 +263,7 @@ class JschSftpClient extends AbstractSftpClient {
 
 	}
 
+	@Override
 	public void chown(String path, int uid) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);
@@ -254,6 +275,7 @@ class JschSftpClient extends AbstractSftpClient {
 
 	}
 
+	@Override
 	public void chgrp(String path, int gid) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);

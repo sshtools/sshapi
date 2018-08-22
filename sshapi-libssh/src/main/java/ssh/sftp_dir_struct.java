@@ -55,8 +55,11 @@ public class sftp_dir_struct extends Structure<sftp_dir_struct, sftp_dir_struct.
 		this.eof = eof;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_dir_struct newInstance() { return new sftp_dir_struct(); }
 	public static sftp_dir_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_dir_struct.class, arrayLength);

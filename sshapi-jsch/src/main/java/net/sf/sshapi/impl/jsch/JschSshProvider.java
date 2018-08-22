@@ -64,6 +64,7 @@ public class JschSshProvider extends AbstractProvider {
 		super("JSch");
 	}
 
+	@Override
 	public SshClient doCreateClient(SshConfiguration configuration) {
 		// Much of JSch configuration is global :(
 		configureAlgorithms(configuration);
@@ -106,6 +107,7 @@ public class JschSshProvider extends AbstractProvider {
 		}
 	}
 
+	@Override
 	public void doSupportsConfiguration(SshConfiguration configuration) {
 		try {
 			Class.forName("com.jcraft.jsch.JSch", false, getClass().getClassLoader());
@@ -117,28 +119,32 @@ public class JschSshProvider extends AbstractProvider {
 		}
 	}
 
+	@Override
 	public List getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY,
-			Capability.SOCKS5_PROXY, Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT, Capability.HOST_KEY_MANAGEMENT,
-			Capability.SFTP, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
-			Capability.SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS });
+				Capability.SOCKS5_PROXY, Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT,
+				Capability.HOST_KEY_MANAGEMENT, Capability.SFTP, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE,
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.SCP, Capability.FILE_TRANSFER_EVENTS,
+				Capability.DATA_TIMEOUTS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.SHELL });
 	}
 
+	@Override
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws SshException {
 		return new JschHostKeyManager(configuration);
 	}
 
+	@Override
 	public SshIdentityManager createIdentityManager(SshConfiguration configuration) {
 		return new JschIdentityManager(configuration);
 	}
 
 	private void checkFirstConnection() {
 		if (!firstConnection) {
-			SshConfiguration.getLogger().log(
-				Level.WARN,
-				"JSch does not fully support per connection configuration. This second client's configuration "
-					+ "may interfere with the first's.");
+			SshConfiguration.getLogger().log(Level.WARN,
+					"JSch does not fully support per connection configuration. This second client's configuration "
+							+ "may interfere with the first's.");
 			firstConnection = true;
 		}
 	}
@@ -153,26 +159,34 @@ public class JschSshProvider extends AbstractProvider {
 		JSch.setConfig(key, delimited);
 	}
 
+	@Override
 	public List getSupportedCiphers(int protocolVersion) {
 		return Arrays.asList("aes128-ctr,aes128-cbc,3des-ctr,3des-cbc,blowfish-cbc,aes192-cbc,aes256-cbc".split(","));
 	}
 
+	@Override
 	public List getSupportedCompression() {
 		return Arrays.asList("zlib@openssh.com,zlib,none".split(","));
 	}
 
+	@Override
 	public List getSupportedMAC() {
 		return Arrays.asList("hmac-md5,hmac-sha1,hmac-sha1-96,hmac-md5-96".split(","));
 	}
 
+	@Override
 	public List getSupportedKeyExchange() {
-		return Arrays.asList("diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256".split(","));
+		return Arrays.asList(
+				"diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256"
+						.split(","));
 	}
 
+	@Override
 	public List getSupportedPublicKey() {
 		return Arrays.asList("ssh-rsa,ssh-dss,ssh-ecdsa".split(","));
 	}
 
+	@Override
 	public void seed(long seed) {
 		// Jsch 'Random' interface is global anyway
 		RANDOM.setSeed(seed);

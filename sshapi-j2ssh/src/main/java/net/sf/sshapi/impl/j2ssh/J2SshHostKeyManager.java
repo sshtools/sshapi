@@ -95,12 +95,12 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	public SshHostKey[] getKeys() {
-		List hostKeys = new ArrayList();
-		Map hosts = knownHosts.allowedHosts();
-		for (Iterator e = hosts.keySet().iterator(); e.hasNext();) {
+		List<SshHostKey> hostKeys = new ArrayList<>();
+		Map<?,?> hosts = knownHosts.allowedHosts();
+		for (Iterator<?> e = hosts.keySet().iterator(); e.hasNext();) {
 			final String host = (String) e.next();
-			HashMap allowed = (HashMap) hosts.get(host);
-			for (Iterator e2 = allowed.keySet().iterator(); e2.hasNext();) {
+			HashMap<?,?> allowed = (HashMap<?,?>) hosts.get(host);
+			for (Iterator<?> e2 = allowed.keySet().iterator(); e2.hasNext();) {
 				final String algo = (String) e2.next();
 				final SshPublicKey key = (SshPublicKey) allowed.get(algo);
 				hostKeys.add(new AbstractHostKey() {

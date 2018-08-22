@@ -9,7 +9,7 @@ Note, this Commons VF provider is for Commons VFS 2.0.</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
 		<groupId>com.sshtools</groupId>
-		<version>1.1.2</version>
+		<version>2.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>

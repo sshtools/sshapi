@@ -43,8 +43,11 @@ public class sftp_status_message_struct extends Structure<sftp_status_message_st
 		this.langmsg = langmsg;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_status_message_struct newInstance() { return new sftp_status_message_struct(); }
 	public static sftp_status_message_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_status_message_struct.class, arrayLength);

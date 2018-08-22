@@ -24,25 +24,24 @@
 package net.sf.sshapi;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Abstract implementation of an {@link SshLifecycleComponent}, providing some
  * command methods.
  */
-public abstract class AbstractLifecycleComponent implements SshLifecycleComponent {
+public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> implements SshLifecycleComponent<L, C> {
 
-	private List listeners;
+	private List<L> listeners;
 
-	public final synchronized void addListener(SshLifecycleListener listener) {
+	public final synchronized void addListener(L listener) {
 		if (listeners == null) {
-			listeners = new ArrayList();
+			listeners = new ArrayList<>();
 		}
 		listeners.add(listener);
 	}
 
-	public final synchronized void removeListener(SshLifecycleListener listener) {
+	public final synchronized void removeListener(L listener) {
 		if (listeners != null) {
 			listeners.remove(listener);
 		}
@@ -51,37 +50,37 @@ public abstract class AbstractLifecycleComponent implements SshLifecycleComponen
 	/**
 	 * Inform all listeners the component has opened.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void fireOpened() {
 		if (listeners != null) {
-			for (Iterator i = new ArrayList(listeners).iterator(); i.hasNext();) {
-				((SshLifecycleListener) i.next()).opened(this);
-			}
+			for (int i = listeners.size() - 1; i >= 0; i--)
+				listeners.get(i).opened((C) this);
 		}
 	}
 
 	/**
 	 * Inform all listeners the component has closed.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void fireClosed() {
 		if (listeners != null) {
-			for (Iterator i = new ArrayList(listeners).iterator(); i.hasNext();) {
-				((SshLifecycleListener) i.next()).closed(this);
-			}
+			for (int i = listeners.size() - 1; i >= 0; i--)
+				listeners.get(i).closed((C) this);
 		}
 	}
 
 	/**
 	 * Inform all listeners the component is closing.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void fireClosing() {
 		if (listeners != null) {
-			for (Iterator i = new ArrayList(listeners).iterator(); i.hasNext();) {
-				((SshLifecycleListener) i.next()).closing(this);
-			}
+			for (int i = listeners.size() - 1; i >= 0; i--)
+				listeners.get(i).closing((C) this);
 		}
 	}
 	
-	protected List getListeners() {
+	protected List<L> getListeners() {
 		return listeners;
 	}
 }

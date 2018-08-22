@@ -45,8 +45,11 @@ public class sftp_client_message_struct extends Structure<sftp_client_message_st
 	protected void initFieldOrder() {
 		setFieldOrder(new java.lang.String[]{"sftp", "type", "id", "filename", "flags", "attr", "handle", "offset", "len", "attr_num", "attrbuf", "data"});
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_client_message_struct newInstance() { return new sftp_client_message_struct(); }
 	public static sftp_client_message_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_client_message_struct.class, arrayLength);

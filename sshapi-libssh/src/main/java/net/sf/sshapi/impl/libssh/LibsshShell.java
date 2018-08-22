@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
@@ -12,8 +13,11 @@ import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
-// Crazy name :)
-public class LibsshShell extends AbstractLifecycleComponentWithEvents implements SshShell {
+// Crazy name :)SshLifecycleListener<SshShell>, SshShell
+
+
+public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannelListener<SshShell>, SshShell>
+		implements SshShell {
 
 	private LibsshInputStream in;
 	private LibsshInputStream ext;
@@ -44,12 +48,13 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents implements
 		return out;
 	}
 
-	public void addDataListener(SshDataListener listener) {
+	public void addDataListener(SshDataListener<SshShell> listener) {
 	}
 
-	public void removeDataListener(SshDataListener listener) {
+	public void removeDataListener(SshDataListener<SshShell> listener) {
 	}
 
+	@Override
 	public void onOpen() throws SshException {
 
 		channel = library.ssh_channel_new(libSshSession);
@@ -94,6 +99,7 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents implements
 
 	}
 
+	@Override
 	public void onClose() throws SshException {
 		library.ssh_channel_send_eof(channel);
 		try {

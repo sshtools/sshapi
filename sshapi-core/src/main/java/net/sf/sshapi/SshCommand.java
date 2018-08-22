@@ -8,7 +8,9 @@ import java.io.InputStream;
  * used for STDERR.
  * 
  */
-public interface SshExtendedStreamChannel extends SshStreamChannel {
+
+public interface SshCommand
+		extends SshExtendedChannel<SshChannelListener<SshCommand>, SshCommand> {
 	/**
 	 * Get the extended input stream.
 	 * 

@@ -33,8 +33,11 @@ public class sftp_message_struct extends Structure<sftp_message_struct, sftp_mes
 		this.id = id;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_message_struct newInstance() { return new sftp_message_struct(); }
 	public static sftp_message_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_message_struct.class, arrayLength);

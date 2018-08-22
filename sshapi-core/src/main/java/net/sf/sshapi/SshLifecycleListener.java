@@ -29,30 +29,35 @@ package net.sf.sshapi;
  * <p>
  * Note, to date, not all providers will support all of these events.
  */
-public interface SshLifecycleListener {
+public interface SshLifecycleListener<C extends SshLifecycleComponent<?, C>> {
 
 	/**
-	 * A channel has been opened. This is called once the client has confirmed,
-	 * or received a confirmation from the server that a channel has been
-	 * opened.
+	 * A channel has been opened. This is called once the client has confirmed, or
+	 * received a confirmation from the server that a channel has been opened.
 	 * 
-	 * @param channel the opened channel.
+	 * @param channel
+	 *            the opened channel.
 	 */
-	void opened(SshLifecycleComponent channel);
+	default void opened(C channel) {
+	}
 
 	/**
-	 * A channel is closing. This is called before a channel is confirmed as
-	 * being closed.
+	 * A channel is closing. This is called before a channel is confirmed as being
+	 * closed.
 	 * 
-	 * @param channel the channel closing.
+	 * @param channel
+	 *            the channel closing.
 	 */
-	void closing(SshLifecycleComponent channel);
+	default void closing(C channel) {
+	}
 
 	/**
 	 * A channel is c;osed. This is called after a channel is confirmed as being
 	 * closed.
 	 * 
-	 * @param channel the channel closed.
+	 * @param channel
+	 *            the channel closed.
 	 */
-	void closed(SshLifecycleComponent channel);
+	default void closed(C channel) {
+	}
 }

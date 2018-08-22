@@ -58,8 +58,10 @@ final class TriliadSCPClient extends AbstractSCPClient implements SshSCPClient {
 				}
 			} else {
 				fireFileTransferStarted(localfile.getPath(), remotePath, localfile.length());
+				String remoteDir = Util.dirname(remotePath);
+				String remoteFile = Util.basename(remotePath);
 				try {
-					client.put(localfile.getPath(), remotePath, mode == null ? "0600" : mode);
+					client.put(localfile.getPath(), remoteFile, remoteDir, mode == null ? "0600" : mode);
 				} finally {
 					fireFileTransferFinished(localfile.getPath(), remotePath);
 				}
@@ -73,7 +75,7 @@ final class TriliadSCPClient extends AbstractSCPClient implements SshSCPClient {
 			throws SshException {
 		if (recursive) {
 			throw new UnsupportedOperationException(
-					"Ganymed does not support recursively retrieving files from the server using SCP");
+					"Trilead does not support recursively retrieving files from the server using SCP");
 		}
 		try {
 			if (targetFile.isDirectory()) {

@@ -26,6 +26,7 @@ package net.sf.sshapi;
 import java.util.List;
 
 import net.sf.sshapi.agent.SshAgent;
+import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -86,7 +87,7 @@ public interface SshProvider {
 	 * @throws UnsupportedOperationException
 	 *             if protocol version not supported
 	 */
-	List getSupportedCiphers(int protocolVersion);
+	List<String> getSupportedCiphers(int protocolVersion);
 
 	/**
 	 * Get a list of supported MAC types. Each element will be a {@link String} of
@@ -98,7 +99,7 @@ public interface SshProvider {
 	 * @throws UnsupportedOperationException
 	 *             if SSH2 not supported
 	 */
-	List getSupportedMAC();
+	List<String> getSupportedMAC();
 
 	/**
 	 * Get a list of supported compression types. Each element will be a
@@ -110,7 +111,7 @@ public interface SshProvider {
 	 * @throws UnsupportedOperationException
 	 *             if SSH2 not supported
 	 */
-	List getSupportedCompression();
+	List<String> getSupportedCompression();
 
 	/**
 	 * Get a list of supported key exchange algorithms. Each element will be a
@@ -122,7 +123,7 @@ public interface SshProvider {
 	 * @throws UnsupportedOperationException
 	 *             if SSH2 not supported
 	 */
-	List getSupportedKeyExchange();
+	List<String> getSupportedKeyExchange();
 
 	/**
 	 * Get a list of supported public key algorithms. Each element will be a
@@ -134,7 +135,7 @@ public interface SshProvider {
 	 * @throws UnsupportedOperationException
 	 *             if SSH2 not supported
 	 */
-	List getSupportedPublicKey();
+	List<String> getSupportedPublicKey();
 
 	/**
 	 * Get a list of the capabilities of this implementation ({@link Capability}
@@ -143,7 +144,7 @@ public interface SshProvider {
 	 * @return list of capabilities
 	 * @see Capability
 	 */
-	List getCapabilities();
+	List<Capability> getCapabilities();
 
 	/**
 	 * Examine the configuration to see if this provider supports it.
@@ -167,6 +168,32 @@ public interface SshProvider {
 	 *             if the provider configuration is not valid
 	 */
 	SshClient createClient(SshConfiguration configuration);
+
+	/**
+	 * Create a new client instance with the specified configuration and connect and
+	 * authenticate it.
+	 * <p>
+	 * IMPLEMENTATION NOTE: The provider implementation is expected to invoke
+	 * {@link SshClient#init(SshProvider)} after construction.
+	 * 
+	 * @param configuration
+	 *            configuration
+	 * @param username
+	 *            user name
+	 * @param hostname
+	 *            hostname
+	 * @param port
+	 *            port
+	 * @param authenticators
+	 *            authenticators
+	 * @return client
+	 * @throws SshException
+	 *             on error
+	 * @throws UnsupportedOperationException
+	 *             if the provider configuration is not valid
+	 */
+	SshClient open(SshConfiguration configuration, String username, String hostname, int port,
+			SshAuthenticator... authenticators) throws SshException;
 
 	/**
 	 * Create a connection to the local agent using default or auto-detected

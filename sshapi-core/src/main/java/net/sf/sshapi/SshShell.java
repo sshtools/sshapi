@@ -26,15 +26,19 @@ package net.sf.sshapi;
 /**
  * A remote shell.
  */
-public interface SshShell extends SshExtendedStreamChannel {
+public interface SshShell extends SshExtendedChannel<SshChannelListener<SshShell>, SshShell> {
 
 	/**
 	 * Request that the pseudo terminal attributes are changed.
 	 * 
-	 * @param width new terminal width
-	 * @param height new terminal height
-	 * @param pixw new pixel width
-	 * @param pixh new pixel height
+	 * @param width
+	 *            new terminal width
+	 * @param height
+	 *            new terminal height
+	 * @param pixw
+	 *            new pixel width
+	 * @param pixh
+	 *            new pixel height
 	 * @throws SshException
 	 */
 	void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException;

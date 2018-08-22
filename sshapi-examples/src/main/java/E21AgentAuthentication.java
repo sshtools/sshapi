@@ -18,7 +18,8 @@ public class E21AgentAuthentication {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -26,7 +27,7 @@ public class E21AgentAuthentication {
 		config.addRequiredCapability(Capability.AGENT);
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
-		
+
 		// Locate and connect to agent
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
 		System.out.println("Connecting to agent.");
@@ -35,7 +36,7 @@ public class E21AgentAuthentication {
 
 		// Create the client using that configuration
 		SshClient client = config.createClient();
-		
+
 		ExampleUtilities.dumpClientInfo(client);
 
 		// Prompt for the host and username
@@ -49,20 +50,16 @@ public class E21AgentAuthentication {
 
 		// Connect the client to the agent
 		client.addChannelHandler(agent);
-		
+
 		// Authenticate
 		client.authenticate(new SshAuthenticator[] { new DefaultAgentAuthenticator(agent) });
 
 		try {
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			try {
-				shell.open();
+			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
-			} finally {
-				shell.close();
 			}
 		} finally {
-			client.disconnect();
+			client.close();
 		}
 	}
 }

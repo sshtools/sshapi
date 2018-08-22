@@ -32,7 +32,8 @@ import java.io.OutputStream;
  * streams, such as executing a command, or a {@link SshShell}.
  * 
  */
-public interface SshStreamChannel extends SshDataProducingComponent {
+public interface SshStreamChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
+		extends SshDataProducingComponent<L, C> {
 
 	/**
 	 * Get the input stream for this channel.

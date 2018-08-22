@@ -7,15 +7,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import net.sf.sshapi.AbstractSCPClient;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshSCPClient;
-import net.sf.sshapi.util.Util;
 import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.SCPInputStream;
 import ch.ethz.ssh2.SCPOutputStream;
+import net.sf.sshapi.AbstractSCPClient;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.util.Util;
 
-final class GanymedSCPClient extends AbstractSCPClient implements SshSCPClient {
+final class GanymedSCPClient extends AbstractSCPClient {
 
 	/**
 	 * 

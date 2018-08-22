@@ -1,0 +1,20 @@
+<component-set>
+	<components>
+		<component>
+			<role>org.apache.maven.wagon.Wagon</role>
+			<role-hint>scp</role-hint>
+			<implementation>org.apache.maven.wagon.providers.ssh.sshapi.ScpWagon
+			</implementation>
+			<instantiation-strategy>per-lookup</instantiation-strategy>
+			<description>SCP protocol wagon.</description>
+		</component>
+		<component>
+			<role>org.apache.maven.wagon.Wagon</role>
+			<role-hint>sftp</role-hint>
+			<implementation>org.apache.maven.wagon.providers.ssh.sshapi.SftpWagon
+			</implementation>
+			<instantiation-strategy>per-lookup</instantiation-strategy>
+			<description>SFTP protocol wagon.</description>
+		</component>
+	</components>
+</component-set>

@@ -51,6 +51,7 @@ import net.sf.sshapi.identity.SshPublicKeyFile;
  */
 public class MaverickIdentityManager implements SshIdentityManager {
 
+	@Override
 	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in) throws SshException {
 		try {
 			return new MaverickPrivateKeyFile(SshPrivateKeyFileFactory.parse(in));
@@ -59,6 +60,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 	}
 
+	@Override
 	public SshPublicKeyFile createPublicKeyFromStream(InputStream in) throws SshException {
 		try {
 			return new MaverickPublicKeyFile(SshPublicKeyFileFactory.parse(in));
@@ -67,6 +69,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 	}
 
+	@Override
 	public SshPrivateKeyFile create(net.sf.sshapi.identity.SshKeyPair pair, int format, char[] passphrase,
 			String comment) throws SshException {
 		int typeNo = SshPrivateKeyFileFactory.OPENSSH_FORMAT;
@@ -93,6 +96,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		return SshKeyPair.getKeyPair(privateKey.privateKey, publicKey.publicKey);
 	}
 
+	@Override
 	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
 		try {
 			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(translateKeyType(keyType), keyBits);
@@ -115,25 +119,30 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 	}
 
-	public List getSupportedKeyLengths() {
+	@Override
+	public List<Integer> getSupportedKeyLengths() {
 		return Arrays
 				.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
 	}
 
-	public List getSupportedPublicKeyFileFormats() {
+	@Override
+	public List<Integer> getSupportedPublicKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
 				new Integer(SshPublicKeyFile.SECSH_FORMAT), new Integer(SshPublicKeyFile.SSH1_FORMAT) });
 	}
 
-	public List getSupportedPrivateKeyFileFormats() {
+	@Override
+	public List<Integer> getSupportedPrivateKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPrivateKeyFile.VENDOR_OPENSSH),
 				new Integer(SshPrivateKeyFile.VENDOR_SSH1), new Integer(SshPrivateKeyFile.VENDOR_SSHTOOLS) });
 	}
 
-	public List getSupportedKeyTypes() {
+	@Override
+	public List<String> getSupportedKeyTypes() {
 		return Arrays.asList(new String[] { "ssh-dss", "ssh-rsa", "rsa1" });
 	}
 
+	@Override
 	public SshPublicKeyFile create(SshPublicKey key, String options, String comment, int format) throws SshException {
 		MaverickPublicKey pk = (MaverickPublicKey) key;
 		int type;
@@ -170,16 +179,17 @@ public class MaverickIdentityManager implements SshIdentityManager {
 				if (!isEncrypted()) {
 					pair = privateKeyFile.toKeyPair(null);
 				}
-			} catch (IOException e) {
-				SshConfiguration.getLogger().log(Level.ERROR, "Failed to load key.");
-			} catch (InvalidPassphraseException e) {
+			}catch (InvalidPassphraseException e) {
 				SshConfiguration.getLogger().log(Level.WARN, "Failed to decode supposedly unencrypted key.");
 			} catch (SshException e) {
 				SshConfiguration.getLogger().log(Level.WARN, "Failed to test if key is encrypted.");
-			}
+			} catch (IOException e) {
+				SshConfiguration.getLogger().log(Level.ERROR, "Failed to load key.");
+			} 
 
 		}
 
+		@Override
 		public void changePassphrase(char[] newPassphrase) throws SshException {
 			if (isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
@@ -195,6 +205,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 		}
 
+		@Override
 		public byte[] getFormattedKey() throws SshException {
 			try {
 				return privateKeyFile.getFormattedKey();
@@ -203,6 +214,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 		}
 
+		@Override
 		public void decrypt(char[] passphrase) throws SshException {
 			if (!isEncrypted()) {
 				throw new SshException(SshException.NOT_ENCRYPTED, "Key not encrypted.");
@@ -219,6 +231,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 		}
 
+		@Override
 		public boolean isEncrypted() throws SshException {
 			return privateKeyFile.isPassphraseProtected();
 		}
@@ -233,10 +246,12 @@ public class MaverickIdentityManager implements SshIdentityManager {
 					"Cannot write keys in " + typeName + " format");
 		}
 
+		@Override
 		public boolean supportsPassphraseChange() {
 			return privateKeyFile.supportsPassphraseChange();
 		}
 
+		@Override
 		public int getFormat() {
 			String type = privateKeyFile.getType();
 			if (type.equals("OpenSSH")) {
@@ -253,6 +268,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			return VENDOR_UNKNOWN;
 		}
 
+		@Override
 		public net.sf.sshapi.identity.SshKeyPair toKeyPair() throws SshException {
 			if (isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
@@ -275,6 +291,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			this.privateKey = privateKey;
 		}
 
+		@Override
 		public byte[] sign(byte[] data) throws SshException {
 			try {
 				return privateKey.sign(data);
@@ -283,6 +300,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 		}
 
+		@Override
 		public String getAlgorithm() {
 			return privateKey.getAlgorithm();
 		}
@@ -321,18 +339,22 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			bitLength = publicKey.getBitLength();
 		}
 
+		@Override
 		public String getAlgorithm() {
 			return algorithm;
 		}
 
+		@Override
 		public String getFingerprint() {
 			return fingerPrint;
 		}
 
+		@Override
 		public byte[] getEncodedKey() {
 			return key;
 		}
 
+		@Override
 		public int getBitLength() {
 			return bitLength;
 		}
@@ -370,22 +392,27 @@ public class MaverickIdentityManager implements SshIdentityManager {
 
 		}
 
+		@Override
 		public SshPublicKey getPublicKey() throws SshException {
 			return publicKey;
 		}
 
+		@Override
 		public String getComment() {
 			return comment;
 		}
 
+		@Override
 		public byte[] getFormattedKey() {
 			return formattedKey;
 		}
 
+		@Override
 		public String getOptions() {
 			return options;
 		}
 
+		@Override
 		public int getFormat() {
 			return format;
 		}

@@ -95,6 +95,7 @@ public class Util {
 	public static String prompt(String message) {
 		message = message.trim();
 		System.out.print(message + (message.endsWith(":") ? " " : ": "));
+		System.out.flush();
 		try {
 			return readLine();
 		} catch (IOException e) {

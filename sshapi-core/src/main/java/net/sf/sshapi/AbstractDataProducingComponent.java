@@ -24,29 +24,28 @@
 package net.sf.sshapi;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Abstract implementation of {@link SshDataProducingComponent} that provides
  * some default common methods.
  */
-public abstract class AbstractDataProducingComponent extends AbstractLifecycleComponentWithEvents implements
-		SshDataProducingComponent {
+public abstract class AbstractDataProducingComponent<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
+		extends AbstractLifecycleComponentWithEvents<L, C> implements SshDataProducingComponent<L, C> {
 
-	private List dataListeners = new ArrayList();
+	private List<SshDataListener<C>> dataListeners = new ArrayList<>();
 
-	public final synchronized void addDataListener(SshDataListener listener) {
+	public final synchronized void addDataListener(SshDataListener<C> listener) {
 		dataListeners.add(listener);
 	}
 
-	public final synchronized void removeDataListener(SshDataListener listener) {
+	public final synchronized void removeDataListener(SshDataListener<C> listener) {
 		dataListeners.remove(listener);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void fireData(int direction, byte[] buf, int off, int len) {
-		for (Iterator i = new ArrayList(dataListeners).iterator(); i.hasNext();) {
-			((SshDataListener) i.next()).data(this, direction, buf, off, len);
-		}
+		for (int i = dataListeners.size() - 1; i >= 0; i--)
+			dataListeners.get(i).data((C) this, direction, buf, off, len);
 	}
 }

@@ -19,7 +19,8 @@ public class E16PublicKeySubsytem {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -45,9 +46,7 @@ public class E16PublicKeySubsytem {
 		System.out.println("list - list all keys");
 		String cmd = "";
 
-		SshPublicKeySubsystem subsys = client.createPublicKeySubsystem();
-		subsys.open();
-		try {
+		try (SshPublicKeySubsystem subsys = client.publicKeySubsystem()) {
 			while (true) {
 				cmd = Util.prompt("Command: ");
 				if (cmd.equals("list")) {
@@ -63,8 +62,6 @@ public class E16PublicKeySubsytem {
 					System.out.println("Invalid command");
 				}
 			}
-		} finally {
-			subsys.close();
 		}
 	}
 

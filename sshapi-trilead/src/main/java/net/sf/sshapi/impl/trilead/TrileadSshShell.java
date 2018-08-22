@@ -28,11 +28,12 @@ import java.io.InputStream;
 
 import com.trilead.ssh2.Session;
 
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
-class TrileadSshShell extends TrileadStreamChannel implements SshShell {
+class TrileadSshShell extends AbstractTrileadStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	public TrileadSshShell(SshConfiguration configuration, Session channel) throws SshException {
 		super(configuration, channel);
 	}

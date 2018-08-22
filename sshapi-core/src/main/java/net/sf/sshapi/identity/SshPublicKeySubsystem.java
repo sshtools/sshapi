@@ -26,6 +26,7 @@ package net.sf.sshapi.identity;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleComponent;
+import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshPublicKey;
 
 /**
@@ -35,13 +36,16 @@ import net.sf.sshapi.SshPublicKey;
  * keys.
  * 
  */
-public interface SshPublicKeySubsystem extends SshLifecycleComponent {
+public interface SshPublicKeySubsystem
+		extends SshLifecycleComponent<SshLifecycleListener<SshPublicKeySubsystem>, SshPublicKeySubsystem> {
 
 	/**
 	 * Add a new authorized key.
 	 * 
-	 * @param key key
-	 * @param comment comment
+	 * @param key
+	 *            key
+	 * @param comment
+	 *            comment
 	 * @throws SshException
 	 */
 	void add(SshPublicKey key, String comment) throws SshException;
@@ -55,8 +59,8 @@ public interface SshPublicKeySubsystem extends SshLifecycleComponent {
 	SshPublicKey[] list() throws SshException;
 
 	/**
-	 * Remove a key from the list of available authorized keys. Any clients
-	 * using this key will no longer be able to authenticate as this user.
+	 * Remove a key from the list of available authorized keys. Any clients using
+	 * this key will no longer be able to authenticate as this user.
 	 * 
 	 * @param key
 	 * @throws SshException

@@ -37,6 +37,7 @@ public class LibsshInputStream extends InputStream {
 		}
 		byte[] buf = m.getByteArray(0, read);
 		System.arraycopy(buf, 0, b, off, read);
+		System.out.println("X: " + new String(buf, 0, read));
 		return read;
 	}
 

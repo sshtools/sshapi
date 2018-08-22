@@ -11,7 +11,6 @@ import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
-import net.sf.sshapi.util.Util;
 
 /**
  * This examples extends the {@link E01Shell} example, except host user name and
@@ -23,7 +22,8 @@ public class E03ShellWithGUIPrompts {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -32,12 +32,9 @@ public class E03ShellWithGUIPrompts {
 		config.setHostKeyValidator(new HostKeyValidator());
 		config.setBannerHandler(new BannerHandler());
 
-		// Create the client using that configuration
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
-
 		// Prompt for the host and username
-		String connectionSpec = JOptionPane.showInputDialog("Enter username@hostname", System.getProperty("user.name") + "@localhost");
+		String connectionSpec = JOptionPane.showInputDialog("Enter username@hostname",
+				System.getProperty("user.name") + "@localhost");
 		if (connectionSpec == null) {
 			return;
 		}
@@ -46,20 +43,13 @@ public class E03ShellWithGUIPrompts {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate
-		client.connect(user, host, port);
-		client.authenticate(new ShellAuthenticator());
+		try (SshClient client = config.open(user, host, port, new ShellAuthenticator())) {
+			ExampleUtilities.dumpClientInfo(client);
 
-		try {
 			// Start the shell
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			try {
-				shell.open();
+			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
-			} finally {
-				shell.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 	}
 
@@ -69,8 +59,9 @@ public class E03ShellWithGUIPrompts {
 			String keyAlgorithm = hostKey.getType();
 			String hexFingerprint = hostKey.getFingerprint();
 			message += (keyAlgorithm == null ? "?" : keyAlgorithm) + " key fingerprint is "
-				+ (hexFingerprint == null ? "unknown" : hexFingerprint);
-			int result = JOptionPane.showConfirmDialog(null, message, "Host Key Verification", JOptionPane.OK_CANCEL_OPTION);
+					+ (hexFingerprint == null ? "unknown" : hexFingerprint);
+			int result = JOptionPane.showConfirmDialog(null, message, "Host Key Verification",
+					JOptionPane.OK_CANCEL_OPTION);
 			if (result == JOptionPane.OK_OPTION) {
 				return SshHostKeyValidator.STATUS_HOST_KEY_VALID;
 			}

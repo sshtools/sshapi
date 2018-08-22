@@ -54,8 +54,11 @@ public class sftp_attributes_struct extends Structure<sftp_attributes_struct, sf
 	protected void initFieldOrder() {
 		setFieldOrder(new java.lang.String[]{"name", "longname", "flags", "type", "size", "uid", "gid", "owner", "group", "permissions", "atime64", "atime", "atime_nseconds", "createtime", "createtime_nseconds", "mtime64", "mtime", "mtime_nseconds", "acl", "extended_count", "extended_type", "extended_data"});
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected sftp_attributes_struct newInstance() { return new sftp_attributes_struct(); }
 	public static sftp_attributes_struct[] newArray(int arrayLength) {
 		return Structure.newArray(sftp_attributes_struct.class, arrayLength);

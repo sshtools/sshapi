@@ -60,31 +60,34 @@ public class J2SshProvider extends AbstractProvider {
 		}
 	}
 
-	public List getCapabilities() {
-		return Arrays
-			.asList(new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.HTTP_PROXY,
-				Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY, Capability.PASSWORD_AUTHENTICATION,
-				Capability.PUBLIC_KEY_AUTHENTICATION, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
-				Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP, Capability.WINDOW_CHANGE,
-				Capability.TUNNELED_SOCKET_FACTORY, Capability.DATA_TIMEOUTS });
+	public List<Capability> getCapabilities() {
+		return Arrays.asList(new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
+				Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
+				Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SCP,
+				Capability.SFTP, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY, Capability.DATA_TIMEOUTS,
+				Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL });
 	}
 
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws net.sf.sshapi.SshException {
 		return new J2SshHostKeyManager(configuration);
 	}
 
-	public List getSupportedCiphers(int protocolVersion) {
+	@SuppressWarnings("unchecked")
+	public List<String> getSupportedCiphers(int protocolVersion) {
 		if (protocolVersion == SshConfiguration.SSH1_ONLY) {
 			throw new UnsupportedOperationException("Only SSH2 is supported by J2SSH");
 		}
 		return SshCipherFactory.getSupportedCiphers();
 	}
 
-	public List getSupportedCompression() {
+	@SuppressWarnings("unchecked")
+	public List<String> getSupportedCompression() {
 		return SshCompressionFactory.getSupportedCompression();
 	}
 
-	public List getSupportedMAC() {
+	@SuppressWarnings("unchecked")
+	public List<String> getSupportedMAC() {
 		return SshHmacFactory.getSupportedMacs();
 	}
 
@@ -99,11 +102,12 @@ public class J2SshProvider extends AbstractProvider {
 		}
 	}
 
-	public List getSupportedKeyExchange() {
+	@SuppressWarnings("unchecked")
+	public List<String> getSupportedKeyExchange() {
 		return SshKeyExchangeFactory.getSupportedKeyExchanges();
 	}
 
-	public List getSupportedPublicKey() {
+	public List<String> getSupportedPublicKey() {
 		return Arrays.asList(new String[] { "ssh-rsa", "ssh-dss" });
 	}
 

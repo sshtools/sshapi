@@ -1,6 +1,7 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.sftp.SftpClient;
 
@@ -16,17 +17,15 @@ class SFTPPutTest extends AbstractConnectionTest {
 
 	public SFTPPutTest() throws IOException {
 		super();
+		configuration.addRequiredCapability(Capability.SFTP);
 	}
 
 	protected void doConnection(SshClient client) throws Exception {
 		super.doConnection(client);
-		SftpClient sftp = client.createSftpClient();
-		sftp.open();
-		FileInputStream fin = new FileInputStream(Util.TEST_FILE);
-		try {
-			sftp.put(Util.TEST_FILE.getName(), fin, 0644);
-		} finally {
-			fin.close();
+		try(SftpClient sftp = client.sftp()) {
+			try(FileInputStream fin = new FileInputStream(Util.TEST_FILE)) {
+				sftp.put(Util.TEST_FILE.getName(), fin, 0644);
+			} 
 		}
 	}
 

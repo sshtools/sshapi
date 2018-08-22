@@ -63,7 +63,8 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 
 	public void add(SshHostKey hostKey, boolean persist) throws SshException {
 		try {
-			KnownHosts.addHostkeyToFile(knownHostsFile, new String[] { hostKey.getHost() }, hostKey.getType(), hostKey.getKey());
+			KnownHosts.addHostkeyToFile(knownHostsFile, new String[] { hostKey.getHost() }, hostKey.getType(),
+					hostKey.getKey());
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
@@ -71,12 +72,12 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 	}
 
 	public SshHostKey[] getKeys() {
-		List keys = new ArrayList();
+		List<SshHostKey> keys = new ArrayList<>();
 		// Ewwwww :(
 		try {
 			Field field = knownHosts.getClass().getDeclaredField("publicKeys");
 			field.setAccessible(true);
-			LinkedList publickeys = (LinkedList) field.get(knownHosts);
+			LinkedList<?> publickeys = (LinkedList<?>) field.get(knownHosts);
 			addKeys(keys, publickeys);
 		} catch (Exception e) {
 			SshConfiguration.getLogger().log(Level.ERROR, "Failed to get host keys.", e);
@@ -85,9 +86,10 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 		return (SshHostKey[]) keys.toArray(new SshHostKey[0]);
 	}
 
-	private void addKeys(List keys, Collection publickeys) throws NoSuchFieldException, IllegalAccessException, IOException {
+	private void addKeys(List<SshHostKey> keys, Collection<?> publickeys)
+			throws NoSuchFieldException, IllegalAccessException, IOException {
 		Field field;
-		for (Iterator e = publickeys.iterator(); e.hasNext();) {
+		for (Iterator<?> e = publickeys.iterator(); e.hasNext();) {
 			Object knownHostEntry = e.next();
 			field = knownHostEntry.getClass().getDeclaredField("key");
 			field.setAccessible(true);
@@ -113,13 +115,15 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 
 	public SshHostKey[] getKeysForHost(String host, String type) {
 		SshHostKey[] keys = getKeys();
-		List hostKeys = new ArrayList();
+		List<SshHostKey> hostKeys = new ArrayList<>();
 		try {
-			Method m = knownHosts.getClass().getDeclaredMethod("hostnameMatches", new Class[] { String[].class, String.class });
+			Method m = knownHosts.getClass().getDeclaredMethod("hostnameMatches",
+					new Class[] { String[].class, String.class });
 			m.setAccessible(true);
 			for (int i = 0; i < keys.length; i++) {
 				if (type.equals(keys[i].getType())
-					&& ((Boolean) m.invoke(knownHosts, new Object[] { ((GanymedHostKey) keys[i]).hosts, host })).booleanValue()) {
+						&& ((Boolean) m.invoke(knownHosts, new Object[] { ((GanymedHostKey) keys[i]).hosts, host }))
+								.booleanValue()) {
 					hostKeys.add(keys[i]);
 				}
 			}

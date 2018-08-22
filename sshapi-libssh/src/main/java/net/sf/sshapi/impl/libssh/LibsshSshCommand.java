@@ -5,14 +5,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
+import net.sf.sshapi.SshCommand;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
-class LibsshSshCommand extends AbstractLifecycleComponentWithEvents implements SshExtendedStreamChannel {
+class LibsshSshCommand
+		extends AbstractLifecycleComponentWithEvents<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
 
 	private InputStream in;
 	private InputStream ext;
@@ -40,12 +43,23 @@ class LibsshSshCommand extends AbstractLifecycleComponentWithEvents implements S
 		return ext;
 	}
 
-	public void addDataListener(SshDataListener listener) {
+	// public void addDataListener(SshDataListener<> listener) {
+	// }
+	//
+	// public void removeDataListener(SshDataListener listener) {
+	// }
+
+	public void addDataListener(SshDataListener<SshCommand> listener) {
+		// TODO Auto-generated method stub
+
 	}
 
-	public void removeDataListener(SshDataListener listener) {
+	public void removeDataListener(SshDataListener<SshCommand> listener) {
+		// TODO Auto-generated method stub
+
 	}
 
+	@Override
 	public void onOpen() throws SshException {
 
 		channel = library.ssh_channel_new(libSshSession);
@@ -81,6 +95,7 @@ class LibsshSshCommand extends AbstractLifecycleComponentWithEvents implements S
 
 	}
 
+	@Override
 	public void onClose() throws SshException {
 		library.ssh_channel_send_eof(channel);
 		try {

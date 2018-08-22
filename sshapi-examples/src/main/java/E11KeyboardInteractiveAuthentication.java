@@ -14,7 +14,8 @@ public class E11KeyboardInteractiveAuthentication {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -34,18 +35,13 @@ public class E11KeyboardInteractiveAuthentication {
 
 		// Connect, authenticate
 		client.connect(user, host, port);
-		client.authenticate(new ConsoleKeyboardInteractiveAuthenticator());
-
 		try {
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			try {
-				shell.open();
+			client.authenticate(new ConsoleKeyboardInteractiveAuthenticator());
+			try (SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
-			} finally {
-				shell.close();
 			}
 		} finally {
-			client.disconnect();
+			client.close();
 		}
 	}
 }

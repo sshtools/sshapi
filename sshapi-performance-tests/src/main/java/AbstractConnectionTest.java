@@ -5,27 +5,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.sf.sshapi.Capability;
+import org.apache.log4j.BasicConfigurator;
+import org.slf4j.LoggerFactory;
+
 import net.sf.sshapi.DefaultProviderFactory;
+import net.sf.sshapi.Logger;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.util.DumbHostKeyValidator;
-import net.sf.sshapi.util.SimpleKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;
 
 abstract class AbstractConnectionTest {
 
-	protected static Properties PROPERTIES = new Properties();
+	final static org.slf4j.Logger log;
 
+	protected static Properties PROPERTIES = new Properties();
 	static {
 		File propertyFile = new File("ssh-test.properties");
 		try {
@@ -38,47 +39,93 @@ abstract class AbstractConnectionTest {
 		} catch (IOException ioe) {
 			throw new RuntimeException(ioe);
 		}
-		// BasicConfigurator.configure();
-	}
-	private SshConfiguration configuration;
+		BasicConfigurator.configure();
+		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.WARN);
+		SshConfiguration.setLogger(new Logger() {
+			@Override
+			public void log(Level level, String message, Throwable exception) {
+				switch (level) {
+				case INFO:
+					log.info(message, exception);
+					break;
+				case ERROR:
+					log.error(message, exception);
+					break;
+				case DEBUG:
+					log.debug(message, exception);
+					break;
+				case WARN:
+					log.warn(message, exception);
+					break;
+				default:
+					break;
+				}
+			}
 
-	protected Map times = new HashMap();
+			@Override
+			public void log(Level level, String message) {
+				switch (level) {
+				case INFO:
+					log.info(message);
+					break;
+				case ERROR:
+					log.error(message);
+					break;
+				case DEBUG:
+					log.debug(message);
+					break;
+				case WARN:
+					log.warn(message);
+					break;
+				default:
+					break;
+				}
+			}
+
+			@Override
+			public boolean isLevelEnabled(Level required) {
+				return true;
+			}
+		});
+		log = LoggerFactory.getLogger(AbstractConnectionTest.class);
+	}
+	protected SshConfiguration configuration;
+	protected Map<String, List<Long>> times = new HashMap<>();
+	protected Map<String, Throwable> exceptions = new HashMap<>();
 
 	public AbstractConnectionTest() throws IOException {
 		this("ConnectionTest");
 	}
 
 	public AbstractConnectionTest(String propertyPrefix) throws IOException {
-
 		configuration = new SshConfiguration();
 		configuration.setHostKeyValidator(new DumbHostKeyValidator());
-		configuration.setPreferredClientToServerCipher("blowfish-cbc");
-		configuration.setPreferredServerToClientCipher("blowfish-cbc");
+		configuration.setPreferredClientToServerCipher("aes128-ctr");
+		configuration.setPreferredServerToClientCipher("aes128-ctr");
 		configuration.setPreferredClientToServerCompression("none");
 		configuration.setPreferredServerToClientCompression("none");
 		configuration.setPreferredPublicKey(SshConfiguration.PUBLIC_KEY_SSHRSA);
-
-		configuration.addRequiredCapability(Capability.SCP);
 	}
 
 	public SshProvider[] getAllConfiguredProviders() {
-		List include = parseList(PROPERTIES.getProperty("include", ""));
-		List exclude = parseList(PROPERTIES.getProperty("exclude", ""));
-		List providers = new ArrayList();
+		List<String> include = parseList(PROPERTIES.getProperty("include", ""));
+		List<String> exclude = parseList(PROPERTIES.getProperty("exclude", ""));
+		List<SshProvider> providers = new ArrayList<>();
 		SshProvider[] alLProviders = DefaultProviderFactory.getAllProviders();
 		for (int i = 0; i < alLProviders.length; i++) {
 			SshProvider provider = alLProviders[i];
-			if (!exclude.contains(provider.getName()) && (include.size() == 0 || include.contains(provider.getName()))) {
+			if (!exclude.contains(provider.getName())
+					&& (include.size() == 0 || include.contains(provider.getName()))) {
 				providers.add(provider);
 			}
 		}
 		return (SshProvider[]) providers.toArray(new SshProvider[0]);
 	}
 
-	private List parseList(String list) {
+	private List<String> parseList(String list) {
 		list = list.trim();
 		if (list.equals("")) {
-			return new ArrayList();
+			return new ArrayList<>();
 		}
 		return Arrays.asList(list.split(","));
 	}
@@ -90,29 +137,33 @@ abstract class AbstractConnectionTest {
 		for (int i = 0; i < warmUps; i++) {
 			singleRun();
 		}
-		SshConfiguration.getLogger().log(Level.INFO, "Warmed up, starting actual run of " + repeats + " runs for each provider");
+		SshConfiguration.getLogger().log(Level.INFO,
+				"Warmed up, starting actual run of " + repeats + " runs for each provider");
 		resetStats();
 		for (int i = 0; i < repeats; i++) {
 			singleRun();
 		}
-
 		SshProvider[] providers = getAllConfiguredProviders();
 		for (int i = 0; i < providers.length; i++) {
 			SshProvider provider = providers[i];
-			List providerTimes = (List) times.get(provider);
-			long total = 0;
-			for (Iterator it = providerTimes.iterator(); it.hasNext();) {
-				Long t = (Long) it.next();
-				total += t.longValue();
-			}
-			long avg = total / providerTimes.size();
+			List<Long> providerTimes = times.get(provider.getName());
 			StringBuilder sb = new StringBuilder();
-			Formatter formatter = new Formatter(sb);
-			formatter.format("%20s Total: %6d  Avg per run: %6d",
-				new Object[] { provider.getName(), new Long(total), new Long(avg) });
+			try (Formatter formatter = new Formatter(sb)) {
+				if (providerTimes == null) {
+					Throwable t = exceptions.get(provider.getName());
+					formatter.format("%20s Failed. %s", new Object[] { provider.getName(),
+							t == null || t.getMessage() == null ? "" : t.getMessage() });
+				} else {
+					long total = 0;
+					for (Long t : providerTimes)
+						total += t;
+					long avg = total / providerTimes.size();
+					formatter.format("%20s Total: %6d  Avg per run: %6d",
+							new Object[] { provider.getName(), new Long(total), new Long(avg) });
+				}
+			}
 			System.out.println(sb);
 		}
-
 	}
 
 	void singleRun() throws Exception {
@@ -120,14 +171,19 @@ abstract class AbstractConnectionTest {
 		for (int i = 0; i < providers.length; i++) {
 			long started = System.currentTimeMillis();
 			SshProvider provider = providers[i];
-			doProvider(provider);
-			long finished = System.currentTimeMillis();
-			List providerTimes = (List) times.get(provider);
-			if (providerTimes == null) {
-				providerTimes = new ArrayList();
-				times.put(provider, providerTimes);
+			try {
+				doProvider(provider);
+				long finished = System.currentTimeMillis();
+				List<Long> providerTimes = times.get(provider.getName());
+				if (providerTimes == null) {
+					providerTimes = new ArrayList<>();
+					times.put(provider.getName(), providerTimes);
+				}
+				providerTimes.add(new Long(finished - started));
+			} catch (Exception e) {
+				log.error(String.format("Provider %s failed.", provider.getName()), e);
+				exceptions.put(provider.getName(), e);
 			}
-			providerTimes.add(new Long(finished - started));
 		}
 	}
 
@@ -147,18 +203,16 @@ abstract class AbstractConnectionTest {
 			}
 		}
 		long finished = System.currentTimeMillis();
-		List providerTimes = (List) times.get(provider);
+		List<Long> providerTimes = times.get(provider.getName());
 		if (providerTimes == null) {
-			providerTimes = new ArrayList();
-			times.put(provider, providerTimes);
+			providerTimes = new ArrayList<>();
+			times.put(provider.getName(), providerTimes);
 		}
 		providerTimes.add(new Long(finished - started));
-
 	}
 
 	protected void doProvider(SshProvider provider) throws Exception {
-		final SshClient client = connect(provider);
-		try {
+		try (SshClient client = connect(provider)) {
 			time(provider, new Runnable() {
 				public void run() {
 					try {
@@ -168,28 +222,24 @@ abstract class AbstractConnectionTest {
 					}
 				}
 			});
-		} finally {
-			client.disconnect();
 		}
 	}
 
 	protected final SshClient connect(SshProvider provider) throws SshException {
 		SshConfiguration.getLogger().log(Level.INFO, "\tProvider " + provider.getName());
-		SshClient client = provider.createClient(configuration);
-		client.connect(PROPERTIES.getProperty("username", System.getProperty("user.name")),
-			PROPERTIES.getProperty("hostname", "localhost"), Integer.parseInt(PROPERTIES.getProperty("port", "22")));
+		String password = PROPERTIES.getProperty("password");
+		if (password == null) {
+			throw new IllegalArgumentException("Password must be provided in properties file.");
+		}
 		try {
-			String password = PROPERTIES.getProperty("password");
-			if (password == null) {
-				throw new IllegalArgumentException("Password must be provided in properties file.");
-			}
-			client.authenticate(new SshAuthenticator[] { 
-				new SimpleKeyboardInteractiveAuthenticator(password) });
+			return provider.open(configuration, PROPERTIES.getProperty("username", System.getProperty("user.name")),
+					PROPERTIES.getProperty("hostname", "localhost"),
+					Integer.parseInt(PROPERTIES.getProperty("port", "22")),
+					// new SimpleKeyboardInteractiveAuthenticator(password)
+					new SimplePasswordAuthenticator(password.toCharArray()));
 		} catch (SshException sshe) {
-			client.disconnect();
 			throw sshe;
 		}
-		return client;
 	}
 
 	protected void doConnection(SshClient client) throws Exception {

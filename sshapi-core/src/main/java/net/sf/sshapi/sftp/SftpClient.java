@@ -23,11 +23,17 @@
  */
 package net.sf.sshapi.sftp;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystemException;
 
+import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshLifecycleComponent;
+import net.sf.sshapi.SshFileTransferClient;
+import net.sf.sshapi.SshLifecycleListener;
 
 /**
  * Providers will create an instance of an implementation of this interface to
@@ -37,15 +43,16 @@ import net.sf.sshapi.SshLifecycleComponent;
  * 
  * @see SshClient#createSftpClient()
  */
-public interface SftpClient extends SshLifecycleComponent {
+public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient> {
 	/**
 	 * List a directory.
 	 * 
 	 * @param path directory to list
 	 * @return files contain in directory
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException if directory cannot be found or opened
 	 */
-	SftpFile[] ls(String path) throws SshException;
+	SftpFile[] ls(String path) throws SshException, FileNotFoundException;
 
 	/**
 	 * Get the default path
@@ -61,9 +68,10 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * 
 	 * @param path path
 	 * @return file object
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException if file could not be found
 	 */
-	SftpFile stat(String path) throws SshException;
+	SftpFile stat(String path) throws SshException, FileNotFoundException;
 
 	/**
 	 * Create a directory. If any element of the parent path does not exist an
@@ -71,9 +79,10 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * 
 	 * @param path path of directory to create.
 	 * @param permissions permissions
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException if folder could not be created
 	 */
-	void mkdir(String path, int permissions) throws SshException;
+	void mkdir(String path, int permissions) throws SshException, FileSystemException;
 
 	/**
 	 * Create a directory, creating missing parents. If any element of the
@@ -81,37 +90,58 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * 
 	 * @param path path of directory to create.
 	 * @param permissions permissions
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException if directory could not be created 
+	 * @throws FileNotFoundException 
 	 */
-	void mkdirs(String path, int permissions) throws SshException;
+	void mkdirs(String path, int permissions) throws SshException, FileSystemException, FileNotFoundException;
 
 	/**
 	 * Remove a file given it's path. If the path is a directory, use
 	 * {@link #rmdir(String)} instead.
 	 * 
 	 * @param path path of file to remove.
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException if file could not be found or removed
 	 * 
 	 */
-	void rm(String path) throws SshException;
+	void rm(String path) throws SshException, FileSystemException;
 
 	/**
 	 * Remove a directory given it's path.
 	 * 
 	 * @param path path of directory to remove.
-	 * @throws SshException
+	 * @throws SshException on other errror
+	 * @throws FileSystemException if directory could not be found or removed
 	 */
-	void rmdir(String path) throws SshException;
+	void rmdir(String path) throws SshException, FileSystemException;
 
 	/**
 	 * Rename or move a file. If a file or folder on the remove system is on a
 	 * different file system, a move may not be possible.
 	 * 
 	 * @param path path of file or directory to rename or move.
-	 * @param newPath new path of file or directry
-	 * @throws SshException
+	 * @param newPath new path of file or directory
+	 * @throws SshException on other error
+	 * @throws FileSystemException if file cannot be renamed
 	 */
-	void rename(String path, String newPath) throws SshException;
+	void rename(String path, String newPath) throws SshException, FileSystemException;
+
+	/**
+	 * Retrieve the contents of a remote file, writing it to the local file.
+	 * If destination is a directory, the file will be retrieved to that
+	 * directory (overwriting any previous file of the same name). If it is
+	 * an existing file, it will be overwritten. If it doesn't exist at 
+	 * all, it will be created.
+	 * 
+	 * @param path path of remote file
+	 * @param destination destination file or directory
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException file not found or could not be opened
+	 * @throws IOException on error writing local file
+	 * @see {@link #get(String)}
+	 */
+	void get(String path, File destination) throws SshException, FileNotFoundException, IOException;
 
 	/**
 	 * Retrieve the contents of a remote file, writing it to the provided output
@@ -119,10 +149,11 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * 
 	 * @param path path of remote file
 	 * @param out output stream to write data to
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException file not found or could not be opened
 	 * @see {@link #get(String)}
 	 */
-	void get(String path, OutputStream out) throws SshException;
+	void get(String path, OutputStream out) throws SshException, FileNotFoundException;
 
 
 	/**
@@ -137,10 +168,11 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * @param path path of remote file
 	 * @param out output stream to write data to
 	 * @param filePointer position to set filePointer to
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException file not found or could not be opened
 	 * @see {@link #get(String)}
 	 */
-	void get(String path, OutputStream out, long filePointer) throws SshException;
+	void get(String path, OutputStream out, long filePointer) throws SshException, FileNotFoundException;
 	
 	/**
 	 * Retrieve the contents of a remote file, presenting it as an input stream.
@@ -149,10 +181,11 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * 
 	 * @param path path of remote file
 	 * @return input stream
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException file not found or could not be opened
 	 * @see {@link #get(String, OutputStream)}
 	 */
-	InputStream get(String path) throws SshException;
+	InputStream get(String path) throws SshException, FileNotFoundException;
 
 	/**
 	 * Retrieve the contents of a remote file, presenting it as an input stream.
@@ -167,11 +200,12 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * @param path path of remote file
 	 * @param filePointer position to set filePointer to
 	 * @return input stream
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileNotFoundException file not found or could not be opened
 	 * @see {@link #get(String, OutputStream)}
 	 * @throws UnsupportedOperationException uoe
 	 */
-	InputStream get(String path, long filePointer) throws SshException;
+	InputStream get(String path, long filePointer) throws SshException, FileNotFoundException;
 
 	/**
 	 * Write to a remote from the provided input stream. This method will block
@@ -181,9 +215,10 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * @param path path to save file to
 	 * @param in input stream providing content
 	 * @param permissions permissions of file when created
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException file could not be written
 	 */
-	void put(String path, InputStream in, int permissions) throws SshException;
+	void put(String path, InputStream in, int permissions) throws SshException, FileSystemException;
 
 	/**
 	 * Open a remote file for writing to. This method will return immediately,
@@ -195,9 +230,10 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * @param permissions permissions of file when created
 	 * @param filePointer position to set filePointer to
 	 * @return output stream
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException file could not be written
 	 */
-	OutputStream put(final String path, final int permissions, long offset) throws SshException;
+	OutputStream put(final String path, final int permissions, long offset) throws SshException, FileSystemException;
 
 	/**
 	 * Open a remote file for writing to. This method will return immediately,
@@ -206,44 +242,49 @@ public interface SftpClient extends SshLifecycleComponent {
 	 * @param path path to save file to
 	 * @param permissions permissions of file when created
 	 * @return output stream
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException file could not be written
 	 */
-	OutputStream put(String path, int permissions) throws SshException;
+	OutputStream put(String path, int permissions) throws SshException, FileSystemException;
 
 	/**
 	 * Change the permission of a remove file.
 	 * 
 	 * @param path path of remote file
 	 * @param permissions permissions
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException  if file cannot be found or permissions cannot be set 
 	 */
-	void chmod(String path, int permissions) throws SshException;
+	void chmod(String path, int permissions) throws SshException, FileSystemException;
 
 	/**
 	 * Change the owner of a remote file.
 	 * 
 	 * @param path path of remote file
 	 * @param uid new UID
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException  if file cannot be found or owner cannot be set
 	 */
-	void chown(String path, int uid) throws SshException;
+	void chown(String path, int uid) throws SshException, FileSystemException;
 
 	/**
 	 * Change the owning group of a remote file.
 	 * 
 	 * @param path path of remote file
 	 * @param gid new GID
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException  if file cannot be found or group cannot be set 
 	 */
-	void chgrp(String path, int gid) throws SshException;
+	void chgrp(String path, int gid) throws SshException, FileSystemException;
 
 	/**
 	 * Set the last modified time of a file.
 	 * 
 	 * @param path
 	 * @param modtime last modified time in milliseconds since 00:00:00, Jan 1st 1970.
-	 * @throws SshException
+	 * @throws SshException on other error
+	 * @throws FileSystemException  if file cannot be found or modification time cannot be set 
 	 */
-	void setLastModified(String path, long modtime) throws SshException;
+	void setLastModified(String path, long modtime) throws SshException, FileSystemException;
 
 }

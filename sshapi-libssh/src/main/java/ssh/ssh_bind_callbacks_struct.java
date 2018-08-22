@@ -36,8 +36,11 @@ public class ssh_bind_callbacks_struct extends Structure<ssh_bind_callbacks_stru
 		this.incoming_connection = incoming_connection;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_bind_callbacks_struct newInstance() { return new ssh_bind_callbacks_struct(); }
 	public static ssh_bind_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_bind_callbacks_struct.class, arrayLength);

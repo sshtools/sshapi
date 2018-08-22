@@ -46,7 +46,7 @@ import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -88,12 +88,8 @@ class GanymedSshClient extends AbstractClient {
 		this.rng = rng;
 	}
 
-	public void connect(String username, String hostname, int port)
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
 			throws SshException {
-		if (isConnected()) {
-			throw new SshException(SshException.ALREADY_OPEN,
-					"Already connected.");
-		}
 		SshConfiguration configuration = getConfiguration();
 		if (configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
 			throw new SshException(SshException.UNSUPPORTED_PROTOCOL_VERSION,
@@ -102,10 +98,8 @@ class GanymedSshClient extends AbstractClient {
 
 		SshProxyServerDetails proxyServer = configuration.getProxyServer();
 		if (proxyServer != null) {
-			connection = new Connection(hostname, port, new HTTPProxyData(
-					proxyServer.getHostname(), proxyServer.getPort(),
-					proxyServer.getUsername(), new String(
-							proxyServer.getPassword())));
+			connection = new Connection(hostname, port, new HTTPProxyData(proxyServer.getHostname(),
+					proxyServer.getPort(), proxyServer.getUsername(), new String(proxyServer.getPassword())));
 		} else {
 			connection = new Connection(hostname, port);
 		}
@@ -113,12 +107,10 @@ class GanymedSshClient extends AbstractClient {
 		configureAlgorithms(configuration);
 
 		try {
-			connection.connect(new ServerHostKeyVerifierBridge(configuration
-					.getHostKeyValidator()));
+			connection.connect(new ServerHostKeyVerifierBridge(configuration.getHostKeyValidator()));
 			connected = true;
 		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, "Failed to connect.",
-					e);
+			throw new SshException(SshException.IO_ERROR, "Failed to connect.", e);
 		}
 		this.username = username;
 	}
@@ -127,12 +119,11 @@ class GanymedSshClient extends AbstractClient {
 		return new RemoteSocketFactory();
 	}
 
-	public SshSCPClient createSCPClient() throws SshException {
+	public SshSCPClient createSCP() throws SshException {
 		return new GanymedSCPClient(this);
 	}
 
-	public boolean authenticate(SshAuthenticator[] authenticators)
-			throws SshException {
+	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
 		try {
 			if (!doAuthentication(authenticators)) {
 				return false;
@@ -144,29 +135,23 @@ class GanymedSshClient extends AbstractClient {
 		}
 	}
 
-	private boolean doAuthentication(SshAuthenticator[] authenticators)
-			throws IOException, SshException {
-		Map authenticatorMap = createAuthenticatorMap(authenticators);
+	private boolean doAuthentication(SshAuthenticator[] authenticators) throws IOException, SshException {
+		Map<String, SshAuthenticator> authenticatorMap = createAuthenticatorMap(authenticators);
 		while (true) {
-			String[] remainingMethods = connection
-					.getRemainingAuthMethods(username);
+			String[] remainingMethods = connection.getRemainingAuthMethods(username);
 			if (remainingMethods == null || remainingMethods.length == 0) {
-				throw new SshException(SshException.AUTHENTICATION_FAILED,
-						"No remaining authentication methods");
+				throw new SshException(SshException.AUTHENTICATION_FAILED, "No remaining authentication methods");
 			}
 			for (int i = 0; i < remainingMethods.length; i++) {
-				SshAuthenticator authenticator = (SshAuthenticator) authenticatorMap
-						.get(remainingMethods[i]);
+				SshAuthenticator authenticator = (SshAuthenticator) authenticatorMap.get(remainingMethods[i]);
 				if (authenticator != null) {
 					// Password
 					if (authenticator instanceof SshPasswordAuthenticator) {
-						char[] pw = ((SshPasswordAuthenticator) authenticator)
-								.promptForPassword(this, "Password");
+						char[] pw = ((SshPasswordAuthenticator) authenticator).promptForPassword(this, "Password");
 						if (pw == null) {
 							throw new SshException("Authentication cancelled.");
 						}
-						if (connection.authenticateWithPassword(username,
-								new String(pw))) {
+						if (connection.authenticateWithPassword(username, new String(pw))) {
 							// Authenticated!
 							return true;
 						}
@@ -181,8 +166,7 @@ class GanymedSshClient extends AbstractClient {
 						SshPublicKeyAuthenticator pka = ((SshPublicKeyAuthenticator) authenticator);
 						byte[] keyBytes = pka.getPrivateKey();
 						char[] pw = null;
-						char[] charArray = new String(keyBytes, "US-ASCII")
-								.toCharArray();
+						char[] charArray = new String(keyBytes, "US-ASCII").toCharArray();
 
 						// Try to work out if key is encrypted
 						try {
@@ -191,13 +175,12 @@ class GanymedSshClient extends AbstractClient {
 							// Encrypted (probably)
 							pw = pka.promptForPassphrase(this, "Passphrase");
 							if (pw == null) {
-								throw new SshException(
-										"Authentication cancelled.");
+								throw new SshException("Authentication cancelled.");
 							}
 						}
 
-						if (connection.authenticateWithPublicKey(username,
-								charArray, pw == null ? null : new String(pw))) {
+						if (connection.authenticateWithPublicKey(username, charArray,
+								pw == null ? null : new String(pw))) {
 							// Authenticated!
 							return true;
 						}
@@ -210,16 +193,12 @@ class GanymedSshClient extends AbstractClient {
 					// Keyboard interactive
 					if (authenticator instanceof SshKeyboardInteractiveAuthenticator) {
 						final SshKeyboardInteractiveAuthenticator kbi = (SshKeyboardInteractiveAuthenticator) authenticator;
-						if (connection.authenticateWithKeyboardInteractive(
-								username, new InteractiveCallback() {
-									public String[] replyToChallenge(
-											String name, String instruction,
-											int numPrompts, String[] prompt,
-											boolean[] echo) throws Exception {
-										return kbi.challenge(name, instruction,
-												prompt, echo);
-									}
-								})) {
+						if (connection.authenticateWithKeyboardInteractive(username, new InteractiveCallback() {
+							public String[] replyToChallenge(String name, String instruction, int numPrompts,
+									String[] prompt, boolean[] echo) throws Exception {
+								return kbi.challenge(name, instruction, prompt, echo);
+							}
+						})) {
 							// Authenticated!
 							return true;
 						}
@@ -237,18 +216,15 @@ class GanymedSshClient extends AbstractClient {
 		try {
 			Field amF = connection.getClass().getDeclaredField("am");
 			amF.setAccessible(true);
-			AuthenticationManager am = (AuthenticationManager) amF
-					.get(connection);
+			AuthenticationManager am = (AuthenticationManager) amF.get(connection);
 			Field bannerF = am.getClass().getDeclaredField("banner");
 			bannerF.setAccessible(true);
 			String banner = (String) bannerF.get(am);
-			if (banner != null && !banner.equals("")
-					&& getConfiguration().getBannerHandler() != null) {
+			if (banner != null && !banner.equals("") && getConfiguration().getBannerHandler() != null) {
 				getConfiguration().getBannerHandler().banner(banner);
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR,
-					"Failed to access banner", e);
+			SshConfiguration.getLogger().log(Level.ERROR, "Failed to access banner", e);
 		}
 	}
 
@@ -267,9 +243,8 @@ class GanymedSshClient extends AbstractClient {
 		return SshConfiguration.SSH2_ONLY;
 	}
 
-	public SshPortForward createLocalForward(final String localAddress,
-			final int localPort, final String remoteHost, final int remotePort)
-			throws SshException {
+	public SshPortForward createLocalForward(final String localAddress, final int localPort, final String remoteHost,
+			final int remotePort) throws SshException {
 		if (localAddress != null && !localAddress.equals("0.0.0.0")) {
 			throw new IllegalArgumentException(
 					"Ganymed does not supporting binding a local port forward to a particular address.");
@@ -280,11 +255,9 @@ class GanymedSshClient extends AbstractClient {
 
 			protected void onOpen() throws SshException {
 				try {
-					localPortForwarder = connection.createLocalPortForwarder(
-							localPort, remoteHost, remotePort);
+					localPortForwarder = connection.createLocalPortForwarder(localPort, remoteHost, remotePort);
 				} catch (IOException e) {
-					throw new SshException(
-							"Failed to open local port forward.", e);
+					throw new SshException("Failed to open local port forward.", e);
 				}
 			}
 
@@ -292,24 +265,20 @@ class GanymedSshClient extends AbstractClient {
 				try {
 					localPortForwarder.close();
 				} catch (IOException e) {
-					throw new SshException(
-							"Failed to stop local port forward.", e);
+					throw new SshException("Failed to stop local port forward.", e);
 				}
 			}
 		};
 	}
 
-	public SshPortForward createRemoteForward(final String remoteHost,
-			final int remotePort, final String localAddress, final int localPort)
-			throws SshException {
+	public SshPortForward createRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
+			final int localPort) throws SshException {
 		return new AbstractPortForward() {
 			protected void onOpen() throws SshException {
 				try {
-					connection.requestRemotePortForwarding(remoteHost,
-							remotePort, localAddress, localPort);
+					connection.requestRemotePortForwarding(remoteHost, remotePort, localAddress, localPort);
 				} catch (IOException e) {
-					throw new SshException(
-							"Failed to open remote port forward.", e);
+					throw new SshException("Failed to open remote port forward.", e);
 				}
 			}
 
@@ -317,15 +286,13 @@ class GanymedSshClient extends AbstractClient {
 				try {
 					connection.cancelRemotePortForwarding(remotePort);
 				} catch (IOException e) {
-					throw new SshException(
-							"Failed to stop remote port forward.", e);
+					throw new SshException("Failed to stop remote port forward.", e);
 				}
 			}
 		};
 	}
 
-	public SshShell createShell(String termType, int cols, int rows,
-			int pixWidth, int pixHeight, byte[] terminalModes)
+	public SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException {
 		try {
 			Session sess = connection.openSession();
@@ -339,8 +306,7 @@ class GanymedSshClient extends AbstractClient {
 		}
 	}
 
-	public SshExtendedStreamChannel createCommand(final String command)
-			throws SshException {
+	public SshCommand createCommand(final String command) throws SshException {
 		try {
 			final Session sess = connection.openSession();
 			return new GanymedStreamChannel(getConfiguration(), sess) {
@@ -377,7 +343,7 @@ class GanymedSshClient extends AbstractClient {
 		return isConnected() && connection.isAuthenticationComplete();
 	}
 
-	public SftpClient createSftpClient() throws SshException {
+	public SftpClient createSftp() throws SshException {
 		return new GanymedSftpClient(connection);
 	}
 
@@ -386,75 +352,62 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	private void configureAlgorithms(SshConfiguration configuration) {
-		String preferredClientToServerCipher = configuration
-				.getPreferredClientToServerCipher();
+		String preferredClientToServerCipher = configuration.getPreferredClientToServerCipher();
 		if (preferredClientToServerCipher != null) {
-			connection
-					.setClient2ServerCiphers(checkCipher(preferredClientToServerCipher));
+			connection.setClient2ServerCiphers(checkCipher(preferredClientToServerCipher));
 		}
-		String preferredServerToClientCipher = configuration
-				.getPreferredServerToClientCipher();
+		String preferredServerToClientCipher = configuration.getPreferredServerToClientCipher();
 		if (preferredServerToClientCipher != null) {
-			connection
-					.setServer2ClientCiphers(checkCipher(preferredServerToClientCipher));
+			connection.setServer2ClientCiphers(checkCipher(preferredServerToClientCipher));
 		}
-		String preferredClientToServerMAC = configuration
-				.getPreferredClientToServerMAC();
+		String preferredClientToServerMAC = configuration.getPreferredClientToServerMAC();
 		if (preferredClientToServerMAC != null) {
-			connection
-					.setClient2ServerMACs(checkMAC(preferredClientToServerMAC));
+			connection.setClient2ServerMACs(checkMAC(preferredClientToServerMAC));
 		}
-		String preferredServerToClientMAC = configuration
-				.getPreferredServerToClientMAC();
+		String preferredServerToClientMAC = configuration.getPreferredServerToClientMAC();
 		if (preferredServerToClientMAC != null) {
-			connection
-					.setServer2ClientMACs(checkMAC(preferredServerToClientMAC));
+			connection.setServer2ClientMACs(checkMAC(preferredServerToClientMAC));
 		}
 		String preferredKeyExchange = configuration.getPreferredKeyExchange();
 		if (preferredKeyExchange != null) {
 			try {
 				// Nasty reflection hack to set the preferred key exchange
-				Field field = connection.getClass().getDeclaredField(
-						"cryptoWishList");
+				Field field = connection.getClass().getDeclaredField("cryptoWishList");
 				field.setAccessible(true);
 				CryptoWishList cwl = (CryptoWishList) field.get(connection);
-				List l = new ArrayList(Arrays.asList(cwl.kexAlgorithms));
+				List<String> l = new ArrayList<>(Arrays.asList(cwl.kexAlgorithms));
 				l.remove(preferredKeyExchange);
 				l.add(0, preferredKeyExchange);
 				cwl.kexAlgorithms = (String[]) l.toArray(new String[l.size()]);
 			} catch (Exception e) {
-				SshConfiguration.getLogger().log(Level.ERROR,
-						"Could not set key exchange.", e);
+				SshConfiguration.getLogger().log(Level.ERROR, "Could not set key exchange.", e);
 			}
 		}
 		String preferredPublicKey = configuration.getPreferredPublicKey();
 		if (preferredPublicKey != null) {
-			connection
-					.setServerHostKeyAlgorithms(checkPublicKey(preferredPublicKey));
+			connection.setServerHostKeyAlgorithms(checkPublicKey(preferredPublicKey));
 		}
 	}
 
 	private String[] checkCipher(String cipher) {
-		List ciphers = new ArrayList(Arrays.asList(BlockCipherFactory
-				.getDefaultCipherList()));
+		List<String> ciphers = new ArrayList<>(Arrays.asList(BlockCipherFactory.getDefaultCipherList()));
 		ciphers.remove(cipher);
 		ciphers.add(0, cipher);
-		return (String[]) ciphers.toArray(new String[ciphers.size()]);
+		return ciphers.toArray(new String[ciphers.size()]);
 	}
 
 	private String[] checkMAC(String mac) {
-		List macs = new ArrayList(Arrays.asList(MAC.getMacList()));
+		List<String> macs = new ArrayList<>(Arrays.asList(MAC.getMacList()));
 		macs.remove(mac);
 		macs.add(0, mac);
-		return (String[]) macs.toArray(new String[macs.size()]);
+		return macs.toArray(new String[macs.size()]);
 	}
 
 	private String[] checkPublicKey(String publicKey) {
-		List pks = new ArrayList(Arrays.asList(KexManager
-				.getDefaultServerHostkeyAlgorithmList()));
+		List<String> pks = new ArrayList<>(Arrays.asList(KexManager.getDefaultServerHostkeyAlgorithmList()));
 		pks.remove(publicKey);
 		pks.add(0, publicKey);
-		return (String[]) pks.toArray(new String[pks.size()]);
+		return pks.toArray(new String[pks.size()]);
 	}
 
 	class ServerHostKeyVerifierBridge implements ServerHostKeyVerifier {
@@ -464,11 +417,9 @@ class GanymedSshClient extends AbstractClient {
 			this.hostKeyValidator = hostKeyValidator;
 		}
 
-		public boolean verifyServerHostKey(final String hostname, int port,
-				final String serverHostKeyAlgorithm, final byte[] serverHostKey)
-				throws Exception {
-			final String hexFingerprint = KnownHosts.createHexFingerprint(
-					serverHostKeyAlgorithm, serverHostKey);
+		public boolean verifyServerHostKey(final String hostname, int port, final String serverHostKeyAlgorithm,
+				final byte[] serverHostKey) throws Exception {
+			final String hexFingerprint = KnownHosts.createHexFingerprint(serverHostKeyAlgorithm, serverHostKey);
 			if (hostKeyValidator != null) {
 				switch (hostKeyValidator.verifyHost(new AbstractHostKey() {
 
@@ -493,12 +444,9 @@ class GanymedSshClient extends AbstractClient {
 				}
 				return false;
 			} else {
-				System.out.println("The authenticity of host '" + hostname
-						+ "' can't be established.");
-				System.out.println(serverHostKeyAlgorithm
-						+ " key fingerprint is " + hexFingerprint);
-				return Util
-						.promptYesNo("Are you sure you want to continue connecting?");
+				System.out.println("The authenticity of host '" + hostname + "' can't be established.");
+				System.out.println(serverHostKeyAlgorithm + " key fingerprint is " + hexFingerprint);
+				return Util.promptYesNo("Are you sure you want to continue connecting?");
 			}
 		}
 	}
@@ -510,17 +458,15 @@ class GanymedSshClient extends AbstractClient {
 			ChannelManager cm = (ChannelManager) cmF.get(connection);
 			Field cF = cm.getClass().getDeclaredField("channels");
 			cF.setAccessible(true);
-			Vector channels = (Vector) cF.get(cm);
+			Vector<?> channels = (Vector<?>) cF.get(cm);
 			return channels == null ? 0 : channels.size();
 		} catch (Exception e) {
-			throw new UnsupportedOperationException(
-					"Could not determine number of channels open.", e);
+			throw new UnsupportedOperationException("Could not determine number of channels open.", e);
 		}
 	}
 
 	protected static byte[] checkTerminalModes(byte[] terminalModes) {
-		if (terminalModes != null && terminalModes.length > 0
-				&& terminalModes[terminalModes.length - 1] != 0) {
+		if (terminalModes != null && terminalModes.length > 0 && terminalModes[terminalModes.length - 1] != 0) {
 			byte[] b = new byte[terminalModes.length + 1];
 			System.arraycopy(terminalModes, 0, b, 0, terminalModes.length);
 			terminalModes = b;
@@ -534,24 +480,21 @@ class GanymedSshClient extends AbstractClient {
 			return new RemoteSocket(connection);
 		}
 
-		public Socket createSocket(String host, int port) throws IOException,
-				UnknownHostException {
+		public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
 			return new RemoteSocket(connection, host, port);
 		}
 
-		public Socket createSocket(InetAddress host, int port)
+		public Socket createSocket(InetAddress host, int port) throws IOException {
+			return new RemoteSocket(connection, host, port);
+		}
+
+		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+				throws IOException, UnknownHostException {
+			return new RemoteSocket(connection, host, port);
+		}
+
+		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
 				throws IOException {
-			return new RemoteSocket(connection, host, port);
-		}
-
-		public Socket createSocket(String host, int port,
-				InetAddress localHost, int localPort) throws IOException,
-				UnknownHostException {
-			return new RemoteSocket(connection, host, port);
-		}
-
-		public Socket createSocket(InetAddress address, int port,
-				InetAddress localAddress, int localPort) throws IOException {
 			return new RemoteSocket(connection, address, port);
 		}
 
@@ -567,28 +510,23 @@ class GanymedSshClient extends AbstractClient {
 			this.connection = connection;
 		}
 
-		RemoteSocket(Connection connection, String host, int port)
-				throws UnknownHostException, IOException {
+		RemoteSocket(Connection connection, String host, int port) throws UnknownHostException, IOException {
 			super();
 			this.connection = connection;
-			this.connect(new InetSocketAddress(InetAddress.getByName(host),
-					port));
+			this.connect(new InetSocketAddress(InetAddress.getByName(host), port));
 		}
 
-		RemoteSocket(Connection connection, InetAddress host, int port)
-				throws UnknownHostException, IOException {
+		RemoteSocket(Connection connection, InetAddress host, int port) throws UnknownHostException, IOException {
 			super();
 			this.connection = connection;
 			this.connect(new InetSocketAddress(host, port));
 		}
 
-		public void onConnect(InetSocketAddress addr, int timeout)
-				throws IOException {
+		public void onConnect(InetSocketAddress addr, int timeout) throws IOException {
 			if (connection == null) {
 				throw new IOException("Not connected.");
 			}
-			streamForwarder = connection.createLocalStreamForwarder(
-					addr.getHostName(), addr.getPort());
+			streamForwarder = connection.createLocalStreamForwarder(addr.getHostName(), addr.getPort());
 		}
 
 		public void bind(SocketAddress bindpoint) throws IOException {

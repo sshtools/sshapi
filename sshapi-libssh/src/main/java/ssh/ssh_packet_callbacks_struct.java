@@ -47,8 +47,11 @@ public class ssh_packet_callbacks_struct extends Structure<ssh_packet_callbacks_
 		this.user = user;
 		initFieldOrder();
 	}
+	@Override
 	protected ByReference newByReference() { return new ByReference(); }
+	@Override
 	protected ByValue newByValue() { return new ByValue(); }
+	@Override
 	protected ssh_packet_callbacks_struct newInstance() { return new ssh_packet_callbacks_struct(); }
 	public static ssh_packet_callbacks_struct[] newArray(int arrayLength) {
 		return Structure.newArray(ssh_packet_callbacks_struct.class, arrayLength);

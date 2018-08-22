@@ -23,6 +23,9 @@
  */
 package net.sf.sshapi;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
  * Many components of SSHAPI implement this interface, as they all follow the open() / close() pattern.
  * This applies to sessions, SFTP clients, port forwards and more.
@@ -30,20 +33,20 @@ package net.sf.sshapi;
  * All of the components may fire events when the lifecycle events occur.
  *
  */
-public interface SshLifecycleComponent {
+public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> extends Closeable, AutoCloseable {
 	/**
 	 * Add a listener to those informed when the current phase in this components lifecycle changes.
 	 * 
 	 * @param listener listener
 	 */
-	void addListener(SshLifecycleListener listener);
+	void addListener(L listener);
 
 	/**
 	 * Remove a listener from those informed when the current phase in this components lifecycle changes.
 	 * 
 	 * @param listener listener
 	 */
-	void removeListener(SshLifecycleListener listener);
+	void removeListener(L listener);
 
 	/**
 	 * Open the component. Remember to {@link #close()} the component when
@@ -68,5 +71,5 @@ public interface SshLifecycleComponent {
 	 * 
 	 * @throws SshException
 	 */
-	void close() throws SshException;
+	void close() throws IOException;
 }

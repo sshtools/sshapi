@@ -93,7 +93,7 @@ public interface SshAgent extends SshChannelHandler, Closeable {
 	 * @throws SshException
 	 *             if an error occurs
 	 */
-	Map listKeys() throws SshException;
+	Map<SshPublicKey, String> listKeys() throws SshException;
 
 	/**
 	 * Lock the agent

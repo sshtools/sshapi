@@ -29,11 +29,13 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 		this.libSshSession = libSshSession;
 	}
 
+	@Override
 	protected void onClose() throws net.sf.sshapi.SshException {
 		// Nothing to do, we open and close the actual sessions when
 		// transferring files
 	}
 
+	@Override
 	protected void onOpen() throws net.sf.sshapi.SshException {
 		// Nothing to do, we open and close the actual sessions when
 		// transferring files
@@ -115,6 +117,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 		}
 	}
 
+	@Override
 	protected void doPut(String remotePath, String mode, File sourceFile, boolean recursive) throws net.sf.sshapi.SshException {
 		checkOpen();
 		ssh_scp scp = library.ssh_scp_new(libSshSession, SshLibrary.SSH_SCP_WRITE | (recursive ? SshLibrary.SSH_SCP_RECURSIVE : 0),

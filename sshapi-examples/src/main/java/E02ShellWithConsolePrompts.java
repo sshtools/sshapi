@@ -1,10 +1,8 @@
 import net.sf.sshapi.Capability;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshDataProducingComponent;
-import net.sf.sshapi.SshLifecycleComponent;
-import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.util.ConsoleBannerHandler;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
@@ -27,7 +25,8 @@ public class E02ShellWithConsolePrompts {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -37,65 +36,58 @@ public class E02ShellWithConsolePrompts {
 		// Also display banner messages
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Create the client using that configuration
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
-
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
 
-		// Connect, authenticate
-		client.connect(user, host, port);
-		System.out.println("Remote identification: " + client.getRemoteIdentification());
-		client.authenticate(new ConsolePasswordAuthenticator());
+		// Create the client using that configuration
+		try (SshClient client = config.open(ExampleUtilities.extractUsername(connectionSpec),
+				ExampleUtilities.extractHostname(connectionSpec), ExampleUtilities.extractPort(connectionSpec),
+				new ConsolePasswordAuthenticator())) {
 
-		try {
-			// Create the simple shell
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			// SshShell shell = client.createShell(null, 80, 24, 0, 0, null);
+			// We are now connected and authenticated
+			ExampleUtilities.dumpClientInfo(client);
+			System.out.println("Remote identification: " + client.getRemoteIdentification());
 
-			// Listen for channel events
-			shell.addDataListener(new SshDataListener() {
+			try {
+				// Create the simple shell
+				SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
+				// SshShell shell = client.createShell(null, 80, 24, 0, 0, null);
 
-				public void data(SshDataProducingComponent channel, int direction, byte[] buf, int off, int len) {
+				// Listen for channel events
+				shell.addDataListener((SshShell channel, int direction, byte[] buf, int off, int len) -> {
 					if (direction == SshDataListener.RECEIVED) {
 						dataTransferredIn += len;
 					} else {
 						dataTransferredOut += len;
 					}
-				}
-			});
-			shell.addListener(new SshLifecycleListener() {
+				});
+				shell.addListener(new SshChannelListener<SshShell>() {
 
-				public void opened(SshLifecycleComponent channel) {
-					System.out.println("Shell channel opened!");
-				}
+					public void opened(SshShell channel) {
+						System.out.println("Shell channel opened!");
+					}
 
-				public void closing(SshLifecycleComponent channel) {
-					System.out.println("Shell channel closing!");
-				}
+					public void closing(SshShell channel) {
+						System.out.println("Shell channel closing!");
+					}
 
-				public void closed(SshLifecycleComponent channel) {
-					System.out.println("Shell channel closed!");
-				}
-			});
+					public void closed(SshShell channel) {
+						System.out.println("Shell channel closed!");
+					}
+				});
 
-			try {
-				shell.open();
-				ExampleUtilities.joinShellToConsole(shell);
+				try {
+					shell.open();
+					ExampleUtilities.joinShellToConsole(shell);
+				} finally {
+					shell.close();
+				}
 			} finally {
-				shell.close();
-			}
-		} finally {
-			client.disconnect();
-
-			// If the provider supports events, we will have some simple stats
-			if (client.getProvider().getCapabilities().contains(Capability.CHANNEL_DATA_EVENTS)) {
-				System.out.println("Session over. Received " + dataTransferredIn + " bytes, sent " + dataTransferredOut
-					+ " bytes over the shell channel");
+				// If the provider supports events, we will have some simple stats
+				if (client.getProvider().getCapabilities().contains(Capability.CHANNEL_DATA_EVENTS)) {
+					System.out.println("Session over. Received " + dataTransferredIn + " bytes, sent "
+							+ dataTransferredOut + " bytes over the shell channel");
+				}
 			}
 		}
 	}

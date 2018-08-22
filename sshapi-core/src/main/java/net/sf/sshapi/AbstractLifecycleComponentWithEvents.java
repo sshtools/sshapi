@@ -29,7 +29,8 @@ package net.sf.sshapi;
  * components will extend this.
  * 
  */
-public abstract class AbstractLifecycleComponentWithEvents extends AbstractLifecycleComponent {
+public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
+		extends AbstractLifecycleComponent<L, C> {
 
 	private boolean open;
 

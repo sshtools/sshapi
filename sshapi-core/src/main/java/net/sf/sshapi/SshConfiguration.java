@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import javax.net.SocketFactory;
 
+import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.util.ConsoleLogger;
 import net.sf.sshapi.util.XDetails;
@@ -39,10 +40,10 @@ import net.sf.sshapi.util.XDetails;
  * callbacks that are common to all providers. Also contains a property sheet
  * that may be used to pass configuration to the provider.
  * <p>
- * <h2>Default Configuration</h2>
- * The default constructor will create a configuration that allows SSH1 or SSH2,
- * has no custom host key validation, and has no properties. This is what will
- * be passed to providers that support a default configuration.
+ * <h2>Default Configuration</h2> The default constructor will create a
+ * configuration that allows SSH1 or SSH2, has no custom host key validation,
+ * and has no properties. This is what will be passed to providers that support
+ * a default configuration.
  * 
  */
 public class SshConfiguration {
@@ -144,6 +145,7 @@ public class SshConfiguration {
 	private String sftpSSH1Path;
 	private List requiredCapabilities = new ArrayList();
 	private SocketFactory socketFactory;
+	private int maxAuthAttempts = 3;
 
 	/**
 	 * Do reverse DNS lookups for hosts in the known_hosts (
@@ -167,7 +169,8 @@ public class SshConfiguration {
 	/**
 	 * Set the logger to use
 	 * 
-	 * @param logger logger
+	 * @param logger
+	 *            logger
 	 */
 	public static void setLogger(Logger logger) {
 		SshConfiguration.logger = logger;
@@ -185,7 +188,8 @@ public class SshConfiguration {
 	/**
 	 * Constructor
 	 * 
-	 * @param hostKeyValidator host key validator
+	 * @param hostKeyValidator
+	 *            host key validator
 	 */
 	public SshConfiguration(SshHostKeyValidator hostKeyValidator) {
 		this(new Properties(), hostKeyValidator);
@@ -194,7 +198,8 @@ public class SshConfiguration {
 	/**
 	 * Constructor
 	 * 
-	 * @param properties properties
+	 * @param properties
+	 *            properties
 	 */
 	public SshConfiguration(Properties properties) {
 		this(properties, null);
@@ -203,12 +208,41 @@ public class SshConfiguration {
 	/**
 	 * Constructor
 	 * 
-	 * @param properties properties
-	 * @param hostKeyValidator host key validator
+	 * @param properties
+	 *            properties
+	 * @param hostKeyValidator
+	 *            host key validator
 	 */
 	public SshConfiguration(Properties properties, SshHostKeyValidator hostKeyValidator) {
 		this.properties = properties;
 		this.hostKeyValidator = hostKeyValidator;
+	}
+
+	/**
+	 * Get the maximum number of authentication attempts when using the
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
+	 * with one or more authenticators. This does not impact
+	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
+	 * wish to perform authentication separately.
+	 * 
+	 * @return max auth attempts
+	 */
+	public int getMaxAuthAttempts() {
+		return maxAuthAttempts;
+	}
+
+	/**
+	 * Set the maximum number of authentication attempts when using the
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
+	 * with one or more authenticators. This does not impact
+	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
+	 * wish to perform authentication separately.
+	 * 
+	 * @param maxAuthAttempts
+	 *            max auth attempts
+	 */
+	public void setMaxAuthAttempts(int maxAuthAttempts) {
+		this.maxAuthAttempts = maxAuthAttempts;
 	}
 
 	/**
@@ -234,7 +268,8 @@ public class SshConfiguration {
 	 * Set the object that is used to validate host keys. When not set, all host
 	 * keys will be allowed.
 	 * 
-	 * @param hostKeyValidator host key validator
+	 * @param hostKeyValidator
+	 *            host key validator
 	 */
 	public void setHostKeyValidator(SshHostKeyValidator hostKeyValidator) {
 		this.hostKeyValidator = hostKeyValidator;
@@ -251,10 +286,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the properties for this configuration. The property names supported
-	 * will depend on the provider implementation they are passed to. See the
-	 * documentation for the provider for details on what properties are
-	 * supported.
+	 * Get the properties for this configuration. The property names supported will
+	 * depend on the provider implementation they are passed to. See the
+	 * documentation for the provider for details on what properties are supported.
 	 * 
 	 * @return properties
 	 */
@@ -274,7 +308,8 @@ public class SshConfiguration {
 	/**
 	 * Set the host to use for X11 forwarding.
 	 * 
-	 * @param x11Host X11 host
+	 * @param x11Host
+	 *            X11 host
 	 */
 	public void setX11Host(String x11Host) {
 		this.x11Host = x11Host;
@@ -292,7 +327,8 @@ public class SshConfiguration {
 	/**
 	 * Set the port to use for X11 forwarding.
 	 * 
-	 * @param x11Port port to use for X11 forwarding
+	 * @param x11Port
+	 *            port to use for X11 forwarding
 	 */
 	public void setX11Port(int x11Port) {
 		this.x11Port = x11Port;
@@ -312,7 +348,8 @@ public class SshConfiguration {
 	 * Set the cookie to use for X11 forwarding. You may want to consider using
 	 * the @{link {@link XDetails} helper instead of setting this directly.
 	 * 
-	 * @param x11Cookie X11 cookie
+	 * @param x11Cookie
+	 *            X11 cookie
 	 */
 	public void setX11Cookie(byte[] x11Cookie) {
 		this.x11Cookie = x11Cookie;
@@ -330,7 +367,8 @@ public class SshConfiguration {
 	/**
 	 * Set the banner handler (called to display the login banner).
 	 * 
-	 * @param bannerHandler banner handler
+	 * @param bannerHandler
+	 *            banner handler
 	 */
 	public void setBannerHandler(SshBannerHandler bannerHandler) {
 		this.bannerHandler = bannerHandler;
@@ -349,7 +387,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client cipher.
 	 * 
-	 * @param preferredServerToClientCipher preferred server to client cipher.
+	 * @param preferredServerToClientCipher
+	 *            preferred server to client cipher.
 	 * @see SshProvider#getSupportedCiphers(int)
 	 */
 	public void setPreferredServerToClientCipher(String preferredServerToClientCipher) {
@@ -369,7 +408,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server cipher.
 	 * 
-	 * @param preferredClientToServerCipher preferred client to server cipher.
+	 * @param preferredClientToServerCipher
+	 *            preferred client to server cipher.
 	 * @see SshProvider#getSupportedCiphers(int)
 	 */
 	public void setPreferredClientToServerCipher(String preferredClientToServerCipher) {
@@ -389,7 +429,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client MAC.
 	 * 
-	 * @param preferredServerToClientMAC preferred server to client MAC.
+	 * @param preferredServerToClientMAC
+	 *            preferred server to client MAC.
 	 * @see SshProvider#getSupportedMAC()
 	 */
 	public void setPreferredServerToClientMAC(String preferredServerToClientMAC) {
@@ -409,7 +450,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server MAC.
 	 * 
-	 * @param preferredClientToServerMAC preferred client to server MAC.
+	 * @param preferredClientToServerMAC
+	 *            preferred client to server MAC.
 	 * @see SshProvider#getSupportedMAC()
 	 */
 	public void setPreferredClientToServerMAC(String preferredClientToServerMAC) {
@@ -429,8 +471,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client compression.
 	 * 
-	 * @param preferredServerToClientCompression preferred server to client
-	 *            compression.
+	 * @param preferredServerToClientCompression
+	 *            preferred server to client compression.
 	 * @see SshProvider#getSupportedCompression()
 	 */
 	public void setPreferredServerToClientCompression(String preferredServerToClientCompression) {
@@ -450,8 +492,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server compression.
 	 * 
-	 * @param preferredClientToServerCompression preferred client to server
-	 *            compression.
+	 * @param preferredClientToServerCompression
+	 *            preferred client to server compression.
 	 * @see SshProvider#getSupportedCompression()
 	 */
 	public void setPreferredClientToServerCompression(String preferredClientToServerCompression) {
@@ -460,10 +502,11 @@ public class SshConfiguration {
 
 	/**
 	 * Set the preferred protocol version. Use one of
-	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2}
-	 * or {@link SshConfiguration#SSH2_ONLY}.
+	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2} or
+	 * {@link SshConfiguration#SSH2_ONLY}.
 	 * 
-	 * @param protocolVersion protocol version
+	 * @param protocolVersion
+	 *            protocol version
 	 */
 	public void setProtocolVersion(int protocolVersion) {
 		this.protocolVersion = protocolVersion;
@@ -482,7 +525,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred key exchange.
 	 * 
-	 * @param preferredKeyExchange preferred key exchange.
+	 * @param preferredKeyExchange
+	 *            preferred key exchange.
 	 * @see SshProvider#getSupportedKeyExchange()
 	 */
 	public void setPreferredKeyExchange(String preferredKeyExchange) {
@@ -502,7 +546,8 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred public key algorithm.
 	 * 
-	 * @param preferredPublicKey public key algorithm.
+	 * @param preferredPublicKey
+	 *            public key algorithm.
 	 * @see SshProvider#getSupportedPublicKey()
 	 */
 	public void setPreferredPublicKey(String preferredPublicKey) {
@@ -521,7 +566,8 @@ public class SshConfiguration {
 	/**
 	 * Set the proxy server details.
 	 * 
-	 * @param proxyServer proxy server details
+	 * @param proxyServer
+	 *            proxy server details
 	 */
 	public void setProxyServer(SshProxyServerDetails proxyServer) {
 		this.proxyServer = proxyServer;
@@ -529,11 +575,11 @@ public class SshConfiguration {
 
 	/**
 	 * Set the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or
-	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
-	 * by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
+	 * as these are the only two supported by SSH1.
 	 * 
-	 * @param preferredSSH1Cipher preferred SSH1 cipger
+	 * @param preferredSSH1Cipher
+	 *            preferred SSH1 cipger
 	 */
 	public void setPreferredSSH1CipherType(String preferredSSH1Cipher) {
 		this.preferredSSH1Cipher = preferredSSH1Cipher;
@@ -541,9 +587,8 @@ public class SshConfiguration {
 
 	/**
 	 * Get the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or
-	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
-	 * by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
+	 * as these are the only two supported by SSH1.
 	 * 
 	 * @return preferred SSH1 cipger
 	 */
@@ -554,7 +599,8 @@ public class SshConfiguration {
 	/**
 	 * Set the path of the SFTP server executable (SSH1 only).
 	 * 
-	 * @param sftpSSH1Path SSH1 SFTP server executable path
+	 * @param sftpSSH1Path
+	 *            SSH1 SFTP server executable path
 	 */
 	public void setSftpSSH1Path(String sftpSSH1Path) {
 		this.sftpSSH1Path = sftpSSH1Path;
@@ -570,26 +616,27 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Test if a provider has all the capbilities required by this
-	 * configuration.
+	 * Test if a provider has all the capbilities required by this configuration.
 	 * 
-	 * @param provider provider
-	 * @throws UnsupportedOperationException if a provider does not have all the
-	 *             required capabilities
+	 * @param provider
+	 *            provider
+	 * @throws UnsupportedOperationException
+	 *             if a provider does not have all the required capabilities
 	 */
 	public void providerHasCapabilities(SshProvider provider) throws UnsupportedOperationException {
 		for (Iterator i = requiredCapabilities.iterator(); i.hasNext();) {
 			Capability c = (Capability) i.next();
 			if (!provider.getCapabilities().contains(c)) {
-				throw new UnsupportedOperationException("Capability " + c + " is required, but not supported by this provider.");
+				throw new UnsupportedOperationException(
+						"Capability " + c + " is required, but not supported by this provider.");
 			}
 		}
 	}
 
 	/**
-	 * Get the socket factory to use to make outgoing connections to SSH
-	 * servers. Will be set to <code>null</code> when the default Java socket
-	 * factory is to be used.
+	 * Get the socket factory to use to make outgoing connections to SSH servers.
+	 * Will be set to <code>null</code> when the default Java socket factory is to
+	 * be used.
 	 * 
 	 * @return socket factory
 	 */
@@ -598,19 +645,20 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the socket factory to use to make outgoing connections to SSH
-	 * servers. Set to <code>null</code> to use the default Java socket factory.
+	 * Set the socket factory to use to make outgoing connections to SSH servers.
+	 * Set to <code>null</code> to use the default Java socket factory.
 	 * 
-	 * @param socketFactory socket factory
+	 * @param socketFactory
+	 *            socket factory
 	 */
 	public void setSocketFactory(SocketFactory socketFactory) {
 		this.socketFactory = socketFactory;
 	}
 
 	/**
-	 * Utility to create a client that may be used with this configuration. It
-	 * uses the DefaultProviderFactory, so if you want to custom how providers
-	 * are selected, do not use this method.
+	 * Utility to create a client that may be used with this configuration. It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
 	 * 
 	 * @return client
 	 */
@@ -618,6 +666,36 @@ public class SshConfiguration {
 		// Create the client using that configuration
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
 		return provider.createClient(this);
+
+	}
+
+	/**
+	 * Utility to create a client that may be used with this configuration and
+	 * connect to a host as a particular user, optionally authenticating. It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
+	 * 
+	 * @param username
+	 *            user name
+	 * @param hostname
+	 *            hostname
+	 * @param port
+	 *            port
+	 * @param authenticators
+	 *            authenticators
+	 * @return client client
+	 * @throws SshException
+	 *             on error
+	 */
+	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
+		// Create the client using that configuration
+		if (authenticators.length < 1)
+			throw new IllegalArgumentException("At least one authenticator must be provided.");
+		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
+		SshClient client = provider.createClient(this);
+		client.connect(username, hostname, port, authenticators);
+		return client;
 
 	}
 

@@ -23,66 +23,19 @@
  */
 package net.sf.sshapi.impl.trilead;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import com.trilead.ssh2.Session;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshExtendedStreamChannel;
-import net.sf.sshapi.util.Util;
+import net.sf.sshapi.SshCommand;
 
-abstract class TrileadStreamChannel extends AbstractDataProducingComponent implements SshExtendedStreamChannel {
-
-	private final Session session;
-	private final SshConfiguration configuration;
+abstract class TrileadStreamChannel
+		extends AbstractTrileadStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
 
 	public TrileadStreamChannel(SshConfiguration configuration, Session channel) throws SshException {
-		this.session = channel;
-		this.configuration = configuration;
+		super(configuration, channel);
 	}
-
-	public int exitCode() throws IOException {
-		Integer t = session.getExitStatus();
-		return t == null ? -1 : t.intValue();
-	}
-
-	public InputStream getInputStream() throws IOException {
-		return session.getStdout();
-	}
-	public OutputStream getOutputStream() throws IOException {
-		return session.getStdin();
-	}
-
-	public InputStream getExtendedInputStream() throws IOException {
-		return session.getStderr();
-	}
-
-	protected Session getSession() {
-		return session;
-	}
-
-	public void onClose() throws SshException {
-		session.close();
-	}
-
-	public final void onOpen() throws SshException {
-		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
-			boolean singleConnection = Boolean.parseBoolean(configuration.getProperties().getProperty(
-				TrileadSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));
-			try {
-				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Port(), configuration.getX11Cookie(),
-					singleConnection);
-			} catch (IOException e) {
-				throw new SshException(SshException.IO_ERROR, e);
-			}
-		}
-		onChannelOpen();
-	}
-
-	public abstract void onChannelOpen() throws SshException;
 
 }

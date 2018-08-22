@@ -77,14 +77,15 @@ public class GanymedSshProvider extends AbstractProvider {
 		}
 	}
 
-	public List getCapabilities() {
+	public List<Capability> getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 			Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-			Capability.TUNNELED_SOCKET_FACTORY });
+			Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+			Capability.SHELL });
 	}
 
-	public List getSupportedCiphers(int protocolVersion) {
+	public List<String> getSupportedCiphers(int protocolVersion) {
 		if (protocolVersion == SshConfiguration.SSH1_ONLY) {
 			throw new UnsupportedOperationException("Only SSH2 is supported by Ganymed");
 		}
@@ -95,19 +96,19 @@ public class GanymedSshProvider extends AbstractProvider {
 		return new GanymedHostKeyManager(configuration);
 	}
 
-	public List getSupportedCompression() {
+	public List<String> getSupportedCompression() {
 		return Collections.emptyList();
 	}
 
-	public List getSupportedMAC() {
+	public List<String> getSupportedMAC() {
 		return Arrays.asList(MAC.getMacList());
 	}
 
-	public List getSupportedKeyExchange() {
+	public List<String> getSupportedKeyExchange() {
 		return Arrays.asList(KexManager.getDefaultClientKexAlgorithmList());
 	}
 
-	public List getSupportedPublicKey() {
+	public List<String> getSupportedPublicKey() {
 		return Arrays.asList(KexManager.getDefaultServerHostkeyAlgorithmList());
 	}
 

@@ -1,6 +1,5 @@
 package ssh;
 import com.ochafik.lang.jnaerator.runtime.LibraryExtractor;
-import com.ochafik.lang.jnaerator.runtime.MangledFunctionMapper;
 import com.ochafik.lang.jnaerator.runtime.Mangling;
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.sun.jna.Callback;
@@ -21,7 +20,7 @@ import java.nio.IntBuffer;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public interface SshLibrary extends Library {
-	public static final String JNA_LIBRARY_NAME = LibraryExtractor.getLibraryPath("ssh", true, ssh.SshLibrary.class);
+	public static final String JNA_LIBRARY_NAME = LibraryExtractor.getLibraryPath(System.getProperty("net.sf.sshapi.libssh.libname", "ssh"), true, ssh.SshLibrary.class);
 	public static final NativeLibrary JNA_NATIVE_LIB = NativeLibrary.getInstance(ssh.SshLibrary.JNA_LIBRARY_NAME, com.ochafik.lang.jnaerator.runtime.MangledFunctionMapper.DEFAULT_OPTIONS);
 	public static final SshLibrary INSTANCE = (SshLibrary)Native.loadLibrary(ssh.SshLibrary.JNA_LIBRARY_NAME, ssh.SshLibrary.class, com.ochafik.lang.jnaerator.runtime.MangledFunctionMapper.DEFAULT_OPTIONS);
 	/**

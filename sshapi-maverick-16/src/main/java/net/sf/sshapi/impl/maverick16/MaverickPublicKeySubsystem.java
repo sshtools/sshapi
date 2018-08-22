@@ -25,17 +25,19 @@ package net.sf.sshapi.impl.maverick16;
 
 import java.io.IOException;
 
-import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshPublicKey;
-import net.sf.sshapi.identity.SshPublicKeySubsystem;
-
 import com.maverick.ssh2.Ssh2Session;
 import com.sshtools.publickey.PublicKeySubsystem;
 import com.sshtools.publickey.PublicKeySubsystemException;
 
+import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPublicKey;
+import net.sf.sshapi.identity.SshPublicKeySubsystem;
 
-class MaverickPublicKeySubsystem extends AbstractLifecycleComponentWithEvents implements SshPublicKeySubsystem {
+class MaverickPublicKeySubsystem extends
+		AbstractLifecycleComponentWithEvents<SshLifecycleListener<SshPublicKeySubsystem>, SshPublicKeySubsystem>
+		implements SshPublicKeySubsystem {
 
 	private PublicKeySubsystem subsystem;
 	private Ssh2Session ssh2Session;
@@ -43,12 +45,14 @@ class MaverickPublicKeySubsystem extends AbstractLifecycleComponentWithEvents im
 	/**
 	 * Constructor.
 	 * 
-	 * @param ssh2Session session
+	 * @param ssh2Session
+	 *            session
 	 */
 	MaverickPublicKeySubsystem(Ssh2Session ssh2Session) {
 		this.ssh2Session = ssh2Session;
 	}
 
+	@Override
 	public void add(final SshPublicKey key, String comment) throws SshException {
 		try {
 			subsystem.add(new MaverickSshPublicKey(key), comment);
@@ -59,15 +63,18 @@ class MaverickPublicKeySubsystem extends AbstractLifecycleComponentWithEvents im
 		}
 	}
 
+	@Override
 	public SshPublicKey[] list() throws SshException {
 		// TODO complete
 		return null;
 	}
 
+	@Override
 	public void remove(SshPublicKey key) throws SshException {
 		// TODO complete
 	}
 
+	@Override
 	protected void onClose() throws SshException {
 		try {
 			subsystem.close();
@@ -76,6 +83,7 @@ class MaverickPublicKeySubsystem extends AbstractLifecycleComponentWithEvents im
 		}
 	}
 
+	@Override
 	protected void onOpen() throws SshException {
 		try {
 			subsystem = new PublicKeySubsystem(ssh2Session);

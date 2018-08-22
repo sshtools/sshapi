@@ -1,3 +1,4 @@
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshShell;
@@ -35,6 +36,9 @@ public class E05X11Forwarding {
 		 */
 		SshConfiguration config = new SshConfiguration();
 		new XDetails().configure(config);
+		
+		/* Make sure we get a provider that is capable of X11 forwarding */
+		config.addRequiredCapability(Capability.X11_FORWARDING);
 
 		// If XDetails doesn't work, you can set these manually
 		// config.setX11Host("ahost");
@@ -44,10 +48,6 @@ public class E05X11Forwarding {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Create the client using that configuration
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
-
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
 		String host = ExampleUtilities.extractHostname(connectionSpec);
@@ -55,28 +55,22 @@ public class E05X11Forwarding {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate, and start the simple shell
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
 
-		try {
+		// Create the client using that configuration
+		try(SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+
 			/*
 			 * Now you must either create a shell or start a command. This will
 			 * activate the X11 forwarding
 			 */
-			SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-			try {
+			try(SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				/*
-				 * Now open the channel and join the streams to the console. At
+				 * Now join the streams to the console. At
 				 * this point X11 forwarding should now be active
 				 */
-				shell.open();
 				ExampleUtilities.joinShellToConsole(shell);
-			} finally {
-				shell.close();
-			}
-		} finally {
-			client.disconnect();
-		}
+			} 
+		} 
 
 	}
 }

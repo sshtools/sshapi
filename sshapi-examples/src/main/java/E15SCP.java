@@ -19,7 +19,8 @@ public class E15SCP {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
@@ -27,9 +28,6 @@ public class E15SCP {
 		config.addRequiredCapability(Capability.SCP);
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
-		SshClient client = config.createClient();
-
-		ExampleUtilities.dumpClientInfo(client);
 
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
@@ -38,15 +36,11 @@ public class E15SCP {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
+		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
 
-		try {
-			// Create an open the sftp client
-			SshSCPClient sftp = client.createSCPClient();
-			sftp.open();
+			// Create and open the sftp client
+			try (SshSCPClient sftp = client.scp()) {
 
-			try {
 				//
 				// Copying a single file
 				//
@@ -59,12 +53,11 @@ public class E15SCP {
 				destinationFile.delete();
 
 				/*
-				 * Write out a file locally that we can upload. Although some
-				 * providers may natively support streams for SCP copies, some
-				 * do not, so the SCP client only works with local files.
+				 * Write out a file locally that we can upload. Although some providers may
+				 * natively support streams for SCP copies, some do not, so the SCP client only
+				 * works with local files.
 				 * 
-				 * If you need to work with streams, use the {@link SftpClient}
-				 * instead.
+				 * If you need to work with streams, use the {@link SftpClient} instead.
 				 */
 				createNewFile(fileToUpload);
 
@@ -83,8 +76,7 @@ public class E15SCP {
 				//
 
 				/*
-				 * Create a simple directory structure to test copying
-				 * directories
+				 * Create a simple directory structure to test copying directories
 				 */
 				File dir = new File("upload-test-directory");
 				File destinationDir = new File("download-test-directory");
@@ -108,23 +100,19 @@ public class E15SCP {
 				System.out.println("Downloading directory ..");
 				sftp.get(dir.getName(), destinationDir, true);
 				System.out.println("Directory downloaded to " + destinationDir);
-			} finally {
-				sftp.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 
 	}
 
 	static void createNewFile(File file) throws UnsupportedEncodingException, IOException {
 		String content = "Lorem ipsum dolor sit amet, consectetur adipisicing "
-			+ "elit, sed do eiusmod tempor incididunt ut labore et dolore magna "
-			+ "aliqua. Ut enim ad minim veniam, quis nostrud exercitation "
-			+ "ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-			+ "Duis aute irure dolor in reprehenderit in voluptate velit esse "
-			+ "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
-			+ "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n";
+				+ "elit, sed do eiusmod tempor incididunt ut labore et dolore magna "
+				+ "aliqua. Ut enim ad minim veniam, quis nostrud exercitation "
+				+ "ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+				+ "Duis aute irure dolor in reprehenderit in voluptate velit esse "
+				+ "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
+				+ "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n";
 		System.out.println("Creating temporary file to upload");
 		FileOutputStream fout = new FileOutputStream(file);
 		try {

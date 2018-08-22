@@ -17,17 +17,15 @@ public class E06bLocalForwardingAndShell {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg command line arguments
+	 * @param arg
+	 *            command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
 		SshConfiguration config = new SshConfiguration();
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
-
-		// Create the client using that configuration.
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
+		config.addRequiredCapability(Capability.PORT_FORWARD_EVENTS);
 
 		// Prompt for the host and username
 		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
@@ -36,55 +34,40 @@ public class E06bLocalForwardingAndShell {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate, and start the simple shell
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
 
-		// If our provider supports it, adds listen for the events as tunneled
-		// connections become active
-		if (client.getProvider().getCapabilities().contains(Capability.PORT_FORWARD_EVENTS)) {
-			client.addPortForwardListener(new SshPortForwardListener() {
+		// Create the client using that configuration.
+		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+			ExampleUtilities.dumpClientInfo(client);
 
-				public void channelOpened(int type, SshPortForwardTunnel channel) {
-					System.out.println("Channel open: " + type + " / " + channel);
+			// If our provider supports it, adds listen for the events as tunneled
+			// connections become active
+			if (client.getProvider().getCapabilities().contains(Capability.PORT_FORWARD_EVENTS)) {
+				client.addPortForwardListener(new SshPortForwardListener() {
 
-				}
+					public void channelOpened(int type, SshPortForwardTunnel channel) {
+						System.out.println("Channel open: " + type + " / " + channel);
 
-				public void channelClosed(int type, SshPortForwardTunnel channel) {
-					System.out.println("Channel closed: " + type + " / " + channel);
-				}
-			});
-		}
+					}
 
-		try {
-			SshPortForward local = client.createLocalForward(null, 8900, "www.javassh.com", 80);
-			local.open();
+					public void channelClosed(int type, SshPortForwardTunnel channel) {
+						System.out.println("Channel closed: " + type + " / " + channel);
+					}
+				});
+			}
 
-			// Wait for two minute
-			try {
-				System.out.println("Point your browser to http://localhost:8900.");
-				// Create the shell channel
-				SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
+			try (SshPortForward local = client.localForward(null, 8443, "sshtools.com", 443)) {
 
-				/*
-				 * Open the shell channel. All channels must be opened once created
-				 * and closed when finished with
-				 */
-				try {
-					shell.open();
+				System.out.println("Point your browser to https://localhost:8443/en/");
+				
+				// Create the shell channel, tunnel will be active until that exits
+				try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 
 					/*
-					 * Call the utility method to join the remote streams to the
-					 * console streams
+					 * Call the utility method to join the remote streams to the console streams
 					 */
 					ExampleUtilities.joinShellToConsole(shell);
-				} finally {
-					shell.close();
 				}
-			} finally {
-				local.close();
 			}
-		} finally {
-			client.disconnect();
 		}
 
 	}
