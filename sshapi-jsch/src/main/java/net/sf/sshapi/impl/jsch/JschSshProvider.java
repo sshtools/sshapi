@@ -120,7 +120,7 @@ public class JschSshProvider extends AbstractProvider {
 	}
 
 	@Override
-	public List getCapabilities() {
+	public List<Capability> getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY,
 				Capability.SOCKS5_PROXY, Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT,
@@ -152,7 +152,7 @@ public class JschSshProvider extends AbstractProvider {
 	private void checkConfig(String cipher, String name, String key) {
 		checkFirstConnection();
 		String[] split = JSch.getConfig(key).split(",");
-		List ciphers = new ArrayList(Arrays.asList(split));
+		List<String> ciphers = new ArrayList<>(Arrays.asList(split));
 		ciphers.remove(cipher);
 		ciphers.add(0, cipher);
 		String delimited = Util.toDelimited((String[]) ciphers.toArray(new String[ciphers.size()]), ',');
@@ -160,29 +160,29 @@ public class JschSshProvider extends AbstractProvider {
 	}
 
 	@Override
-	public List getSupportedCiphers(int protocolVersion) {
+	public List<String> getSupportedCiphers(int protocolVersion) {
 		return Arrays.asList("aes128-ctr,aes128-cbc,3des-ctr,3des-cbc,blowfish-cbc,aes192-cbc,aes256-cbc".split(","));
 	}
 
 	@Override
-	public List getSupportedCompression() {
+	public List<String> getSupportedCompression() {
 		return Arrays.asList("zlib@openssh.com,zlib,none".split(","));
 	}
 
 	@Override
-	public List getSupportedMAC() {
+	public List<String> getSupportedMAC() {
 		return Arrays.asList("hmac-md5,hmac-sha1,hmac-sha1-96,hmac-md5-96".split(","));
 	}
 
 	@Override
-	public List getSupportedKeyExchange() {
+	public List<String> getSupportedKeyExchange() {
 		return Arrays.asList(
 				"diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256"
 						.split(","));
 	}
 
 	@Override
-	public List getSupportedPublicKey() {
+	public List<String> getSupportedPublicKey() {
 		return Arrays.asList("ssh-rsa,ssh-dss,ssh-ecdsa".split(","));
 	}
 

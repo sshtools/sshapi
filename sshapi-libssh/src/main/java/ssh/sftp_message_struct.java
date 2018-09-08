@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import ssh.SshLibrary.ssh_buffer;
 /**
@@ -16,10 +19,10 @@ public class sftp_message_struct extends Structure<sftp_message_struct, sftp_mes
 	public int id;
 	public sftp_message_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"sftp", "packet_type", "payload", "id"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"sftp", "packet_type", "payload", "id"});
 	}
 	/**
 	 * @param sftp C type : sftp_session<br>
@@ -31,7 +34,6 @@ public class sftp_message_struct extends Structure<sftp_message_struct, sftp_mes
 		this.packet_type = packet_type;
 		this.payload = payload;
 		this.id = id;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

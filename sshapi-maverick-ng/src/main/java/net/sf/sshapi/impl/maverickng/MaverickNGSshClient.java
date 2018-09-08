@@ -252,8 +252,10 @@ class MaverickNGSshClient extends AbstractClient
 			authSemaphore.acquire();
 			authSemaphore.release();
 		} catch (IOException sshe) {
+			authSemaphore.release();
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
 		} catch (SshException e) {
+			authSemaphore.release();
 			throw new net.sf.sshapi.SshException("Failed to authenticate.", e);
 		} catch (InterruptedException e) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, e);
@@ -277,6 +279,8 @@ class MaverickNGSshClient extends AbstractClient
 				public String getPassword() {
 					char[] answer = ((SshPasswordAuthenticator) authenticator)
 							.promptForPassword(MaverickNGSshClient.this, "Password");
+					if(answer == null && authSemaphore.availablePermits() < 1)
+						authSemaphore.release();
 					return answer == null ? null : new String(answer);
 				}
 			};
@@ -330,6 +334,8 @@ class MaverickNGSshClient extends AbstractClient
 						}
 						return;
 					}
+					if(authSemaphore.availablePermits() < 1)
+						authSemaphore.release();
 					throw new IllegalStateException("Cancelled.");
 				}
 			});
@@ -472,6 +478,9 @@ class MaverickNGSshClient extends AbstractClient
 		try {
 			connection.disconnect();
 		} finally {
+			if (authSemaphore.availablePermits() < 1)
+				authSemaphore.release();
+			
 			// if (forwarding != null) {
 			// forwarding.removeListener(this);
 			// }

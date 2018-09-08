@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 /**
@@ -25,10 +28,11 @@ public class ssh_packet_callbacks_struct extends Structure<ssh_packet_callbacks_
 	public Pointer user;
 	public ssh_packet_callbacks_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"start", "n_callbacks", "callbacks", "user"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"start", "n_callbacks", "callbacks", "user"});
 	}
 	/**
 	 * @param start Index of the first packet type being handled<br>
@@ -45,7 +49,6 @@ public class ssh_packet_callbacks_struct extends Structure<ssh_packet_callbacks_
 		this.n_callbacks = n_callbacks;
 		this.callbacks = callbacks;
 		this.user = user;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

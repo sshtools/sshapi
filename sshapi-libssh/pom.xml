@@ -2,8 +2,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
-		<sourceRelease>1.5</sourceRelease>
-		<targetRelease>1.5</targetRelease>
+		<sourceRelease>1.8</sourceRelease>
+		<targetRelease>1.8</targetRelease>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-libssh</artifactId>
@@ -69,9 +69,7 @@ This library is deployed to SSHTools own Maven repository.</description>
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
-			<version>3.2.7</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>4.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.nativelibs4java</groupId>

@@ -31,6 +31,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.maverick.ssh.SshConnector;
+import com.maverick.ssh.SshException;
+import com.maverick.ssh.components.jce.JCEProvider;
+import com.maverick.ssh2.Ssh2Context;
+
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger.Level;
@@ -40,18 +45,12 @@ import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
-import com.maverick.ssh.SshConnector;
-import com.maverick.ssh.SshException;
-import com.maverick.ssh.components.jce.JCEProvider;
-import com.maverick.ssh2.Ssh2Context;
-
 /**
  * Provider implementation for Maverick SSH.
  */
 public class MaverickSshProvider extends AbstractProvider {
 	/**
-	 * The User-Agent Maverick identifies itself as when using HTTP proxy
-	 * connection
+	 * The User-Agent Maverick identifies itself as when using HTTP proxy connection
 	 */
 	public final static String CFG_HTTP_PROXY_USER_AGENT = "sshapi.maverick.httpProxy.userAgent";
 	/**
@@ -63,18 +62,18 @@ public class MaverickSshProvider extends AbstractProvider {
 	 */
 	public static final String CFG_SFTP_MODE = "sshapi.maverick.sftp.mode";
 	/**
-	 * SFTP protocol maximum version (defaults to the highest supported by
-	 * Maverick)
+	 * SFTP protocol maximum version (defaults to the highest supported by Maverick)
 	 */
 	public static final String CFG_SFTP_MAX_VERSION = "sshapi.maverick.sftp.maxVersion";
-	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
-			Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
+	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION,
+			Capability.SSH1, Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
 			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT,
-			Capability.PORT_FORWARD_EVENTS, Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP,
-			Capability.PUBLIC_KEY_SUBSYSTEM, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE,
-			Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
-			Capability.CHANNEL_HANDLERS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL };
+			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT,
+			Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS, Capability.CHANNEL_DATA_EVENTS,
+			Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM, Capability.SOCKET_FACTORY,
+			Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_OVER_SCP,
+			Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
+			Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL };
 	private SshConnector con;
 	static {
 		// Warning for slow startup on Linux / Solaris
@@ -89,9 +88,8 @@ public class MaverickSshProvider extends AbstractProvider {
 	private synchronized void checkConnector() {
 		if (con == null) {
 			/*
-			 * Use reflection to keep compatibility between version 1.6 and 1.7.
-			 * This is the only incompatibile API change (that we care about)
-			 * between the two versions
+			 * Use reflection to keep compatibility between version 1.6 and 1.7. This is the
+			 * only incompatibile API change (that we care about) between the two versions
 			 */
 			try {
 				try {
@@ -176,7 +174,8 @@ public class MaverickSshProvider extends AbstractProvider {
 			} catch (SshException e) {
 				throw new UnsupportedOperationException(e);
 			}
-			ciphers.addAll(Arrays.asList(ssh2Context.supportedCiphersCS().list("").split(",")));
+			ciphers.addAll(Arrays
+					.asList(ssh2Context.supportedCiphersCS().list(ssh2Context.getPreferredCipherCS()).split(",")));
 		}
 		if (protocolVersion == SshConfiguration.SSH1_OR_SSH2 || protocolVersion == SshConfiguration.SSH1_ONLY) {
 			ciphers.add(SshConfiguration.CIPHER_3DES);
@@ -191,7 +190,8 @@ public class MaverickSshProvider extends AbstractProvider {
 		List<String> compressions = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
-			compressions.addAll(Arrays.asList(ssh2Context.supportedCompressionsCS().list("").split(",")));
+			compressions.addAll(Arrays.asList(
+					ssh2Context.supportedCompressionsCS().list(ssh2Context.getPreferredCompressionCS()).split(",")));
 		} catch (SshException e) {
 			throw new UnsupportedOperationException(e);
 		}
@@ -204,7 +204,7 @@ public class MaverickSshProvider extends AbstractProvider {
 		List<String> macs = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
-			macs.addAll(Arrays.asList(ssh2Context.supportedMacsCS().list("").split(",")));
+			macs.addAll(Arrays.asList(ssh2Context.supportedMacsCS().list(ssh2Context.getPreferredMacCS()).split(",")));
 		} catch (SshException e) {
 			throw new UnsupportedOperationException(e);
 		}
@@ -217,7 +217,8 @@ public class MaverickSshProvider extends AbstractProvider {
 		List<String> kexs = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
-			kexs.addAll(Arrays.asList(ssh2Context.supportedKeyExchanges().list("").split(",")));
+			kexs.addAll(Arrays.asList(
+					ssh2Context.supportedKeyExchanges().list(ssh2Context.getPreferredKeyExchange()).split(",")));
 		} catch (SshException e) {
 			throw new UnsupportedOperationException(e);
 		}
@@ -230,7 +231,8 @@ public class MaverickSshProvider extends AbstractProvider {
 		List<String> pks = new ArrayList<>();
 		try {
 			Ssh2Context ssh2Context = (Ssh2Context) con.getContext(SshConnector.SSH2);
-			pks.addAll(Arrays.asList(ssh2Context.supportedPublicKeys().list("").split(",")));
+			pks.addAll(Arrays
+					.asList(ssh2Context.supportedPublicKeys().list(ssh2Context.getPreferredPublicKey()).split(",")));
 		} catch (SshException e) {
 			throw new UnsupportedOperationException(e);
 		}

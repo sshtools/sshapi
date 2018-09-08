@@ -28,16 +28,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import net.sf.sshapi.AbstractProvider;
-import net.sf.sshapi.Capability;
-import net.sf.sshapi.SshClient;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import ch.ethz.ssh2.crypto.cipher.BlockCipherFactory;
 import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
+import net.sf.sshapi.AbstractProvider;
+import net.sf.sshapi.Capability;
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshClient;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.hostkeys.SshHostKeyManager;
 
 /**
  * Provider implementation for Ganymed
@@ -47,7 +47,6 @@ public class GanymedSshProvider extends AbstractProvider {
 	 * Single X11 connection
 	 */
 	public final static String CFG_SINGLE_X11_CONNECTION = "sshapi.ganymed.x11.singleConnection";
-
 	private SecureRandom rng;
 
 	/**
@@ -79,10 +78,10 @@ public class GanymedSshProvider extends AbstractProvider {
 
 	public List<Capability> getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
-			Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-			Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
-			Capability.SHELL });
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
+				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.SHELL });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

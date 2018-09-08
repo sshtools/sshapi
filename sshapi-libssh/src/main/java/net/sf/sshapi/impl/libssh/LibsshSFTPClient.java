@@ -80,6 +80,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 			} finally {
 				closeDir(dir);
 			}
+			dir = null;
 			System.out.println("Done listing");
 			return files.toArray(new SftpFile[0]);
 		}
@@ -175,7 +176,28 @@ class LibsshSFTPClient extends AbstractSftpClient {
 	}
 
 	public void put(String path, InputStream in, int permissions) throws SshException {
-		throw new UnsupportedOperationException();
+		synchronized (sftp) {
+			sftp_file_struct file;
+			file = library.sftp_open(sftp, path, LibsshClient.O_WRONLY | LibsshClient.O_CREAT | LibsshClient.O_TRUNC, permissions);
+			if (file == null)
+				throw new LibsshSFTPException(String.format("Could not open file for writing. %s", path));
+			try {
+				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE);
+				byte[] nb = new byte[LibsshClient.SFTP_BUFFER_SIZE];
+				int r;
+				while( ( r = in.read(nb)) != -1) {
+					buf.getByteBuffer(0, r).put(nb, 0, r);
+					int w = library.sftp_write(file, buf, new NativeSize(r));
+					if(w != r) {
+						throw new LibsshSFTPException("Failed to write to target.");
+					}
+				}
+			} catch (IOException e) {
+				throw new SshException(SshException.GENERAL, "Failed to read from source.", e);
+			} finally {
+				library.sftp_close(file);
+			}
+		}
 	}
 
 	public void setLastModified(String path, long modtime) throws SshException {

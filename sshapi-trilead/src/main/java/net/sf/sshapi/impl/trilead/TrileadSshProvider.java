@@ -48,7 +48,6 @@ public class TrileadSshProvider extends AbstractProvider {
 	 * Single X11 connection
 	 */
 	public final static String CFG_SINGLE_X11_CONNECTION = "sshapi.trilead.x11.singleConnection";
-
 	private SecureRandom rng;
 
 	/**
@@ -79,11 +78,10 @@ public class TrileadSshProvider extends AbstractProvider {
 	}
 
 	public List<Capability> getCapabilities() {
-		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION,
-				Capability.PUBLIC_KEY_AUTHENTICATION, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
-				Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.HTTP_PROXY,
-				Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP, Capability.TUNNELED_SOCKET_FACTORY,
-				Capability.HOST_KEY_VERIFICATION, Capability.SHELL });
+		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
+				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.HOST_KEY_VERIFICATION, Capability.SHELL });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

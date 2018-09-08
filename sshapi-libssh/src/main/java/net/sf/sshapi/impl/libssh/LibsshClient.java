@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi.impl.libssh;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -63,6 +64,8 @@ public class LibsshClient extends AbstractClient {
 	public final static int O_RDONLY = 0;
 	public final static int O_WRONLY = 1;
 	public final static int O_RDWR = 2;
+	public final static int O_CREAT = 512;
+	public final static int O_TRUNC = 1024;
 	// TODO make configurable
 	public final static int SCP_BUFFER_SIZE = 32768;
 	public final static int SFTP_BUFFER_SIZE = 32768;
@@ -228,7 +231,13 @@ public class LibsshClient extends AbstractClient {
 		// }
 		// }
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_PUBLICKEY) != 0 && pk != null) {
-			ssh_private_key privk = new ssh_private_key(bytePointer(pk.getPrivateKey()));
+			byte[] keybytes = pk.getPrivateKey();
+//			library.ssh_P
+			
+//			File f = File.createTempFile("pk", suffix);
+//			library.ssh_userauth_privatekey_file(libSshSession, username, filename, passphrase)pki
+			
+			ssh_private_key privk = new ssh_private_key(bytePointer(keybytes));
 			SshLibrary.ssh_public_key pubk = library.publickey_from_privatekey(privk);
 			SshLibrary.ssh_string pubs = pubk == null ? null : library.publickey_to_string(pubk);
 			ret = library.ssh_userauth_pubkey(libSshSession, username, pubs, privk);

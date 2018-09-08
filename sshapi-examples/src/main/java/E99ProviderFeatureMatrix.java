@@ -71,7 +71,7 @@ public class E99ProviderFeatureMatrix {
 
 		// Caps
 		for (int i = 0; i < caps.length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(caps[i].getName());
 			for (int j = 0; j < providers.length; j++) {
 				if (providers[j].getCapabilities().contains(caps[i])) {
@@ -89,7 +89,7 @@ public class E99ProviderFeatureMatrix {
 
 		// Ciphers
 		for (int i = 0; i < strArrs[0].length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(strArrs[0][i]);
 			for (int k = 0; k < providers.length; k++) {
 				try {
@@ -113,7 +113,7 @@ public class E99ProviderFeatureMatrix {
 
 		// KEX
 		for (int i = 0; i < strArrs[1].length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(strArrs[1][i]);
 			for (int k = 0; k < providers.length; k++) {
 				try {
@@ -136,7 +136,7 @@ public class E99ProviderFeatureMatrix {
 
 		// MAC
 		for (int i = 0; i < strArrs[2].length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(strArrs[2][i]);
 			for (int k = 0; k < providers.length; k++) {
 				try {
@@ -158,7 +158,7 @@ public class E99ProviderFeatureMatrix {
 
 		// Compression
 		for (int i = 0; i < strArrs[3].length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(strArrs[3][i]);
 			for (int k = 0; k < providers.length; k++) {
 				try {
@@ -181,7 +181,7 @@ public class E99ProviderFeatureMatrix {
 
 		// Publick Key
 		for (int i = 0; i < strArrs[4].length; i++) {
-			List l = new ArrayList();
+			List<String> l = new ArrayList<>();
 			l.add(strArrs[4][i]);
 			for (int k = 0; k < providers.length; k++) {
 				try {

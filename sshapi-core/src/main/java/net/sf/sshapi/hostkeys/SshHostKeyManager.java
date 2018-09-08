@@ -23,8 +23,6 @@
  */
 package net.sf.sshapi.hostkeys;
 
-import java.io.IOException;
-
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 

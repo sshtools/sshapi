@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 /**
  * <i>native declaration : /usr/include/libssh/sftp.h:136</i><br>
@@ -13,10 +16,10 @@ public class sftp_request_queue_struct extends Structure<sftp_request_queue_stru
 	public ssh.sftp_message_struct.ByReference message;
 	public sftp_request_queue_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"next", "message"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"next", "message"});
 	}
 	/**
 	 * @param next C type : sftp_request_queue<br>
@@ -26,7 +29,6 @@ public class sftp_request_queue_struct extends Structure<sftp_request_queue_stru
 		super();
 		this.next = next;
 		this.message = message;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

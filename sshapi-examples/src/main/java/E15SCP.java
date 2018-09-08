@@ -39,7 +39,7 @@ public class E15SCP {
 		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
 
 			// Create and open the sftp client
-			try (SshSCPClient sftp = client.scp()) {
+			try (SshSCPClient scp = client.scp()) {
 
 				//
 				// Copying a single file
@@ -63,12 +63,12 @@ public class E15SCP {
 
 				// Now upload the file,
 				System.out.println("Upoading first file ..");
-				sftp.put(fileToUpload.getName(), null, fileToUpload, false);
+				scp.put(fileToUpload.getName(), null, fileToUpload, false);
 				System.out.println("File uploaded ..");
 
 				// Download the file
 				System.out.println("Downloading file ..");
-				sftp.get(fileToUpload.getName(), destinationFile, false);
+				scp.get(fileToUpload.getName(), destinationFile, false);
 				System.out.println("File downloaded to " + destinationFile);
 
 				//
@@ -93,12 +93,12 @@ public class E15SCP {
 
 				// Now upload the directory,
 				System.out.println("Uploading directory ..");
-				sftp.put(".", null, dir, true);
+				scp.put(".", null, dir, true);
 				System.out.println("Directory uploaded ..");
 
 				// Download the directory
 				System.out.println("Downloading directory ..");
-				sftp.get(dir.getName(), destinationDir, true);
+				scp.get(dir.getName(), destinationDir, true);
 				System.out.println("Directory downloaded to " + destinationDir);
 			}
 		}

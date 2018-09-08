@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_callback_data;
@@ -44,10 +47,11 @@ public class ssh_socket_callbacks_struct extends Structure<ssh_socket_callbacks_
 	public ssh_callback_int_int connected;
 	public ssh_socket_callbacks_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"userdata", "data", "controlflow", "exception", "connected"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"userdata", "data", "controlflow", "exception", "connected"});
 	}
 	/**
 	 * @param userdata User-provided data. User is free to set anything he wants here<br>
@@ -72,7 +76,6 @@ public class ssh_socket_callbacks_struct extends Structure<ssh_socket_callbacks_
 		this.controlflow = controlflow;
 		this.exception = exception;
 		this.connected = connected;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

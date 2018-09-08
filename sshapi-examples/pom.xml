@@ -88,13 +88,6 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-ganymed</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
@@ -118,8 +111,31 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>-->
+		</dependency>
 		
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-openssh</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-ng</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-16</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		-->
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-libssh</artifactId>
@@ -127,6 +143,7 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency> 
+		
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>

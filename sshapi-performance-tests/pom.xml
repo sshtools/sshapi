@@ -69,20 +69,20 @@
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-j2ssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-16</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-ng</artifactId>

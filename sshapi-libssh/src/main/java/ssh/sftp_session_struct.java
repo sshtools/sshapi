@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.ptr.PointerByReference;
 import ssh.SshLibrary.sftp_ext;
@@ -28,10 +31,10 @@ public class sftp_session_struct extends Structure<sftp_session_struct, sftp_ses
 	public sftp_ext ext;
 	public sftp_session_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"session", "channel", "server_version", "client_version", "version", "queue", "id_counter", "errnum", "handles", "ext"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"session", "channel", "server_version", "client_version", "version", "queue", "id_counter", "errnum", "handles", "ext"});
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_string;
@@ -49,11 +52,12 @@ public class sftp_attributes_struct extends Structure<sftp_attributes_struct, sf
 	public ssh_string extended_data;
 	public sftp_attributes_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"name", "longname", "flags", "type", "size", "uid", "gid", "owner", "group", "permissions", "atime64", "atime", "atime_nseconds", "createtime", "createtime_nseconds", "mtime64", "mtime", "mtime_nseconds", "acl", "extended_count", "extended_type", "extended_data"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"name", "longname", "flags", "type", "size", "uid", "gid", "owner", "group", "permissions", "atime64", "atime", "atime_nseconds", "createtime", "createtime_nseconds", "mtime64", "mtime", "mtime_nseconds", "acl", "extended_count", "extended_type", "extended_data"});
 	}
+
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }
 	@Override

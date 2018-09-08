@@ -41,7 +41,7 @@ public class E14HostKeyManagement {
 		//
 		System.out.println("list - list all keys");
 		System.out.println("exit - quit this utility");
-		System.out.println("get <type> <hostname> - get all keys of specified type and host");
+		System.out.println("get <hostname> [<type>] - get all keys for the host (and optional type)");
 		System.out.println("remove <type> <hostname> - remove all keys of specified type and host");
 		String cmd = "";
 		while (true) {
@@ -58,8 +58,8 @@ public class E14HostKeyManagement {
 			} else if (cmd.startsWith("get ")) {
 				StringTokenizer t = new StringTokenizer(cmd);
 				t.nextToken();
-				String type = t.nextToken();
 				String host = t.nextToken();
+				String type = t.hasMoreTokens() ? t.nextToken() : null;
 				SshHostKey[] keys = mgr.getKeysForHost(host, type);
 				if (keys == null) {
 					System.out.println("No keys for this host");

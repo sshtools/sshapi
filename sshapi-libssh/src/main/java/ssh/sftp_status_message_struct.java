@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_string;
@@ -22,10 +25,10 @@ public class sftp_status_message_struct extends Structure<sftp_status_message_st
 	public Pointer langmsg;
 	public sftp_status_message_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"id", "status", "error", "lang", "errormsg", "langmsg"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"id", "status", "error", "lang", "errormsg", "langmsg"});
 	}
 	/**
 	 * @param error C type : ssh_string<br>
@@ -41,7 +44,6 @@ public class sftp_status_message_struct extends Structure<sftp_status_message_st
 		this.lang = lang;
 		this.errormsg = errormsg;
 		this.langmsg = langmsg;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

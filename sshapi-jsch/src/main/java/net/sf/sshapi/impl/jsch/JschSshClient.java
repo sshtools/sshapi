@@ -23,8 +23,6 @@
  */
 package net.sf.sshapi.impl.jsch;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -57,9 +55,9 @@ import com.jcraft.jsch.UserInfo;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -87,9 +85,12 @@ class JschSshClient extends AbstractClient implements Logger {
 		client = new JSch();
 	}
 
+	public JSch getJSchClient() {
+		return client;
+	}
+
 	@Override
-	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
-			throws SshException {
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
 		try {
 			JSch.setLogger(this);
 			client.setHostKeyRepository(new HostKeyRepositoryBridge(client.getHostKeyRepository()));
@@ -114,7 +115,6 @@ class JschSshClient extends AbstractClient implements Logger {
 				});
 			}
 			SshConfiguration configuration = getConfiguration();
-
 			if (configuration.getX11Host() != null) {
 				session.setX11Host(configuration.getX11Host());
 			}
@@ -125,7 +125,6 @@ class JschSshClient extends AbstractClient implements Logger {
 				String hexString = Util.formatAsHexString(configuration.getX11Cookie());
 				session.setX11Cookie(hexString);
 			}
-
 			SshProxyServerDetails proxyServer = configuration.getProxyServer();
 			if (proxyServer != null) {
 				if (proxyServer.getType().equals(SshProxyServerDetails.Type.HTTP)) {
@@ -140,10 +139,8 @@ class JschSshClient extends AbstractClient implements Logger {
 					ProxySOCKS5 proxy = new ProxySOCKS5(proxyServer.getHostname(), proxyServer.getPort());
 					proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
 					session.setProxy(proxy);
-
 				}
 			}
-
 		} catch (JSchException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
@@ -154,21 +151,10 @@ class JschSshClient extends AbstractClient implements Logger {
 		Map<String, SshAuthenticator> authenticatorMap = createAuthenticatorMap(authenticators);
 		SshPasswordAuthenticator paw = (SshPasswordAuthenticator) authenticatorMap.get("password");
 		SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticatorMap.get("publickey");
-		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap
-				.get("keyboard-interactive");
+		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap.get("keyboard-interactive");
 		if (pk != null) {
 			try {
-				File tempFile = File.createTempFile("prvk", "jsch");
-				tempFile.deleteOnExit();
-				FileOutputStream fout = new FileOutputStream(tempFile);
-				try {
-					fout.write(pk.getPrivateKey());
-				} finally {
-					fout.close();
-				}
-				client.addIdentity(tempFile.getAbsolutePath());
-			} catch (IOException ioe) {
-				throw new SshException(SshException.IO_ERROR, ioe);
+				client.addIdentity(pk.getPrivateKeyFile().getAbsolutePath());
 			} catch (JSchException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
@@ -176,8 +162,8 @@ class JschSshClient extends AbstractClient implements Logger {
 		session.setUserInfo(new UserInfoAuthenticatorBridge(paw, pk, ki));
 		SshConfiguration configuration = getConfiguration();
 		try {
-			session.connect(Integer.parseInt(
-					configuration.getProperties().getProperty(JschSshProvider.CFG_SESSION_CONNECT_TIMEOUT, "30000")));
+			session.connect(Integer
+					.parseInt(configuration.getProperties().getProperty(JschSshProvider.CFG_SESSION_CONNECT_TIMEOUT, "30000")));
 			authenticated = true;
 			return true;
 		} catch (NumberFormatException e) {
@@ -209,13 +195,12 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	public SshShell createShell(String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws SshException {
+	public SshShell createShell(String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight, byte[] terminalModes)
+			throws SshException {
 		try {
 			ChannelShell channel = (ChannelShell) session.openChannel("shell");
 			if (termType != null) {
-				channel.setTerminalMode(
-						terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
+				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
 			}
 			return new JschSshShell(getConfiguration(), channel) {
@@ -238,7 +223,6 @@ class JschSshClient extends AbstractClient implements Logger {
 	public SshPortForward createRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
 		return new AbstractPortForward() {
-
 			@Override
 			protected void onOpen() throws SshException {
 				try {
@@ -405,8 +389,7 @@ class JschSshClient extends AbstractClient implements Logger {
 
 		@Override
 		public boolean promptPassword(String message) {
-			password = passwordAuthenticator == null ? null
-					: passwordAuthenticator.promptForPassword(JschSshClient.this, message);
+			password = passwordAuthenticator == null ? null : passwordAuthenticator.promptForPassword(JschSshClient.this, message);
 			return password != null;
 		}
 
@@ -473,7 +456,6 @@ class JschSshClient extends AbstractClient implements Logger {
 					Class<?> c = Class.forName(JSch.getConfig("md5"));
 					final HASH hash = (HASH) (c.newInstance());
 					switch (hostKeyValidator.verifyHost(new AbstractHostKey() {
-
 						@Override
 						public String getType() {
 							switch (key[8]) {
@@ -555,7 +537,6 @@ class JschSshClient extends AbstractClient implements Logger {
 			return b;
 		if (b == -1)
 			return b;
-
 		if (b == 1 || b == 2) {
 			StringBuffer sb = new StringBuffer();
 			int c;
@@ -617,7 +598,6 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	class RemoteSocketFactory extends SocketFactory {
-
 		private Session session;
 
 		RemoteSocketFactory(Session session) {
@@ -646,15 +626,12 @@ class JschSshClient extends AbstractClient implements Logger {
 		}
 
 		@Override
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
-				throws IOException {
+		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
 			return new RemoteSocket(session, address, port);
 		}
-
 	}
 
 	class RemoteSocket extends AbstractSocket {
-
 		private ChannelDirectTCPIP channel;
 		private Session session;
 
@@ -729,5 +706,4 @@ class JschSshClient extends AbstractClient implements Logger {
 			return channel != null && !isClosed();
 		}
 	}
-
 }

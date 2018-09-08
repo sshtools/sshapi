@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 /**
  * <i>native declaration : /usr/include/libssh/sftp.h:176</i><br>
@@ -31,10 +34,10 @@ public class sftp_statvfs_struct extends Structure<sftp_statvfs_struct, sftp_sta
 	public long f_namemax;
 	public sftp_statvfs_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"f_bsize", "f_frsize", "f_blocks", "f_bfree", "f_bavail", "f_files", "f_ffree", "f_favail", "f_fsid", "f_flag", "f_namemax"});
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"f_bsize", "f_frsize", "f_blocks", "f_bfree", "f_bavail", "f_files", "f_ffree", "f_favail", "f_fsid", "f_flag", "f_namemax"});
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

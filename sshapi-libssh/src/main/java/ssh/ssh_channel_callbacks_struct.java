@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
@@ -54,10 +57,11 @@ public class ssh_channel_callbacks_struct extends Structure<ssh_channel_callback
 	public ssh_channel_exit_signal_callback channel_exit_signal_function;
 	public ssh_channel_callbacks_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"size", "userdata", "channel_data_function", "channel_eof_function", "channel_close_function", "channel_signal_function", "channel_exit_status_function", "channel_exit_signal_function"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"size", "userdata", "channel_data_function", "channel_eof_function", "channel_close_function", "channel_signal_function", "channel_exit_status_function", "channel_exit_signal_function"});
 	}
 	/**
 	 * @param size DON'T SET THIS use ssh_callbacks_init() instead.<br>
@@ -86,7 +90,6 @@ public class ssh_channel_callbacks_struct extends Structure<ssh_channel_callback
 		this.channel_signal_function = channel_signal_function;
 		this.channel_exit_status_function = channel_exit_status_function;
 		this.channel_exit_signal_function = channel_exit_signal_function;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

@@ -23,6 +23,8 @@
  */
 package net.sf.sshapi.auth;
 
+import java.io.File;
+
 import net.sf.sshapi.SshClient;
 
 /**
@@ -31,10 +33,28 @@ import net.sf.sshapi.SshClient;
  */
 public interface SshPublicKeyAuthenticator extends SshAuthenticator {
 
+	@Override
+	public default String getTypeName() {
+		return "publickey";
+	}
+	
 	/**
-	 * Get the private key data.
+	 * Get the private key as a file. If the user provided a file, this will
+	 * generally be the same reference. If the user provided a byte array, a
+	 * temporary file will be created. It is up to the caller to delete the file
+	 * as soon as possible, but failing that it will be deleted on JVM exit. The
+	 * permission will only allow the user to read the file.
 	 * 
-	 * @return private key
+	 * @return private key file
+	 */
+	File getPrivateKeyFile();
+
+	/**
+	 * Get the private key data. If the user provided a file, the byte array
+	 * will be populated with the contents of the file, otherwise the byte
+	 * array will be returned as is.
+	 * 
+	 * @return private key data
 	 */
 	byte[] getPrivateKey();
 

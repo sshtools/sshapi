@@ -23,62 +23,25 @@
  */
 package net.sf.sshapi.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
-import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshPasswordPrompt;
-import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 
 /**
- * A public key authenticator that reads the key from a file. The passphrase for
- * the key is retrieved using the provided {@link SshPasswordPrompt}.
+ * A public key authenticator that reads the key from a file or from a byte
+ * array. The passphrase for the key is retrieved using the provided
+ * {@link SshPasswordPrompt}.
+ * <p>
+ * Deprecated. See {@link DefaultPublicKeyAuthenticator}.
  */
-public class PEMFilePublicKeyAuthenticator implements SshPublicKeyAuthenticator {
-
-	private SshPasswordPrompt passphrasePrompt;
-	private byte[] privateKey;
-
-	/**
-	 * Constructor
-	 * 
-	 * @param passphrasePrompt invoked when passphrase is required
-	 * @param pemFile A file containing a DSA or RSA private key of the user in
-	 *            OpenSSH key format.
-	 * @throws IOException on any IO error
-	 */
-	public PEMFilePublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, File pemFile) throws IOException {
-		this.passphrasePrompt = passphrasePrompt;
-
-		byte[] buff = new byte[256];
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-		FileInputStream fin = new FileInputStream(pemFile);
-		try {
-			while (true) {
-				int len = fin.read(buff);
-				if (len < 0)
-					break;
-				baos.write(buff, 0, len);
-			}
-			privateKey = baos.toByteArray();
-		} finally {
-			fin.close();
-		}
+@Deprecated
+public class PEMFilePublicKeyAuthenticator extends DefaultPublicKeyAuthenticator {
+	public PEMFilePublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) throws IOException {
+		super(passphrasePrompt, privateKeyData);
 	}
 
-	public byte[] getPrivateKey() {
-		return privateKey;
+	public PEMFilePublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, File privateKeyFile) throws IOException {
+		super(passphrasePrompt, privateKeyFile);
 	}
-
-	public char[] promptForPassphrase(SshClient session, String message) {
-		return passphrasePrompt.promptForPassword(session, message);
-	}
-
-	public String getTypeName() {
-		return "publickey";
-	}
-
 }

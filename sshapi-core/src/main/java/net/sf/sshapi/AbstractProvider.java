@@ -23,10 +23,17 @@
  */
 package net.sf.sshapi;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 
@@ -78,14 +85,17 @@ public abstract class AbstractProvider implements SshProvider {
 			if (supportsDefaultConfiguration) {
 				return;
 			} else {
-				throw new UnsupportedOperationException("Default configuration is not supported. You must supply a configuration.");
+				throw new UnsupportedOperationException(
+						"Default configuration is not supported. You must supply a configuration.");
 			}
 		}
 
 		configuration.providerHasCapabilities(this);
 
-		check(configuration.getPreferredClientToServerCipher(), getSupportedCiphers(configuration.getProtocolVersion()));
-		check(configuration.getPreferredServerToClientCipher(), getSupportedCiphers(configuration.getProtocolVersion()));
+		check(configuration.getPreferredClientToServerCipher(),
+				getSupportedCiphers(configuration.getProtocolVersion()));
+		check(configuration.getPreferredServerToClientCipher(),
+				getSupportedCiphers(configuration.getProtocolVersion()));
 		check(configuration.getPreferredClientToServerMAC(), getSupportedMAC());
 		check(configuration.getPreferredServerToClientMAC(), getSupportedMAC());
 		check(configuration.getPreferredClientToServerCompression(), getSupportedCompression());
@@ -93,13 +103,16 @@ public abstract class AbstractProvider implements SshProvider {
 
 		if (configuration.getProxyServer() != null) {
 			SshProxyServerDetails proxy = configuration.getProxyServer();
-			if (proxy.getType().equals(SshProxyServerDetails.Type.HTTP) && !getCapabilities().contains(Capability.HTTP_PROXY)) {
+			if (proxy.getType().equals(SshProxyServerDetails.Type.HTTP)
+					&& !getCapabilities().contains(Capability.HTTP_PROXY)) {
 				throw new UnsupportedOperationException("HTTP proxy is not supported.");
 			}
-			if (proxy.getType().equals(SshProxyServerDetails.Type.SOCKS4) && !getCapabilities().contains(Capability.SOCKS4_PROXY)) {
+			if (proxy.getType().equals(SshProxyServerDetails.Type.SOCKS4)
+					&& !getCapabilities().contains(Capability.SOCKS4_PROXY)) {
 				throw new UnsupportedOperationException("SOCKS4 proxy is not supported.");
 			}
-			if (proxy.getType().equals(SshProxyServerDetails.Type.SOCKS5) && !getCapabilities().contains(Capability.SOCKS5_PROXY)) {
+			if (proxy.getType().equals(SshProxyServerDetails.Type.SOCKS5)
+					&& !getCapabilities().contains(Capability.SOCKS5_PROXY)) {
 				throw new UnsupportedOperationException("SOCKS5 proxy is not supported.");
 			}
 		}
@@ -113,7 +126,8 @@ public abstract class AbstractProvider implements SshProvider {
 		throw new UnsupportedOperationException();
 	}
 
-	public SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol) throws SshException {
+	public SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol)
+			throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -124,14 +138,15 @@ public abstract class AbstractProvider implements SshProvider {
 	public SshAgent connectToLocalAgent(String application) throws SshException {
 		return connectToLocalAgent(application, SshAgent.AUTO_PROTOCOL);
 	}
-	
-	public SshClient open(SshConfiguration configuration, String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
+
+	public SshClient open(SshConfiguration configuration, String username, String hostname, int port,
+			SshAuthenticator... authenticators) throws SshException {
 		SshClient client = createClient(configuration);
 		client.connect(username, hostname, port, authenticators);
 		return client;
 	}
 
-	static boolean check(String name, List list) {
+	static boolean check(String name, List<String> list) {
 		boolean ok = name == null || list.contains(name) || name.equals("none");
 		if (!ok) {
 			throw new UnsupportedOperationException("Capability " + name + " is not one of " + list);

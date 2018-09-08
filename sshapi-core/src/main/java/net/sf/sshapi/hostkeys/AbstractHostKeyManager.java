@@ -87,16 +87,20 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 	 */
 	protected SshHostKey[] doGetKeysForHost(String host, String type) {
 		SshHostKey[] keys = getKeys();
-		List hostKeys = new ArrayList();
-		for (int i = 0; i < keys.length; i++) {
-			if (checkHost(keys[i].getHost(), host) && ( type == null || type.equals(keys[i].getType()))) {
-				hostKeys.add(keys[i]);
+		List<SshHostKey> hostKeys = new ArrayList<>();
+		for (SshHostKey k : keys) {
+			if (checkHost(k.getHost(), host) && ( type == null || type.equals(k.getType()))) {
+				hostKeys.add(k);
 			}
 		}
-		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshHostKey[0]);
 	}
 
 	protected boolean checkHost(String storedHostName, String hostToCheck) {
-		return storedHostName.equals(hostToCheck);
+		boolean match = storedHostName.equals(hostToCheck);
+		if(!match) {
+			System.out.println("STORED: " + storedHostName + " CHECK: " +hostToCheck);
+		}
+		return match;
 	}
 }

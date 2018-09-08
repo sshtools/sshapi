@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_string;
@@ -21,10 +24,11 @@ public class sftp_file_struct extends Structure<sftp_file_struct, sftp_file_stru
 	public int nonblocking;
 	public sftp_file_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"sftp", "name", "offset", "handle", "eof", "nonblocking"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"sftp", "name", "offset", "handle", "eof", "nonblocking"});
 	}
 	/**
 	 * @param sftp C type : sftp_session<br>
@@ -39,7 +43,6 @@ public class sftp_file_struct extends Structure<sftp_file_struct, sftp_file_stru
 		this.handle = handle;
 		this.eof = eof;
 		this.nonblocking = nonblocking;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

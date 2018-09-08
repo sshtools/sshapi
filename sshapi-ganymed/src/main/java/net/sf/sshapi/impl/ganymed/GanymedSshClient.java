@@ -41,25 +41,6 @@ import java.util.Vector;
 
 import javax.net.SocketFactory;
 
-import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.AbstractSocket;
-import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshCommand;
-import net.sf.sshapi.SshProxyServerDetails;
-import net.sf.sshapi.SshSCPClient;
-import net.sf.sshapi.SshShell;
-import net.sf.sshapi.auth.SshAuthenticator;
-import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
-import net.sf.sshapi.auth.SshPasswordAuthenticator;
-import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
-import net.sf.sshapi.forwarding.AbstractPortForward;
-import net.sf.sshapi.forwarding.SshPortForward;
-import net.sf.sshapi.hostkeys.AbstractHostKey;
-import net.sf.sshapi.hostkeys.SshHostKeyValidator;
-import net.sf.sshapi.sftp.SftpClient;
-import net.sf.sshapi.util.Util;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.HTTPProxyData;
 import ch.ethz.ssh2.InteractiveCallback;
@@ -75,6 +56,25 @@ import ch.ethz.ssh2.crypto.PEMDecoder;
 import ch.ethz.ssh2.crypto.cipher.BlockCipherFactory;
 import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
+import net.sf.sshapi.AbstractClient;
+import net.sf.sshapi.AbstractSocket;
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProxyServerDetails;
+import net.sf.sshapi.SshSCPClient;
+import net.sf.sshapi.SshShell;
+import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
+import net.sf.sshapi.auth.SshPasswordAuthenticator;
+import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
+import net.sf.sshapi.forwarding.AbstractPortForward;
+import net.sf.sshapi.forwarding.SshPortForward;
+import net.sf.sshapi.hostkeys.AbstractHostKey;
+import net.sf.sshapi.hostkeys.SshHostKeyValidator;
+import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.Util;
 
 class GanymedSshClient extends AbstractClient {
 	// Private instance variables
@@ -88,24 +88,21 @@ class GanymedSshClient extends AbstractClient {
 		this.rng = rng;
 	}
 
-	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
-			throws SshException {
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
 		SshConfiguration configuration = getConfiguration();
 		if (configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
 			throw new SshException(SshException.UNSUPPORTED_PROTOCOL_VERSION,
 					"Ganymed only supports SSH2, yet SSH1 only was request.");
 		}
-
 		SshProxyServerDetails proxyServer = configuration.getProxyServer();
 		if (proxyServer != null) {
-			connection = new Connection(hostname, port, new HTTPProxyData(proxyServer.getHostname(),
-					proxyServer.getPort(), proxyServer.getUsername(), new String(proxyServer.getPassword())));
+			connection = new Connection(hostname, port, new HTTPProxyData(proxyServer.getHostname(), proxyServer.getPort(),
+					proxyServer.getUsername(), new String(proxyServer.getPassword())));
 		} else {
 			connection = new Connection(hostname, port);
 		}
 		connection.setSecureRandom(rng);
 		configureAlgorithms(configuration);
-
 		try {
 			connection.connect(new ServerHostKeyVerifierBridge(configuration.getHostKeyValidator()));
 			connected = true;
@@ -155,59 +152,49 @@ class GanymedSshClient extends AbstractClient {
 							// Authenticated!
 							return true;
 						}
-
 						// Return to main loop so getRemainingMethods is called
 						// again
 						continue;
 					}
-
 					// Public key
 					if (authenticator instanceof SshPublicKeyAuthenticator) {
-						SshPublicKeyAuthenticator pka = ((SshPublicKeyAuthenticator) authenticator);
-						byte[] keyBytes = pka.getPrivateKey();
+						SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticator;
+						char[] charArray = new String(pk.getPrivateKey(), "US-ASCII").toCharArray();
 						char[] pw = null;
-						char[] charArray = new String(keyBytes, "US-ASCII").toCharArray();
-
 						// Try to work out if key is encrypted
 						try {
 							PEMDecoder.decode(charArray, null);
 						} catch (IOException ioe) {
 							// Encrypted (probably)
-							pw = pka.promptForPassphrase(this, "Passphrase");
+							pw = pk.promptForPassphrase(this, "Passphrase");
 							if (pw == null) {
 								throw new SshException("Authentication cancelled.");
 							}
 						}
-
-						if (connection.authenticateWithPublicKey(username, charArray,
-								pw == null ? null : new String(pw))) {
+						if (connection.authenticateWithPublicKey(getUsername(), charArray, pw == null ? null : new String(pw))) {
 							// Authenticated!
 							return true;
 						}
-
 						// Return to main loop so getRemainingMethods is called
 						// again
 						continue;
 					}
-
 					// Keyboard interactive
 					if (authenticator instanceof SshKeyboardInteractiveAuthenticator) {
 						final SshKeyboardInteractiveAuthenticator kbi = (SshKeyboardInteractiveAuthenticator) authenticator;
 						if (connection.authenticateWithKeyboardInteractive(username, new InteractiveCallback() {
-							public String[] replyToChallenge(String name, String instruction, int numPrompts,
-									String[] prompt, boolean[] echo) throws Exception {
+							public String[] replyToChallenge(String name, String instruction, int numPrompts, String[] prompt,
+									boolean[] echo) throws Exception {
 								return kbi.challenge(name, instruction, prompt, echo);
 							}
 						})) {
 							// Authenticated!
 							return true;
 						}
-
 						continue;
 					}
 				}
 			}
-
 			return false;
 		}
 	}
@@ -246,11 +233,9 @@ class GanymedSshClient extends AbstractClient {
 	public SshPortForward createLocalForward(final String localAddress, final int localPort, final String remoteHost,
 			final int remotePort) throws SshException {
 		if (localAddress != null && !localAddress.equals("0.0.0.0")) {
-			throw new IllegalArgumentException(
-					"Ganymed does not supporting binding a local port forward to a particular address.");
+			throw new IllegalArgumentException("Ganymed does not supporting binding a local port forward to a particular address.");
 		}
 		return new AbstractPortForward() {
-
 			private LocalPortForwarder localPortForwarder;
 
 			protected void onOpen() throws SshException {
@@ -422,7 +407,6 @@ class GanymedSshClient extends AbstractClient {
 			final String hexFingerprint = KnownHosts.createHexFingerprint(serverHostKeyAlgorithm, serverHostKey);
 			if (hostKeyValidator != null) {
 				switch (hostKeyValidator.verifyHost(new AbstractHostKey() {
-
 					public String getType() {
 						return serverHostKeyAlgorithm;
 					}
@@ -475,7 +459,6 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	class RemoteSocketFactory extends SocketFactory {
-
 		public Socket createSocket() throws IOException {
 			return new RemoteSocket(connection);
 		}
@@ -493,15 +476,12 @@ class GanymedSshClient extends AbstractClient {
 			return new RemoteSocket(connection, host, port);
 		}
 
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
-				throws IOException {
+		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
 			return new RemoteSocket(connection, address, port);
 		}
-
 	}
 
 	class RemoteSocket extends AbstractSocket {
-
 		private LocalStreamForwarder streamForwarder;
 		private Connection connection;
 

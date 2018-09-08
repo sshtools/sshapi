@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_buffer;
@@ -30,10 +33,11 @@ public class sftp_dir_struct extends Structure<sftp_dir_struct, sftp_dir_struct.
 	public int eof;
 	public sftp_dir_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"sftp", "name", "handle", "buffer", "count", "eof"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"sftp", "name", "handle", "buffer", "count", "eof"});
 	}
 	/**
 	 * @param sftp C type : sftp_session<br>
@@ -53,7 +57,6 @@ public class sftp_dir_struct extends Structure<sftp_dir_struct, sftp_dir_struct.
 		this.buffer = buffer;
 		this.count = count;
 		this.eof = eof;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

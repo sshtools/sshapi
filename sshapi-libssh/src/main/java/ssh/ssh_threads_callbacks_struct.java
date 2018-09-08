@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Pointer;
 import ssh.SshLibrary.ssh_thread_callback;
@@ -24,10 +27,11 @@ public class ssh_threads_callbacks_struct extends Structure<ssh_threads_callback
 	public ssh_thread_id_callback thread_id;
 	public ssh_threads_callbacks_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"type", "mutex_init", "mutex_destroy", "mutex_lock", "mutex_unlock", "thread_id"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"type", "mutex_init", "mutex_destroy", "mutex_lock", "mutex_unlock", "thread_id"});
 	}
 	/**
 	 * @param type C type : const char*<br>
@@ -45,7 +49,6 @@ public class ssh_threads_callbacks_struct extends Structure<ssh_threads_callback
 		this.mutex_lock = mutex_lock;
 		this.mutex_unlock = mutex_unlock;
 		this.thread_id = thread_id;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }

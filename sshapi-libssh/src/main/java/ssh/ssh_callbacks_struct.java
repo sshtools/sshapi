@@ -1,4 +1,7 @@
 package ssh;
+import java.util.Arrays;
+import java.util.List;
+
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.ochafik.lang.jnaerator.runtime.Structure;
 import com.sun.jna.Callback;
@@ -48,10 +51,11 @@ public class ssh_callbacks_struct extends Structure<ssh_callbacks_struct, ssh_ca
 	};
 	public ssh_callbacks_struct() {
 		super();
-		initFieldOrder();
 	}
-	protected void initFieldOrder() {
-		setFieldOrder(new java.lang.String[]{"size", "userdata", "auth_function", "log_function", "connect_status_function", "global_request_function"});
+
+	@Override
+	protected List<String> getFieldOrder() {
+		return Arrays.asList(new java.lang.String[]{"size", "userdata", "auth_function", "log_function", "connect_status_function", "global_request_function"});
 	}
 	/**
 	 * @param size DON'T SET THIS use ssh_callbacks_init() instead.<br>
@@ -75,7 +79,6 @@ public class ssh_callbacks_struct extends Structure<ssh_callbacks_struct, ssh_ca
 		this.log_function = log_function;
 		this.connect_status_function = connect_status_function;
 		this.global_request_function = global_request_function;
-		initFieldOrder();
 	}
 	@Override
 	protected ByReference newByReference() { return new ByReference(); }
