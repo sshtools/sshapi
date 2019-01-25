@@ -125,6 +125,11 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 				public String test() {
 					throw new UnsupportedOperationException();
 				}
+
+				@Override
+				public String getEncodingAlgorithm() {
+					throw new UnsupportedOperationException();
+				}
 			}, persist);
 		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);

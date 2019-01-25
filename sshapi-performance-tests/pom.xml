@@ -42,21 +42,21 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<!-- 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
-		<!-- <dependency>
+		</dependency><dependency>
 		Conflicts with Maverick 1.6
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency> -->
+		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-ganymed</artifactId>
@@ -68,24 +68,10 @@
 			<artifactId>sshapi-trilead</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency>
+		</dependency>-->
 		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> -->
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> 
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-ng</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
@@ -96,8 +82,20 @@
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
+		</dependency>-->
+		  
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-ng</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
-		
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-ng-common</artifactId>
+			<version>${maverickNGVersion}</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12 -->
 		<dependency>

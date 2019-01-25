@@ -26,8 +26,6 @@ package net.sf.sshapi.impl.libssh;
 import java.util.Arrays;
 import java.util.List;
 
-import com.sun.jna.CallbackProxy;
-
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger.Level;
@@ -38,22 +36,6 @@ import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import ssh.SshLibrary;
 
 public class LibsshSshProvider extends AbstractProvider {
-	static class JavaThreading implements CallbackProxy {
-		public Object callback(Object[] args) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public Class<?>[] getParameterTypes() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public Class<?> getReturnType() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-	}
 
 	static {
 		SshLibrary.INSTANCE.ssh_init();
@@ -90,16 +72,18 @@ public class LibsshSshProvider extends AbstractProvider {
 		}
 	}
 
+	@Override
 	public List<Capability> getCapabilities() {
-		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION,
-				Capability.SSH2, Capability.SSH1, Capability.SCP, Capability.SFTP, Capability.FILE_TRANSFER_EVENTS,
-				Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
-				Capability.PUBLIC_KEY_AUTHENTICATION });
+		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION,
+				Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.SSH1, Capability.SCP,
+				Capability.SFTP, Capability.FILE_TRANSFER_EVENTS, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION });
 	}
 
+	@Override
 	public List<String> getSupportedCiphers(int protocolVersion) {
-		return Arrays.asList(new String[] { "aes256-ctr", "aes192-ctr", "aes128-ctr", "aes256-cbc", "aes192-cbc", "aes128-cbc",
-				"3des-cbc", "blowfish-cbc", "none" });
+		return Arrays.asList(new String[] { "aes256-ctr", "aes192-ctr", "aes128-ctr", "aes256-cbc", "aes192-cbc",
+				"aes128-cbc", "3des-cbc", "blowfish-cbc", "none" });
 	}
 
 	@Override
@@ -107,6 +91,7 @@ public class LibsshSshProvider extends AbstractProvider {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public List<String> getSupportedCompression() {
 		if (getVersion() >= getVersion("0.8.0"))
 			return Arrays.asList(new String[] { "zlib@openssh.com", "none" });
@@ -114,6 +99,7 @@ public class LibsshSshProvider extends AbstractProvider {
 			return Arrays.asList(new String[] { "zlib@openssh.com", "zlib", "none" });
 	}
 
+	@Override
 	public List<String> getSupportedMAC() {
 		if (getVersion() >= getVersion("0.8.0"))
 			return Arrays.asList(new String[] { "hmac-sha2-512", "hmac-sha2-256", "hmac-sha1", "none" });
@@ -121,15 +107,18 @@ public class LibsshSshProvider extends AbstractProvider {
 			return Arrays.asList(new String[] { "hmac-sha1", "none" });
 	}
 
+	@Override
 	public List<String> getSupportedKeyExchange() {
-		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256", "diffie-hellman-group1-sha1",
-				"diffie-hellman-group14-sha1" });
+		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
+				"diffie-hellman-group1-sha1", "diffie-hellman-group14-sha1" });
 	}
 
+	@Override
 	public List<String> getSupportedPublicKey() {
 		return Arrays.asList(new String[] { SshConfiguration.PUBLIC_KEY_SSHRSA, SshConfiguration.PUBLIC_KEY_SSHDSA });
 	}
 
+	@Override
 	public void seed(long seed) {
 		// TODO seed libssh?
 	}

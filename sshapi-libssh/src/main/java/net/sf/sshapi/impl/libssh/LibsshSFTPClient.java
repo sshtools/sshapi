@@ -56,6 +56,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		library.sftp_free(sftp);
 	}
 
+	@Override
 	public SftpFile[] ls(String path) throws SshException {
 		synchronized (sftp) {
 			sftp_dir_struct dir;
@@ -97,10 +98,12 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public String getDefaultPath() throws SshException {
 		return "/";
 	}
 
+	@Override
 	public SftpFile stat(String path) throws SshException {
 		synchronized (sftp) {
 			System.out.println("Stat '" + path + "'");
@@ -112,6 +115,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void mkdir(String path, int permissions) throws SshException {
 		synchronized (sftp) {
 			int ret = library.sftp_mkdir(sftp, path, permissions);
@@ -121,6 +125,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rm(String path) throws SshException {
 		synchronized (sftp) {
 			int ret = library.sftp_unlink(sftp, path);
@@ -129,6 +134,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rmdir(String path) throws SshException {
 		synchronized (sftp) {
 			int ret = library.sftp_rmdir(sftp, path);
@@ -137,6 +143,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rename(String path, String newPath) throws SshException {
 		synchronized (sftp) {
 			int ret = library.sftp_rename(sftp, path, newPath);
@@ -147,6 +154,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void get(String path, OutputStream out) throws SshException {
 		synchronized (sftp) {
 			sftp_file_struct file;
@@ -154,11 +162,11 @@ class LibsshSFTPClient extends AbstractSftpClient {
 			if (file == null)
 				throw new LibsshSFTPException(String.format("Could not open file. %s", path));
 			try {
-				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE);
-				int nbytes = library.sftp_read(file, buf, new NativeSize(buf.size()));
+				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE * 4);
+				long nbytes = library.sftp_read(file, buf, new NativeSize(buf.size()));
 				while (nbytes > 0) {
 					try {
-						out.write(buf.getByteArray(0, nbytes));
+						out.write(buf.getByteArray(0, (int) nbytes));
 					} catch (IOException e) {
 						throw new SshException(SshException.GENERAL, "Failed to write to target stream.", e);
 					}
@@ -175,19 +183,19 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void put(String path, InputStream in, int permissions) throws SshException {
 		synchronized (sftp) {
-			sftp_file_struct file;
-			file = library.sftp_open(sftp, path, LibsshClient.O_WRONLY | LibsshClient.O_CREAT | LibsshClient.O_TRUNC, permissions);
+			sftp_file_struct file = library.sftp_open(sftp, path, LibsshClient.O_WRONLY | LibsshClient.O_CREAT | LibsshClient.O_TRUNC, permissions);
 			if (file == null)
 				throw new LibsshSFTPException(String.format("Could not open file for writing. %s", path));
 			try {
-				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE);
-				byte[] nb = new byte[LibsshClient.SFTP_BUFFER_SIZE];
+				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE * 4);
+				byte[] nb = new byte[64];
 				int r;
 				while( ( r = in.read(nb)) != -1) {
-					buf.getByteBuffer(0, r).put(nb, 0, r);
-					int w = library.sftp_write(file, buf, new NativeSize(r));
+					buf.write(0, nb, 0, r);
+					int w = (int) library.sftp_write(file, buf, new NativeSize(r));
 					if(w != r) {
 						throw new LibsshSFTPException("Failed to write to target.");
 					}
@@ -200,6 +208,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void setLastModified(String path, long modtime) throws SshException {
 		throw new UnsupportedOperationException();
 	}
@@ -212,6 +221,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		return file;
 	}
 
+	@Override
 	public void chmod(String path, int permissions) throws SshException {
 		synchronized (sftp) {
 			int ret = library.sftp_chmod(sftp, path, permissions);
@@ -220,6 +230,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void chown(String path, int uid) throws SshException {
 		synchronized (sftp) {
 			sftp_attributes_struct attr = library.sftp_stat(sftp, path);
@@ -229,6 +240,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void chgrp(String path, int gid) throws SshException {
 		synchronized (sftp) {
 			sftp_attributes_struct attr = library.sftp_stat(sftp, path);

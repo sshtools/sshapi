@@ -119,7 +119,10 @@ abstract class AbstractConnectionTest {
 				providers.add(provider);
 			}
 		}
-		return (SshProvider[]) providers.toArray(new SshProvider[0]);
+		SshProvider[] array = (SshProvider[]) providers.toArray(new SshProvider[0]);
+		if(array.length ==0)
+			throw new IllegalStateException("No providers.");
+		return array;
 	}
 
 	private List<String> parseList(String list) {

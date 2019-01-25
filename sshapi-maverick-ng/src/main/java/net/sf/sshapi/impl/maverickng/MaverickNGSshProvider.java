@@ -34,7 +34,6 @@ import java.util.List;
 import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.ComponentManager;
-import com.sshtools.common.ssh.components.jce.JCEComponentManager;
 import com.sshtools.common.ssh.components.jce.JCEProvider;
 
 import net.sf.sshapi.AbstractProvider;
@@ -57,7 +56,7 @@ public class MaverickNGSshProvider extends AbstractProvider {
 
 	private SshEngine engine;
 
-	private JCEComponentManager componentManager;
+	private ComponentManager componentManager;
 
 	static {
 		// Warning for slow startup on Linux / Solaris

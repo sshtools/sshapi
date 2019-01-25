@@ -34,10 +34,9 @@ public class E11KeyboardInteractiveAuthentication {
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate
-		client.connect(user, host, port);
+		client.connect(user, host, port, new ConsoleKeyboardInteractiveAuthenticator());
 		try {
-			client.authenticate(new ConsoleKeyboardInteractiveAuthenticator());
-			try (SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null)) {
+			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
 			}
 		} finally {

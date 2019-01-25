@@ -23,7 +23,6 @@
  */
 package net.sf.sshapi.impl.libssh;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -53,7 +52,7 @@ import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
 import ssh.SshLibrary;
-import ssh.SshLibrary.ssh_private_key;
+import ssh.SshLibrary.ssh_key;
 import ssh.SshLibrary.ssh_session;
 
 public class LibsshClient extends AbstractClient {
@@ -84,6 +83,7 @@ public class LibsshClient extends AbstractClient {
 		library = SshLibrary.INSTANCE;
 	}
 
+	@Override
 	protected void doConnect(String username, final String hostname, int port, SshAuthenticator... authenticators)
 			throws SshException {
 		SshConfiguration configuration = getConfiguration();
@@ -105,11 +105,9 @@ public class LibsshClient extends AbstractClient {
 						stringPointer(configuration.getPreferredServerToClientCompression()));
 			}
 			library.ssh_options_set(libSshSession, SshLibrary.ssh_options_e.SSH_OPTIONS_SSH1,
-					new IntByReference(configuration.getProtocolVersion() == SshConfiguration.SSH2_ONLY ? 0 : 1)
-							.getPointer());
+					new IntByReference(configuration.getProtocolVersion() == SshConfiguration.SSH2_ONLY ? 0 : 1).getPointer());
 			library.ssh_options_set(libSshSession, SshLibrary.ssh_options_e.SSH_OPTIONS_SSH2,
-					new IntByReference(configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY ? 0 : 1)
-							.getPointer());
+					new IntByReference(configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY ? 0 : 1).getPointer());
 			// TODO other options -
 			// http://api.libssh.org/stable/group__libssh__session.html#ga7a801b85800baa3f4e16f5b47db0a73d
 			// library.ssh_options_set(libSshSession,
@@ -120,8 +118,7 @@ public class LibsshClient extends AbstractClient {
 			int rc = library.ssh_connect(libSshSession);
 			if (rc != SshLibrary.SSH_OK) {
 				throw new SshException(SshException.GENERAL,
-						"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " connecting to " + hostname
-								+ ":" + port);
+						"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " connecting to " + hostname + ":" + port);
 			}
 			connected = true;
 			SshHostKeyValidator hostKeyValidator = configuration.getHostKeyValidator();
@@ -140,18 +137,22 @@ public class LibsshClient extends AbstractClient {
 				final String keyType = SshConfiguration.PUBLIC_KEY_SSHRSA;
 				// The key
 				SshHostKey hostKey = new SshHostKey() {
+					@Override
 					public String getType() {
 						return keyType;
 					}
 
+					@Override
 					public byte[] getKey() {
 						return null;
 					}
 
+					@Override
 					public String getHost() {
 						return hostname;
 					}
 
+					@Override
 					public String getFingerprint() {
 						return fingerPrint;
 					}
@@ -189,7 +190,10 @@ public class LibsshClient extends AbstractClient {
 		return new LibsshSCPClient(library, libSshSession);
 	}
 
+	@Override
 	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
+		if(authenticated)
+			throw new IllegalStateException("Already authenticated.");
 		try {
 			if (!doAuthentication(authenticators)) {
 				return false;
@@ -214,8 +218,7 @@ public class LibsshClient extends AbstractClient {
 		// authenticatorMap.get("agent");
 		SshPasswordAuthenticator paw = (SshPasswordAuthenticator) authenticatorMap.get("password");
 		SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticatorMap.get("publickey");
-		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap
-				.get("keyboard-interactive");
+		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap.get("keyboard-interactive");
 		int ret = 0;
 		ret = library.ssh_userauth_none(libSshSession, username);
 		if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
@@ -223,27 +226,23 @@ public class LibsshClient extends AbstractClient {
 		}
 		int remaining = library.ssh_userauth_list(libSshSession, username);
 		ret = SshLibrary.ssh_auth_e.SSH_AUTH_DENIED;
-		// if(agent != null) {
-		//
-		// ret = library.ssh_userauth_agent(libSshSession, username);
-		// if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
-		// return true;
-		// }
-		// }
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_PUBLICKEY) != 0 && pk != null) {
-			byte[] keybytes = pk.getPrivateKey();
-//			library.ssh_P
-			
-//			File f = File.createTempFile("pk", suffix);
-//			library.ssh_userauth_privatekey_file(libSshSession, username, filename, passphrase)pki
-			
-			ssh_private_key privk = new ssh_private_key(bytePointer(keybytes));
-			SshLibrary.ssh_public_key pubk = library.publickey_from_privatekey(privk);
-			SshLibrary.ssh_string pubs = pubk == null ? null : library.publickey_to_string(pubk);
-			ret = library.ssh_userauth_pubkey(libSshSession, username, pubs, privk);
-			if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
-				return true;
+			PointerByReference keyRef = new PointerByReference();
+			if (library.ssh_pki_import_privkey_base64(new String(pk.getPrivateKey(), "US-ASCII"), null, null, null,
+					keyRef) == SshLibrary.SSH_OK) {
+				ssh_key key = new ssh_key(keyRef.getValue());
+				PointerByReference pubkeyRef = new PointerByReference();
+				if (library.ssh_pki_export_privkey_to_pubkey(key, pubkeyRef) == SshLibrary.SSH_OK) {
+					ssh_key pubkey = new ssh_key(pubkeyRef.getValue());
+					ret = library.ssh_userauth_try_publickey(libSshSession, getUsername(), pubkey);
+					if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
+						ret = library.ssh_userauth_publickey(libSshSession, getUsername(), key);
+						if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS)
+							return true;
+					}
+				}
 			}
+			return false;
 		}
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_PASSWORD) != 0 && paw != null) {
 			char[] pw = paw.promptForPassword(this, "Password");
@@ -283,6 +282,7 @@ public class LibsshClient extends AbstractClient {
 		return false;
 	}
 
+	@Override
 	public String getRemoteIdentification() {
 		if (!isConnected()) {
 			throw new IllegalStateException("Not connected");
@@ -290,6 +290,7 @@ public class LibsshClient extends AbstractClient {
 		return "Unknown";
 	}
 
+	@Override
 	public int getRemoteProtocolVersion() {
 		if (!isConnected()) {
 			throw new IllegalStateException("Not connected");
@@ -322,6 +323,7 @@ public class LibsshClient extends AbstractClient {
 		return new LibsshSshCommand(libSshSession, library, command);
 	}
 
+	@Override
 	public void disconnect() throws SshException {
 		if (!isConnected()) {
 			throw new SshException(SshException.NOT_OPEN, "Not connected.");
@@ -331,10 +333,12 @@ public class LibsshClient extends AbstractClient {
 		authenticated = false;
 	}
 
+	@Override
 	public boolean isConnected() {
 		return connected;
 	}
 
+	@Override
 	public boolean isAuthenticated() {
 		return isConnected() && authenticated;
 	}
@@ -344,10 +348,12 @@ public class LibsshClient extends AbstractClient {
 		return new LibsshSFTPClient(library, libSshSession);
 	}
 
+	@Override
 	public String getUsername() {
 		return username;
 	}
 
+	@Override
 	public int getChannelCount() {
 		// TODO Can't see anything in libssh, might have to count our own
 		// channels

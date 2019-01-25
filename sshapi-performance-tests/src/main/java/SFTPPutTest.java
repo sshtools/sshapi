@@ -13,6 +13,7 @@ class SFTPPutTest extends AbstractConnectionTest {
 		} catch (IOException ioe) {
 			throw new RuntimeException(ioe);
 		}
+//		Native.setProtected(true);
 	}
 
 	public SFTPPutTest() throws IOException {
@@ -22,10 +23,13 @@ class SFTPPutTest extends AbstractConnectionTest {
 
 	protected void doConnection(SshClient client) throws Exception {
 		super.doConnection(client);
-		try(SftpClient sftp = client.sftp()) {
-			try(FileInputStream fin = new FileInputStream(Util.TEST_FILE)) {
-				sftp.put(Util.TEST_FILE.getName(), fin, 0644);
-			} 
+		try (SftpClient sftp = client.sftp()) {
+			for (int i = 0; i < 1500; i++) {
+				System.out.println(i);
+				try (FileInputStream fin = new FileInputStream(Util.TEST_FILE)) {
+					sftp.put(Util.TEST_FILE.getName(), fin, 0644);
+				}
+			}
 		}
 	}
 

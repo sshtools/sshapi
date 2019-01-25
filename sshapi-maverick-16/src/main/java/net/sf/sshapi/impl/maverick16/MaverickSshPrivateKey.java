@@ -31,4 +31,9 @@ public class MaverickSshPrivateKey implements com.maverick.ssh.components.SshPri
 	public String getAlgorithm() {
 		return key.getAlgorithm();
 	}
+
+	@Override
+	public byte[] sign(byte[] arg0, String arg1) throws IOException {
+		throw new UnsupportedOperationException();
+	}
 }

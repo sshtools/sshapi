@@ -30,6 +30,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.concurrent.Semaphore;
 
+import com.sshtools.client.PseudoTerminalModes;
 import com.sshtools.client.SessionChannel;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.client.tasks.AbstractShellTask;
@@ -49,8 +50,19 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Connection<SshClientContext> con;
+	private String termType;
+	private int cols;
+	private int rows;
+	private int pixWidth;
+	private int pixHeight;
 
-	MaverickNGSshShell(final Connection<SshClientContext> con) {
+	MaverickNGSshShell(final Connection<SshClientContext> con, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) {
+		this.termType = termType;
+		this.cols = cols;
+		this.rows = rows;
+		this.pixWidth = pixWidth;
+		this.pixHeight = pixHeight;
 		this.con = con;
 	}
 
@@ -76,7 +88,9 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 
 	@Override
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
-		throw new UnsupportedOperationException();
+		if (termType == null)
+			throw new IllegalStateException("Not a pseudo tty.");
+		session.changeTerminalDimensions(width, height, pixw, pixh);
 	}
 
 	@Override
@@ -90,6 +104,10 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 				@Override
 				protected void onOpenSession(SessionChannel session) {
 					MaverickNGSshShell.this.session = session;
+					if (termType != null) {
+						session.allocatePseudoTerminal(termType, cols, rows, pixWidth, pixHeight,
+								new PseudoTerminalModes());
+					}
 					session.startShell();
 					release();
 				}

@@ -12,13 +12,9 @@ import net.sf.sshapi.SshShell;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
-
 // Crazy name :)SshLifecycleListener<SshShell>, SshShell
 
-
-public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannelListener<SshShell>, SshShell>
-		implements SshShell {
-
+public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private LibsshInputStream in;
 	private LibsshInputStream ext;
 	private LibsshOutputStream out;
@@ -40,63 +36,67 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannel
 		this.useExtendedStream = useExtendedStream;
 	}
 
+	@Override
 	public InputStream getInputStream() throws IOException {
+		if (in == null) {
+			throw new IllegalStateException(
+					"Shell channel not opened. If you use SshClient.createShell(), you must also call SshShell.open(). Alternatively use SshClient.shell() which will return an opened shell.");
+		}
 		return in;
 	}
 
+	@Override
 	public OutputStream getOutputStream() throws IOException {
+		if (in == null) {
+			throw new IllegalStateException(
+					"Shell channel not opened. If you use SshClient.createShell(), you must also call SshShell.open(). Alternatively use SshClient.shell() which will return an opened shell.");
+		}
 		return out;
 	}
 
+	@Override
 	public void addDataListener(SshDataListener<SshShell> listener) {
 	}
 
+	@Override
 	public void removeDataListener(SshDataListener<SshShell> listener) {
 	}
 
 	@Override
 	public void onOpen() throws SshException {
-
 		channel = library.ssh_channel_new(libSshSession);
 		if (channel == null) {
 			throw new SshException(SshException.FAILED_TO_OPEN_SHELL, "Failed to open channel for shell.");
 		}
-
 		try {
 			int ret = library.ssh_channel_open_session(channel);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new SshException(SshException.FAILED_TO_OPEN_SHELL, "Failed to open session for shell channel.");
 			}
-
 			if (termType != null) {
 				ret = library.ssh_channel_request_pty_size(channel, termType, cols, rows);
 				if (ret != SshLibrary.SSH_OK) {
 					throw new SshException(SshException.FAILED_TO_OPEN_SHELL, "Failed to set PTY size");
 				}
 			}
-
 			try {
 				ret = library.ssh_channel_request_shell(channel);
 				if (ret != SshLibrary.SSH_OK) {
 					throw new SshException(SshException.FAILED_TO_OPEN_SHELL);
 				}
-
 				in = new LibsshInputStream(library, channel, false);
 				if (useExtendedStream) {
 					ext = new LibsshInputStream(library, channel, true);
 				}
 				out = new LibsshOutputStream(library, channel);
-
 			} catch (SshException sshe) {
 				library.ssh_channel_close(channel);
 				throw sshe;
 			}
-
 		} catch (SshException sshe) {
 			library.ssh_channel_free(channel);
 			throw sshe;
 		}
-
 	}
 
 	@Override
@@ -122,10 +122,12 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannel
 		}
 	}
 
+	@Override
 	public InputStream getExtendedInputStream() throws IOException {
 		return ext;
 	}
 
+	@Override
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
 		int ret = library.ssh_channel_change_pty_size(channel, width, height);
 		if (ret != SshLibrary.SSH_OK) {
@@ -133,8 +135,8 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannel
 		}
 	}
 
+	@Override
 	public int exitCode() throws IOException {
 		return library.ssh_channel_get_exit_status(channel);
 	}
-
 }

@@ -38,8 +38,7 @@ public class E16PublicKeySubsytem {
 		String user = ExampleUtilities.extractUsername(connectionSpec);
 		int port = ExampleUtilities.extractPort(connectionSpec);
 
-		client.connect(user, host, port);
-		client.authenticate(new ConsolePasswordAuthenticator());
+		client.connect(user, host, port, new ConsolePasswordAuthenticator());
 		System.out.println("Remote identification: " + client.getRemoteIdentification());
 
 		//

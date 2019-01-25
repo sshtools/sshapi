@@ -20,7 +20,7 @@
 		<!-- To compile Maverick bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
-		<maverickNGVersion>2.0.1-SNAPSHOT</maverickNGVersion>
+		<maverickNGVersion>2.0.3</maverickNGVersion>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
@@ -331,12 +331,13 @@
 		<module>sshapi-examples</module>
 		<module>sshapi-maverick</module>
 		<module>sshapi-maverick-16</module>
-		<!-- <module>sshapi-maverick-ng</module> -->
+		<module>sshapi-maverick-ng</module>
 		<module>sshapi-ganymed</module>
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>
 		<module>sshapi-j2ssh</module>
 		<module>sshapi-trilead</module>
+		<module>sshapi-openssh</module>
 		<module>sshapi-commons-vfs</module>
 		<module>sshapi-cli</module>
 		<module>sshapi-site</module>

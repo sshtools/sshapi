@@ -90,6 +90,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				} catch (UnsatisfiedLinkError ule) {
 					SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.",
 							ule);
+				} catch(NoClassDefFoundError ex) {
+					SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. Error suggests that an incorrect dependency library may be being used.", ex);
 				} catch (Exception ex) {
 					SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
 				}
@@ -101,7 +103,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	}
 
 	private static void addIfNotExist(List<SshProvider> providers, Enumeration<URL> e) throws IOException {
-		SshProvider provider = loadFromProperties((URL) e.nextElement());
+		URL url = (URL) e.nextElement();
+		SshProvider provider = loadFromProperties(url);
 		if (provider != null && !providers.contains(provider)) {
 			providers.add(provider);
 		}

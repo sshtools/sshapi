@@ -48,7 +48,7 @@ public class E13ExtendedHostKeyValidation {
 		// Connect, authenticate
 		try (SshClient client = provider.open(config, user, host, port, new ConsolePasswordAuthenticator())) {
 
-			try (SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null)) {
+			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
 			}
 		}

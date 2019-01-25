@@ -56,4 +56,9 @@ public class MaverickSshPublicKey implements com.maverick.ssh.components.SshPubl
 	public String test() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public String getEncodingAlgorithm() {
+		throw new UnsupportedOperationException();
+	}
 }

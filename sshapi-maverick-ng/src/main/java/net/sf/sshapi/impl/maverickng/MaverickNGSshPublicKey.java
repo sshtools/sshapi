@@ -10,13 +10,16 @@ public class MaverickNGSshPublicKey implements com.sshtools.common.ssh.component
 		this.key = key;
 	}
 
+	@Override
 	public boolean verifySignature(byte[] signature, byte[] data) throws com.sshtools.common.ssh.SshException {
 		return false;
 	}
 
+	@Override
 	public void init(byte[] blob, int start, int len) throws com.sshtools.common.ssh.SshException {
 	}
 
+	@Override
 	public String getFingerprint() throws com.sshtools.common.ssh.SshException {
 		try {
 			return key.getFingerprint();
@@ -25,6 +28,7 @@ public class MaverickNGSshPublicKey implements com.sshtools.common.ssh.component
 		}
 	}
 
+	@Override
 	public byte[] getEncoded() throws com.sshtools.common.ssh.SshException {
 		try {
 			return key.getEncodedKey();
@@ -33,19 +37,28 @@ public class MaverickNGSshPublicKey implements com.sshtools.common.ssh.component
 		}
 	}
 
+	@Override
 	public int getBitLength() {
 		return key.getBitLength();
 	}
 
+	@Override
 	public String getAlgorithm() {
 		return key.getAlgorithm();
 	}
 
+	@Override
 	public String getSigningAlgorithm() {
 		return key.getAlgorithm();
 	}
 
+	@Override
 	public String test() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getEncodingAlgorithm() {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -9,3 +9,4 @@
 -v
 -noJar
 -noComp
+-runtime JNA

@@ -29,4 +29,10 @@ public class MaverickNGSshPrivateKey implements com.sshtools.common.ssh.componen
 	public String getAlgorithm() {
 		return key.getAlgorithm();
 	}
+
+	@Override
+	public byte[] sign(byte[] data, String signingAlgorithm) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

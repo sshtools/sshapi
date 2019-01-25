@@ -41,6 +41,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 		// transferring files
 	}
 
+	@Override
 	public void get(String remoteFilePath, File destinationFile, boolean recursive) throws net.sf.sshapi.SshException {
 		checkOpen();
 		ssh_scp scp = library.ssh_scp_new(libSshSession, SshLibrary.SSH_SCP_READ | (recursive ? SshLibrary.SSH_SCP_RECURSIVE : 0),

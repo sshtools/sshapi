@@ -31,14 +31,17 @@ class LibsshSshCommand
 		this.libSshSession = libSshSession;
 	}
 
+	@Override
 	public InputStream getInputStream() throws IOException {
 		return in;
 	}
 
+	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return out;
 	}
 
+	@Override
 	public InputStream getExtendedInputStream() throws IOException {
 		return ext;
 	}
@@ -49,11 +52,13 @@ class LibsshSshCommand
 	// public void removeDataListener(SshDataListener listener) {
 	// }
 
+	@Override
 	public void addDataListener(SshDataListener<SshCommand> listener) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void removeDataListener(SshDataListener<SshCommand> listener) {
 		// TODO Auto-generated method stub
 
@@ -112,6 +117,7 @@ class LibsshSshCommand
 		}
 	}
 
+	@Override
 	public int exitCode() throws IOException {
 		return library.ssh_channel_get_exit_status(channel);
 	}

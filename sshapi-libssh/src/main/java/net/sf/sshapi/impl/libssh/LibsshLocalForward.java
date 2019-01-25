@@ -79,6 +79,7 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 		library.ssh_channel_free(channel);
 	}
 
+	@Override
 	public void run() {
 		try {
 			while (!closed) {

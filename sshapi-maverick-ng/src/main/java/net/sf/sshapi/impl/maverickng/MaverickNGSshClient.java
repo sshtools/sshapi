@@ -25,13 +25,15 @@ package net.sf.sshapi.impl.maverickng;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import com.sshtools.client.AbstractKeyboardInteractiveCallback;
 import com.sshtools.client.BannerDisplay;
 import com.sshtools.client.ClientAuthenticator;
+import com.sshtools.client.ClientStateListener;
 import com.sshtools.client.ConnectionProtocolClient;
-import com.sshtools.client.HostKeyVerification;
 import com.sshtools.client.KeyboardInteractiveAuthenticator;
 import com.sshtools.client.KeyboardInteractivePrompt;
 import com.sshtools.client.KeyboardInteractivePromptCompletor;
@@ -39,12 +41,12 @@ import com.sshtools.client.PasswordAuthenticator;
 import com.sshtools.client.PublicKeyAuthenticator;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.client.UnauthorizedException;
+import com.sshtools.common.knownhosts.HostKeyVerification;
 import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.publickey.InvalidPassphraseException;
 import com.sshtools.common.publickey.SshPrivateKeyFile;
 import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.common.ssh.Connection;
-import com.sshtools.common.ssh.ConnectionStateListener;
 import com.sshtools.common.ssh.ForwardingPolicy;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.SshKeyPair;
@@ -75,25 +77,43 @@ class MaverickNGSshClient extends AbstractClient
 	private Connection<SshClientContext> connection;
 	private String hostname;
 	private int port;
-	private Semaphore authSemaphore = new Semaphore(1);
+	private Semaphore auth = new Semaphore(1);
+	private SshAuthenticator[] authenticators;
 
 	MaverickNGSshClient(SshEngine engine, SshConfiguration configuration) throws SshException, IOException {
 		super(configuration);
 		this.engine = engine;
 		sshContext = new SshClientContext(engine);
 		sshContext.setHostKeyVerification(new HostKeyVerificationBridge());
-		sshContext.addStateListener(new ConnectionStateListener<SshClientContext>() {
-			@Override
-			public void connected(Connection<SshClientContext> con) {
-				connection = con;
-				authSemaphore.release();
-			}
-
+		sshContext.addStateListener(new ClientStateListener() {
+			
 			@Override
 			public void disconnected(Connection<SshClientContext> con) {
 				connection = null;
 			}
+			
+			@Override
+			public void connected(Connection<SshClientContext> con) {
+				connection = con;
+				
+			}
+			
+			@Override
+			public void authenticate(Connection<SshClientContext> arg0, Set<String> arg1, boolean arg2,
+					List<ClientAuthenticator> arg3) {
+				try {
+					/* Will block until SshClient.authenticate() is called and the authenticators are supplied */
+					auth.acquire();
+				}
+				catch(InterruptedException ie) {
+					throw new IllegalStateException("Interrupted waiting for authentication.");
+				}
+				
+				/* Client code has called SshClient.authenticate(), we now have authenticators */
+				
+			}
 		});
+		
 		// Version
 		if (configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY)
 			throw new IllegalArgumentException("SSH1 is not supported by this provider.");
@@ -142,6 +162,29 @@ class MaverickNGSshClient extends AbstractClient
 		sshContext.setUsername(username);
 		this.hostname = hostname;
 		this.port = port;
+		
+		try {
+			if(authenticators.length == 0) {
+				/* For separate authentication */
+				auth.acquire();
+			}
+			else {
+				/* For pre-emptive authentication */
+				for (SshAuthenticator a : authenticators) {
+					sshContext.addAuthenticator(createAuthentication(a, ""));
+				}
+			}
+			
+			engine.connect(hostname, port, sshContext);
+		} catch (IOException sshe) {
+			auth.release();
+			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
+		} catch (SshException e) {
+			auth.release();
+			throw new net.sf.sshapi.SshException("Failed to authenticate.", e);
+		} catch (InterruptedException e) {
+			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, e);
+		}
 	}
 
 	public boolean isConnected() {
@@ -166,15 +209,7 @@ class MaverickNGSshClient extends AbstractClient
 	public SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws net.sf.sshapi.SshException {
 		synchronized (sshContext) {
-			if (termType != null && termType.length() > 0) {
-				sshContext.setAllocatePseudoTerminal(true);
-			}
-			sshContext.setTerminalColumns(cols);
-			sshContext.setTerminalRows(rows);
-			sshContext.setTerminalType(termType);
-			sshContext.setTerminalWidth(pixWidth);
-			sshContext.setTerminalHeight(pixHeight);
-			return new MaverickNGSshShell(connection);
+			return new MaverickNGSshShell(connection, termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		}
 	}
 
@@ -241,25 +276,31 @@ class MaverickNGSshClient extends AbstractClient
 	}
 
 	public boolean authenticate(SshAuthenticator... authenticators) throws net.sf.sshapi.SshException {
-		if (authSemaphore.availablePermits() < 1)
-			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, "Already authenticating.");
-		try {
-			authSemaphore.acquire();
-			for (SshAuthenticator a : authenticators) {
-				sshContext.addAuthenticator(createAuthentication(a, ""));
-			}
-			engine.connect(hostname, port, sshContext);
-			authSemaphore.acquire();
-			authSemaphore.release();
-		} catch (IOException sshe) {
-			authSemaphore.release();
-			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
-		} catch (SshException e) {
-			authSemaphore.release();
-			throw new net.sf.sshapi.SshException("Failed to authenticate.", e);
-		} catch (InterruptedException e) {
-			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, e);
+		if(this.authenticators != null) {
+			throw new IllegalStateException("Already authenticating");
 		}
+		this.authenticators = authenticators;
+		
+		/* Release auth semaphore, this will either unblock the wait in ClientStateListener.authenticate() 
+		 * or allow it to just continue if it hasn't reached that point yet. 
+		 */
+		auth.release();
+		
+//		if (authSemaphore.availablePermits() < 1)
+//			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, "Already authenticating.");
+//		try {
+//			authSemaphore.acquire();
+//			authSemaphore.acquire();
+//			authSemaphore.release();
+//		} catch (IOException sshe) {
+////			authSemaphore.release();
+//			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
+//		} catch (SshException e) {
+////			authSemaphore.release();
+//			throw new net.sf.sshapi.SshException("Failed to authenticate.", e);
+//		} catch (InterruptedException e) {
+//			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, e);
+//		}
 		// if (isAuthenticated()) {
 		// forwarding = new ForwardingClient(client);
 		// forwarding.addListener(this);
@@ -279,8 +320,8 @@ class MaverickNGSshClient extends AbstractClient
 				public String getPassword() {
 					char[] answer = ((SshPasswordAuthenticator) authenticator)
 							.promptForPassword(MaverickNGSshClient.this, "Password");
-					if(answer == null && authSemaphore.availablePermits() < 1)
-						authSemaphore.release();
+					if(answer == null && auth.availablePermits() < 1)
+						auth.release();
 					return answer == null ? null : new String(answer);
 				}
 			};
@@ -334,8 +375,8 @@ class MaverickNGSshClient extends AbstractClient
 						}
 						return;
 					}
-					if(authSemaphore.availablePermits() < 1)
-						authSemaphore.release();
+					if(auth.availablePermits() < 1)
+						auth.release();
 					throw new IllegalStateException("Cancelled.");
 				}
 			});
@@ -478,8 +519,8 @@ class MaverickNGSshClient extends AbstractClient
 		try {
 			connection.disconnect();
 		} finally {
-			if (authSemaphore.availablePermits() < 1)
-				authSemaphore.release();
+			if (auth.availablePermits() < 1)
+				auth.release();
 			
 			// if (forwarding != null) {
 			// forwarding.removeListener(this);
