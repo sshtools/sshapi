@@ -40,9 +40,9 @@ import com.sshtools.client.KeyboardInteractivePromptCompletor;
 import com.sshtools.client.PasswordAuthenticator;
 import com.sshtools.client.PublicKeyAuthenticator;
 import com.sshtools.client.SshClientContext;
-import com.sshtools.client.UnauthorizedException;
 import com.sshtools.common.knownhosts.HostKeyVerification;
 import com.sshtools.common.nio.SshEngine;
+import com.sshtools.common.permissions.UnauthorizedException;
 import com.sshtools.common.publickey.InvalidPassphraseException;
 import com.sshtools.common.publickey.SshPrivateKeyFile;
 import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
@@ -577,6 +577,11 @@ class MaverickNGSshClient extends AbstractClient
 							} catch (SshException e) {
 								throw new RuntimeException(e);
 							}
+						}
+
+						@Override
+						public String getComments() {
+							return null;
 						}
 					});
 					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;

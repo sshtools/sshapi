@@ -196,5 +196,10 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 				throw new RuntimeException(e);
 			}
 		}
+
+		@Override
+		public String getComments() {
+			return key.getComment();
+		}
 	}
 }

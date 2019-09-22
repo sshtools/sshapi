@@ -156,6 +156,11 @@ public class LibsshClient extends AbstractClient {
 					public String getFingerprint() {
 						return fingerPrint;
 					}
+
+					@Override
+					public String getComments() {
+						return null;
+					}
 				};
 				if (hostKeyValidator.verifyHost(hostKey) != SshHostKeyValidator.STATUS_HOST_KEY_VALID) {
 					throw new SshException(SshException.HOST_KEY_REJECTED);

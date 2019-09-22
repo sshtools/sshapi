@@ -26,14 +26,12 @@ package net.sf.sshapi.impl.maverickng;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.concurrent.Semaphore;
 
 import com.sshtools.client.PseudoTerminalModes;
 import com.sshtools.client.SessionChannel;
 import com.sshtools.client.SshClientContext;
-import com.sshtools.client.tasks.AbstractShellTask;
+import com.sshtools.client.tasks.ShellTask;
 import com.sshtools.common.ssh.Connection;
 
 import net.sf.sshapi.AbstractDataProducingComponent;
@@ -98,7 +96,7 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 		sem = new Semaphore(1);
 		try {
 			sem.acquire();
-			con.addTask(new AbstractShellTask(con) {
+			con.addTask(new ShellTask(con) {
 				private boolean released;
 
 				@Override
@@ -126,51 +124,14 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 			});
 			sem.acquire();
 			sem.release();
-
-			PipedOutputStream inputStreamOut = new PipedOutputStream();
-			session.addInputListener(inputStreamOut);
-			inputStream = new PipedInputStream(inputStreamOut);
-			PipedOutputStream extendedInputStreamOut = new PipedOutputStream();
-			session.addStderrListener(extendedInputStreamOut);
-			extendedInputStream = new PipedInputStream(extendedInputStreamOut);
-
-			outputStream = new OutputStream() {
-
-				private boolean closed;
-
-				@Override
-				public void write(int b) throws IOException {
-					if (closed)
-						throw new IOException("Closed.");
-					session.sendChannelData(new byte[] { (byte) b });
-				}
-
-				@Override
-				public void write(byte[] b) throws IOException {
-					if (closed)
-						throw new IOException("Closed.");
-					session.sendChannelData(b);
-				}
-
-				@Override
-				public void write(byte[] b, int off, int len) throws IOException {
-					if (closed)
-						throw new IOException("Closed.");
-					session.sendChannelData(b, off, len);
-				}
-
-				@Override
-				public void close() throws IOException {
-					if (closed)
-						throw new IOException("Already closed.");
-					closed = true;
-				}
-			};
+			
+			inputStream = session.getInputStream();
+			extendedInputStream = session.getStderrInputStream();
+			outputStream = session.getOutputStream();
 		} catch (InterruptedException ie) {
 			throw new SshException(SshException.GENERAL, ie);
-		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, e);
-		}
+		} 
+
 	}
 
 	@Override

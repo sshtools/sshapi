@@ -120,6 +120,11 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 					public String getFingerprint() {
 						return key.getFingerprint();
 					}
+
+					@Override
+					public String getComments() {
+						return null;
+					}
 				});
 			}
 		}

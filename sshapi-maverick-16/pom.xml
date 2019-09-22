@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-maverick-16</artifactId>
 	<name>SSHAPI Maverick 1.6+</name>
-	<description>This version uses the Mavenized 1.6/1.7 branch of Maverick. It will probably eventually become the default Maverick provider implementation, but until such a time it will be a separate module. Using this version we pull the Maverick jars from the SSHTools repository and build directly
+	<description>This version uses the Mavenized 1.8 branch of Maverick. It will probably eventually become the default Maverick provider implementation, but until such a time it will be a separate module. Using this version we pull the Maverick jars from the SSHTools repository and build directly
 
 Maverick is the definitive solution for total SSH compatibility on the Java™ platform. The library is designed to support SSH1 and SSH2 using any version of the Java Development Kit from 1.1 and above, and the API is also now J2ME-ready1 in anticipation of the new breed of interconnected mobile devices 
 

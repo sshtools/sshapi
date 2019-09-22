@@ -152,6 +152,8 @@ public interface SshAgent extends SshChannelHandler, Closeable {
 	 * 
 	 * @param key
 	 *            the public key of the required private key
+	 *            
+	 * @param algorithm signing algorithm
 	 * @param data
 	 *            the data to has and sign
 	 * 
@@ -160,7 +162,7 @@ public interface SshAgent extends SshChannelHandler, Closeable {
 	 * @throws SshException
 	 *             if an error occurs
 	 */
-	byte[] hashAndSign(SshPublicKey key, byte[] data) throws SshException;
+	byte[] hashAndSign(SshPublicKey key, String algorithm, byte[] data) throws SshException;
 
 	/**
 	 * Delete all the keys held by the agent.

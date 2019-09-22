@@ -157,6 +157,11 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 							throw new RuntimeException(e);
 						}
 					}
+
+					@Override
+					public String getComments() {
+						return null;
+					}
 				});
 			}
 		}

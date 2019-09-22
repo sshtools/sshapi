@@ -11,14 +11,14 @@ public class MaverickPublicKey implements SshPublicKey {
 	private String fingerPrint;
 	private String algorithm;
 	private int bitLength;
-	private com.maverick.ssh.components.SshPublicKey publicKey;
+	private com.sshtools.common.ssh.components.SshPublicKey publicKey;
 
-	public MaverickPublicKey(com.sshtools.publickey.SshPublicKeyFile publicKeyFile) throws com.maverick.ssh.SshException,
+	public MaverickPublicKey(com.sshtools.common.publickey.SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException,
 			IOException {
 		init(publicKeyFile.toPublicKey());
 	}
 
-	private void init(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
+	private void init(com.sshtools.common.ssh.components.SshPublicKey publicKey) throws com.sshtools.common.ssh.SshException {
 		this.publicKey = publicKey;
 		key = publicKey.getEncoded();
 		algorithm = publicKey.getAlgorithm();
@@ -26,7 +26,7 @@ public class MaverickPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
-	public MaverickPublicKey(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
+	public MaverickPublicKey(com.sshtools.common.ssh.components.SshPublicKey publicKey) throws com.sshtools.common.ssh.SshException {
 		init(publicKey);
 	}
 
@@ -37,7 +37,7 @@ public class MaverickPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
-	public com.maverick.ssh.components.SshPublicKey getPublicKey() {
+	public com.sshtools.common.ssh.components.SshPublicKey getPublicKey() {
 		return publicKey;
 	}
 

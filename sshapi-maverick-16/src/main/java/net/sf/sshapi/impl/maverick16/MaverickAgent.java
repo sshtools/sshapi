@@ -13,7 +13,7 @@ import com.maverick.agent.KeyConstraints;
 import com.maverick.agent.client.AgentSocketType;
 import com.maverick.agent.client.SshAgentClient;
 import com.maverick.agent.exceptions.AgentNotAvailableException;
-import com.maverick.util.IOUtil;
+import com.sshtools.common.util.IOUtil;
 
 import net.sf.sshapi.DefaultChannelData;
 import net.sf.sshapi.SshChannel;
@@ -179,12 +179,12 @@ public class MaverickAgent implements SshAgent {
 	@Override
 	public Map<SshPublicKey, String> listKeys() throws SshException {
 		try {
-			Map<com.maverick.ssh.components.SshPublicKey, String> nativeKeys = sshAgent.listKeys();
+			Map<com.sshtools.common.ssh.components.SshPublicKey, String> nativeKeys = sshAgent.listKeys();
 			Map<SshPublicKey, String> keys = new HashMap<>();
-			for (Map.Entry<com.maverick.ssh.components.SshPublicKey, String> en : nativeKeys.entrySet()) {
+			for (Map.Entry<com.sshtools.common.ssh.components.SshPublicKey, String> en : nativeKeys.entrySet()) {
 				try {
 					keys.put(new MaverickPublicKey(en.getKey()), en.getValue());
-				} catch (com.maverick.ssh.SshException e) {
+				} catch (com.sshtools.common.ssh.SshException e) {
 					throw new SshException(SshException.GENERAL, "Failed to convert key to SSHAPI.", e);
 				}
 			}
@@ -231,9 +231,9 @@ public class MaverickAgent implements SshAgent {
 	}
 
 	@Override
-	public byte[] hashAndSign(SshPublicKey key, byte[] data) throws SshException {
+	public byte[] hashAndSign(SshPublicKey key, String algorithm, byte[] data) throws SshException {
 		try {
-			return sshAgent.hashAndSign(new MaverickSshPublicKey(key), data);
+			return sshAgent.hashAndSign(new MaverickSshPublicKey(key), algorithm, data);
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}

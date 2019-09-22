@@ -886,6 +886,11 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 								throw new RuntimeException(e);
 							}
 						}
+
+						@Override
+						public String getComments() {
+							return null;
+						}
 					});
 					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
 				} catch (net.sf.sshapi.SshException e) {

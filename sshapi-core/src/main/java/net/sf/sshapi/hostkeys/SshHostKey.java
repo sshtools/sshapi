@@ -61,4 +61,11 @@ public interface SshHostKey {
 	 * @return key bytes
 	 */
 	byte[] getKey();
+
+	/**
+	 * Get an optional comments
+	 * 
+	 * @return comments
+	 */
+	String getComments();
 }

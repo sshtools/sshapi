@@ -16,11 +16,11 @@
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick bridge (New public 1.6) -->
-		<maverickVersion>1.7.20</maverickVersion>
+		<maverickVersion>1.8.2</maverickVersion>
 		<!-- To compile Maverick bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
-		<maverickNGVersion>2.0.3</maverickNGVersion>
+		<maverickNGVersion>2.0.4</maverickNGVersion>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>

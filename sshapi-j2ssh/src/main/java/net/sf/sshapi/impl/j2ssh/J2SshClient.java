@@ -472,6 +472,11 @@ class J2SshClient extends AbstractClient {
 						public String getFingerprint() {
 							return pk.getFingerprint();
 						}
+
+						@Override
+						public String getComments() {
+							return null;
+						}
 					});
 					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
 				} catch (net.sf.sshapi.SshException e) {

@@ -29,18 +29,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 
+import com.maverick.sftp.SftpFileAttributes;
+import com.maverick.sftp.SftpStatusException;
+import com.maverick.sftp.SftpSubsystemChannel;
+import com.maverick.ssh.SshClient;
+import com.sshtools.common.util.UnsignedInteger64;
+import com.sshtools.sftp.SftpClient;
+
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
-
-import com.maverick.sftp.SftpFileAttributes;
-import com.maverick.sftp.SftpStatusException;
-import com.maverick.sftp.SftpSubsystemChannel;
-import com.maverick.ssh.SshClient;
-import com.maverick.util.UnsignedInteger64;
-import com.sshtools.sftp.SftpClient;
 
 class MaverickSftpClient extends AbstractSftpClient {
 
@@ -58,7 +58,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	public void onClose() throws SshException {
 		try {
 			sftpClient.exit();
-		} catch (com.maverick.ssh.SshException sshe) {
+		} catch (com.sshtools.common.ssh.SshException sshe) {
 			throw new SshException(SshException.GENERAL, sshe);
 		}
 	}
@@ -80,7 +80,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	private SftpFile entryToFile(String path, com.maverick.sftp.SftpFile entry) throws SftpStatusException,
-			com.maverick.ssh.SshException {
+			com.sshtools.common.ssh.SshException {
 		String fullPath = Util.concatenatePaths(path, entry.getFilename());
 		SftpFileAttributes attr = entry.getAttributes();
 		
@@ -277,7 +277,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 							IOException ioe = new IOException("Failed to set permissions on file close.");
 							ioe.initCause(e);
 							throw ioe;
-						} catch (com.maverick.ssh.SshException e) {
+						} catch (com.sshtools.common.ssh.SshException e) {
 							IOException ioe = new IOException("Failed to set permissions on file close.");
 							ioe.initCause(e);
 							throw ioe;
@@ -298,7 +298,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			sftpClient.chmod(permissions, path);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.maverick.ssh.SshException e) {
+		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(e.getLocalizedMessage());
 		}
 	}
@@ -371,7 +371,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			sftpClient.chown(String.valueOf(uid), path);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.maverick.ssh.SshException e) {
+		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(e.getLocalizedMessage());
 		}
 	}
@@ -382,7 +382,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			sftpClient.chgrp(String.valueOf(gid), path);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.maverick.ssh.SshException e) {
+		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(e.getLocalizedMessage());
 		}
 	}

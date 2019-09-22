@@ -2,10 +2,10 @@ package net.sf.sshapi.impl.maverick16;
 
 import java.io.File;
 
-import net.sf.sshapi.AbstractSCPClient;
-
 import com.maverick.sftp.FileTransferProgress;
 import com.sshtools.scp.ScpClient;
+
+import net.sf.sshapi.AbstractSCPClient;
 
 class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgress {
 

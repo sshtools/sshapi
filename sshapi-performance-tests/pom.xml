@@ -91,11 +91,11 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-ng-common</artifactId>
 			<version>${maverickNGVersion}</version>
-		</dependency>
+		</dependency> -->
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12 -->
 		<dependency>

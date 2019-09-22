@@ -176,6 +176,11 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 		public String getFingerprint() {
 			return KnownHosts.createHexFingerprint(getType(), getKey());
 		}
+
+		@Override
+		public String getComments() {
+			return null;
+		}
 	}
 
 }

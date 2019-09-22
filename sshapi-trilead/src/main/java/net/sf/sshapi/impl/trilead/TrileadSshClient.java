@@ -422,6 +422,11 @@ class TrileadSshClient extends AbstractClient {
 					public String getFingerprint() {
 						return hexFingerprint;
 					}
+
+					@Override
+					public String getComments() {
+						return null;
+					}
 				})) {
 				case SshHostKeyValidator.STATUS_HOST_KEY_VALID:
 					return true;

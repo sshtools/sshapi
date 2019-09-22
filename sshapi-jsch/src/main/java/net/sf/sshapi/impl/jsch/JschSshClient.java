@@ -481,6 +481,11 @@ class JschSshClient extends AbstractClient implements Logger {
 						public String getFingerprint() {
 							return getFingerPrint(hash, key);
 						}
+
+						@Override
+						public String getComments() {
+							return null;
+						}
 					})) {
 					case SshHostKeyValidator.STATUS_HOST_CHANGED:
 						return HostKeyRepository.CHANGED;

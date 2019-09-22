@@ -28,6 +28,14 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
+import com.sshtools.common.publickey.InvalidPassphraseException;
+import com.sshtools.common.publickey.OpenSSHPublicKeyFile;
+import com.sshtools.common.publickey.SECSHPublicKeyFile;
+import com.sshtools.common.publickey.SshKeyPairGenerator;
+import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
+import com.sshtools.common.publickey.SshPublicKeyFileFactory;
+import com.sshtools.common.ssh.components.SshKeyPair;
+
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -35,14 +43,6 @@ import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
 import net.sf.sshapi.identity.SshPublicKeyFile;
-
-import com.maverick.ssh.components.SshKeyPair;
-import com.sshtools.publickey.InvalidPassphraseException;
-import com.sshtools.publickey.OpenSSHPublicKeyFile;
-import com.sshtools.publickey.SECSHPublicKeyFile;
-import com.sshtools.publickey.SshKeyPairGenerator;
-import com.sshtools.publickey.SshPrivateKeyFileFactory;
-import com.sshtools.publickey.SshPublicKeyFileFactory;
 
 /**
  * Maverick implementation of an {@link SshIdentityManager}, used for managing
@@ -105,7 +105,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 					new MaverickPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
-		} catch (com.maverick.ssh.SshException e) {
+		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
 	}
@@ -160,7 +160,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		default:
 			throw new SshException(SshException.UNSUPPORTED_FEATURE, "Unsupport public key file format.");
 		}
-		com.sshtools.publickey.SshPublicKeyFile publicKeyFile;
+		com.sshtools.common.publickey.SshPublicKeyFile publicKeyFile;
 		try {
 			publicKeyFile = SshPublicKeyFileFactory.create(pk.getPublicKey(), options, comment, type);
 		} catch (IOException e) {
@@ -171,10 +171,10 @@ public class MaverickIdentityManager implements SshIdentityManager {
 
 	class MaverickPrivateKeyFile implements SshPrivateKeyFile {
 
-		private com.sshtools.publickey.SshPrivateKeyFile privateKeyFile;
+		private com.sshtools.common.publickey.SshPrivateKeyFile privateKeyFile;
 		private SshKeyPair pair;
 
-		public MaverickPrivateKeyFile(com.sshtools.publickey.SshPrivateKeyFile privateKeyFile) {
+		public MaverickPrivateKeyFile(com.sshtools.common.publickey.SshPrivateKeyFile privateKeyFile) {
 			this.privateKeyFile = privateKeyFile;
 			try {
 				if (!isEncrypted()) {
@@ -280,7 +280,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			try {
 				return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pair.getPublicKey()),
 						new MaverickPrivateKey(pair.getPrivateKey()));
-			} catch (com.maverick.ssh.SshException e) {
+			} catch (com.sshtools.common.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
 		}
@@ -294,7 +294,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		private MaverickPublicKey publicKey;
 		private final int format;
 
-		public MaverickPublicKeyFile(com.sshtools.publickey.SshPublicKeyFile keyFile) throws SshException {
+		public MaverickPublicKeyFile(com.sshtools.common.publickey.SshPublicKeyFile keyFile) throws SshException {
 			comment = keyFile.getComment();
 			options = keyFile.getOptions();
 			try {
