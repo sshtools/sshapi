@@ -108,7 +108,7 @@ public class SshClientFactory {
 		} catch (FileSystemException fse) {
 			throw fse;
 		} catch (final Exception ex) {
-			throw new FileSystemException("vfs.provider.sftp/connect.error", new Object[] { hostname }, ex);
+			throw new FileSystemException("vfs.provider.sftp/connect.error", ex, new Object[] { hostname });
 		}
 
 		return ssh;

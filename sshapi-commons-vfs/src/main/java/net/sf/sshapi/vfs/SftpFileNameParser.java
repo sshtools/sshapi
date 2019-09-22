@@ -24,12 +24,12 @@
 package net.sf.sshapi.vfs;
 
 import org.apache.commons.vfs2.provider.FileNameParser;
-import org.apache.commons.vfs2.provider.URLFileNameParser;
+import org.apache.commons.vfs2.provider.GenericURLFileNameParser;
 
 /**
  * File name parser for Sftp.
  */
-public class SftpFileNameParser extends URLFileNameParser {
+public class SftpFileNameParser extends GenericURLFileNameParser {
 	private final static SftpFileNameParser instance = new SftpFileNameParser();
 
 	/**

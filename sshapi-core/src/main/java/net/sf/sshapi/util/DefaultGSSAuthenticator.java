@@ -40,6 +40,7 @@ import net.sf.sshapi.auth.SshGSSAPIAuthenticator;
  * See the documentation for
  * {@link com.sun.security.auth.module.Krb5LoginModule} for more details.
  */
+@SuppressWarnings("restriction")
 public class DefaultGSSAuthenticator implements SshGSSAPIAuthenticator {
 
 	private String principal;
@@ -245,7 +246,7 @@ public class DefaultGSSAuthenticator implements SshGSSAPIAuthenticator {
 	public Configuration getConfiguration() {
 		return new Configuration() {
 			public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-				Map options = new HashMap();
+				Map<String, String> options = new HashMap<>();
 				if (principal != null) {
 					options.put("principal", principal);
 				}

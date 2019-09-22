@@ -30,6 +30,7 @@ import net.sf.sshapi.SshLifecycleListener;
  * Adapter for {@link SshLifecycleListener}.
  * Just use {@link SshLifecycleListener}, it now uses Java8 default implementation.
  */
+@SuppressWarnings("rawtypes")
 @Deprecated
 public class ChannelListenerAdapter implements SshLifecycleListener {
 

@@ -23,11 +23,13 @@
  */
 package net.sf.sshapi.forwarding;
 
+import net.sf.sshapi.SshLifecycleListener;
+
 /**
  * Interfaces to be implemented by classes that wish to be notified when port
  * forwarding channels are opened and closed.
  */
-public interface SshPortForwardListener {
+public interface SshPortForwardListener extends SshLifecycleListener<SshPortForward> {
 	/**
 	 * A port forwarding channel has been opened.
 	 * 

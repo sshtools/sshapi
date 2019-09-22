@@ -110,6 +110,7 @@ public abstract class AbstractClient implements SshClient {
 		return provider;
 	}
 
+	@SuppressWarnings("deprecation")
 	public void close() throws IOException {
 		try {
 			disconnect();
@@ -118,6 +119,7 @@ public abstract class AbstractClient implements SshClient {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void closeQuietly() {
 		try {
 			disconnect();

@@ -23,8 +23,8 @@
  */
 package net.sf.sshapi.forwarding;
 
-import net.sf.sshapi.SshLifecycleComponent;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshLifecycleComponent;
 
 /**
  * Maintains state of either a local or remote port forward. The
@@ -34,7 +34,7 @@ import net.sf.sshapi.SshException;
  * stop the actal tunell.
  * 
  */
-public interface SshPortForward extends SshLifecycleComponent {
+public interface SshPortForward extends SshLifecycleComponent<SshPortForwardListener, SshPortForward> {
 
 	/**
 	 * Constant used to specify whether the event relates to a local forwarding

@@ -140,6 +140,7 @@ public class XAuthorityFile {
 	public void write(boolean append) throws IOException {
 		FileOutputStream fout = new FileOutputStream(file, append);
 		try {
+			@SuppressWarnings("resource")
 			DataOutputStream dout = new DataOutputStream(fout);
 			dout.writeShort(256);
 			dout.writeShort(hostname.length());

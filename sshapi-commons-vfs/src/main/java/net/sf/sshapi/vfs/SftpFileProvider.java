@@ -27,8 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import net.sf.sshapi.SshClient;
-
+import org.apache.commons.vfs2.Capability;
 import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileSystem;
 import org.apache.commons.vfs2.FileSystemConfigBuilder;
@@ -37,12 +36,14 @@ import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.provider.AbstractOriginatingFileProvider;
 import org.apache.commons.vfs2.provider.GenericFileName;
 
+import net.sf.sshapi.SshClient;
+
 /**
  * Commons VFS file provider implementation for SFTP via SSHAPI
  */
 public class SftpFileProvider extends AbstractOriginatingFileProvider {
 
-	protected final static Collection capabilities = Collections.unmodifiableCollection(
+	protected final static Collection<org.apache.commons.vfs2.Capability> capabilities = Collections.unmodifiableCollection(
 			Arrays.asList(new org.apache.commons.vfs2.Capability[] { org.apache.commons.vfs2.Capability.CREATE,
 					org.apache.commons.vfs2.Capability.ATTRIBUTES, org.apache.commons.vfs2.Capability.DELETE,
 					org.apache.commons.vfs2.Capability.RENAME, org.apache.commons.vfs2.Capability.GET_TYPE,
@@ -84,7 +85,7 @@ public class SftpFileProvider extends AbstractOriginatingFileProvider {
 		return SftpFileSystemConfigBuilder.getInstance();
 	}
 
-	public Collection getCapabilities() {
+	public Collection<Capability> getCapabilities() {
 		return capabilities;
 	}
 }

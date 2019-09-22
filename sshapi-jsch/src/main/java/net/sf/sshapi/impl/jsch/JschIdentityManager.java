@@ -74,24 +74,24 @@ class JschIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public List getSupportedPublicKeyFileFormats() {
+	public List<Integer> getSupportedPublicKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
 			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
 	@Override
-	public List getSupportedPrivateKeyFileFormats() {
+	public List<Integer> getSupportedPrivateKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
 			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
 	@Override
-	public List getSupportedKeyLengths() {
+	public List<Integer> getSupportedKeyLengths() {
 		return Arrays.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
 	}
 
 	@Override
-	public List getSupportedKeyTypes() {
+	public List<String> getSupportedKeyTypes() {
 		return Arrays.asList(new String[] { "rsa", "dsa" });
 	}
 
@@ -190,7 +190,7 @@ class JschIdentityManager implements SshIdentityManager {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
 					"Key is currently encrypyted. Please decrypt before changing passphrase.");
 			}
-			kpair.setPassphrase(new String(newPassphrase));
+			kpair.setPassphrase(new String(newPassphrase).getBytes());
 		}
 
 		@Override

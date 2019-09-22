@@ -49,7 +49,7 @@ import org.apache.commons.vfs2.util.RandomAccessMode;
 /**
  * @{link {@link AbstractFileObject} for SFTP via SSHAPI.
  */
-public class SftpFileObject extends AbstractFileObject {
+public class SftpFileObject extends AbstractFileObject<SftpFileSystem> {
 
 	private final SftpFileSystem fs;
 	private SftpFile attrs;
@@ -159,7 +159,7 @@ public class SftpFileObject extends AbstractFileObject {
 		}
 
 		// Extract the child names
-		final ArrayList children = new ArrayList();
+		final ArrayList<String> children = new ArrayList<>();
 		for (int i = 0; i < array.length; i++) {
 			if (!array[i].getName().equals(".")
 					&& !array[i].getName().equals("..")) {
@@ -196,8 +196,8 @@ public class SftpFileObject extends AbstractFileObject {
 		}
 	}
 
-	protected Map doGetAttributes() throws Exception {
-		final Map attributes = new HashMap();
+	protected Map<String, Object> doGetAttributes() throws Exception {
+		final Map<String, Object> attributes = new HashMap<>();
 		if (attrs != null) {
 			attributes.put("accessedTime", Long.valueOf(attrs.getAccessed()));
 			attributes.put("creationTime", Long.valueOf(attrs.getCreated()));

@@ -143,7 +143,7 @@ public class SshConfiguration {
 	private SshProxyServerDetails proxyServer;
 	private String preferredSSH1Cipher;
 	private String sftpSSH1Path;
-	private List requiredCapabilities = new ArrayList();
+	private List<Capability> requiredCapabilities = new ArrayList<>();
 	private SocketFactory socketFactory;
 	private int maxAuthAttempts = 3;
 
@@ -624,7 +624,7 @@ public class SshConfiguration {
 	 *             if a provider does not have all the required capabilities
 	 */
 	public void providerHasCapabilities(SshProvider provider) throws UnsupportedOperationException {
-		for (Iterator i = requiredCapabilities.iterator(); i.hasNext();) {
+		for (Iterator<Capability> i = requiredCapabilities.iterator(); i.hasNext();) {
 			Capability c = (Capability) i.next();
 			if (!provider.getCapabilities().contains(c)) {
 				throw new UnsupportedOperationException(

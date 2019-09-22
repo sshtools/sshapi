@@ -25,12 +25,13 @@ package net.sf.sshapi.vfs;
 
 import java.io.File;
 
+import org.apache.commons.vfs2.FileSystem;
+import org.apache.commons.vfs2.FileSystemConfigBuilder;
+import org.apache.commons.vfs2.FileSystemOptions;
+
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
-
-import org.apache.commons.vfs2.FileSystemConfigBuilder;
-import org.apache.commons.vfs2.FileSystemOptions;
 
 /**
  * @{link {@link FileSystemConfigBuilder} for SFTP via SSHAPI.
@@ -175,7 +176,7 @@ public class SftpFileSystemConfigBuilder extends FileSystemConfigBuilder {
 		return (String) getParam(opts, "compression");
 	}
 
-	protected Class getConfigClass() {
+	protected Class<? extends FileSystem> getConfigClass() {
 		return SftpFileSystem.class;
 	}
 }

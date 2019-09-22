@@ -30,7 +30,7 @@ import net.sf.sshapi.SshException;
  * Abstract implementation of {@link SshPortForward} that maintains the
  * {@link AbstractPortForward#isOpen()} state for any sub-classes.
  */
-public abstract class AbstractPortForward extends AbstractLifecycleComponent implements SshPortForward {
+public abstract class AbstractPortForward extends AbstractLifecycleComponent<SshPortForwardListener, SshPortForward> implements SshPortForward {
 
 	private boolean open;
 	private int timeout;

@@ -26,7 +26,6 @@ package net.sf.sshapi.identity;
 import java.io.IOException;
 
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshPrivateKey;
 import net.sf.sshapi.SshPublicKey;
 
 /**

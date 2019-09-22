@@ -84,20 +84,6 @@ final class JschSCPClient extends AbstractSCPClient {
 		}
 	}
 
-	private void doDir(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in)
-			throws IOException {
-		int ack;
-		String basename = Util.basename(remotePath);
-		String command = "D" + (mode == null ? "0755" : mode) + " 0 " + basename;
-		command += "\n";
-		out.write(command.getBytes());
-		out.flush();
-		ack = JschSshClient.checkAck(in);
-		if (ack != 0) {
-			throw new IOException("Incorrect Ack " + ack + " received");
-		}
-	}
-
 	private void doFile(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in)
 			throws IOException {
 		int ack;
@@ -139,7 +125,7 @@ final class JschSCPClient extends AbstractSCPClient {
 
 	@Override
 	public void get(final String remoteFilePath, File targetFile, boolean recursive) throws SshException {
-		SshStreamChannel cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
+		SshStreamChannel<?, ?> cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
 		cmd.open();
 
 		// get I/O streams for remote scp
@@ -243,7 +229,8 @@ final class JschSCPClient extends AbstractSCPClient {
 
 	private String readLine(InputStream in) throws IOException {
 		StringBuffer buf = new StringBuffer();
-		for (int i = 0;; i++) {
+		for (@SuppressWarnings("unused")
+		int i = 0;; i++) {
 			int r = in.read();
 			if (r == (byte) 0x0a) {
 				break;

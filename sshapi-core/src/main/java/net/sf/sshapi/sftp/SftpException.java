@@ -167,7 +167,7 @@ public class SftpException extends SshException {
 	 */
 	public static final Code SSH_FX_NO_MATCHING_BYTE_RANGE_LOCK = new SftpCode("sftp.noMatchingByteRangeLock", 31);
 
-	private static Map codes;
+	private static Map<Integer, Code> codes;
 
 	/**
 	 * Constructor
@@ -231,7 +231,7 @@ public class SftpException extends SshException {
 		public SftpCode(String id, int serverCode) {
 			super(id);
 			if (codes == null) {
-				codes = new HashMap();
+				codes = new HashMap<>();
 			}
 			codes.put(new Integer(serverCode), this);
 		}

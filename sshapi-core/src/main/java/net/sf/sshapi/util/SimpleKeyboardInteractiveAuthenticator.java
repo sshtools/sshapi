@@ -46,7 +46,7 @@ public class SimpleKeyboardInteractiveAuthenticator implements SshKeyboardIntera
 	}
 
 	public String[] challenge(String name, String instruction, String[] prompt, boolean[] echo) {
-		List answers = new ArrayList(Arrays.asList(this.answers));
+		List<String> answers = new ArrayList<>(Arrays.asList(this.answers));
 		while(prompt.length < answers.size()) {
 			answers.remove(answers.size() - 1);
 		}

@@ -206,4 +206,9 @@ class SftpRandomAccessContent extends AbstractRandomAccessContent {
 		createStream();
 		return dis;
 	}
+
+	@Override
+	public void setLength(long newLength) throws IOException {
+		throw new UnsupportedOperationException();
+	}
 }

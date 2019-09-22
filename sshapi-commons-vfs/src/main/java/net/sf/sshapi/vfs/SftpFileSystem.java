@@ -32,6 +32,7 @@ import net.sf.sshapi.sftp.SftpClient;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.vfs2.Capability;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemOptions;
@@ -121,7 +122,7 @@ public class SftpFileSystem extends AbstractFileSystem {
 		}
 	}
 
-	protected void addCapabilities(final Collection caps) {
+	protected void addCapabilities(final Collection<Capability> caps) {
 		caps.addAll(SftpFileProvider.capabilities);
 	}
 
