@@ -144,17 +144,7 @@ class MaverickNGSshClient extends AbstractClient
 		}
 		sshContext.setBannerDisplay(new BannerDisplayBridge());
 		// TODO expose as configurable
-		sshContext.setForwardingPolicy(new ForwardingPolicy() {
-			@Override
-			public boolean checkInterfacePermitted(Connection<?> con, String originHost, int originPort) {
-				return true;
-			}
-
-			@Override
-			public boolean checkHostPermitted(Connection<?> con, String host, int port) {
-				return true;
-			}
-		});
+		sshContext.setForwardingPolicy(new ForwardingPolicy());
 	}
 
 	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)

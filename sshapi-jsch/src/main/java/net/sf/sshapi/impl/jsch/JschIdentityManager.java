@@ -190,7 +190,7 @@ class JschIdentityManager implements SshIdentityManager {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
 					"Key is currently encrypyted. Please decrypt before changing passphrase.");
 			}
-			kpair.setPassphrase(new String(newPassphrase).getBytes());
+			kpair.setPassphrase(new String(newPassphrase));
 		}
 
 		@Override

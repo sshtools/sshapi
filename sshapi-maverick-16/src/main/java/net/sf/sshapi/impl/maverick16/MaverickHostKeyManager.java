@@ -90,7 +90,8 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 			knownHosts.addEntry(new SshPublicKey() {
 
 				@Override
-				public boolean verifySignature(byte[] signature, byte[] data) throws com.sshtools.common.ssh.SshException {
+				public boolean verifySignature(byte[] signature, byte[] data)
+						throws com.sshtools.common.ssh.SshException {
 					return false;
 				}
 
@@ -133,6 +134,19 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 					throw new UnsupportedOperationException();
 				}
 			}, hostKey.getComments(), hostKey.getHost());
+			if (persist) {
+				try {
+					FileOutputStream fout = new FileOutputStream(file);
+					try {
+						fout.write(knownHosts.toString().getBytes("UTF-8"));
+					} finally {
+						fout.close();
+					}
+				} catch (IOException ioe) {
+					throw new SshException(SshException.IO_ERROR,
+							String.format("Failed to save known hosts file %s", ioe));
+				}
+			}
 		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
@@ -220,7 +234,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	protected void saveHostFile() throws IOException {
-		try(FileOutputStream fos = new FileOutputStream(file)) {
+		try (FileOutputStream fos = new FileOutputStream(file)) {
 			fos.write(knownHosts.toString().getBytes());
 		}
 	}
