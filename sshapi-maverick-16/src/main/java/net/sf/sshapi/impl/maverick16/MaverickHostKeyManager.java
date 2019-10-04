@@ -65,7 +65,8 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	public MaverickHostKeyManager(SshConfiguration configuration) throws SshException {
 		super(configuration);
 		Util.checkKnownHostsFile(configuration);
-		load(configuration);
+		if(Util.getKnownHostsFile(configuration).exists())
+			load(configuration);
 	}
 
 	private void load(SshConfiguration configuration) throws SshException {
@@ -136,12 +137,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 			}, hostKey.getComments(), hostKey.getHost());
 			if (persist) {
 				try {
-					FileOutputStream fout = new FileOutputStream(file);
-					try {
-						fout.write(knownHosts.toString().getBytes("UTF-8"));
-					} finally {
-						fout.close();
-					}
+					saveHostFile();
 				} catch (IOException ioe) {
 					throw new SshException(SshException.IO_ERROR,
 							String.format("Failed to save known hosts file %s", ioe));
