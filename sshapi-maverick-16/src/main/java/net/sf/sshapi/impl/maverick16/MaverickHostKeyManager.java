@@ -41,6 +41,7 @@ import com.sshtools.common.util.Base64;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
@@ -55,6 +56,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 	private KnownHostsKeyVerification knownHosts;
 	private File file;
+	private long lastModified;
 
 	/**
 	 * Constructor.
@@ -65,7 +67,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	public MaverickHostKeyManager(SshConfiguration configuration) throws SshException {
 		super(configuration);
 		Util.checkKnownHostsFile(configuration);
-		if(Util.getKnownHostsFile(configuration).exists())
+		if (Util.getKnownHostsFile(configuration).exists())
 			load(configuration);
 		else
 			knownHosts = new KnownHostsKeyVerification();
@@ -74,6 +76,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	private void load(SshConfiguration configuration) throws SshException {
 		try {
 			file = Util.getKnownHostsFile(configuration);
+			lastModified = file.lastModified();
 			FileInputStream fin = new FileInputStream(file);
 			try {
 				knownHosts = new KnownHostsKeyVerification(fin);
@@ -90,6 +93,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	@Override
 	public void add(final SshHostKey hostKey, boolean persist) throws SshException {
 		try {
+			checkForChanges();
 			knownHosts.addEntry(new SshPublicKey() {
 
 				@Override
@@ -152,6 +156,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 	@Override
 	public SshHostKey[] getKeys() {
+		checkForChanges();
 		List<SshHostKey> hostKeys = new ArrayList<>();
 		Set<KeyEntry> hosts = knownHosts.getKeyEntries();
 		for (KeyEntry ke : hosts) {
@@ -201,6 +206,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	@Override
 	public void remove(SshHostKey hostKey) throws SshException {
 		try {
+			checkForChanges();
 			knownHosts.removeEntries(hostKey.getHost());
 			saveHostFile();
 		} catch (IOException e) {
@@ -212,6 +218,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 	@Override
 	protected boolean checkHost(String storedHostName, String hostToCheck) {
+		checkForChanges();
 		if (storedHostName.startsWith(HASH_MAGIC)) {
 			try {
 				SshHmac sha1 = (SshHmac) ComponentManager.getInstance().supportedHMacsCS().getInstance("hmac-sha1");
@@ -231,10 +238,25 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
+	protected void checkForChanges() {
+		try {
+			file = Util.getKnownHostsFile(getConfiguration());
+			if (file.lastModified() != lastModified) {
+				load(getConfiguration());
+			}
+		} catch (Exception e) {
+			SshConfiguration.getLogger().log(Level.ERROR,
+					"Failed to reload trusted host key store after an external modification.");
+		}
+	}
+
 	protected void saveHostFile() throws IOException {
 		file = Util.getKnownHostsFile(getConfiguration());
 		try (FileOutputStream fos = new FileOutputStream(file)) {
 			fos.write(knownHosts.toString().getBytes());
+
+		} finally {
+			lastModified = file.lastModified();
 		}
 	}
 }
