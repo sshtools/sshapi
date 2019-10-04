@@ -67,6 +67,8 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 		Util.checkKnownHostsFile(configuration);
 		if(Util.getKnownHostsFile(configuration).exists())
 			load(configuration);
+		else
+			knownHosts = new KnownHostsKeyVerification();
 	}
 
 	private void load(SshConfiguration configuration) throws SshException {
@@ -193,7 +195,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 	@Override
 	public boolean isWriteable() {
-		return file != null && file.canWrite();
+		return file == null || !file.exists() || file.canWrite();
 	}
 
 	@Override
@@ -230,6 +232,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	protected void saveHostFile() throws IOException {
+		file = Util.getKnownHostsFile(getConfiguration());
 		try (FileOutputStream fos = new FileOutputStream(file)) {
 			fos.write(knownHosts.toString().getBytes());
 		}
