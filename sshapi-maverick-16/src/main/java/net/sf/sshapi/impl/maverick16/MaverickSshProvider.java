@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.maverick.ssh.LicenseManager;
 import com.maverick.ssh.SshConnector;
 import com.maverick.ssh2.Ssh2Context;
 import com.sshtools.common.ssh.SshException;
@@ -50,23 +49,6 @@ import net.sf.sshapi.identity.SshIdentityManager;
  * Provider implementation for Maverick SSH.
  */
 public class MaverickSshProvider extends AbstractProvider {
-	
-	static {
-		LicenseManager.addLicense("----BEGIN 3SP LICENSE----\r\n"
-                + "Product : Maverick Legacy Client\r\n"
-                + "Licensee: Hypersocket Software Limited\r\n"
-                + "Comments: Priority Support\r\n"
-                + "Type    : Enterprise License (Priority Support)\r\n"
-                + "Created : 28-Jan-2019\r\n"
-                + "\r\n"
-                + "37872061D5887BDBA600F3CF9CCEF4C8800BC6A77709B679\r\n"
-                + "3E49B3890BA5AC9794976BE380D54279BDCE32723B990BBA\r\n"
-                + "A642DC4416431FE6FB4F82B97B6A782A11CD0AE0E03CD097\r\n"
-                + "6E36E9F2FECFAA6476C93A8D0199E548A6A034A0C7CCE998\r\n"
-                + "4BF147F184074FC65BCBA6B2C0CDDB2EBFDEFFBE37BBEE51\r\n"
-                + "6CC4A5A1DB5D6B42136F2C461193E28A024DF0BAF0BC852C\r\n"
-                + "----END 3SP LICENSE----\r\n");
-	}
 	/**
 	 * The User-Agent Maverick identifies itself as when using HTTP proxy connection
 	 */

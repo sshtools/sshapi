@@ -122,7 +122,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					if (timeout != -1)
 						sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
 					originalChannelFactory = sshContext.getChannelFactory();
-					sshContext.setChannelFactory(MaverickSynergySshClient.this);
+					// TODO not published yet
+//					sshContext.setChannelFactory(MaverickSynergySshClient.this);
 					sshContext.setHostKeyVerification(new HostKeyVerificationBridge());
 					SshConfiguration configuration = getConfiguration();
 					// Version
