@@ -6,7 +6,6 @@ import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshSCPClient;
 
 class SCPGetTest extends AbstractConnectionTest {
-
 	public SCPGetTest() throws IOException {
 		super();
 		configuration.addRequiredCapability(Capability.SCP);
@@ -16,7 +15,9 @@ class SCPGetTest extends AbstractConnectionTest {
 		super.doConnection(client);
 		File tempFile = File.createTempFile("scp", "tst");
 		try (SshSCPClient scp = client.scp()) {
-			scp.get("test-file", tempFile, false);
+			for (int i = 0; i < iterations; i++) {
+				scp.get("test-file", tempFile, false);
+			}
 		} finally {
 			tempFile.delete();
 		}
@@ -25,6 +26,5 @@ class SCPGetTest extends AbstractConnectionTest {
 	public static void main(String[] arg) throws Exception {
 		SCPGetTest t = new SCPGetTest();
 		t.start();
-
 	}
 }

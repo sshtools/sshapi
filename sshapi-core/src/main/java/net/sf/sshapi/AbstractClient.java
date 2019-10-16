@@ -37,6 +37,7 @@ import net.sf.sshapi.forwarding.SshPortForwardListener;
 import net.sf.sshapi.forwarding.SshPortForwardTunnel;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.Util;
 
 /**
  * Abstract implementation of a {@link SshClient}. All provider client
@@ -57,6 +58,11 @@ public abstract class AbstractClient implements SshClient {
 	 */
 	public AbstractClient(SshConfiguration configuration) {
 		this.configuration = configuration;
+	}
+
+	public final void connect(String spec, SshAuthenticator... authenticators)
+			throws SshException {
+		connect(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
 	}
 
 	public final void connect(String username, String hostname, int port, SshAuthenticator... authenticators)

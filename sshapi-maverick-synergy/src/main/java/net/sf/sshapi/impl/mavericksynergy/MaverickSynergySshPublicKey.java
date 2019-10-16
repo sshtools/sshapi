@@ -1,12 +1,12 @@
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
 
-public class MaverickNGSshPublicKey implements com.sshtools.common.ssh.components.SshPublicKey {
+public class MaverickSynergySshPublicKey implements com.sshtools.common.ssh.components.SshPublicKey {
 	private final SshPublicKey key;
 
-	public MaverickNGSshPublicKey(SshPublicKey key) {
+	public MaverickSynergySshPublicKey(SshPublicKey key) {
 		this.key = key;
 	}
 

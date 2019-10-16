@@ -44,6 +44,13 @@ import com.sshtools.j2ssh.transport.kex.SshKeyExchangeFactory;
  * Provider implementation for J2SSH.
  */
 public class J2SshProvider extends AbstractProvider {
+	
+	static {
+		if("false".equals(System.getProperty("sshapi.j2ssh.noWarning", "false"))) {
+			System.err.println("J2SSH is currently unmaintained, and uses configuration now considered weak. If you really want to use this, "
+					+ "it may be necessary to reconfigure your server and enable diffie-helman-group1-sha1 key exchange and blowfish-cbc and/or 3des-cbc ciphers. See https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0#340853");
+		}
+	}
 
 	/**
 	 * Constructor.

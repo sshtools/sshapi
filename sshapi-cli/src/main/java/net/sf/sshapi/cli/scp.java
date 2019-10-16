@@ -1,3 +1,5 @@
+package net.sf.sshapi.cli;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -6,8 +8,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import jline.ConsoleReader;
-import jline.Terminal;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.Parser;
+import org.apache.commons.cli.PosixParser;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
@@ -27,13 +38,6 @@ import net.sf.sshapi.util.ConsolePasswordAuthenticator;
 import net.sf.sshapi.util.PEMFilePublicKeyAuthenticator;
 import net.sf.sshapi.util.Util;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
-import org.apache.commons.cli.PosixParser;
-
 /**
  * Java clone of the de-facto standard OpenSSH scp command.
  */
@@ -52,7 +56,7 @@ public class scp implements SshFileTransferListener, Logger {
 	private long transferLastUpdate;
 	private int transferSpeed;
 	private Terminal terminal;
-	private ConsoleReader reader;
+	private LineReader reader;
 	private long transferBlock;
 	private String providerClass;
 	private SshProvider provider;
@@ -75,8 +79,8 @@ public class scp implements SshFileTransferListener, Logger {
 		buildOptions(options);
 
 		try {
-			terminal = Terminal.setupTerminal();
-			reader = new ConsoleReader();
+			terminal = TerminalBuilder.builder().system(true).build();
+			reader = LineReaderBuilder.builder().terminal(terminal).build();
 			// terminal.beforeReadLine(reader, "", (char)0);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -97,7 +101,8 @@ public class scp implements SshFileTransferListener, Logger {
 			try {
 				provider = (SshProvider) Class.forName(providerClass).newInstance();
 			} catch (Exception e) {
-				log(Level.WARN, "SSH provider " + providerClass + " not accessible: Falling back to first available provider.");
+				log(Level.WARN,
+						"SSH provider " + providerClass + " not accessible: Falling back to first available provider.");
 			}
 		}
 		if (provider == null) {
@@ -281,7 +286,8 @@ public class scp implements SshFileTransferListener, Logger {
 		if (commandLine.hasOption('1')) {
 			configuration.setProtocolVersion(SshConfiguration.SSH1_ONLY);
 			if (commandLine.hasOption('2')) {
-				throw new ParseException("Conflicting options -1 and -2. You may only specify one or the other or neither.");
+				throw new ParseException(
+						"Conflicting options -1 and -2. You may only specify one or the other or neither.");
 			}
 		} else if (commandLine.hasOption('2')) {
 			configuration.setProtocolVersion(SshConfiguration.SSH1_ONLY);
@@ -296,10 +302,11 @@ public class scp implements SshFileTransferListener, Logger {
 		boolean quiet = commandLine.hasOption('q');
 		recursive = commandLine.hasOption('r');
 		port = Integer.parseInt(commandLine.getOptionValue('P', String.valueOf("22")));
-		identityFile = new File(commandLine.getOptionValue('i', new File(
-			new File(new File(System.getProperty("user.home")), ".ssh"), "id_dsa").getAbsolutePath()));
+		identityFile = new File(commandLine.getOptionValue('i',
+				new File(new File(new File(System.getProperty("user.home")), ".ssh"), "id_dsa").getAbsolutePath()));
 		if (!identityFile.exists() && commandLine.hasOption('i') && !quiet) {
-			System.out.println("Warning: Identity file " + identityFile.getPath() + " not accessible: No such file or directory");
+			System.out.println(
+					"Warning: Identity file " + identityFile.getPath() + " not accessible: No such file or directory");
 		}
 
 		verbosity = 0;
@@ -330,37 +337,40 @@ public class scp implements SshFileTransferListener, Logger {
 	void buildOptions(Options options) {
 		options.addOption("1", false, "Forces scp to use protocol 1");
 		options.addOption("2", false, "Forces scp to use protocol 2");
-		options.addOption("3", false, "Copies between two remote hosts are transferred through the local host.  Without "
-			+ "this option the data is copied directly between the two remote hosts.  Note that this option disables "
-			+ "the progress meter.");
-		options.addOption("P", true, "Specifies the port to connect to on the remote host.  Note "
-			+ "that this option is written with a capital ‘P’, because -p is already reserved for "
-			+ "preserving the times and modes of the file");
+		options.addOption("3", false,
+				"Copies between two remote hosts are transferred through the local host.  Without "
+						+ "this option the data is copied directly between the two remote hosts.  Note that this option disables "
+						+ "the progress meter.");
+		options.addOption("P", true,
+				"Specifies the port to connect to on the remote host.  Note "
+						+ "that this option is written with a capital ‘P’, because -p is already reserved for "
+						+ "preserving the times and modes of the file");
 		options.addOption("c", true, "Selects the cipher to use for encrypting the data transfer.");
-		options.addOption("i", true, "Selects the file from which the identity (private key) for public key authentication"
-			+ " is read.");
+		options.addOption("i", true,
+				"Selects the file from which the identity (private key) for public key authentication" + " is read.");
 		options.addOption("r", false, "Recursively copy entire directories.  Note that scp follows symbolic links "
-			+ "encountered in the tree traversal.");
+				+ "encountered in the tree traversal.");
 		options.addOption("F", true,
-			"Specifies an alternative per-user configuration file (IGNORED - Only present for OpenSSH compatibility).");
+				"Specifies an alternative per-user configuration file (IGNORED - Only present for OpenSSH compatibility).");
 		options.addOption("o", true, "Additional options (IGNORED - Only present for OpenSSH compatibility).");
-		options.addOption("4", false, "Forces use of IPv4 addresses only (IGNORED - Only present for OpenSSH compatibility).");
-		options.addOption("6", false, "Forces use of IPv6 addresses only (IGNORED - Only present for OpenSSH compatibility).");
+		options.addOption("4", false,
+				"Forces use of IPv4 addresses only (IGNORED - Only present for OpenSSH compatibility).");
+		options.addOption("6", false,
+				"Forces use of IPv6 addresses only (IGNORED - Only present for OpenSSH compatibility).");
 		options.addOption("p", false,
-			"Preserves modification times, access times, and modes from the original file (IGNORED - Only present for "
-				+ "OpenSSH compatibility).");
+				"Preserves modification times, access times, and modes from the original file (IGNORED - Only present for "
+						+ "OpenSSH compatibility).");
 		options.addOption("v", false,
-			"Verbose mode.  Print debugging messages about their progress. This is helpful in debugging connection, "
-				+ "authentication, and configuration problems.");
+				"Verbose mode.  Print debugging messages about their progress. This is helpful in debugging connection, "
+						+ "authentication, and configuration problems.");
 		options.addOption("l", false,
-			"Limits the used bandwidth, specified in Kbit/s. (IGNORED - Only present for OpenSSH compatibility).");
+				"Limits the used bandwidth, specified in Kbit/s. (IGNORED - Only present for OpenSSH compatibility).");
 		options.addOption("B", false, "Selects batch mode (prevents asking for passwords or passphrases).");
-		options.addOption("C", false, "Compression enable. Will be ignored if the provider does not support compression.");
-		options.addOption("q", false, "Quiet mode: disables the progress meter as well as warning and diagnostic messages.");
-		options
-			.addOption(
-				"S",
-				true,
+		options.addOption("C", false,
+				"Compression enable. Will be ignored if the provider does not support compression.");
+		options.addOption("q", false,
+				"Quiet mode: disables the progress meter as well as warning and diagnostic messages.");
+		options.addOption("S", true,
 				"Classname of SSH provider to use (Note, in OpenSSH this option is 'program' which is an executable. In this case, it must be the classname of an SSHAPI provider.");
 	}
 
@@ -439,27 +449,23 @@ public class scp implements SshFileTransferListener, Logger {
 		int pc = (int) (((double) transferProgressed / (double) transferLength) * 100.0);
 		String sizeSoFar = formatSize(transferProgressed);
 		// width - ( 5+ 10 + 8 + 3 + 1 + 1 + 1 + 1 )
-		int w = reader == null ? 80 : reader.getTermwidth();
+		int w = reader == null ? 80 : terminal.getWidth();
 		int filenameWidth = w - 32;
 
 		String result = String.format("%-" + filenameWidth + "s %3d%% %-8s %10s %5s",
-			new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), "??:??" });
+				new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), "??:??" });
 		if (terminal == null) {
 			System.out.print(result + "\r");
 			if (newline) {
 				System.out.println();
 			}
 		} else {
-			reader.getCursorBuffer().clearBuffer();
-			reader.getCursorBuffer().write(result);
-			try {
-				reader.setCursorPosition(w);
-				reader.redrawLine();
-				if (newline) {
-					reader.printNewline();
-				}
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+			reader.getBuffer().clear();
+			reader.getBuffer().write(result);
+			reader.getBuffer().atChar(w);
+			if (newline) {
+				reader.getBuffer().down();
+				reader.getBuffer().atChar(0);
 			}
 		}
 

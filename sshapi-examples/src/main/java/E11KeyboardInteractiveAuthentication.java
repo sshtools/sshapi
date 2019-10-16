@@ -19,28 +19,16 @@ public class E11KeyboardInteractiveAuthentication {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
-
-		// Create the client using that configuration
-		SshClient client = config.createClient();
-		ExampleUtilities.dumpClientInfo(client);
-
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
 
 		// Connect, authenticate
-		client.connect(user, host, port, new ConsoleKeyboardInteractiveAuthenticator());
-		try {
+		try(SshClient client = config.open(Util.promptConnectionSpec(), new ConsoleKeyboardInteractiveAuthenticator())) {
+			ExampleUtilities.dumpClientInfo(client);
 			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);
 			}
-		} finally {
-			client.close();
-		}
+		} 
 	}
 }

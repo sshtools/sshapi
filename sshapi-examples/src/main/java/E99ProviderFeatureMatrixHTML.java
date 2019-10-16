@@ -4,6 +4,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 
@@ -27,8 +28,8 @@ public class E99ProviderFeatureMatrixHTML {
 		JTabbedPane tabs = new JTabbedPane();
 		f.setLayout(new BorderLayout());
 		f.add(tabs, BorderLayout.CENTER);
-		tabs.addTab("HTML", new JEditorPane("text/html", getHTML()));
-		tabs.addTab("Source", new JTextArea(getHTML()));
+		tabs.addTab("HTML", new JScrollPane(new JEditorPane("text/html", getHTML())));
+		tabs.addTab("Source", new JScrollPane(new JTextArea(getHTML())));
 		f.pack();
 		f.setVisible(true);
 		f.addWindowListener(new WindowAdapter() {
@@ -51,8 +52,13 @@ public class E99ProviderFeatureMatrixHTML {
 
 		StringBuilder bui = new StringBuilder();
 		bui.append("<html>\n");
+		bui.append("<head>\n");
+		bui.append("<style type=\"text/css\">\n");
+		bui.append(".section { font-size: 32pt; font-weight: bold; }\n");
+		bui.append("</style>\n");
+		bui.append("</head>\n");
 		bui.append("<body>\n");
-		bui.append("  <table>\n");
+		bui.append("  <table border=\"1\">\n");
 		bui.append("    <thead>\n");
 		bui.append("      <tr>\n");
 
@@ -62,7 +68,7 @@ public class E99ProviderFeatureMatrixHTML {
 			if (i == 0) {
 				titles[i] = "Capability";
 			} else {
-				titles[i] = providers[i - 1].getClass().getSimpleName();
+				titles[i] = providers[i - 1].getName();
 			}
 			bui.append("        <td>");
 			bui.append(titles[i]);

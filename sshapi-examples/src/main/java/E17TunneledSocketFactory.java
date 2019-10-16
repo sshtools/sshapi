@@ -36,14 +36,8 @@ public class E17TunneledSocketFactory {
 
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
 		// Connect, authenticate, and start the simple shell
-		try (SshClient client = provider.open(config, user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = provider.open(config, Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
 			SocketFactory sf = client.createTunneledSocketFactory();
 

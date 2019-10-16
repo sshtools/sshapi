@@ -33,24 +33,22 @@ public class E20CustomChannel {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
 		config.addRequiredCapability(Capability.CHANNEL_HANDLERS);
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 
 		// Also display banner messages
 		config.setBannerHandler(new ConsoleBannerHandler());
 
 		// Prompt for the host, username and custom channel name
 
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		String connectionSpec = Util.promptConnectionSpec();
 
 		final String channelName = Util.prompt("Enter channel name", "custom@mycompany.com");
 
 		// Create the client using that configuration and connect and authenticate
-		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = config.open(connectionSpec, new ConsolePasswordAuthenticator())) {
 			ExampleUtilities.dumpClientInfo(client);
 
 			/*

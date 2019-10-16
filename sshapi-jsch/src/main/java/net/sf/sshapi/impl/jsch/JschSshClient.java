@@ -159,7 +159,7 @@ class JschSshClient extends AbstractClient implements Logger {
 				throw new SshException(SshException.GENERAL, e);
 			}
 		}
-		session.setUserInfo(new UserInfoAuthenticatorBridge(paw, pk, ki));
+		session.setUserInfo(new UserInfoAuthenticatorBridge(paw, pk, ki, getConfiguration().getHostKeyValidator()));
 		SshConfiguration configuration = getConfiguration();
 		try {
 			session.connect(Integer
@@ -277,7 +277,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	public SftpClient createSftp() throws SshException {
 		try {
 			ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-			return new JschSftpClient(channel);
+			return new JschSftpClient(channel, getConfiguration());
 		} catch (JSchException e) {
 			throw new SshException("Failed to open SFTP channel.", e);
 		}
@@ -364,7 +364,8 @@ class JschSshClient extends AbstractClient implements Logger {
 
 		public UserInfoAuthenticatorBridge(SshPasswordAuthenticator passwordAuthenticator,
 				SshPublicKeyAuthenticator publicKeyAuthenticator,
-				SshKeyboardInteractiveAuthenticator keyboardInteractiveAuthenticator) {
+				SshKeyboardInteractiveAuthenticator keyboardInteractiveAuthenticator,
+				SshHostKeyValidator hkv) {
 			this.passwordAuthenticator = passwordAuthenticator;
 			this.publicKeyAuthenticator = publicKeyAuthenticator;
 			this.keyboardInteractiveAuthenticator = keyboardInteractiveAuthenticator;
@@ -463,6 +464,9 @@ class JschSshClient extends AbstractClient implements Logger {
 								return SshConfiguration.PUBLIC_KEY_SSHDSA;
 							case 'r':
 								return SshConfiguration.PUBLIC_KEY_SSHRSA;
+							case 'e':
+								// TODO check
+								return SshConfiguration.PUBLIC_KEY_ECDSA;
 							}
 							return null;
 						}

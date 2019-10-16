@@ -5,7 +5,7 @@ import net.sf.sshapi.SshProvider;
 
 /**
  * The {@link DefaultProviderFactory} will only return a provider that supports
- * SSH version 1 (which in practice is currently only the 'Maverick'
+ * SSH version 1 (which in practice is currently only the 'Maverick16'
  * implementation)
  * 
  */

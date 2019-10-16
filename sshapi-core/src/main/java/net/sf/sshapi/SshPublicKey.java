@@ -39,7 +39,9 @@ public interface SshPublicKey {
 	/**
 	 * Get the public key algorithm used. Will be one of
 	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA}
+	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA},
+	 * {@link SshConfiguration#PUBLIC_KEY_ECDSA},
+	 * {@link SshConfiguration#PUBLIC_KEY_ED25519}
 	 * 
 	 * @return algorithm
 	 */

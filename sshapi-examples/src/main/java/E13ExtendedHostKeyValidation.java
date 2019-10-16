@@ -39,14 +39,8 @@ public class E13ExtendedHostKeyValidation {
 		 */
 		config.setHostKeyValidator(new ConsoleHostKeyValidator(mgr));
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
 		// Connect, authenticate
-		try (SshClient client = provider.open(config, user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = provider.open(config, Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
 			try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {
 				ExampleUtilities.joinShellToConsole(shell);

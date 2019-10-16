@@ -35,7 +35,7 @@ public class E12ChangeKeyPassphrase {
 
 		// Private key
 		File pemFile = new File(Util.prompt("Private key file", System.getProperty("user.home") + File.separator + ".ssh"
-			+ File.separator + "id_dsa"));
+			+ File.separator + "id_rsa"));
 		FileInputStream in = new FileInputStream(pemFile);
 		try {
 			SshPrivateKeyFile pk = mgr.createPrivateKeyFromStream(in);

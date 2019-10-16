@@ -29,6 +29,7 @@ import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Abstract implementation of an {@link SshProvider}, providing some common
@@ -38,13 +39,29 @@ public abstract class AbstractProvider implements SshProvider {
 
 	private boolean supportsDefaultConfiguration = true;
 	private final String name;
+	private final String vendor;
 
 	protected AbstractProvider(String name) {
+		this(name, "Unknown");
+	}
+
+	protected AbstractProvider(String name, String vendor) {
 		this.name = name;
+		this.vendor = vendor;
 	}
 
 	protected void setSupportsDefaultConfiguration(boolean supportsDefaultConfiguration) {
 		this.supportsDefaultConfiguration = supportsDefaultConfiguration;
+	}
+
+	@Override
+	public String getVersion() {
+		return "Unknown";
+	}
+
+	@Override
+	public String getVendor() {
+		return vendor;
 	}
 
 	public String getName() {
@@ -137,6 +154,11 @@ public abstract class AbstractProvider implements SshProvider {
 		SshClient client = createClient(configuration);
 		client.connect(username, hostname, port, authenticators);
 		return client;
+	}
+
+	public SshClient open(SshConfiguration configuration, String spec,
+			SshAuthenticator... authenticators) throws SshException {
+		return open(configuration, Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
 	}
 
 	static boolean check(String name, List<String> list) {

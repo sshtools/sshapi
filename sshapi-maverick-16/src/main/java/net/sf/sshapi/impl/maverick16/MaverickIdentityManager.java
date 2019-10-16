@@ -84,7 +84,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 		try {
 			MaverickPrivateKeyFile pk = new MaverickPrivateKeyFile(SshPrivateKeyFileFactory.create(convertPair(pair),
-					passphrase == null ? null : new String(passphrase), comment, typeNo));
+					passphrase == null ? null : new String(passphrase), typeNo));
 			return pk;
 		} catch (IOException e) {
 			throw new SshException(e);
@@ -113,8 +113,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	private static String translateKeyType(String type) {
 		if (type.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
 			return SshKeyPairGenerator.SSH2_RSA;
-		} else if (type.equals(SshConfiguration.PUBLIC_KEY_SSHRSA1)) {
-			return SshKeyPairGenerator.SSH1_RSA;
 		} else {
 			return SshKeyPairGenerator.SSH2_DSA;
 		}
@@ -222,7 +220,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 			try {
 				pair = privateKeyFile.toKeyPair(new String(passphrase));
-				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null, "Create by SSHAPI Identity Management",
+				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null, 
 						convertType(privateKeyFile.getType()));
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);

@@ -73,8 +73,10 @@ public interface SshHostKeyManager {
 	 * 
 	 * @param host host to match
 	 * @param type type (one of {@link SshConfiguration#PUBLIC_KEY_SSHDSS} or
-	 *            {@link SshConfiguration#PUBLIC_KEY_SSHRSA}.
-	 * @return keys 
+	 *             {@link SshConfiguration#PUBLIC_KEY_SSHRSA},
+	 *             {@link SshConfiguration#PUBLIC_KEY_ECDSA},
+	 *             {@link SshConfiguration#PUBLIC_KEY_ED25519}.
+	 * @return keys
 	 */
 	SshHostKey[] getKeysForHost(String host, String type);
 }

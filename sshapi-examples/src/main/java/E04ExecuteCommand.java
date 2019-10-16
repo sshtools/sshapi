@@ -20,12 +20,8 @@ public class E04ExecuteCommand {
 	 */
 	public static void main(String[] arg) throws Exception {
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-
 		// Create the client using that configuration and connect
-		try (SshClient client = Ssh.open(ExampleUtilities.extractUsername(connectionSpec),
-				ExampleUtilities.extractHostname(connectionSpec), ExampleUtilities.extractPort(connectionSpec),
+		try (SshClient client = Ssh.open(Util.promptConnectionSpec(),
 				new ConsolePasswordAuthenticator())) {
 
 			// Execute the command and read back its output

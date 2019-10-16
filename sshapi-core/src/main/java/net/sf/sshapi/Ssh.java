@@ -60,13 +60,25 @@ public class Ssh {
 	 *            hostname
 	 * @param port
 	 *            port
-	 * @param authenticators
+	 * @param authenticators authenticators
 	 * @return connect client
 	 * @throws SshException
 	 */
 	public static SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators)
 			throws SshException {
-		SshConfiguration configuration = new SshConfiguration();
-		return configuration.open(username, hostname, port, authenticators);
+		return new SshConfiguration().open(username, hostname, port, authenticators);
+	}
+	
+	/**
+	 * Connect to an SSH server using a connection string in the format user[:password]@host[:port].
+	 * 
+	 * @param spec spec
+	 * @param authenticators authenticators
+	 * @return connect client
+	 * @throws SshException
+	 */
+	public static SshClient open(String spec, SshAuthenticator... authenticators)
+			throws SshException {
+		return new SshConfiguration().open(spec, authenticators);
 	}
 }

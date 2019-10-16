@@ -16,7 +16,9 @@ class SFTPGetTest extends AbstractConnectionTest {
 		super.doConnection(client);
 		File tempFile = File.createTempFile("sftp", "tst");
 		try (SftpClient sftp = client.sftp()) {
-			sftp.get("test-file", tempFile);
+			for (int i = 0; i < iterations; i++) {
+				sftp.get("test-file", tempFile);
+			}
 		} finally {
 			tempFile.delete();
 		}

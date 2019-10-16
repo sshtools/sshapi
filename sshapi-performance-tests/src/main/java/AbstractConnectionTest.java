@@ -3,6 +3,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ import net.sf.sshapi.util.SimplePasswordAuthenticator;
 
 abstract class AbstractConnectionTest {
 
-	final static org.slf4j.Logger log;
+	protected final static org.slf4j.Logger log;
 
 	protected static Properties PROPERTIES = new Properties();
 	static {
@@ -40,7 +41,7 @@ abstract class AbstractConnectionTest {
 			throw new RuntimeException(ioe);
 		}
 		BasicConfigurator.configure();
-		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.WARN);
+		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.INFO);
 		SshConfiguration.setLogger(new Logger() {
 			@Override
 			public void log(Level level, String message, Throwable exception) {
@@ -92,6 +93,8 @@ abstract class AbstractConnectionTest {
 	protected SshConfiguration configuration;
 	protected Map<String, List<Long>> times = new HashMap<>();
 	protected Map<String, Throwable> exceptions = new HashMap<>();
+	protected Map<SshProvider, Long> connectionTime = Collections.synchronizedMap(new HashMap<>());
+	protected int iterations;
 
 	public AbstractConnectionTest() throws IOException {
 		this("ConnectionTest");
@@ -100,11 +103,21 @@ abstract class AbstractConnectionTest {
 	public AbstractConnectionTest(String propertyPrefix) throws IOException {
 		configuration = new SshConfiguration();
 		configuration.setHostKeyValidator(new DumbHostKeyValidator());
-		configuration.setPreferredClientToServerCipher("aes128-ctr");
-		configuration.setPreferredServerToClientCipher("aes128-ctr");
-		configuration.setPreferredClientToServerCompression("none");
-		configuration.setPreferredServerToClientCompression("none");
-		configuration.setPreferredPublicKey(SshConfiguration.PUBLIC_KEY_SSHRSA);
+		iterations = Integer.parseInt(PROPERTIES.getProperty("iterations", "100"));
+		if(PROPERTIES.getProperty("fair", "true").equals("true")) {
+			configuration.setPreferredClientToServerCipher(PROPERTIES.getProperty("cipher.cs", "aes256-ctr"));
+			configuration.setPreferredServerToClientCipher(PROPERTIES.getProperty("cipher.sc", "aes256-ctr"));
+			configuration.setPreferredClientToServerMAC(PROPERTIES.getProperty("mac", "hmac-sha1"));
+			configuration.setPreferredServerToClientMAC(PROPERTIES.getProperty("mac", "hmac-sha1"));
+			configuration.setPreferredClientToServerCompression(PROPERTIES.getProperty("compress", "none"));
+			configuration.setPreferredServerToClientCompression(PROPERTIES.getProperty("compress", "none"));
+			configuration.setPreferredKeyExchange(PROPERTIES.getProperty("kex", "diffie-hellman-group14-sha1"));
+			configuration.setPreferredPublicKey(PROPERTIES.getProperty("pubkey", SshConfiguration.PUBLIC_KEY_SSHRSA));
+			configuration.setSftpPacketSize(Long.parseLong(PROPERTIES.getProperty("sftppacketsize", "16384")));
+			configuration.setSftpWindowSize(Long.parseLong(PROPERTIES.getProperty("sftpwindowsize", "1048576")));
+			configuration.setSftpWindowSizeMax(Long.parseLong(PROPERTIES.getProperty("sftpmaxwindowsize", "1048576")));
+		}
+		
 	}
 
 	public SshProvider[] getAllConfiguredProviders() {
@@ -147,6 +160,13 @@ abstract class AbstractConnectionTest {
 			singleRun();
 		}
 		SshProvider[] providers = getAllConfiguredProviders();
+		System.out.println();
+		System.out.println("Test Properties :-");
+		Properties p =new Properties(PROPERTIES);
+		p.remove("password");
+		p.list(System.out);
+		System.out.println();
+		System.out.println("Test Results:-");
 		for (int i = 0; i < providers.length; i++) {
 			SshProvider provider = providers[i];
 			List<Long> providerTimes = times.get(provider.getName());
@@ -161,8 +181,16 @@ abstract class AbstractConnectionTest {
 					for (Long t : providerTimes)
 						total += t;
 					long avg = total / providerTimes.size();
-					formatter.format("%20s Total: %6d  Avg per run: %6d",
-							new Object[] { provider.getName(), new Long(total), new Long(avg) });
+					long contime = connectionTime.get(provider);
+					formatter.format("%20s Total: %6d  Avg per run: %6d    Data Only: %6d  Data Only Avg per run: %6d    Connection time: %6d   Connection Avg: %6d",
+							new Object[] { 
+									provider.getName(), 
+									new Long(total), 
+									new Long(avg),
+									new Long(total - contime), 
+									new Long(total - contime) / providerTimes.size(),
+									contime, 
+									contime / repeats });
 				}
 			}
 			System.out.println(sb);
@@ -191,6 +219,7 @@ abstract class AbstractConnectionTest {
 	}
 
 	void resetStats() {
+		connectionTime.clear();
 		times.clear();
 	}
 
@@ -215,16 +244,22 @@ abstract class AbstractConnectionTest {
 	}
 
 	protected void doProvider(SshProvider provider) throws Exception {
+		long started = System.currentTimeMillis();
 		try (SshClient client = connect(provider)) {
 			time(provider, new Runnable() {
 				public void run() {
 					try {
+						long connectionTook = System.currentTimeMillis() - started;
+						synchronized(connectionTime) {
+							connectionTime.put(provider, connectionTime.getOrDefault(provider, 0l) + connectionTook);
+						}
 						doConnection(client);
 					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
 			});
+			log.info(String.format("Provider %s finished.", provider.getName()));
 		}
 	}
 

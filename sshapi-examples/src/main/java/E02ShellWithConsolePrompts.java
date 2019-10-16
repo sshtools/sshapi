@@ -18,51 +18,42 @@ import net.sf.sshapi.util.Util;
  * 
  */
 public class E02ShellWithConsolePrompts {
-
 	static int dataTransferredIn = 0;
 	static int dataTransferredOut = 0;
 
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg
-	 *            command line arguments
+	 * @param arg command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-
-		// Also display banner messages
-		config.setBannerHandler(new ConsoleBannerHandler());
-
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
+		
 		// Create the client using that configuration
-		try (SshClient client = config.open(ExampleUtilities.extractUsername(connectionSpec),
-				ExampleUtilities.extractHostname(connectionSpec), ExampleUtilities.extractPort(connectionSpec),
-				new ConsolePasswordAuthenticator())) {
-
+		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
+			
 			// We are now connected and authenticated
 			ExampleUtilities.dumpClientInfo(client);
 			System.out.println("Remote identification: " + client.getRemoteIdentification());
-
 			try {
+				
 				// Create the simple shell
 				SshShell shell = client.createShell("dumb", 80, 24, 0, 0, null);
-				// SshShell shell = client.createShell(null, 80, 24, 0, 0, null);
-
+				
 				// Listen for channel events
-				shell.addDataListener((SshShell channel, int direction, byte[] buf, int off, int len) -> {
-					if (direction == SshDataListener.RECEIVED) {
-						dataTransferredIn += len;
-					} else {
-						dataTransferredOut += len;
-					}
-				});
+				if (client.getProvider().getCapabilities().contains(Capability.CHANNEL_DATA_EVENTS)) {
+					shell.addDataListener((channel, direction, buf, off, len) -> {
+						if (direction == SshDataListener.RECEIVED) {
+							dataTransferredIn += len;
+						} else {
+							dataTransferredOut += len;
+						}
+					});
+				}
 				shell.addListener(new SshChannelListener<SshShell>() {
-
 					public void opened(SshShell channel) {
 						System.out.println("Shell channel opened!");
 					}
@@ -75,7 +66,7 @@ public class E02ShellWithConsolePrompts {
 						System.out.println("Shell channel closed!");
 					}
 				});
-
+				
 				try {
 					shell.open();
 					ExampleUtilities.joinShellToConsole(shell);
@@ -83,10 +74,11 @@ public class E02ShellWithConsolePrompts {
 					shell.close();
 				}
 			} finally {
-				// If the provider supports events, we will have some simple stats
+				// If the provider supports events, we will have some simple
+				// stats
 				if (client.getProvider().getCapabilities().contains(Capability.CHANNEL_DATA_EVENTS)) {
-					System.out.println("Session over. Received " + dataTransferredIn + " bytes, sent "
-							+ dataTransferredOut + " bytes over the shell channel");
+					System.out.println("Session over. Received " + dataTransferredIn + " bytes, sent " + dataTransferredOut
+							+ " bytes over the shell channel");
 				}
 			}
 		}

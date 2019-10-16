@@ -66,6 +66,8 @@ public class E99ProviderFeatureMatrix {
 			}
 		}
 		sep.append("*");
+		
+		System.out.println("Capabilities\n");
 		System.out.println(sep);
 		print(true, titles, width, sep.toString());
 
@@ -83,11 +85,11 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("Capabilities\n");
-		System.out.println(sep);
-		print(true, titles, width, sep.toString());
 
 		// Ciphers
+		System.out.println("\nCiphers\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
 		for (int i = 0; i < strArrs[0].length; i++) {
 			List<String> l = new ArrayList<>();
 			l.add(strArrs[0][i]);
@@ -107,11 +109,11 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("Ciphers\n");
-		System.out.println(sep);
-		print(true, titles, width, sep.toString());
 
 		// KEX
+		System.out.println("\nKEX\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
 		for (int i = 0; i < strArrs[1].length; i++) {
 			List<String> l = new ArrayList<>();
 			l.add(strArrs[1][i]);
@@ -130,11 +132,11 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("Key Exchange\n");
-		System.out.println(sep);
-		print(true, titles, width, sep.toString());
 
 		// MAC
+		System.out.println("\nMAC\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
 		for (int i = 0; i < strArrs[2].length; i++) {
 			List<String> l = new ArrayList<>();
 			l.add(strArrs[2][i]);
@@ -152,11 +154,11 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("MAC\n");
-		System.out.println(sep);
-		print(true, titles, width, sep.toString());
 
 		// Compression
+		System.out.println("\nCompression\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
 		for (int i = 0; i < strArrs[3].length; i++) {
 			List<String> l = new ArrayList<>();
 			l.add(strArrs[3][i]);
@@ -175,11 +177,11 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("Compression\n");
-		System.out.println(sep);
-		print(true, titles, width, sep.toString());
 
 		// Publick Key
+		System.out.println("\nPublic Key\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
 		for (int i = 0; i < strArrs[4].length; i++) {
 			List<String> l = new ArrayList<>();
 			l.add(strArrs[4][i]);
@@ -198,21 +200,20 @@ public class E99ProviderFeatureMatrix {
 			print(false, (String[]) l.toArray(new String[0]), width,
 					sep.toString());
 		}
-		System.out.println("Public Key\n");
 	}
 
 	static void print(boolean header, String[] args, int width, String sep) {
 		StringBuffer buf = new StringBuffer();
 		buf.append("|");
-		if (header) {
-			buf.append("|");
-		}
+//		if (header) {
+//			buf.append("|");
+//		}
 		for (int i = 0; i < args.length; i++) {
 			if (i > 0) {
 				buf.append("|");
-				if (header) {
-					buf.append("|");
-				}
+//				if (header) {
+//					buf.append("|");
+//				}
 			}
 			int before = (width - args[i].length()) / 2;
 			int after = width - before - args[i].length();

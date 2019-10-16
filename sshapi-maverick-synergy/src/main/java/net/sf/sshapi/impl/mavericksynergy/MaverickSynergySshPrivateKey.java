@@ -1,4 +1,4 @@
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -6,10 +6,10 @@ import java.security.PrivateKey;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
 
-public class MaverickNGSshPrivateKey implements com.sshtools.common.ssh.components.SshPrivateKey {
+public class MaverickSynergySshPrivateKey implements com.sshtools.common.ssh.components.SshPrivateKey {
 	private final SshPrivateKey key;
 
-	public MaverickNGSshPrivateKey(SshPrivateKey key) {
+	public MaverickSynergySshPrivateKey(SshPrivateKey key) {
 		this.key = key;
 	}
 

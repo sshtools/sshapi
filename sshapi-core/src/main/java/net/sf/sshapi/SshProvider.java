@@ -45,6 +45,20 @@ public interface SshProvider {
 	String getName();
 
 	/**
+	 * Get the version of the library that is used for this provider.
+	 * 
+	 * @return provider version
+	 */
+	String getVersion();
+
+	/**
+	 * Get the vendor of the library that is used for this provider.
+	 * 
+	 * @return provider vendor
+	 */
+	String getVendor();
+
+	/**
 	 * Create a {@link SshHostKeyManager} that may be used to list, add and remove
 	 * valid host keys. An implementation is not required to provide this
 	 * functionality, but vendors do, so this interface provides a common way to
@@ -193,6 +207,28 @@ public interface SshProvider {
 	 *             if the provider configuration is not valid
 	 */
 	SshClient open(SshConfiguration configuration, String username, String hostname, int port,
+			SshAuthenticator... authenticators) throws SshException;
+
+	/**
+	 * Create a new client instance with the specified configuration and connect and
+	 * authenticate it.
+	 * <p>
+	 * IMPLEMENTATION NOTE: The provider implementation is expected to invoke
+	 * {@link SshClient#init(SshProvider)} after construction.
+	 * 
+	 * @param configuration
+	 *            configuration
+	 * @param spec
+	 *            connection spec in the format username[:password]@host[:port]
+	 * @param authenticators
+	 *            authenticators
+	 * @return client
+	 * @throws SshException
+	 *             on error
+	 * @throws UnsupportedOperationException
+	 *             if the provider configuration is not valid
+	 */
+	SshClient open(SshConfiguration configuration, String spec,
 			SshAuthenticator... authenticators) throws SshException;
 
 	/**

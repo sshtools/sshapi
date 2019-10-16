@@ -22,21 +22,13 @@ public class E06bLocalForwardingAndShell {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
-		config.addRequiredCapability(Capability.PORT_FORWARD_EVENTS);
-
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
-		// Connect, authenticate, and start the simple shell
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
+//		config.addRequiredCapability(Capability.PORT_FORWARD_EVENTS);
 
 		// Create the client using that configuration.
-		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 			ExampleUtilities.dumpClientInfo(client);
 
 			// If our provider supports it, adds listen for the events as tunneled
@@ -55,7 +47,7 @@ public class E06bLocalForwardingAndShell {
 				});
 			}
 
-			try (SshPortForward local = client.localForward(null, 8443, "sshtools.com", 443)) {
+			try (SshPortForward local = client.localForward(null, 8443, "www.jadaptive.com", 443)) {
 
 				System.out.println("Point your browser to https://localhost:8443/en/");
 				

@@ -96,7 +96,7 @@ public class TrileadSshProvider extends AbstractProvider {
 	}
 
 	public List<String> getSupportedCompression() {
-		return Collections.emptyList();
+		return Arrays.asList("none");
 	}
 
 	public List<String> getSupportedMAC() {

@@ -21,7 +21,7 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,8 +46,8 @@ import net.sf.sshapi.identity.SshPublicKeyFile;
  * Maverick implementation of an {@link SshIdentityManager}, used for managing
  * private keys used for authentication.
  */
-public class MaverickNGIdentityManager implements SshIdentityManager {
-
+public class MaverickSynergyIdentityManager implements SshIdentityManager {
+ 
 	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in) throws SshException {
 		try {
 			return new MaverickPrivateKeyFile(SshPrivateKeyFileFactory.parse(in));
@@ -70,24 +70,25 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 			throw new SshException(SshException.UNSUPPORTED_FEATURE,
 					"Private key file format " + format + " not supported.");
 		try {
-			return new MaverickPrivateKeyFile(SshPrivateKeyFileFactory.create(convertPair(pair),
-					passphrase == null ? null : new String(passphrase), comment));
+			com.sshtools.common.publickey.SshPrivateKeyFile pk = SshPrivateKeyFileFactory.create(convertPair(pair),
+					passphrase == null ? null : new String(passphrase));
+			return new MaverickPrivateKeyFile(pk);
 		} catch (IOException e) {
 			throw new SshException(e);
 		}
 	}
 
 	private SshKeyPair convertPair(net.sf.sshapi.identity.SshKeyPair pair) {
-		final MaverickNGPublicKey publicKey = (MaverickNGPublicKey) pair.getPublicKey();
-		final MaverickNGPrivateKey privateKey = (MaverickNGPrivateKey) pair.getPrivateKey();
+		final MaverickSynergyPublicKey publicKey = (MaverickSynergyPublicKey) pair.getPublicKey();
+		final MaverickSynergyPrivateKey privateKey = (MaverickSynergyPrivateKey) pair.getPrivateKey();
 		return SshKeyPair.getKeyPair(privateKey.privateKey, publicKey.getPublicKey());
 	}
 
 	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
 		try {
 			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(translateKeyType(keyType), keyBits);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickNGPublicKey(pair.getPublicKey()),
-					new MaverickNGPrivateKey(pair.getPrivateKey()));
+			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pair.getPublicKey()),
+					new MaverickSynergyPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		} catch (com.sshtools.common.ssh.SshException e) {
@@ -98,7 +99,11 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 	private static String translateKeyType(String type) {
 		if (type.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
 			return SshKeyPairGenerator.SSH2_RSA;
-		} else {
+		} else if (type.equals(SshConfiguration.PUBLIC_KEY_ECDSA)) {
+			return SshKeyPairGenerator.ECDSA;
+		} if (type.equals(SshConfiguration.PUBLIC_KEY_ED25519)) {
+			return SshKeyPairGenerator.ED25519;
+		}  else {
 			return SshKeyPairGenerator.SSH2_DSA;
 		}
 	}
@@ -121,7 +126,7 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 	}
 
 	public SshPublicKeyFile create(SshPublicKey key, String options, String comment, int format) throws SshException {
-		MaverickNGPublicKey pk = (MaverickNGPublicKey) key;
+		MaverickSynergyPublicKey pk = (MaverickSynergyPublicKey) key;
 		int type;
 		switch (format) {
 		case SshPublicKeyFile.OPENSSH_FORMAT:
@@ -192,7 +197,7 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 			}
 			try {
 				pair = privateKeyFile.toKeyPair(new String(passphrase));
-				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null, "Create by SSHAPI Identity Management");
+				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null);
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			} catch (InvalidPassphraseException e) {
@@ -231,8 +236,8 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 						"Key is encrypted, you must decrypt it before extracing the keys.");
 			}
 			try {
-				return new net.sf.sshapi.identity.SshKeyPair(new MaverickNGPublicKey(pair.getPublicKey()),
-						new MaverickNGPrivateKey(pair.getPrivateKey()));
+				return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pair.getPublicKey()),
+						new MaverickSynergyPrivateKey(pair.getPrivateKey()));
 			} catch (com.sshtools.common.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
@@ -244,7 +249,7 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 		private byte[] formattedKey;
 		private String options;
 		private String comment;
-		private MaverickNGPublicKey publicKey;
+		private MaverickSynergyPublicKey publicKey;
 		private final int format;
 
 		public MaverickPublicKeyFile(com.sshtools.common.publickey.SshPublicKeyFile keyFile) throws SshException {
@@ -252,7 +257,7 @@ public class MaverickNGIdentityManager implements SshIdentityManager {
 			options = keyFile.getOptions();
 			try {
 				formattedKey = keyFile.getFormattedKey();
-				publicKey = new MaverickNGPublicKey(keyFile.toPublicKey());
+				publicKey = new MaverickSynergyPublicKey(keyFile.toPublicKey());
 			} catch (Exception e) {
 				throw new SshException(SshException.GENERAL, e);
 			}

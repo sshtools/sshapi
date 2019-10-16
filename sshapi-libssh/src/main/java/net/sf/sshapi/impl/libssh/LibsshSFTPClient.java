@@ -188,7 +188,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 		synchronized (sftp) {
 			sftp_file_struct file = library.sftp_open(sftp, path, LibsshClient.O_WRONLY | LibsshClient.O_CREAT | LibsshClient.O_TRUNC, permissions);
 			if (file == null)
-				throw new LibsshSFTPException(String.format("Could not open file for writing. %s", path));
+				throw new LibsshSFTPException(String.format("Could not open file for writing. %s. ", path));
 			try {
 				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE * 4);
 				byte[] nb = new byte[64];

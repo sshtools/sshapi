@@ -27,27 +27,32 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
-
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.sftp.AbstractSftpClient;
-import net.sf.sshapi.sftp.SftpFile;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.sftp.AbstractSftpClient;
+import net.sf.sshapi.sftp.SftpFile;
+
 class JschSftpClient extends AbstractSftpClient {
 
 	private final ChannelSftp channel;
 	private String home;
+	private SshConfiguration configuration;
 
-	public JschSftpClient(ChannelSftp channel) {
+	public JschSftpClient(ChannelSftp channel, SshConfiguration configuration) {
 		this.channel = channel;
+		this.configuration = configuration;
 	}
 
 	@Override
@@ -81,6 +86,26 @@ class JschSftpClient extends AbstractSftpClient {
 	@Override
 	public void onOpen() throws SshException {
 		try {
+			try {
+				if(configuration.getSftpPacketSize() > 0) {
+					Method m = ChannelSftp.class.getMethod("setLocalPacketSize", int.class);
+					m.setAccessible(true);
+					m.invoke(channel, configuration.getSftpPacketSize());
+				}
+				if(configuration.getSftpWindowSize() > 0) {
+					Method m = ChannelSftp.class.getMethod("setLocalWindowSize", int.class);
+					m.setAccessible(true);
+					m.invoke(channel, configuration.getSftpWindowSize());
+				}
+				if(configuration.getSftpWindowSizeMax() > 0) {
+					Method m = ChannelSftp.class.getMethod("setLocalWindowSize", int.class);
+					m.setAccessible(true);
+					m.invoke(channel, configuration.getSftpWindowSizeMax());
+				}
+			}
+			catch(Exception e) {
+				SshConfiguration.getLogger().log(Level.DEBUG, "Failed to set SFTP channel configuration via reflection.", e);
+			}
 			channel.connect();
 			home = channel.pwd();
 		} catch (JSchException e) {

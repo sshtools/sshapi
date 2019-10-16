@@ -8,6 +8,7 @@ import net.sf.sshapi.sftp.SftpClient;
 class SFTPPutTest extends AbstractConnectionTest {
 
 	static {
+		net.sf.sshapi.util.Util.prompt("Press RETURN to start test");
 		try {
 			Util.createTempFile();
 		} catch (IOException ioe) {
@@ -24,8 +25,7 @@ class SFTPPutTest extends AbstractConnectionTest {
 	protected void doConnection(SshClient client) throws Exception {
 		super.doConnection(client);
 		try (SftpClient sftp = client.sftp()) {
-			for (int i = 0; i < 1500; i++) {
-				System.out.println(i);
+			for (int i = 0; i < iterations; i++) {
 				try (FileInputStream fin = new FileInputStream(Util.TEST_FILE)) {
 					sftp.put(Util.TEST_FILE.getName(), fin, 0644);
 				}

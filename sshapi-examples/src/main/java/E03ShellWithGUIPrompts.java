@@ -15,7 +15,7 @@ import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 /**
  * This examples extends the {@link E01Shell} example, except host user name and
  * password are all prompted for using Swing components. This demonstrates the
- * user of a custom {@link SshAuthenticator} as well as a custom
+ * use of a custom {@link SshAuthenticator} as well as a custom
  * {@link HostKeyValidator} and {@link SshBannerHandler}
  */
 public class E03ShellWithGUIPrompts {
@@ -38,12 +38,9 @@ public class E03ShellWithGUIPrompts {
 		if (connectionSpec == null) {
 			return;
 		}
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
 
 		// Connect, authenticate
-		try (SshClient client = config.open(user, host, port, new ShellAuthenticator())) {
+		try (SshClient client = config.open(connectionSpec, new ShellAuthenticator())) {
 			ExampleUtilities.dumpClientInfo(client);
 
 			// Start the shell

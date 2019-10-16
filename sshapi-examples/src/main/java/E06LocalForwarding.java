@@ -21,18 +21,12 @@ public class E06LocalForwarding {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
-
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
 
 		// Create the client using that configuration, then connect and authenticate
-		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
 			// If our provider supports it, adds listen for the events as tunneled
 			// connections become active

@@ -42,13 +42,22 @@ public class LibsshSshProvider extends AbstractProvider {
 	}
 
 	public LibsshSshProvider() {
-		super("libssh");
+		super("libssh", "https://www.libssh.org");
 		String ver = SshLibrary.INSTANCE.ssh_version(0);
 		SshConfiguration.getLogger().log(Level.INFO, String.format("libssh version %s", ver));
 	}
-
-	long getVersion() {
+	
+	@Override
+	public String getVersion() {
+		return getVersion(getNumericVersion());
+	}
+	
+	long getNumericVersion() {
 		return getVersion(SshLibrary.INSTANCE.ssh_version(0));
+	}
+	
+	String getVersion(long number) {
+		return String.format("%d.%d.%d", number % 10000, ( number - ( number % 10000 ) ) % 100, number - (( number - ( number % 10000 ) ) % 100));
 	}
 
 	long getVersion(String version) {
@@ -93,7 +102,7 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	@Override
 	public List<String> getSupportedCompression() {
-		if (getVersion() >= getVersion("0.8.0"))
+		if (getNumericVersion() >= getVersion("0.8.0"))
 			return Arrays.asList(new String[] { "zlib@openssh.com", "none" });
 		else
 			return Arrays.asList(new String[] { "zlib@openssh.com", "zlib", "none" });
@@ -101,7 +110,7 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	@Override
 	public List<String> getSupportedMAC() {
-		if (getVersion() >= getVersion("0.8.0"))
+		if (getNumericVersion() >= getVersion("0.8.0"))
 			return Arrays.asList(new String[] { "hmac-sha2-512", "hmac-sha2-256", "hmac-sha1", "none" });
 		else
 			return Arrays.asList(new String[] { "hmac-sha1", "none" });

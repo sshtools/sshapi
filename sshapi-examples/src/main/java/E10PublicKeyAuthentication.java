@@ -24,22 +24,23 @@ public class E10PublicKeyAuthentication {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
+		
 		// Create the client using that configuration
 		SshClient client = config.createClient();
 		ExampleUtilities.dumpClientInfo(client);
+		
 		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		String connectionSpec = Util.promptConnectionSpec();
+		
 		// Prompt for location of private key
 		File pemFile = new File(Util.prompt("Private key file",
 				System.getProperty("user.home") + File.separator + ".ssh" + File.separator + "id_rsa"));
+		
 		// Connect, authenticate
-		client.connect(user, host, port);
+		client.connect(connectionSpec);
 		try {
 			SshAuthenticator[] authenticators = new SshAuthenticator[] {
 					new DefaultPublicKeyAuthenticator(new ConsolePasswordAuthenticator(), pemFile), };

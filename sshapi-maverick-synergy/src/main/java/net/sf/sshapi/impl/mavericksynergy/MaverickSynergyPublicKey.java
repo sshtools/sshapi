@@ -1,4 +1,4 @@
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import com.sshtools.common.publickey.SshPublicKeyFile;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
 
-public class MaverickNGPublicKey implements SshPublicKey {
+public class MaverickSynergyPublicKey implements SshPublicKey {
 
 	private byte[] key;
 	private String fingerPrint;
@@ -15,7 +15,7 @@ public class MaverickNGPublicKey implements SshPublicKey {
 	private int bitLength;
 	private com.sshtools.common.ssh.components.SshPublicKey publicKey;
 
-	public MaverickNGPublicKey(SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException, IOException {
+	public MaverickSynergyPublicKey(SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException, IOException {
 		init(publicKeyFile.toPublicKey());
 	}
 
@@ -28,12 +28,12 @@ public class MaverickNGPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
-	public MaverickNGPublicKey(com.sshtools.common.ssh.components.SshPublicKey publicKey)
+	public MaverickSynergyPublicKey(com.sshtools.common.ssh.components.SshPublicKey publicKey)
 			throws com.sshtools.common.ssh.SshException {
 		init(publicKey);
 	}
 
-	public MaverickNGPublicKey(SshPublicKey publicKey) throws SshException {
+	public MaverickSynergyPublicKey(SshPublicKey publicKey) throws SshException {
 		key = publicKey.getEncodedKey();
 		fingerPrint = publicKey.getFingerprint();
 		algorithm = publicKey.getAlgorithm();

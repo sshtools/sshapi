@@ -25,13 +25,17 @@ package net.sf.sshapi.impl.jsch;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
 
 abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener<SshShell>, SshShell>
@@ -46,7 +50,26 @@ abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener
 	@Override
 	protected final void onChannelOpen() throws SshException {
 		try {
-
+			try {
+				if(getConfiguration().getSftpPacketSize() > 0) {
+					Method m = Channel.class.getMethod("setLocalPacketSize", int.class);
+					m.setAccessible(true);
+					m.invoke(getChannel(), getConfiguration().getSftpPacketSize());
+				}
+				if(getConfiguration().getSftpWindowSize() > 0) {
+					Method m = Channel.class.getMethod("setLocalWindowSize", int.class);
+					m.setAccessible(true);
+					m.invoke(getChannel(), getConfiguration().getSftpWindowSize());
+				}
+				if(getConfiguration().getSftpWindowSizeMax() > 0) {
+					Method m = ChannelSftp.class.getMethod("setLocalWindowSize", int.class);
+					m.setAccessible(true);
+					m.invoke(getChannel(), getConfiguration().getSftpWindowSizeMax());
+				}
+			}
+			catch(Exception e) {
+				SshConfiguration.getLogger().log(Level.DEBUG, "Failed to set SFTP channel configuration via reflection.", e);
+			}
 			if (!Util.nullOrTrimmedBlank(getConfiguration().getX11Host())) {
 				((ChannelShell) getChannel()).setXForwarding(true);
 			}

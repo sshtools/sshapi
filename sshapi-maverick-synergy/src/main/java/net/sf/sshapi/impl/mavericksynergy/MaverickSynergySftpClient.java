@@ -21,24 +21,18 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.util.Date;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
-import com.sshtools.client.SessionChannel;
-import com.sshtools.client.SshClientContext;
-import com.sshtools.client.sftp.AbstractSftpTask;
-import com.sshtools.client.sftp.SftpClientTask;
-import com.sshtools.client.sftp.SftpFileAttributes;
-import com.sshtools.client.sftp.SftpStatusException;
-import com.sshtools.common.ssh.Connection;
+import com.sshtools.client.SshClient;
+import com.sshtools.client.sftp.SftpClient;
+import com.sshtools.common.sftp.SftpFileAttributes;
+import com.sshtools.common.sftp.SftpStatusException;
 import com.sshtools.common.util.UnsignedInteger64;
 
 import net.sf.sshapi.SshException;
@@ -47,14 +41,14 @@ import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
 
-class MaverickNGSftpClient extends AbstractSftpClient {
+class MaverickSynergySftpClient extends AbstractSftpClient {
 
-	private final Connection<SshClientContext> con;
-	private SftpClientTask sftpClient;
+	private final SshClient client;
+	private SftpClient sftpClient;
 	private String home;
 
-	MaverickNGSftpClient(Connection<SshClientContext> con) {
-		this.con = con;
+	MaverickSynergySftpClient(SshClient client) { 
+		this.client = client;
 	}
 
 	public void onClose() throws SshException {
@@ -103,56 +97,14 @@ class MaverickNGSftpClient extends AbstractSftpClient {
 	}
 
 	public void onOpen() throws SshException {
-		Semaphore sem = new Semaphore(1);
 		try {
-			sem.acquire();
-			new AbstractSftpTask(con) {
-				@Override
-				protected void doTask(SessionChannel channel) {
-					sftpClient = new SftpClientTask(con) {
-						{
-						}
-
-						@Override
-						protected void doTask() {
-						}
-					};
-					try {
-						// SftpClientTask.sftp = this;
-						Field f = SftpClientTask.class.getDeclaredField("sftp");
-						f.setAccessible(true);
-						f.set(sftpClient, this);
-
-						// SftpClientTask.cwd = sftp.getDefaultDirectory();
-						f = SftpClientTask.class.getDeclaredField("cwd");
-						f.setAccessible(true);
-						f.set(sftpClient, getDefaultDirectory());
-						
-						String homeDir = "";
-						try {
-							homeDir = System.getProperty("user.home");
-						} catch (SecurityException e) {
-							// ignore
-						}
-
-						// SftpClientTask.lcwd = homeDir;
-						f = SftpClientTask.class.getDeclaredField("cwd");
-						f.setAccessible(true);
-						f.set(sftpClient, homeDir);
-						
-						
-					} catch (Exception e) {
-						throw new IllegalStateException("Failed to hack at SFTP client.", e);
-					} finally {
-						sem.release();
-					}
-				}
-			}.run();
-			sem.tryAcquire(1, TimeUnit.MINUTES);
-		} catch (InterruptedException ie) {
-			throw new SshException(SshException.GENERAL, ie);
-		}
-		sem.release();
+			sftpClient = new SftpClient(client);
+			sftpClient.cd(getDefaultPath());
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(SshException.GENERAL, "Failed to start SFTP.", e);
+		}  catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} 
 		home = sftpClient.pwd();
 	}
 

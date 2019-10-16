@@ -59,11 +59,11 @@ public class LibsshInputStream extends InputStream {
 		if (closed) {
 			throw new IOException("Stream is closed.");
 		}
-		if (library.ssh_channel_is_closed(channel) == 1) {
-			throw new IOException("Channel is closed.");
-		}
 		if (library.ssh_channel_is_eof(channel) == 1) {
 			return -1;
+		}
+		if (library.ssh_channel_is_closed(channel) == 1) {
+			throw new IOException("Channel is closed.");
 		}
 		return 0;
 	}

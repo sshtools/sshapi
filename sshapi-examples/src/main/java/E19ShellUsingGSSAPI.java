@@ -33,10 +33,10 @@ public final class E19ShellUsingGSSAPI {
 		System.out.println("3. If you are using MIT Kerberos, your cache type must be '3'.");
 		System.out.println("4. Use FULLY QUALIFIED host names, e.h myserver.mydomain.com.\n");
 
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		String connectionSpec = Util.promptConnectionSpec();
+		String host = Util.extractHostname(connectionSpec);
+		String user = Util.extractUsername(connectionSpec);
+		int port = Util.extractPort(connectionSpec);
 
 		// Check the provider can do GSSAPI and create a create
 		SshConfiguration configuration = new SshConfiguration();

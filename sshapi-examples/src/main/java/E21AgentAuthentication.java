@@ -23,10 +23,10 @@ public class E21AgentAuthentication {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
 		config.addRequiredCapability(Capability.AGENT);
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
 
 		// Locate and connect to agent
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
@@ -39,14 +39,8 @@ public class E21AgentAuthentication {
 
 		ExampleUtilities.dumpClientInfo(client);
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
 		// Connect
-		client.connect(user, host, port);
+		client.connect(Util.promptConnectionSpec());
 
 		// Connect the client to the agent
 		client.addChannelHandler(agent);

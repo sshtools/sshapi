@@ -36,7 +36,7 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
-import com.maverick.agent.client.Ssh2AgentAuthentication;
+import com.maverick.agent.Ssh2AgentAuthentication;
 import com.maverick.ssh.ChannelEventListener;
 import com.maverick.ssh.PasswordAuthentication;
 import com.maverick.ssh.PseudoTerminalModes;
@@ -395,7 +395,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			}
 			connectingTransport = transport;
 			try {
-				client = con.connect(transport, username, true, null);
+				client = con.connect(transport, username, true, con.getContext());
 			} finally {
 				connectingTransport = null;
 			}

@@ -80,8 +80,7 @@ public class GanymedSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
-				Capability.SHELL });
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {
@@ -96,7 +95,7 @@ public class GanymedSshProvider extends AbstractProvider {
 	}
 
 	public List<String> getSupportedCompression() {
-		return Collections.emptyList();
+		return Arrays.asList("none");
 	}
 
 	public List<String> getSupportedMAC() {

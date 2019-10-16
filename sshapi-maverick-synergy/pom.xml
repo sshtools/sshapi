@@ -5,11 +5,11 @@
 		<maverickHome>${user.home}/maverick</maverickHome>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>sshapi-maverick-ng</artifactId>
+	<artifactId>sshapi-maverick-synergy</artifactId>
 	<name>SSHAPI Maverick NG</name>
-	<description>This version uses the Maverick NG (2.x) branch of Maverick.
+	<description>This version uses the Maverick Synergy (3.x) branch of Maverick.
 
-Downloads and more information about Maverick may be found at http://sshtools.com
+Downloads and more information about Maverick may be found at https://www.jadaptive.com
 
 This library is the provider bridge for SSHAPI.</description>
 	<parent>
@@ -50,7 +50,7 @@ This library is the provider bridge for SSHAPI.</description>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -68,27 +68,30 @@ This library is the provider bridge for SSHAPI.</description>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-ng-client</artifactId>
-			<version>${maverickNGVersion}</version>
+			<artifactId>maverick-synergy-client</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		
+		<!-- Optional -->
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-zip</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+	      <groupId>com.sshtools</groupId>
+	       <artifactId>maverick-ed25519</artifactId>
+	       <version>3.0.0-SNAPSHOT</version>
+	   </dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-bc</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-sshagent</artifactId>
+			<version>${maverickSynergyVersion}</version>
 		</dependency>
 	</dependencies>
-	<repositories>
-
-		<repository>
-			<id>public-releases</id>
-			<url>http://artifactory.javassh.com/public-releases</url>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>public-snapshots</id>
-			<url>http://artifactory.javassh.com/public-snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots />
-		</repository>
-	</repositories>
 </project>

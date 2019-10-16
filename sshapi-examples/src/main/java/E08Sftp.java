@@ -35,14 +35,8 @@ public class E08Sftp {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
 		// Create the client using that configuration and connect and authenticate
-		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator(),
+		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator(),
 				new ConsoleKeyboardInteractiveAuthenticator())) {
 			// Create and open the sftp client
 			try (SftpClient sftp = client.sftp()) {

@@ -15,12 +15,14 @@
 		<assemblyDeploymentLocation>scp://localhost/var/www/maven-assembly/sshapi</assemblyDeploymentLocation>
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- To compile Maverick bridge (New public 1.6) -->
-		<maverickVersion>1.8.2</maverickVersion>
-		<!-- To compile Maverick bridge (stable 1.5.19 version) -->
+		<!-- To compile Maverick Legacy bridge (New public 1.6+) -->
+		<maverickVersion>1.9.0-SNAPSHOT</maverickVersion>
+		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
+		<maverickSynergyVersion>3.0.0-SNAPSHOT</maverickSynergyVersion>
+		<common.version>2.0.4</common.version>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
@@ -80,7 +82,7 @@
 			<plugins>
 				<plugin>
 					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.0.1</version>
+					<version>3.1.1</version>
 					<executions>
 						<execution>
 							<id>javadoc-jar</id>
@@ -103,7 +105,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-gpg-plugin</artifactId>
-					<version>1.5</version>
+					<version>1.6</version>
 					<executions>
 						<execution>
 							<id>sign-artifacts</id>
@@ -143,7 +145,7 @@
 				<plugin>
 					<groupId>org.sonatype.plugins</groupId>
 					<artifactId>nexus-staging-maven-plugin</artifactId>
-					<version>1.6.3</version>
+					<version>1.6.8</version>
 					<extensions>true</extensions>
 					<configuration>
 						<serverId>ossrh-sshtools</serverId>
@@ -157,16 +159,18 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.7.1</version>
+				<version>3.8.2</version>
 				<dependencies>
 					<dependency>
 						<groupId>com.sshtools</groupId>
 						<artifactId>wagon-sshapi</artifactId>
+						<!-- One version behind -->
 						<version>1.1.0</version>
 					</dependency>
 					<dependency>
 						<groupId>com.sshtools</groupId>
 						<artifactId>sshapi-maverick</artifactId>
+						<!-- One version behind -->
 						<version>1.1.0</version>
 					</dependency>
 				</dependencies>
@@ -211,7 +215,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>${sourceRelease}</source>
 					<target>${targetRelease}</target>
@@ -220,7 +224,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.1.2</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -235,7 +239,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -286,7 +290,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22</version>
+				<version>3.0.0-M3</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -301,7 +305,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.10.0</version>
+				<version>3.12.0</version>
 				<configuration>
 					<targetJdk>${reportTargetRelease}</targetJdk>
 					<rulesets>
@@ -331,7 +335,7 @@
 		<module>sshapi-examples</module>
 		<module>sshapi-maverick</module>
 		<module>sshapi-maverick-16</module>
-		<module>sshapi-maverick-ng</module>
+		<module>sshapi-maverick-synergy</module>
 		<module>sshapi-ganymed</module>
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>

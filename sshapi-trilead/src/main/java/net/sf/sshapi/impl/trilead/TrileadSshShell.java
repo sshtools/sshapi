@@ -44,7 +44,8 @@ class TrileadSshShell extends AbstractTrileadStreamChannel<SshChannelListener<Ss
 
 	public void onChannelOpen() throws SshException {
 		try {
-			((Session) getSession()).startShell();
+			Session session = (Session) getSession();
+			session.startShell();
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}

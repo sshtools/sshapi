@@ -33,6 +33,8 @@ import javax.net.SocketFactory;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.util.ConsoleLogger;
+import net.sf.sshapi.util.DumbWithWarningHostKeyValidator;
+import net.sf.sshapi.util.Util;
 import net.sf.sshapi.util.XDetails;
 
 /**
@@ -47,61 +49,53 @@ import net.sf.sshapi.util.XDetails;
  * 
  */
 public class SshConfiguration {
-
+	public static final int SHELL_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	public static final int SHELL_WINDOW_SIZE_MAX = (64 * SHELL_MAXIMUM_PACKET_SIZE);
+	public static final int SFTP_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	public static final int SFTP_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
+	public static final int TUNNEL_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	public static final int TUNNEL_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
 	/** The 3DES CBC cipher **/
 	public static final String CIPHER_TRIPLEDES_CBC = "3des-cbc";
-
 	/** The Blowfish CBC cipher */
 	public static final String CIPHER_BLOWFISH_CBC = "blowfish-cbc";
-
 	/** The AES CBC Cipher */
 	public static final String CIPHER_AES128_CBC = "aes128-cbc";
-
 	/** SHA1 message authentication **/
 	public static final String HMAC_SHA1 = "hmac-sha1";
-
 	/** SHA1 96 bit message authentication **/
 	public static final String HMAC_SHA1_96 = "hmac-sha1-96";
-
 	/** MD5 message authentication **/
 	public static final String HMAC_MD5 = "hmac-md5";
-
 	/** MD5 96 bit message authentication **/
 	public static final String HMAC_MD5_96 = "hmac-md5-96";
-
 	/** Compression off **/
 	public static final String COMPRESSION_NONE = "none";
-
 	/** Optional zlib compression */
 	public static final String COMPRESSION_ZLIB = "zlib";
-
 	/** DH group 1 exchange method **/
 	public static final String KEX_DIFFIE_HELLMAN_GROUP1_SHA1 = "diffie-hellman-group1-sha1";
-
 	/** DH group 14 exchange method **/
 	public static final String KEX_DIFFIE_HELLMAN_GROUP14_SHA1 = "diffie-hellman-group14-sha1";
-
 	/**
 	 * Optional key exchange mechanism in which the server maintains a list of
 	 * acceptable generators and primes
 	 **/
 	public static final String KEX_DIFFIE_HELLMAN_GROUP_EXCHANGE_SHA1 = "diffie-hellman-group-exchange-sha1";
-
 	/** SSH2 DSA Public Key **/
 	public static final String PUBLIC_KEY_SSHDSA = "ssh-dss";
-
 	/** SSH2 RSA Public Key **/
 	public static final String PUBLIC_KEY_SSHRSA = "ssh-rsa";
-
+	/** SSH2 ECDSA **/
+	public static final String PUBLIC_KEY_ECDSA = "ecdsa";
+	/** SSH2 ED25519 Key **/
+	public static final String PUBLIC_KEY_ED25519 = "ed25519";
 	/** SSH1 RSA Public Key **/
 	public static final String PUBLIC_KEY_SSHRSA1 = "rsa1";
-
 	/** SSH1 Cipher **/
 	public static final String CIPHER_DES = "des";
-
 	/** SSH1 Cipher **/
 	public static final String CIPHER_3DES = "3des";
-
 	/**
 	 * Request only use of the SSH1 protocol.
 	 * 
@@ -120,10 +114,8 @@ public class SshConfiguration {
 	 * @see #getProtocolVersion()
 	 */
 	public final static int SSH1_OR_SSH2 = 3;
-
 	// Private statics
 	private static Logger logger = new ConsoleLogger();
-
 	// Private instance variables
 	private int protocolVersion = SSH1_OR_SSH2;
 	private final Properties properties;
@@ -146,13 +138,21 @@ public class SshConfiguration {
 	private List<Capability> requiredCapabilities = new ArrayList<>();
 	private SocketFactory socketFactory;
 	private int maxAuthAttempts = 3;
-
+	private long sftpWindowSizeMax = SFTP_WINDOW_SIZE_MAX;
+	private long sftpWindowSize = SFTP_WINDOW_SIZE_MAX;
+	private long sftpPacketSize = SFTP_MAXIMUM_PACKET_SIZE;
+	private long shellWindowSizeMax = SHELL_WINDOW_SIZE_MAX;
+	private long shellWindowSize = SHELL_WINDOW_SIZE_MAX;
+	private long shellPacketSize = SHELL_MAXIMUM_PACKET_SIZE;
+	private long tunnelWindowSizeMax = TUNNEL_WINDOW_SIZE_MAX;
+	private long tunnelWindowSize = TUNNEL_WINDOW_SIZE_MAX;
+	private long tunnelPacketSize = TUNNEL_MAXIMUM_PACKET_SIZE;
+	private static SshHostKeyValidator defaultHostKeyValidator = new DumbWithWarningHostKeyValidator();
 	/**
 	 * Do reverse DNS lookups for hosts in the known_hosts (
 	 * {@link JschHostKeyManager}).
 	 */
 	public final static String CFG_KNOWN_HOSTS_REVERSE_DNS = "sshapi.knownHosts.reverseDNS";
-
 	/**
 	 * Location of the known_hosts file. Several implementations support this
 	 * format, so this configuration property is common.
@@ -160,17 +160,9 @@ public class SshConfiguration {
 	public final static String CFG_KNOWN_HOSTS_PATH = "sshapi.knownHosts.path";
 
 	/**
-	 * Constructor
-	 */
-	public SshConfiguration() {
-		this(new Properties());
-	}
-
-	/**
 	 * Set the logger to use
 	 * 
-	 * @param logger
-	 *            logger
+	 * @param logger logger
 	 */
 	public static void setLogger(Logger logger) {
 		SshConfiguration.logger = logger;
@@ -186,10 +178,36 @@ public class SshConfiguration {
 	}
 
 	/**
+	 * Get the default host key valid to use when constructing a new
+	 * {@link SshConfiguration}.
+	 * 
+	 * @return default host key validator
+	 */
+	public static SshHostKeyValidator getDefaultHostKeyValidator() {
+		return defaultHostKeyValidator;
+	}
+
+	/**
+	 * Set the default host key valid to use when constructing a new
+	 * {@link SshConfiguration}.
+	 * 
+	 * @param defaultHostKeyValidator default host key validator
+	 */
+	public static void setDefaultHostKeyValidator(SshHostKeyValidator defaultHostKeyValidator) {
+		SshConfiguration.defaultHostKeyValidator = defaultHostKeyValidator;
+	}
+
+	/**
+	 * Constructor
+	 */
+	public SshConfiguration() {
+		this(new Properties());
+	}
+
+	/**
 	 * Constructor
 	 * 
-	 * @param hostKeyValidator
-	 *            host key validator
+	 * @param hostKeyValidator host key validator
 	 */
 	public SshConfiguration(SshHostKeyValidator hostKeyValidator) {
 		this(new Properties(), hostKeyValidator);
@@ -198,30 +216,213 @@ public class SshConfiguration {
 	/**
 	 * Constructor
 	 * 
-	 * @param properties
-	 *            properties
+	 * @param properties properties
 	 */
 	public SshConfiguration(Properties properties) {
-		this(properties, null);
+		this(properties, defaultHostKeyValidator);
 	}
 
 	/**
 	 * Constructor
 	 * 
-	 * @param properties
-	 *            properties
-	 * @param hostKeyValidator
-	 *            host key validator
+	 * @param properties properties
+	 * @param hostKeyValidator host key validator
 	 */
 	public SshConfiguration(Properties properties, SshHostKeyValidator hostKeyValidator) {
 		this.properties = properties;
 		this.hostKeyValidator = hostKeyValidator;
 	}
+	
+	/**
+	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
+	 * 
+	 * @return tunnel max window size
+	 */
+	public long getTunnelWindowSizeMax() {
+		return tunnelWindowSizeMax;
+	}
+
+	/**
+	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
+	 * 
+	 * @param tunnelWindowSize Tunnel window size max
+	 * @return this for chaining
+	 */
+	public SshConfiguration setTunnelWindowSizeMax(long tunnelWindowSizeMax) {
+		this.tunnelWindowSizeMax = tunnelWindowSizeMax;
+		return this;
+	}
+
+	/**
+	 * Get the window size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * 
+	 * @return tunnel window size
+	 */
+	public long getTunnelWindowSize() {
+		return tunnelWindowSize;
+	}
+
+	/**
+	 * Set the window size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @param tunnelWindowSize SFTP window size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setTunnelWindowSize(long tunnelWindowSize) {
+		this.tunnelWindowSize = tunnelWindowSize;
+		return this;
+	}
+
+	/**
+	 * Get the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * 
+	 * @return tunnel packet size
+	 */
+	public long getTunnelPacketSize() {
+		return tunnelPacketSize;
+	}
+
+	/**
+	 * Set the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * 
+	 * @param tunnelPacketSize tunnel packet size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setTunnelPacketSize(long tunnelPacketSize) {
+		this.tunnelPacketSize = tunnelPacketSize;
+		return this;
+	}
+
+	/**
+	 * Get the max window size <strong>hint</strong> for SFTP. Use zero for no
+	 * hint.
+	 * 
+	 * @return SFTP max window size
+	 */
+	public long getSftpWindowSizeMax() {
+		return sftpWindowSizeMax;
+	}
+
+	/**
+	 * Set the window size max <strong>hint</strong> for SFTP. Use zero for no
+	 * hint.
+	 * 
+	 * @param sftpWindowSize SFTP window size max
+	 * @return this for chaining
+	 */
+	public SshConfiguration setSftpWindowSizeMax(long sftpWindowSizeMax) {
+		this.sftpWindowSizeMax = sftpWindowSizeMax;
+		return this;
+	}
+
+	/**
+	 * Get the window size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @return SFTP window size
+	 */
+	public long getSftpWindowSize() {
+		return sftpWindowSize;
+	}
+
+	/**
+	 * Set the window size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @param sftpWindowSize SFTP window size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setSftpWindowSize(long sftpWindowSize) {
+		this.sftpWindowSize = sftpWindowSize;
+		return this;
+	}
+
+	/**
+	 * Get the packet size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @return SFTP packet size
+	 */
+	public long getSftpPacketSize() {
+		return sftpPacketSize;
+	}
+
+	/**
+	 * Set the packet size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @param sftpPacketSize SFTP packet size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setSftpPacketSize(long sftpPacketSize) {
+		this.sftpPacketSize = sftpPacketSize;
+		return this;
+	}
+
+	/**
+	 * Get the max window size <strong>hint</strong> for shell. Use zero for no
+	 * hint.
+	 * 
+	 * @return shell max window size
+	 */
+	public long getShellWindowSizeMax() {
+		return shellWindowSizeMax;
+	}
+
+	/**
+	 * Set the window size max <strong>hint</strong> for shell. Use zero for no
+	 * hint.
+	 * 
+	 * @param shellWindowSizeMax shell window size max
+	 * @return this for chaining
+	 */
+	public SshConfiguration setShellWindowSizeMax(long shellWindowSizeMax) {
+		this.sftpWindowSizeMax = shellWindowSizeMax;
+		return this;
+	}
+
+	/**
+	 * Get the window size <strong>hint</strong> for shell. Use zero for no hint.
+	 * 
+	 * @return shell window size
+	 */
+	public long getShellWindowSize() {
+		return shellWindowSize;
+	}
+
+	/**
+	 * Set the window size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @param shellWindowSize shell window size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setShellWindowSize(long shellWindowSize) {
+		this.shellWindowSize = shellWindowSize;
+		return this;
+	}
+
+	/**
+	 * Get the packet size <strong>hint</strong> for shell. Use zero for no hint.
+	 * 
+	 * @return Shell packet size
+	 */
+	public long getShellPacketSize() {
+		return shellPacketSize;
+	}
+
+	/**
+	 * Set the packet size <strong>hint</strong> for shells. Use zero for no hint.
+	 * 
+	 * @param shellPacketSize shell packet size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setShellPacketSize(long shellPacketSize) {
+		this.shellPacketSize = shellPacketSize;
+		return this;
+	}
 
 	/**
 	 * Get the maximum number of authentication attempts when using the
-	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
-	 * with one or more authenticators. This does not impact
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)}
+	 * method with one or more authenticators. This does not impact
 	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
 	 * wish to perform authentication separately.
 	 * 
@@ -233,25 +434,28 @@ public class SshConfiguration {
 
 	/**
 	 * Set the maximum number of authentication attempts when using the
-	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
-	 * with one or more authenticators. This does not impact
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)}
+	 * method with one or more authenticators. This does not impact
 	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
 	 * wish to perform authentication separately.
 	 * 
-	 * @param maxAuthAttempts
-	 *            max auth attempts
+	 * @param maxAuthAttempts max auth attempts
+	 * @return this for chaining
 	 */
-	public void setMaxAuthAttempts(int maxAuthAttempts) {
+	public SshConfiguration setMaxAuthAttempts(int maxAuthAttempts) {
 		this.maxAuthAttempts = maxAuthAttempts;
+		return this;
 	}
 
 	/**
 	 * Add a capability we REQUIRE for this configuration
 	 * 
 	 * @param capability
+	 * @return this for chaining
 	 */
-	public void addRequiredCapability(Capability capability) {
+	public SshConfiguration addRequiredCapability(Capability capability) {
 		requiredCapabilities.add(capability);
+		return this;
 	}
 
 	/**
@@ -268,11 +472,12 @@ public class SshConfiguration {
 	 * Set the object that is used to validate host keys. When not set, all host
 	 * keys will be allowed.
 	 * 
-	 * @param hostKeyValidator
-	 *            host key validator
+	 * @param hostKeyValidator host key validator
+	 * @return this for chaining
 	 */
-	public void setHostKeyValidator(SshHostKeyValidator hostKeyValidator) {
+	public SshConfiguration setHostKeyValidator(SshHostKeyValidator hostKeyValidator) {
 		this.hostKeyValidator = hostKeyValidator;
+		return this;
 	}
 
 	/**
@@ -286,9 +491,10 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the properties for this configuration. The property names supported will
-	 * depend on the provider implementation they are passed to. See the
-	 * documentation for the provider for details on what properties are supported.
+	 * Get the properties for this configuration. The property names supported
+	 * will depend on the provider implementation they are passed to. See the
+	 * documentation for the provider for details on what properties are
+	 * supported.
 	 * 
 	 * @return properties
 	 */
@@ -308,11 +514,12 @@ public class SshConfiguration {
 	/**
 	 * Set the host to use for X11 forwarding.
 	 * 
-	 * @param x11Host
-	 *            X11 host
+	 * @param x11Host X11 host
+	 * @return this for chaining
 	 */
-	public void setX11Host(String x11Host) {
+	public SshConfiguration setX11Host(String x11Host) {
 		this.x11Host = x11Host;
+		return this;
 	}
 
 	/**
@@ -327,11 +534,12 @@ public class SshConfiguration {
 	/**
 	 * Set the port to use for X11 forwarding.
 	 * 
-	 * @param x11Port
-	 *            port to use for X11 forwarding
+	 * @param x11Port port to use for X11 forwarding
+	 * @return this for chaining
 	 */
-	public void setX11Port(int x11Port) {
+	public SshConfiguration setX11Port(int x11Port) {
 		this.x11Port = x11Port;
+		return this;
 	}
 
 	/**
@@ -348,11 +556,12 @@ public class SshConfiguration {
 	 * Set the cookie to use for X11 forwarding. You may want to consider using
 	 * the @{link {@link XDetails} helper instead of setting this directly.
 	 * 
-	 * @param x11Cookie
-	 *            X11 cookie
+	 * @param x11Cookie X11 cookie
+	 * @return this for chaining
 	 */
-	public void setX11Cookie(byte[] x11Cookie) {
+	public SshConfiguration setX11Cookie(byte[] x11Cookie) {
 		this.x11Cookie = x11Cookie;
+		return this;
 	}
 
 	/**
@@ -367,11 +576,12 @@ public class SshConfiguration {
 	/**
 	 * Set the banner handler (called to display the login banner).
 	 * 
-	 * @param bannerHandler
-	 *            banner handler
+	 * @param bannerHandler banner handler
+	 * @return this for chaining
 	 */
-	public void setBannerHandler(SshBannerHandler bannerHandler) {
+	public SshConfiguration setBannerHandler(SshBannerHandler bannerHandler) {
 		this.bannerHandler = bannerHandler;
+		return this;
 	}
 
 	/**
@@ -387,12 +597,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client cipher.
 	 * 
-	 * @param preferredServerToClientCipher
-	 *            preferred server to client cipher.
+	 * @param preferredServerToClientCipher preferred server to client cipher.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedCiphers(int)
 	 */
-	public void setPreferredServerToClientCipher(String preferredServerToClientCipher) {
+	public SshConfiguration setPreferredServerToClientCipher(String preferredServerToClientCipher) {
 		this.preferredServerToClientCipher = preferredServerToClientCipher;
+		return this;
 	}
 
 	/**
@@ -408,12 +619,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server cipher.
 	 * 
-	 * @param preferredClientToServerCipher
-	 *            preferred client to server cipher.
+	 * @param preferredClientToServerCipher preferred client to server cipher.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedCiphers(int)
 	 */
-	public void setPreferredClientToServerCipher(String preferredClientToServerCipher) {
+	public SshConfiguration setPreferredClientToServerCipher(String preferredClientToServerCipher) {
 		this.preferredClientToServerCipher = preferredClientToServerCipher;
+		return this;
 	}
 
 	/**
@@ -429,12 +641,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client MAC.
 	 * 
-	 * @param preferredServerToClientMAC
-	 *            preferred server to client MAC.
+	 * @param preferredServerToClientMAC preferred server to client MAC.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedMAC()
 	 */
-	public void setPreferredServerToClientMAC(String preferredServerToClientMAC) {
+	public SshConfiguration setPreferredServerToClientMAC(String preferredServerToClientMAC) {
 		this.preferredServerToClientMAC = preferredServerToClientMAC;
+		return this;
 	}
 
 	/**
@@ -450,12 +663,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server MAC.
 	 * 
-	 * @param preferredClientToServerMAC
-	 *            preferred client to server MAC.
+	 * @param preferredClientToServerMAC preferred client to server MAC.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedMAC()
 	 */
-	public void setPreferredClientToServerMAC(String preferredClientToServerMAC) {
+	public SshConfiguration setPreferredClientToServerMAC(String preferredClientToServerMAC) {
 		this.preferredClientToServerMAC = preferredClientToServerMAC;
+		return this;
 	}
 
 	/**
@@ -471,12 +685,14 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred server to client compression.
 	 * 
-	 * @param preferredServerToClientCompression
-	 *            preferred server to client compression.
+	 * @param preferredServerToClientCompression preferred server to client
+	 *            compression.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedCompression()
 	 */
-	public void setPreferredServerToClientCompression(String preferredServerToClientCompression) {
+	public SshConfiguration setPreferredServerToClientCompression(String preferredServerToClientCompression) {
 		this.preferredServerToClientCompression = preferredServerToClientCompression;
+		return this;
 	}
 
 	/**
@@ -492,24 +708,27 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred client to server compression.
 	 * 
-	 * @param preferredClientToServerCompression
-	 *            preferred client to server compression.
+	 * @param preferredClientToServerCompression preferred client to server
+	 *            compression.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedCompression()
 	 */
-	public void setPreferredClientToServerCompression(String preferredClientToServerCompression) {
+	public SshConfiguration setPreferredClientToServerCompression(String preferredClientToServerCompression) {
 		this.preferredClientToServerCompression = preferredClientToServerCompression;
+		return this;
 	}
 
 	/**
 	 * Set the preferred protocol version. Use one of
-	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2} or
-	 * {@link SshConfiguration#SSH2_ONLY}.
+	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2}
+	 * or {@link SshConfiguration#SSH2_ONLY}.
 	 * 
-	 * @param protocolVersion
-	 *            protocol version
+	 * @param protocolVersion protocol version
+	 * @return this for chaining
 	 */
-	public void setProtocolVersion(int protocolVersion) {
+	public SshConfiguration setProtocolVersion(int protocolVersion) {
 		this.protocolVersion = protocolVersion;
+		return this;
 	}
 
 	/**
@@ -525,12 +744,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred key exchange.
 	 * 
-	 * @param preferredKeyExchange
-	 *            preferred key exchange.
+	 * @param preferredKeyExchange preferred key exchange.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedKeyExchange()
 	 */
-	public void setPreferredKeyExchange(String preferredKeyExchange) {
+	public SshConfiguration setPreferredKeyExchange(String preferredKeyExchange) {
 		this.preferredKeyExchange = preferredKeyExchange;
+		return this;
 	}
 
 	/**
@@ -546,12 +766,13 @@ public class SshConfiguration {
 	/**
 	 * Set the preferred public key algorithm.
 	 * 
-	 * @param preferredPublicKey
-	 *            public key algorithm.
+	 * @param preferredPublicKey public key algorithm.
+	 * @return this for chaining
 	 * @see SshProvider#getSupportedPublicKey()
 	 */
-	public void setPreferredPublicKey(String preferredPublicKey) {
+	public SshConfiguration setPreferredPublicKey(String preferredPublicKey) {
 		this.preferredPublicKey = preferredPublicKey;
+		return this;
 	}
 
 	/**
@@ -566,29 +787,33 @@ public class SshConfiguration {
 	/**
 	 * Set the proxy server details.
 	 * 
-	 * @param proxyServer
-	 *            proxy server details
+	 * @param proxyServer proxy server details
+	 * @return this for chaining
 	 */
-	public void setProxyServer(SshProxyServerDetails proxyServer) {
+	public SshConfiguration setProxyServer(SshProxyServerDetails proxyServer) {
 		this.proxyServer = proxyServer;
+		return this;
 	}
 
 	/**
 	 * Set the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
-	 * as these are the only two supported by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or
+	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
+	 * by SSH1.
 	 * 
-	 * @param preferredSSH1Cipher
-	 *            preferred SSH1 cipger
+	 * @param preferredSSH1Cipher preferred SSH1 cipher
+	 * @return this for chaining
 	 */
-	public void setPreferredSSH1CipherType(String preferredSSH1Cipher) {
+	public SshConfiguration setPreferredSSH1CipherType(String preferredSSH1Cipher) {
 		this.preferredSSH1Cipher = preferredSSH1Cipher;
+		return this;
 	}
 
 	/**
 	 * Get the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
-	 * as these are the only two supported by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or
+	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
+	 * by SSH1.
 	 * 
 	 * @return preferred SSH1 cipger
 	 */
@@ -599,11 +824,12 @@ public class SshConfiguration {
 	/**
 	 * Set the path of the SFTP server executable (SSH1 only).
 	 * 
-	 * @param sftpSSH1Path
-	 *            SSH1 SFTP server executable path
+	 * @param sftpSSH1Path SSH1 SFTP server executable path
+	 * @return this for chaining
 	 */
-	public void setSftpSSH1Path(String sftpSSH1Path) {
+	public SshConfiguration setSftpSSH1Path(String sftpSSH1Path) {
 		this.sftpSSH1Path = sftpSSH1Path;
+		return this;
 	}
 
 	/**
@@ -616,27 +842,26 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Test if a provider has all the capbilities required by this configuration.
+	 * Test if a provider has all the capbilities required by this
+	 * configuration.
 	 * 
-	 * @param provider
-	 *            provider
-	 * @throws UnsupportedOperationException
-	 *             if a provider does not have all the required capabilities
+	 * @param provider provider
+	 * @throws UnsupportedOperationException if a provider does not have all the
+	 *             required capabilities
 	 */
 	public void providerHasCapabilities(SshProvider provider) throws UnsupportedOperationException {
 		for (Iterator<Capability> i = requiredCapabilities.iterator(); i.hasNext();) {
 			Capability c = (Capability) i.next();
 			if (!provider.getCapabilities().contains(c)) {
-				throw new UnsupportedOperationException(
-						"Capability " + c + " is required, but not supported by this provider.");
+				throw new UnsupportedOperationException("Capability " + c + " is required, but not supported by this provider.");
 			}
 		}
 	}
 
 	/**
-	 * Get the socket factory to use to make outgoing connections to SSH servers.
-	 * Will be set to <code>null</code> when the default Java socket factory is to
-	 * be used.
+	 * Get the socket factory to use to make outgoing connections to SSH
+	 * servers. Will be set to <code>null</code> when the default Java socket
+	 * factory is to be used.
 	 * 
 	 * @return socket factory
 	 */
@@ -645,20 +870,21 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the socket factory to use to make outgoing connections to SSH servers.
-	 * Set to <code>null</code> to use the default Java socket factory.
+	 * Set the socket factory to use to make outgoing connections to SSH
+	 * servers. Set to <code>null</code> to use the default Java socket factory.
 	 * 
-	 * @param socketFactory
-	 *            socket factory
+	 * @param socketFactory socket factory
+	 * @return this for chaining
 	 */
-	public void setSocketFactory(SocketFactory socketFactory) {
+	public SshConfiguration setSocketFactory(SocketFactory socketFactory) {
 		this.socketFactory = socketFactory;
+		return this;
 	}
 
 	/**
-	 * Utility to create a client that may be used with this configuration. It uses
-	 * the DefaultProviderFactory, so if you want to custom how providers are
-	 * selected, do not use this method.
+	 * Utility to create a client that may be used with this configuration. It
+	 * uses the DefaultProviderFactory, so if you want to custom how providers
+	 * are selected, do not use this method.
 	 * 
 	 * @return client
 	 */
@@ -666,29 +892,44 @@ public class SshConfiguration {
 		// Create the client using that configuration
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
 		return provider.createClient(this);
-
 	}
 
 	/**
 	 * Utility to create a client that may be used with this configuration and
-	 * connect to a host as a particular user, optionally authenticating. It uses
-	 * the DefaultProviderFactory, so if you want to custom how providers are
-	 * selected, do not use this method.
+	 * connect to a host as a particular user, optionally authenticating. It
+	 * uses the DefaultProviderFactory, so if you want to custom how providers
+	 * are selected, do not use this method.
 	 * 
-	 * @param username
-	 *            user name
-	 * @param hostname
-	 *            hostname
-	 * @param port
-	 *            port
-	 * @param authenticators
-	 *            authenticators
+	 * @param spec connection spec in the format
+	 *            username[:password]@hostname[:port]
+	 * @param authenticators authenticators
 	 * @return client client
-	 * @throws SshException
-	 *             on error
+	 * @throws SshException on error
 	 */
-	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators)
-			throws SshException {
+	public SshClient open(String spec, SshAuthenticator... authenticators) throws SshException {
+		// Create the client using that configuration
+		if (authenticators.length < 1)
+			throw new IllegalArgumentException("At least one authenticator must be provided.");
+		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
+		SshClient client = provider.createClient(this);
+		client.connect(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
+		return client;
+	}
+
+	/**
+	 * Utility to create a client that may be used with this configuration and
+	 * connect to a host as a particular user, optionally authenticating. It
+	 * uses the DefaultProviderFactory, so if you want to custom how providers
+	 * are selected, do not use this method.
+	 * 
+	 * @param username user name
+	 * @param hostname hostname
+	 * @param port port
+	 * @param authenticators authenticators
+	 * @return client client
+	 * @throws SshException on error
+	 */
+	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
 		// Create the client using that configuration
 		if (authenticators.length < 1)
 			throw new IllegalArgumentException("At least one authenticator must be provided.");
@@ -696,7 +937,5 @@ public class SshConfiguration {
 		SshClient client = provider.createClient(this);
 		client.connect(username, hostname, port, authenticators);
 		return client;
-
 	}
-
 }

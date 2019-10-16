@@ -33,12 +33,7 @@ public class E16PublicKeySubsytem {
 		SshClient client = provider.createClient(config);
 		ExampleUtilities.dumpClientInfo(client);
 
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
-		client.connect(user, host, port, new ConsolePasswordAuthenticator());
+		client.connect(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator());
 		System.out.println("Remote identification: " + client.getRemoteIdentification());
 
 		//

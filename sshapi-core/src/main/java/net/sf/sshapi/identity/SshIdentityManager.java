@@ -104,8 +104,9 @@ public interface SshIdentityManager {
 	/**
 	 * Get a list of all the supported key types. Each element is a
 	 * {@link String} which will be one of
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA} or
+	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA},
+	 * {@link SshConfiguration#PUBLIC_KEY_ECDSA},
+	 * {@link SshConfiguration#PUBLIC_KEY_ED25519} or
 	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA}.
 	 * 
 	 * @return supported key types

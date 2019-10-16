@@ -21,47 +21,34 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverickng;
+package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Semaphore;
 
-import com.sshtools.client.PseudoTerminalModes;
-import com.sshtools.client.SessionChannel;
+import com.sshtools.client.SessionChannelNG;
 import com.sshtools.client.SshClientContext;
-import com.sshtools.client.tasks.ShellTask;
+import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.common.ssh.Connection;
 
 import net.sf.sshapi.AbstractDataProducingComponent;
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshShell;
 
-class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListener<SshShell>, SshShell>
-		implements SshShell {
-
-	private Semaphore sem;
-	private SessionChannel session;
+class MaverickSynergySshCommand extends AbstractDataProducingComponent<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
+	private SessionChannelNG session;
 	private InputStream extendedInputStream;
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Connection<SshClientContext> con;
-	private String termType;
-	private int cols;
-	private int rows;
-	private int pixWidth;
-	private int pixHeight;
+	private String command;
 
-	MaverickNGSshShell(final Connection<SshClientContext> con, String termType, int cols, int rows, int pixWidth,
-			int pixHeight, byte[] terminalModes) {
-		this.termType = termType;
-		this.cols = cols;
-		this.rows = rows;
-		this.pixWidth = pixWidth;
-		this.pixHeight = pixHeight;
+	MaverickSynergySshCommand(final Connection<SshClientContext> con, String command) {
 		this.con = con;
+		this.command = command;
 	}
 
 	@Override
@@ -85,53 +72,25 @@ class MaverickNGSshShell extends AbstractDataProducingComponent<SshChannelListen
 	}
 
 	@Override
-	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
-		if (termType == null)
-			throw new IllegalStateException("Not a pseudo tty.");
-		session.changeTerminalDimensions(width, height, pixw, pixh);
-	}
-
-	@Override
 	protected void onOpen() throws SshException {
-		sem = new Semaphore(1);
+		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
+				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
+				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
+				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize());
+		con.openChannel(session);
+		if (!session.getOpenFuture().waitFor(30000).isSuccess()) {
+			throw new IllegalStateException("Couldb not open session channel");
+		}
 		try {
-			sem.acquire();
-			con.addTask(new ShellTask(con) {
-				private boolean released;
-
-				@Override
-				protected void onOpenSession(SessionChannel session) {
-					MaverickNGSshShell.this.session = session;
-					if (termType != null) {
-						session.allocatePseudoTerminal(termType, cols, rows, pixWidth, pixHeight,
-								new PseudoTerminalModes());
-					}
-					session.startShell();
-					release();
-				}
-
-				private void release() {
-					if (!released) {
-						sem.release();
-						released = true;
-					}
-				}
-
-				@Override
-				protected void onCloseSession(SessionChannel session) {
-					release();
-				}
-			});
-			sem.acquire();
-			sem.release();
-			
-			inputStream = session.getInputStream();
-			extendedInputStream = session.getStderrInputStream();
-			outputStream = session.getOutputStream();
-		} catch (InterruptedException ie) {
-			throw new SshException(SshException.GENERAL, ie);
-		} 
-
+			if (!session.executeCommand(command).waitFor(30000).isSuccess()) {
+				throw new IllegalStateException("Could not execute command.");
+			}
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException("Failed to execute command.", e);
+		}
+		inputStream = session.getInputStream();
+		extendedInputStream = session.getErrorStream();
+		outputStream = session.getOutputStream();
 	}
 
 	@Override

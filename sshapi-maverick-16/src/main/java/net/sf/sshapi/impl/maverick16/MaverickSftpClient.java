@@ -29,10 +29,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 
-import com.maverick.sftp.SftpFileAttributes;
-import com.maverick.sftp.SftpStatusException;
 import com.maverick.sftp.SftpSubsystemChannel;
 import com.maverick.ssh.SshClient;
+import com.sshtools.common.sftp.SftpFileAttributes;
+import com.sshtools.common.sftp.SftpStatusException;
 import com.sshtools.common.util.UnsignedInteger64;
 import com.sshtools.sftp.SftpClient;
 

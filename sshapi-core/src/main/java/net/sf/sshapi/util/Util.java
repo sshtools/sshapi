@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+import net.sf.sshapi.Ssh;
+import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.SftpFile;
@@ -128,6 +130,18 @@ public class Util {
 	private static String readLine() throws IOException {
 		String answer = new BufferedReader(new InputStreamReader(System.in)).readLine();
 		return answer;
+	}
+	
+	/**
+	 * Display a prompt asking for an SSH user and host (and optional port) to connect
+	 * to. Useful to pass to various methods to open connections in SSHAPI, such as 
+	 * {@link SshClient#connect(String, net.sf.sshapi.auth.SshAuthenticator...)}, or
+	 * {@link Ssh#open(String, net.sf.sshapi.auth.SshAuthenticator...)}.
+	 * 
+	 * @return connection spec
+	 */
+	public static String promptConnectionSpec() {
+		return prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
 	}
 
 	/**
@@ -431,7 +445,9 @@ public class Util {
 	 * 
 	 * @param key
 	 * @param key type
-	 * @return one of @{@link SshConfiguration#PUBLIC_KEY_SSHDSA} or @
+	 * @return one of @{@link SshConfiguration#PUBLIC_KEY_SSHDSA},
+	 *         {@link SshConfiguration#PUBLIC_KEY_ECDSA},
+	 *         {@link SshConfiguration#PUBLIC_KEY_ED25519} or @
 	 *         {@link SshConfiguration#PUBLIC_KEY_SSHRSA}
 	 */
 	public static String guessKeyType(byte[] key) {
@@ -439,6 +455,12 @@ public class Util {
 			return SshConfiguration.PUBLIC_KEY_SSHDSA;
 		} else if (key[8] == 'r') {
 			return SshConfiguration.PUBLIC_KEY_SSHRSA;
+		} else if (key[8] == 'e') {
+			// TODO
+			return SshConfiguration.PUBLIC_KEY_ECDSA;
+		} else if (key[8] == '2') {
+			// TODO
+			return SshConfiguration.PUBLIC_KEY_ED25519;
 		} else {
 			throw new IllegalArgumentException("Invalid key type.");
 		}
@@ -477,5 +499,27 @@ public class Util {
 		if (!file.exists() && !file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
 			throw new SshException("Could not create configuration directory " + file + ". Check permissions.");
 		}
+	}
+
+	public static String extractHostname(String connectionSpec) {
+		connectionSpec = connectionSpec.substring(connectionSpec.indexOf('@') + 1);
+		int idx = connectionSpec.indexOf(':');
+		if (idx != -1) {
+			connectionSpec = connectionSpec.substring(0, idx);
+		}
+		return connectionSpec;
+	}
+
+	public static String extractUsername(String connectionSpec) {
+		return connectionSpec.substring(0, connectionSpec.indexOf('@'));
+	}
+
+	public static int extractPort(String connectionSpec) {
+		connectionSpec = connectionSpec.substring(connectionSpec.indexOf('@') + 1);
+		int idx = connectionSpec.indexOf(':');
+		if (idx != -1) {
+			return Integer.parseInt(connectionSpec.substring(idx + 1));
+		}
+		return 22;
 	}
 }

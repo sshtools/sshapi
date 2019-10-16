@@ -72,6 +72,23 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * time, it will be reattempted until
 	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
 	 * 
+	 * @param spec
+	 *            connection spec in the format username[:password]@host[:port]
+	 * @param authenticators
+	 *            authenticators
+	 * @throws SshException
+	 *             on any error
+	 */
+	void connect(String spec, SshAuthenticator... authenticators) throws SshException;
+
+	/**
+	 * Connect to specified host and port using the provided username, and
+	 * optionally authenticate if you provide one of more authenticate. If you do
+	 * not provide an authenticator, you must call
+	 * {@link #authenticate(SshAuthenticator)}. If authentication fails the first
+	 * time, it will be reattempted until
+	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
+	 * 
 	 * @param username
 	 *            user name
 	 * @param hostname

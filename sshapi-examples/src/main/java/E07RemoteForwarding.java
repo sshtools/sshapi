@@ -18,15 +18,14 @@ public class E07RemoteForwarding {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-		SshConfiguration config = new SshConfiguration();
-		config.setHostKeyValidator(new ConsoleHostKeyValidator());
-		config.setBannerHandler(new ConsoleBannerHandler());
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
+		String connectionSpec = Util.promptConnectionSpec();
+		String host = Util.extractHostname(connectionSpec);
+		String user = Util.extractUsername(connectionSpec);
+		int port = Util.extractPort(connectionSpec);
 
 		// Create the client using that configuration and connect and authenticate
 		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {

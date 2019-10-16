@@ -29,14 +29,8 @@ public class E15SCP {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
 		// Connect, authenticate
-		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
 			// Create and open the sftp client
 			try (SshSCPClient scp = client.scp()) {

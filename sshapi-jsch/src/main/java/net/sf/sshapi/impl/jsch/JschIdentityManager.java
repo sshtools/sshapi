@@ -145,6 +145,8 @@ class JschIdentityManager implements SshIdentityManager {
 				type = KeyPair.RSA;
 			} else if (keyType.equals(SshConfiguration.PUBLIC_KEY_SSHDSA)) {
 				type = KeyPair.DSA;
+			} else if (keyType.equals(SshConfiguration.PUBLIC_KEY_ECDSA)) {
+				type = KeyPair.ECDSA;
 			} else {
 				throw new SshException(SshException.UNSUPPORTED_FEATURE, "Algoritm " + keyType + " is not supported.");
 			}
@@ -281,7 +283,15 @@ class JschIdentityManager implements SshIdentityManager {
 
 		@Override
 		public String getAlgorithm() {
-			return keyPair.getKeyType() == KeyPair.DSA ? SshConfiguration.PUBLIC_KEY_SSHDSA : SshConfiguration.PUBLIC_KEY_SSHRSA;
+			if(keyPair.getKeyType() == KeyPair.DSA)
+				return SshConfiguration.PUBLIC_KEY_SSHDSA;
+			else if(keyPair.getKeyType() == KeyPair.RSA)
+				return SshConfiguration.PUBLIC_KEY_SSHRSA;
+			else if(keyPair.getKeyType() == KeyPair.ECDSA)
+				return SshConfiguration.PUBLIC_KEY_ECDSA;
+			else 
+				throw new IllegalStateException("Unsupported public key algorithm.");
+				
 		}
 
 		@Override

@@ -19,6 +19,10 @@ public class E05X11Forwarding {
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
+		// Basic configuration with a console key validator and console banner handler
+		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())
+				.setBannerHandler(new ConsoleBannerHandler());
+		
 		/*
 		 * Before using X11 forwarding, first the X11 parameters must be
 		 * determined and set on the configuration object.
@@ -34,7 +38,6 @@ public class E05X11Forwarding {
 		 * The second thing that must be done you perform when opening the
 		 * channel (see below)
 		 */
-		SshConfiguration config = new SshConfiguration();
 		new XDetails().configure(config);
 		
 		/* Make sure we get a provider that is capable of X11 forwarding */
@@ -48,16 +51,8 @@ public class E05X11Forwarding {
 		config.setHostKeyValidator(new ConsoleHostKeyValidator());
 		config.setBannerHandler(new ConsoleBannerHandler());
 
-		// Prompt for the host and username
-		String connectionSpec = Util.prompt("Enter username@hostname", System.getProperty("user.name") + "@localhost");
-		String host = ExampleUtilities.extractHostname(connectionSpec);
-		String user = ExampleUtilities.extractUsername(connectionSpec);
-		int port = ExampleUtilities.extractPort(connectionSpec);
-
-		// Connect, authenticate, and start the simple shell
-
 		// Create the client using that configuration
-		try(SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
+		try(SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
 			/*
 			 * Now you must either create a shell or start a command. This will

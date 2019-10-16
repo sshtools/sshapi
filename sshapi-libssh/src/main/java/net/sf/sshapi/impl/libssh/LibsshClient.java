@@ -63,8 +63,8 @@ public class LibsshClient extends AbstractClient {
 	public final static int O_RDONLY = 0;
 	public final static int O_WRONLY = 1;
 	public final static int O_RDWR = 2;
-	public final static int O_CREAT = 512;
-	public final static int O_TRUNC = 1024;
+	public final static int O_CREAT =  8;
+	public final static int O_TRUNC = 16;
 	// TODO make configurable
 	public final static int SCP_BUFFER_SIZE = 32768;
 	public final static int SFTP_BUFFER_SIZE = 32768;

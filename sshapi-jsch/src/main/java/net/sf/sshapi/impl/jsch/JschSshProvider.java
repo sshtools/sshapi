@@ -61,7 +61,7 @@ public class JschSshProvider extends AbstractProvider {
 	 * Constructor
 	 */
 	public JschSshProvider() {
-		super("JSch");
+		super("JSch", "http://www.jcraft.com/");
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class JschSshProvider extends AbstractProvider {
 
 	@Override
 	public List<String> getSupportedCiphers(int protocolVersion) {
-		return Arrays.asList("aes128-ctr,aes128-cbc,3des-ctr,3des-cbc,blowfish-cbc,aes192-cbc,aes256-cbc".split(","));
+		return Arrays.asList("blowfish-cbc,3des-cbc,aes128-cbc,aes192-cbc,aes256-cbc,aes128-ctr,aes192-ctr,aes256-ctr,3des-ctr,arcfour,arcfour128,arcfour256".split(","));
 	}
 
 	@Override
@@ -177,13 +177,13 @@ public class JschSshProvider extends AbstractProvider {
 	@Override
 	public List<String> getSupportedKeyExchange() {
 		return Arrays.asList(
-				"diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256"
+				"diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521"
 						.split(","));
 	}
 
 	@Override
 	public List<String> getSupportedPublicKey() {
-		return Arrays.asList("ssh-rsa,ssh-dss,ssh-ecdsa".split(","));
+		return Arrays.asList("ssh-dss,ssh-rsa,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521".split(","));
 	}
 
 	@Override

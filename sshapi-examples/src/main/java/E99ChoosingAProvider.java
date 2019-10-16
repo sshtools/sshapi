@@ -31,7 +31,7 @@ public class E99ChoosingAProvider {
 		  
 		String[] tests = new String[] { "E01Shell", "E02ShellWithConsolePrompts", "E03ShellWithGUIPrompts",
 					"E04ExecuteCommand", "E05X11Forwarding", "E06bLocalForwardingAndShell", "E6LocalForwarding",
-					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeybboardInteractiveAuthentication",
+					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeyboardInteractiveAuthentication",
 					"E12ChangeKeyPassphrase", "E13ExtendedHostKeyValidation", "E14HostKeyManagement",
 					"E15SCP", "E16PublicKeySubsystem", "E17TunneledSocketFactory", "E19ShellUsingGSSAPI",
 					"E20CustomChannel", "E21AgentAuthentication" };
