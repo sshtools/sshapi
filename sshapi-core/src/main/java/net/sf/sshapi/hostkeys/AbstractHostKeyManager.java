@@ -97,10 +97,6 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 	}
 
 	protected boolean checkHost(String storedHostName, String hostToCheck) {
-		boolean match = storedHostName.equals(hostToCheck);
-		if(!match) {
-			System.out.println("STORED: " + storedHostName + " CHECK: " +hostToCheck);
-		}
-		return match;
+		return storedHostName.equals(hostToCheck);
 	}
 }

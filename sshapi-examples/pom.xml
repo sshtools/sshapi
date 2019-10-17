@@ -116,13 +116,13 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<scope>compile</scope>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-synergy</artifactId>

@@ -23,6 +23,10 @@
  */
 package net.sf.sshapi.util;
 
+import net.sf.sshapi.DefaultProviderFactory;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAgentAuthenticator;
 
@@ -34,9 +38,16 @@ public class DefaultAgentAuthenticator implements SshAgentAuthenticator {
 	private SshAgent agent;
 
 	/**
+	 * Constructor. For this usage, {@link SshConfiguration#setAgent(SshAgent)} 
+	 * should have been used to set the agent to use.
+	 */
+	public DefaultAgentAuthenticator() {
+	}
+
+	/**
 	 * Constructor.
 	 * 
-	 * @param agent
+	 * @param agent agent
 	 */
 	public DefaultAgentAuthenticator(SshAgent agent) {
 		this.agent = agent;
@@ -46,7 +57,18 @@ public class DefaultAgentAuthenticator implements SshAgentAuthenticator {
 		return "agent";
 	}
 	
-	public SshAgent getAgent() {
-		return agent;
+	public SshAgent getAgent(SshConfiguration configuration) {
+		@SuppressWarnings("resource")
+		SshAgent a = agent == null ? configuration.getAgent() : agent;
+		if(a == null) {
+			// Locate and connect to agent, and set it on the configuration
+			SshProvider provider = DefaultProviderFactory.getInstance().getProvider(configuration);
+			try {
+				a = provider.connectToLocalAgent("SSHAPI");
+			} catch (SshException e) {
+				throw new IllegalStateException("Could not connect to local agent.", e);
+			}
+		}
+		return a;
 	}
 }

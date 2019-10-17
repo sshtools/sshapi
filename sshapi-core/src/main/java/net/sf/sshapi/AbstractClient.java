@@ -71,6 +71,8 @@ public abstract class AbstractClient implements SshClient {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.ALREADY_OPEN, "Already connected.");
 		}
 		doConnect(username, hostname, port, authenticators);
+		postConnect();
+		
 		if (authenticators.length > 0) {
 			try {
 				for (int i = 0; i < getConfiguration().getMaxAuthAttempts() && !authenticate(authenticators); i++)
@@ -91,6 +93,11 @@ public abstract class AbstractClient implements SshClient {
 				throw re;
 			}
 		}
+	}
+
+	protected void postConnect() throws SshException {
+		if(getProvider().getCapabilities().contains(Capability.AGENT) && getConfiguration().getAgent() != null)
+			addChannelHandler(getConfiguration().getAgent());
 	}
 
 	protected abstract void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)

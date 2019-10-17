@@ -492,7 +492,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			throws net.sf.sshapi.SshException {
 		if (authenticator instanceof SshAgentAuthenticator) {
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
-			return new Ssh2AgentAuthentication(((MaverickAgent) aa.getAgent()).getAgent());
+			return new Ssh2AgentAuthentication(((MaverickAgent) aa.getAgent(getConfiguration())).getAgent());
 		} else if (authenticator instanceof SshPasswordAuthenticator) {
 			return new PasswordAuthentication() {
 				@Override

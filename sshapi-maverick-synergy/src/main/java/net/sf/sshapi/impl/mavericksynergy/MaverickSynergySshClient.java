@@ -290,7 +290,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		// PrivateKeyFileAuthenticator pfa;	
 		if (authenticator instanceof SshAgentAuthenticator) {
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
-			return new PublicKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent()).getAgent());
+			return new PublicKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent(getConfiguration())).getAgent());
 		} 
 		else if (authenticator instanceof SshPasswordAuthenticator) {
 			return new PasswordAuthenticator() {

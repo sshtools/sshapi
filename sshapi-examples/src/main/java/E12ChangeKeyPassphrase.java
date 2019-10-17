@@ -27,19 +27,18 @@ public class E12ChangeKeyPassphrase {
 	public static void main(String[] arg) throws Exception {
 		SshConfiguration config = new SshConfiguration();
 		config.addRequiredCapability(Capability.IDENTITY_MANAGEMENT);
-
 		// Create the client using that configuration
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
 		System.out.println("Got provider " + provider.getClass());
 		SshIdentityManager mgr = provider.createIdentityManager(config);
-
+		
 		// Private key
-		File pemFile = new File(Util.prompt("Private key file", System.getProperty("user.home") + File.separator + ".ssh"
-			+ File.separator + "id_rsa"));
-		FileInputStream in = new FileInputStream(pemFile);
-		try {
-			SshPrivateKeyFile pk = mgr.createPrivateKeyFromStream(in);
-
+		File pemFile = new File(Util.prompt("Private key file",
+				System.getProperty("user.home") + File.separator + ".ssh" + File.separator + "id_rsa"));
+		SshPrivateKeyFile pk;
+		try (FileInputStream in = new FileInputStream(pemFile)) {
+			pk = mgr.createPrivateKeyFromStream(in);
+			
 			// Before we can do anything with the key, we must decrypt it if it
 			// use encrypted
 			if (pk.isEncrypted()) {
@@ -47,37 +46,29 @@ public class E12ChangeKeyPassphrase {
 				pk.decrypt(pw.toCharArray());
 			}
 			System.out.println(new String(pk.getFormattedKey()));
-
-			// Change
-			int i = 0;
-			String newpw = null;
-			for (; i < 2; i++) {
-				newpw = Util.prompt("New passphrase");
-				String confirmpw = Util.prompt("Confirm new passphrase");
-				if (newpw.equals(confirmpw)) {
-					break;
-				} else {
-					System.out.println("Passphrases do not match");
-				}
-			}
-			if (i == 2) {
-				System.out.println("Aborted Exit");
-				System.exit(0);
-			}
-			pk.changePassphrase(newpw.toCharArray());
-
-			// Write the key back out
-			FileOutputStream fout = new FileOutputStream(pemFile);
-			try {
-				fout.write(pk.getFormattedKey());
-				fout.flush();
-			} finally {
-				fout.close();
-			}
-
-		} finally {
-			in.close();
 		}
-
+		
+		// Change
+		int i = 0;
+		String newpw = null;
+		for (; i < 2; i++) {
+			newpw = Util.prompt("New passphrase");
+			String confirmpw = Util.prompt("Confirm new passphrase");
+			if (newpw.equals(confirmpw)) {
+				break;
+			} else {
+				System.out.println("Passphrases do not match");
+			}
+		}
+		if (i == 2) {
+			System.out.println("Aborted Exit");
+			System.exit(0);
+		}
+		pk.changePassphrase(newpw.toCharArray());
+		
+		// Write the key back out
+		try (FileOutputStream fout = new FileOutputStream(pemFile)) {
+			fout.write(pk.getFormattedKey());
+		}
 	}
 }

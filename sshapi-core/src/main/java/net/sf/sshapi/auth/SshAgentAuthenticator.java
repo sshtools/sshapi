@@ -23,11 +23,13 @@
  */
 package net.sf.sshapi.auth;
 
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
 import net.sf.sshapi.agent.SshAgent;
 
 /**
  * Authenticator that uses keys from the local agent.
  */
 public interface SshAgentAuthenticator extends SshAuthenticator {
-	SshAgent getAgent();
+	SshAgent getAgent(SshConfiguration configuration) throws SshException;
 }

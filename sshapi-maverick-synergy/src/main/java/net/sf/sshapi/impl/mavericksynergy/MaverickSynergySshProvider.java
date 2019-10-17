@@ -163,7 +163,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	public List<Capability> getCapabilities() {
 		List<Capability> caps = Arrays.asList(DEFAULT_CAPS);
 		try {
-			Class.forName("com.maverick.agent.client.SshAgentClient");
+			Class.forName("com.sshtools.agent.client.SshAgentClient");
 			caps = new ArrayList<>(caps);
 			caps.add(Capability.AGENT);
 			caps.add(Capability.OPENSSH_AGENT);

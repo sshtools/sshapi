@@ -79,6 +79,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	private Session session;
 	private boolean authenticated;
 	private int channelCount;
+	private int timeout = -1;
 
 	public JschSshClient(SshConfiguration configuration) {
 		super(configuration);
@@ -95,6 +96,8 @@ class JschSshClient extends AbstractClient implements Logger {
 			JSch.setLogger(this);
 			client.setHostKeyRepository(new HostKeyRepositoryBridge(client.getHostKeyRepository()));
 			session = client.getSession(username, hostname, port);
+			if(timeout > -1)
+				session.setTimeout(timeout);
 			final SocketFactory socketFactory = getConfiguration().getSocketFactory();
 			if (socketFactory != null) {
 				session.setSocketFactory(new com.jcraft.jsch.SocketFactory() {
@@ -342,7 +345,9 @@ class JschSshClient extends AbstractClient implements Logger {
 	@Override
 	public void setTimeout(int timeout) throws IOException {
 		try {
-			session.setTimeout(timeout);
+			this.timeout = timeout;
+			if(session != null)
+				session.setTimeout(timeout);
 		} catch (JSchException e) {
 			IOException ioe = new IOException("Failed to set timeout.");
 			ioe.initCause(e);
@@ -352,7 +357,7 @@ class JschSshClient extends AbstractClient implements Logger {
 
 	@Override
 	public int getTimeout() throws IOException {
-		return session.getTimeout();
+		return session == null ? timeout : session.getTimeout();
 	}
 
 	class UserInfoAuthenticatorBridge implements UserInfo, UIKeyboardInteractive {

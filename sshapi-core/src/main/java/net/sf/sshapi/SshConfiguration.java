@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import javax.net.SocketFactory;
 
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.util.ConsoleLogger;
@@ -135,6 +136,7 @@ public class SshConfiguration {
 	private SshProxyServerDetails proxyServer;
 	private String preferredSSH1Cipher;
 	private String sftpSSH1Path;
+	private SshAgent agent;
 	private List<Capability> requiredCapabilities = new ArrayList<>();
 	private SocketFactory socketFactory;
 	private int maxAuthAttempts = 3;
@@ -233,6 +235,28 @@ public class SshConfiguration {
 		this.hostKeyValidator = hostKeyValidator;
 	}
 	
+	/**
+	 * Get the {@link SshAgent} in use. This will be added to the client as a channel
+	 *  handler if set (you may do this yourself if you wish).
+	 * 
+	 * @return agent
+	 */
+	public SshAgent getAgent() {
+		return agent;
+	}
+	
+	/**
+	 * Set the {@link SshAgent} in use. This will be added to the client as a channel
+	 * handler if set (you may do this yourself if you wish).
+	 * 
+	 * @param agent agent
+	 * @return this for chaining
+	 */
+	public SshConfiguration setAgent(SshAgent agent) {
+		this.agent = agent;
+		return this;
+	}
+
 	/**
 	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for no
 	 * hint.
@@ -853,7 +877,7 @@ public class SshConfiguration {
 		for (Iterator<Capability> i = requiredCapabilities.iterator(); i.hasNext();) {
 			Capability c = (Capability) i.next();
 			if (!provider.getCapabilities().contains(c)) {
-				throw new UnsupportedOperationException("Capability " + c + " is required, but not supported by this provider.");
+				throw new UnsupportedOperationException("Capability " + c + " is required, but not supported by the provider " + provider.getName());
 			}
 		}
 	}
