@@ -7,9 +7,9 @@ import net.sf.sshapi.SshPrivateKey;
 
 class MaverickPrivateKey implements SshPrivateKey {
 
-	com.sshtools.common.ssh.components.SshPrivateKey privateKey;
+	com.maverick.ssh.components.SshPrivateKey privateKey;
 
-	public MaverickPrivateKey(com.sshtools.common.ssh.components.SshPrivateKey privateKey) {
+	public MaverickPrivateKey(com.maverick.ssh.components.SshPrivateKey privateKey) {
 		this.privateKey = privateKey;
 	}
 

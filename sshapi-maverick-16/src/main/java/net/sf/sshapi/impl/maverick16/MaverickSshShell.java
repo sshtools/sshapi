@@ -49,7 +49,7 @@ class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListen
 			if (!((SshSession) getChannel()).startShell()) {
 				throw new SshException("Failed to start shell");
 			}
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException("Failed to open shell.", e);
 		}
 	}
@@ -58,7 +58,7 @@ class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListen
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
 		try {
 			((SshSession) getChannel()).changeTerminalDimensions(width, height, pixw, pixw);
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
 

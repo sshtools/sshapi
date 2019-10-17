@@ -32,9 +32,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.maverick.ssh.SshConnector;
+import com.maverick.ssh.SshException;
+import com.maverick.ssh.components.jce.JCEProvider;
 import com.maverick.ssh2.Ssh2Context;
-import com.sshtools.common.ssh.SshException;
-import com.sshtools.common.ssh.components.jce.JCEProvider;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
@@ -66,7 +66,7 @@ public class MaverickSshProvider extends AbstractProvider {
 	 */
 	public static final String CFG_SFTP_MAX_VERSION = "sshapi.maverick.sftp.maxVersion";
 	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION,
-			Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
+			Capability.SSH1, Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
 			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT,
 			Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS, Capability.CHANNEL_DATA_EVENTS,
@@ -152,7 +152,7 @@ public class MaverickSshProvider extends AbstractProvider {
 	public List<Capability> getCapabilities() {
 		List<Capability> caps = Arrays.asList(DEFAULT_CAPS);
 		try {
-			Class.forName("com.sshtools.agent.client.SshAgentClient");
+			Class.forName("com.maverick.agent.client.SshAgentClient");
 			caps = new ArrayList<>(caps);
 			caps.add(Capability.AGENT);
 			caps.add(Capability.OPENSSH_AGENT);

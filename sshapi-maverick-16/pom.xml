@@ -63,8 +63,8 @@ This library is the provider bridge for SSHAPI.</description>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-sshagent</artifactId>
-			<version>${maverickSynergyVersion}</version>
+			<artifactId>maverick-agent</artifactId>
+			<version>${maverickVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>

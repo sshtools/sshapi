@@ -56,7 +56,7 @@ class MaverickPublicKeySubsystem extends
 	public void add(final SshPublicKey key, String comment) throws SshException {
 		try {
 			subsystem.add(new MaverickSshPublicKey(key), comment);
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		} catch (PublicKeySubsystemException e) {
 			throw new SshException(SshException.GENERAL, e);
@@ -87,7 +87,7 @@ class MaverickPublicKeySubsystem extends
 	protected void onOpen() throws SshException {
 		try {
 			subsystem = new PublicKeySubsystem(ssh2Session);
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
 	}

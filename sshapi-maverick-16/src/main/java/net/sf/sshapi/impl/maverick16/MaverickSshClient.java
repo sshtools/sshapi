@@ -36,8 +36,10 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
-import com.maverick.agent.Ssh2AgentAuthentication;
+import com.maverick.agent.client.Ssh2AgentAuthentication;
 import com.maverick.ssh.ChannelEventListener;
+import com.maverick.ssh.ChannelOpenException;
+import com.maverick.ssh.HostKeyVerification;
 import com.maverick.ssh.PasswordAuthentication;
 import com.maverick.ssh.PseudoTerminalModes;
 import com.maverick.ssh.PublicKeyAuthentication;
@@ -46,31 +48,31 @@ import com.maverick.ssh.SshAuthentication;
 import com.maverick.ssh.SshChannel;
 import com.maverick.ssh.SshClient;
 import com.maverick.ssh.SshConnector;
+import com.maverick.ssh.SshException;
 import com.maverick.ssh.SshTransport;
 import com.maverick.ssh.SshTunnel;
+import com.maverick.ssh.components.SshKeyPair;
+import com.maverick.ssh.components.SshPublicKey;
+import com.maverick.ssh1.Ssh1Client;
+import com.maverick.ssh1.Ssh1Context;
 import com.maverick.ssh2.BannerDisplay;
 import com.maverick.ssh2.ChannelFactory;
 import com.maverick.ssh2.KBIAuthentication;
+import com.maverick.ssh2.KBIPrompt;
 import com.maverick.ssh2.KBIRequestHandler;
 import com.maverick.ssh2.Ssh2Channel;
 import com.maverick.ssh2.Ssh2Client;
 import com.maverick.ssh2.Ssh2Context;
 import com.maverick.ssh2.Ssh2Session;
-import com.sshtools.common.knownhosts.HostKeyVerification;
-import com.sshtools.common.publickey.InvalidPassphraseException;
-import com.sshtools.common.publickey.SshPrivateKeyFile;
-import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
-import com.sshtools.common.ssh.ChannelOpenException;
-import com.sshtools.common.ssh.SshException;
-import com.sshtools.common.ssh.components.SshKeyPair;
-import com.sshtools.common.ssh.components.SshPublicKey;
-import com.sshtools.common.ssh2.KBIPrompt;
 import com.sshtools.net.ForwardingClient;
 import com.sshtools.net.ForwardingClientListener;
 import com.sshtools.net.HttpProxyTransport;
 import com.sshtools.net.SocketTransport;
 import com.sshtools.net.SocketWrapper;
 import com.sshtools.net.SocksProxyTransport;
+import com.sshtools.publickey.InvalidPassphraseException;
+import com.sshtools.publickey.SshPrivateKeyFile;
+import com.sshtools.publickey.SshPrivateKeyFileFactory;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
@@ -120,11 +122,38 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		// SSH2 configuration
 		configureSSH2();
 
+		// Version
+		switch (configuration.getProtocolVersion()) {
+		case SshConfiguration.SSH1_ONLY:
+			con.setSupportedVersions(SshConnector.SSH1);
+			break;
+		case SshConfiguration.SSH2_ONLY:
+			con.setSupportedVersions(SshConnector.SSH2);
+			break;
+		case SshConfiguration.SSH1_OR_SSH2:
+			con.setSupportedVersions(SshConnector.SSH1 | SshConnector.SSH2);
+			break;
+		}
+
+		doSSH1(con);
+
 		con.setKnownHosts(hkv);
 	}
 
+	private void doSSH1(SshConnector con) throws SshException {
+		Ssh1Context context1 = (Ssh1Context) con.getContext(SshConnector.SSH1);
+		SshConfiguration configuration = getConfiguration();
+		if (configuration.getPreferredSSH1CipherType() == null
+				|| configuration.getPreferredSSH1CipherType().equals(SshConfiguration.CIPHER_DES)) {
+			context1.setCipherType(Ssh1Context.CIPHER_DES);
+		} else if (configuration.getPreferredSSH1CipherType().equals(SshConfiguration.CIPHER_3DES)) {
+			context1.setCipherType(Ssh1Context.CIPHER_3DES);
+		}
+		context1.setSFTPProvider(configuration.getSftpSSH1Path());
+	}
+
 	private void configureSSH2() throws SshException {
-		Ssh2Context context2 = con.getContext();
+		Ssh2Context context2 = (Ssh2Context) con.getContext(SshConnector.SSH2);
 		SshConfiguration configuration = getConfiguration();
 		if (configuration.getPreferredClientToServerCipher() != null) {
 			context2.setPreferredCipherCS(configuration.getPreferredClientToServerCipher());
@@ -395,7 +424,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			}
 			connectingTransport = transport;
 			try {
-				client = con.connect(transport, username, true, con.getContext());
+				client = con.connect(transport, username, true, null);
 			} finally {
 				connectingTransport = null;
 			}
@@ -421,14 +450,18 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	private String[] getAuthenticationMethods() throws SshException {
-		String[] authenticationMethods = ((Ssh2Client) client).getAuthenticationMethods(client.getUsername());
-		if (getProvider().getCapabilities().contains(Capability.AGENT)) {
-			String[] a = new String[authenticationMethods.length + 1];
-			System.arraycopy(authenticationMethods, 0, a, 1, authenticationMethods.length);
-			a[0] = "agent";
-			authenticationMethods = a;
+		if (client instanceof Ssh1Client) {
+			return new String[] { "password", "rhosts", "publickey", "challenge" };
+		} else {
+			String[] authenticationMethods = ((Ssh2Client) client).getAuthenticationMethods(client.getUsername());
+			if (getProvider().getCapabilities().contains(Capability.AGENT)) {
+				String[] a = new String[authenticationMethods.length + 1];
+				System.arraycopy(authenticationMethods, 0, a, 1, authenticationMethods.length);
+				a[0] = "agent";
+				authenticationMethods = a;
+			}
+			return authenticationMethods;
 		}
-		return authenticationMethods;
 	}
 
 	@Override

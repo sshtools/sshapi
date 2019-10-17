@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi.impl.maverick16;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,16 +33,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import com.sshtools.common.knownhosts.KnownHostsKeyVerification;
-import com.sshtools.common.knownhosts.KnownHostsKeyVerification.KeyEntry;
-import com.sshtools.common.ssh.components.ComponentManager;
-import com.sshtools.common.ssh.components.SshHmac;
-import com.sshtools.common.ssh.components.SshPublicKey;
-import com.sshtools.common.util.Base64;
+import com.maverick.ssh.components.ComponentManager;
+import com.maverick.ssh.components.SshHmac;
+import com.maverick.ssh.components.SshPublicKey;
+import com.maverick.util.Base64;
+import com.sshtools.publickey.KnownHostsKeyVerification;
+import com.sshtools.publickey.KnownHostsKeyVerification.KeyEntry;
 
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
@@ -83,7 +84,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 			} finally {
 				fin.close();
 			}
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
@@ -98,21 +99,21 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 				@Override
 				public boolean verifySignature(byte[] signature, byte[] data)
-						throws com.sshtools.common.ssh.SshException {
+						throws com.maverick.ssh.SshException {
 					return false;
 				}
 
 				@Override
-				public void init(byte[] blob, int start, int len) throws com.sshtools.common.ssh.SshException {
+				public void init(byte[] blob, int start, int len) throws com.maverick.ssh.SshException {
 				}
 
 				@Override
-				public String getFingerprint() throws com.sshtools.common.ssh.SshException {
+				public String getFingerprint() throws com.maverick.ssh.SshException {
 					return hostKey.getFingerprint();
 				}
 
 				@Override
-				public byte[] getEncoded() throws com.sshtools.common.ssh.SshException {
+				public byte[] getEncoded() throws com.maverick.ssh.SshException {
 					return hostKey.getKey();
 				}
 
@@ -149,7 +150,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 							String.format("Failed to save known hosts file %s", ioe));
 				}
 			}
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
 	}
@@ -170,7 +171,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 				public byte[] getKey() {
 					try {
 						return ke.getKey().getEncoded();
-					} catch (com.sshtools.common.ssh.SshException e) {
+					} catch (com.maverick.ssh.SshException e) {
 						throw new RuntimeException(e);
 					}
 				}
@@ -184,7 +185,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 				public String getFingerprint() {
 					try {
 						return ke.getKey().getFingerprint();
-					} catch (com.sshtools.common.ssh.SshException e) {
+					} catch (com.maverick.ssh.SshException e) {
 						throw new RuntimeException(e);
 					}
 				}
@@ -211,7 +212,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 			saveHostFile();
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
-		} catch (com.sshtools.common.ssh.SshException e) {
+		} catch (com.maverick.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
 	}
@@ -230,7 +231,7 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 				byte[] ourHash = sha1.doFinal();
 				byte[] storedHash = Base64.decode(hashStr);
 				return Arrays.equals(storedHash, ourHash);
-			} catch (com.sshtools.common.ssh.SshException e) {
+			} catch (com.maverick.ssh.SshException e) {
 				throw new RuntimeException(e);
 			}
 		} else {
