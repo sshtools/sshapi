@@ -28,10 +28,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.sftp.SftpClient;
-import net.sf.sshapi.sftp.SftpFile;
-
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.InputData;
 import org.apache.maven.wagon.OutputData;
@@ -44,6 +40,10 @@ import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.providers.ssh.ScpHelper;
 import org.apache.maven.wagon.repository.RepositoryPermissions;
 import org.apache.maven.wagon.resource.Resource;
+
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.sftp.SftpFile;
 
 /**
  * SFTP protocol wagon via SSHAPI. Based on the JSch SFTP Wagon.
@@ -77,7 +77,7 @@ public class SftpWagon extends AbstractSSHAPIWagon {
 		super.openConnectionInternal();
 
 		try {
-			channel = session.createSftpClient();
+			channel = session.createSftp();
 			channel.open();
 		} catch (SshException e) {
 			throw new ConnectionException("Error connecting to remote repository: " + getRepository().getUrl(), e);

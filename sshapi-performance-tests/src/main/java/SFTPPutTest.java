@@ -8,7 +8,6 @@ import net.sf.sshapi.sftp.SftpClient;
 class SFTPPutTest extends AbstractConnectionTest {
 
 	static {
-		net.sf.sshapi.util.Util.prompt("Press RETURN to start test");
 		try {
 			Util.createTempFile();
 		} catch (IOException ioe) {

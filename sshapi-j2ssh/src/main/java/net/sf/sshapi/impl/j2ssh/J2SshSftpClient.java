@@ -23,32 +23,77 @@
  */
 package net.sf.sshapi.impl.j2ssh;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.sftp.AbstractSftpClient;
-import net.sf.sshapi.sftp.SftpException;
-import net.sf.sshapi.sftp.SftpFile;
-
+import com.sshtools.j2ssh.DirectoryOperation;
+import com.sshtools.j2ssh.FileTransferProgress;
 import com.sshtools.j2ssh.SftpClient;
 import com.sshtools.j2ssh.SshClient;
 import com.sshtools.j2ssh.io.UnsignedInteger32;
 import com.sshtools.j2ssh.sftp.FileAttributes;
 
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.sftp.AbstractSftpClient;
+import net.sf.sshapi.sftp.SftpException;
+import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpOperation;
+
 class J2SshSftpClient extends AbstractSftpClient {
-
 	private final SshClient client;
-	private SftpClient sftpClient;
 	private String home;
+	private SftpClient sftpClient;
 
-	public J2SshSftpClient(SshClient client) {
+	public J2SshSftpClient(J2SshClient sshapiClient, SshClient client) {
+		super(sshapiClient.getProvider(), sshapiClient.getConfiguration());
 		this.client = client;
 	}
 
-	public void onClose() throws SshException {
+	public void chgrp(String path, int permissions) throws SshException {
+		try {
+			sftpClient.chgrp(permissions, path);
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	public void chmod(String path, int permissions) throws SshException {
+		try {
+			sftpClient.chmod(permissions, path);
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	public void chown(String path, int permissions) throws SshException {
+		try {
+			sftpClient.chown(permissions, path);
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	public SftpOperation download(String remotedir, File localdir, boolean recurse, boolean sync, boolean commit)
+			throws SshException {
+		try {
+			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync, commit,
+					createProgress(localdir.getPath())));
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	public String getDefaultPath() throws SshException {
+		return home;
 	}
 
 	public SftpFile[] ls(String path) throws SshException {
@@ -65,31 +110,6 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
-	private SftpFile entryToFile(String path, com.sshtools.j2ssh.sftp.SftpFile entry) throws com.sshtools.j2ssh.SshException {
-		FileAttributes attr = entry.getAttributes();
-		SftpFile file = new SftpFile(convertType(attr), entry.getAbsolutePath(), attr.getSize().longValue(), toLong(attr.getModifiedTime()), 0,
-			toLong(attr.getAccessedTime()), (int) toLong(attr.getGID()), (int) toLong(attr.getUID()), (int) toLong(attr
-				.getPermissions()));
-		return file;
-	}
-
-	long convertIntDate(Integer date) {
-		return date == null ? 0 : date.intValue() * 1000l;
-	}
-
-	public void onOpen() throws SshException {
-		try {
-			sftpClient = client.openSftpClient();
-			home = sftpClient.pwd();
-		} catch (IOException e) {
-			throw new SshException("Failed to open SFTP client.", e);
-		}
-	}
-
-	public String getDefaultPath() throws SshException {
-		return home;
-	}
-
 	public void mkdir(String path, int permissions) throws SshException {
 		try {
 			sftpClient.mkdir(path);
@@ -102,6 +122,26 @@ class J2SshSftpClient extends AbstractSftpClient {
 		sftpClient.mkdirs(path);
 	}
 
+	public void onClose() throws SshException {
+	}
+
+	public void onOpen() throws SshException {
+		try {
+			sftpClient = client.openSftpClient();
+			home = sftpClient.pwd();
+		} catch (IOException e) {
+			throw new SshException("Failed to open SFTP client.", e);
+		}
+	}
+
+	public void rename(String path, String newPath) throws SshException {
+		try {
+			sftpClient.rename(path, newPath);
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
 	public void rm(String path) throws SshException {
 		try {
 			SftpFile file = stat(path);
@@ -112,6 +152,15 @@ class J2SshSftpClient extends AbstractSftpClient {
 		} catch (SftpException e) {
 			throw e;
 		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	public void rm(String path, boolean recurse) throws SftpException, SshException {
+		try {
+			sftpClient.rm(path, true, recurse);
+		} catch (Exception e) {
 			throw new SshException("Failed to create directory.", e);
 		}
 	}
@@ -130,6 +179,10 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	public void setLastModified(String path, long modtime) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
 	public SftpFile stat(String path) throws SshException {
 		try {
 			FileAttributes entry = sftpClient.stat(path);
@@ -139,17 +192,48 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
-	private SftpFile entryToFile(String path, FileAttributes entry) {
-		return new SftpFile(convertType(entry), path, entry.getSize().longValue(), toLong(entry.getModifiedTime()), 0, toLong(entry
-			.getAccessedTime()), (int) toLong(entry.getGID()), (int) toLong(entry.getUID()), (int) toLong(entry.getPermissions()));
+	@Override
+	public void symlink(String path, String target) throws SshException {
+		try {
+			sftpClient.symlink(path, target);
+		} catch (SftpException e) {
+			throw e;
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
 	}
 
-	long toLong(UnsignedInteger32 i) {
-		return i == null ? 0 : i.intValue();
+	@Override
+	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
+			throws SshException {
+		try {
+			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync, commit,
+					createProgress(localdir.getPath())));
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
 	}
 
-	int toInt(Integer val) {
-		return val == null ? 0 : val.intValue();
+	@Override
+	protected void doDownload(String path, OutputStream out) throws SshException {
+		try {
+			sftpClient.get(path, out, createProgress(out.toString()));
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	protected void doUpload(String path, InputStream in) throws SshException {
+		try {
+			sftpClient.put(in, path, createProgress(in.toString()));
+		} catch (IOException e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	long convertIntDate(Integer date) {
+		return date == null ? 0 : date.intValue() * 1000l;
 	}
 
 	int convertType(FileAttributes attrs) {
@@ -170,56 +254,115 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
-	public void get(String path, OutputStream out) throws SshException {
-		try {
-			sftpClient.get(path, out);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	int toInt(Integer val) {
+		return val == null ? 0 : val.intValue();
 	}
 
-	public void put(String path, InputStream in, int permissions) throws SshException {
-		try {
-			sftpClient.put(in, path);
-			sftpClient.chmod(permissions, path);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	long toLong(UnsignedInteger32 i) {
+		return i == null ? 0 : i.intValue();
 	}
 
-	public void chmod(String path, int permissions) throws SshException {
-		try {
-			sftpClient.chmod(permissions, path);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	private FileTransferProgress createProgress(String target) {
+		return new FileTransferProgress() {
+			private String path;
+
+			@Override
+			public void completed() {
+				fireFileTransferFinished(path, target);
+			}
+
+			@Override
+			public boolean isCancelled() {
+				return false;
+			}
+
+			@Override
+			public void progressed(long progress) {
+				fireFileTransferProgressed(path, target, progress);
+			}
+
+			@Override
+			public void started(long length, String path) {
+				this.path = path;
+				fireFileTransferStarted(path, target, length);
+			}
+		};
 	}
 
-	public void rename(String path, String newPath) throws SshException {
-		try {
-			sftpClient.rename(path, newPath);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	private SftpFile entryToFile(String path, com.sshtools.j2ssh.sftp.SftpFile entry) throws com.sshtools.j2ssh.SshException {
+		FileAttributes attr = entry.getAttributes();
+		SftpFile file = new SftpFile(convertType(attr), entry.getAbsolutePath(), attr.getSize().longValue(),
+				toLong(attr.getModifiedTime()), 0, toLong(attr.getAccessedTime()), (int) toLong(attr.getGID()),
+				(int) toLong(attr.getUID()), (int) toLong(attr.getPermissions()));
+		return file;
 	}
 
-	public void chgrp(String path, int permissions) throws SshException {
-		try {
-			sftpClient.chgrp(permissions, path);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	private SftpFile entryToFile(String path, FileAttributes entry) {
+		return new SftpFile(convertType(entry), path, entry.getSize().longValue(), toLong(entry.getModifiedTime()), 0,
+				toLong(entry.getAccessedTime()), (int) toLong(entry.getGID()), (int) toLong(entry.getUID()),
+				(int) toLong(entry.getPermissions()));
 	}
 
-	public void chown(String path, int permissions) throws SshException {
-		try {
-			sftpClient.chown(permissions, path);
-		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
-		}
-	}
+	private SftpOperation toOperation(DirectoryOperation op) {
+		List<String> updated = new ArrayList<String>();
+		for (Object f : op.getUpdatedFiles())
+			updated.add(f.toString());
+		List<String> unchanged = new ArrayList<String>();
+		for (Object f : op.getUnchangedFiles())
+			unchanged.add(f.toString());
+		List<String> deleted = new ArrayList<String>();
+		for (Object f : op.getDeletedFiles())
+			deleted.add(f.toString());
+		List<String> created = new ArrayList<String>();
+		for (Object f : op.getNewFiles())
+			created.add(f.toString());
+		Set<String> all = new LinkedHashSet<>();
+		all.addAll(updated);
+		all.addAll(unchanged);
+		all.addAll(deleted);
+		all.addAll(created);
+		Map<String, Exception> errors = new HashMap<String, Exception>();
+		List<String> allList = new ArrayList<>(all);
+		return new SftpOperation() {
+			@Override
+			public List<String> all() {
+				return allList;
+			}
 
-	public void setLastModified(String path, long modtime) throws SshException {
-		throw new UnsupportedOperationException();
+			@Override
+			public List<String> created() {
+				return created;
+			}
+
+			@Override
+			public List<String> deleted() {
+				return deleted;
+			}
+
+			@Override
+			public Map<String, Exception> errors() {
+				return errors;
+			}
+
+			@Override
+			public long files() {
+				return op.getFileCount();
+			}
+
+			@Override
+			public long size() {
+				return op.getTransferSize();
+			}
+
+			@Override
+			public List<String> unchanged() {
+				return unchanged;
+			}
+
+			@Override
+			public List<String> updated() {
+				return updated;
+			}
+		};
 	}
 }

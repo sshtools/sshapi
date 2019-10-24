@@ -23,7 +23,7 @@ class MaverickPrivateKey implements SshPrivateKey {
 	}
 
 	@Override
-	public String getAlgorithm() {
-		return privateKey.getAlgorithm();
+	public Algorithm getAlgorithm() {
+		return Algorithm.fromAlgoName(privateKey.getAlgorithm());
 	}
 }

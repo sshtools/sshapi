@@ -34,6 +34,8 @@ import java.util.List;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.client.components.Rsa1024Sha1;
 import com.sshtools.client.components.Rsa2048Sha256;
+import com.sshtools.common.logger.Log;
+import com.sshtools.common.logger.LoggerContext;
 import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.ssh.SshContext;
 import com.sshtools.common.ssh.SshException;
@@ -61,25 +63,9 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT, Capability.SFTP,
 			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
-			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL /*, Capability.PUBLIC_KEY_SUBSYSTEM, Capability.CHANNEL_HANDLERS */ };
-	
-	// private final static Capability[] DEFAULT_CAPS = new Capability[] {
-	// Capability.PER_CONNECTION_CONFIGURATION,
-	// Capability.SSH2, Capability.HTTP_PROXY, Capability.SOCKS4_PROXY,
-	// Capability.SOCKS5_PROXY,
-	// Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
-	// Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
-	// Capability.HOST_KEY_MANAGEMENT,
-	// Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS,
-	// Capability.CHANNEL_DATA_EVENTS,
-	// Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM,
-	// Capability.SOCKET_FACTORY,
-	// Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
-	// Capability.SFTP_OVER_SCP,
-	// Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
-	// Capability.CHANNEL_HANDLERS,
-	// Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
-	// Capability.SHELL };
+			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL,
+			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+			Capability.REMOTE_PORT_FORWARD };
 	
 	private SshEngine engine;
 	private ComponentManager componentManager;
@@ -92,6 +78,47 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 		ComponentManager.enableCBCCiphers();
+//		Log.setDefaultContext(new LoggerContext() {
+//			@Override
+//			public void raw(com.sshtools.common.logger.Log.Level level, String msg) {
+//				SshConfiguration.getLogger().log(toLevel(level), msg);
+//			}
+//			
+//			@Override
+//			public void newline() {
+//				SshConfiguration.getLogger().log(Level.INFO, "");
+//			}
+//			
+//			@Override
+//			public void log(com.sshtools.common.logger.Log.Level level, String msg, Throwable e, Object... args) {
+//				SshConfiguration.getLogger().log(toLevel(level), msg, e);
+//			}
+//			
+//			private Level toLevel(com.sshtools.common.logger.Log.Level level) {
+//				switch(level) {
+//				case DEBUG:
+//					return Level.DEBUG;
+//				case INFO:
+//					return Level.INFO;
+//				case WARN:
+//					return Level.WARN;
+//				case ERROR:
+//					return Level.ERROR;
+//				default:
+//					return Level.TRACE;
+//				}
+//			}
+//
+//			@Override
+//			public boolean isLogging(com.sshtools.common.logger.Log.Level level) {
+//				return SshConfiguration.getLogger().isLevelEnabled(toLevel(level));
+//			}
+//			
+//			@Override
+//			public void close() {
+//				
+//			}
+//		});
 	}
 
 	private synchronized void checkEngine() {
@@ -168,6 +195,13 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			caps.add(Capability.AGENT);
 			caps.add(Capability.OPENSSH_AGENT);
 			caps.add(Capability.RFC_AGENT);
+			caps = Collections.unmodifiableList(caps);
+		} catch (ClassNotFoundException cnfe) {
+		}
+		try {
+			Class.forName("com.sshtools.common.ssh.components.X509Helper");
+			caps = new ArrayList<>(caps);
+			caps.add(Capability.X509_PUBLIC_KEY);
 			caps = Collections.unmodifiableList(caps);
 		} catch (ClassNotFoundException cnfe) {
 		}

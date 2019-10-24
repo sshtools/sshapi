@@ -115,9 +115,56 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @throws SshException
 	 */
 	boolean authenticate(SshAuthenticator... authenticators) throws SshException;
+	
+	/**
+	 * Create a new shell without a pseudo tty.
+	 * <p>
+	 * Note, this method does not actually start the shell, you must call
+	 * {@link SshShell#open()} to do that.
+	 * <p>
+	 * Remember to close the shell when you are finished with it using
+	 * {@link SshShell#close()}, or use a try-with-resource.
+	 * 
+	 * @return shell
+	 * @throws SshException
+	 * @see {@link #shell(String, int, int, int, int, byte[])}}
+	 * @see {@link #createShell(String, int, int, int, int, byte[])}
+	 * @see {@link #shell()}
+	 */
+	SshShell createShell()
+			throws SshException;
 
 	/**
-	 * Create a new shell.
+	 * <p>
+	 * Create a new shell without a pseudo tty and open it. This method is intended for simpler cases and
+	 * is at it's best when used with try-with-resource. E.g. <code>
+	 * <pre>
+	 * try(client.shell()) {
+	 * 	// Do stuff. The channel will be automatically closed when leaving the scope of the try.
+	 * }
+	 * </pre>
+	 * </code>
+	 * </p>
+	 * <p>
+	 * Note, this method does not give you the opportunity to add any listeners
+	 * before the shell is started, so data may be missed if you wish to use
+	 * listeners. In this case, use
+	 * {@link #createShell)} instead.
+	 * </p>
+	 * <p>
+	 * Remember to close the shell when you are finished with it using
+	 * {@link SshShell#close()}, or use a try-with-resource.
+	 * 
+	 * @return shell
+	 * @throws SshException
+	 * @see {@link #createShell(String, int, int, int, int, byte[])}
+	 * @see {@link #createShell()}
+	 * @see {@link #shell(String, int, int, int, int, byte[])}
+	 */
+	SshShell shell() throws SshException;
+
+	/**
+	 * Create a new shell with a pseudo tty.
 	 * <p>
 	 * Note, this method does not actually start the shell, you must call
 	 * {@link SshShell#open()} to do that.
@@ -149,7 +196,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 
 	/**
 	 * <p>
-	 * Create a new shell and open it. This method is intended for simpler cases and
+	 * Create a new shell with a pseduo tty and open it. This method is intended for simpler cases and
 	 * is at it's best when used with try-with-resource. E.g. <code>
 	 * <pre>
 	 * try(client.shell("vt100",80,24,0,0,null)) {
@@ -186,6 +233,8 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @return shell
 	 * @throws SshException
 	 * @see {@link #createShell(String, int, int, int, int, byte[])}
+	 * @see {@link #createShell()}
+	 * @see {@link #shell()}
 	 */
 	SshShell shell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException;
@@ -312,7 +361,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 			throws SshException;
 
 	/**
-	 * Execute a command on the remote server.
+	 * Execute a command on the remote server without a pseudo tty.
 	 * <p>
 	 * Note, this method does not actually start the command and open the channel,
 	 * you must call {@link SshLifecycleComponent#open()} to do that.
@@ -325,13 +374,99 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @return channel
 	 * @throws SshException
 	 *             on any error
+	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
+	 * @see {@link #command(String)}
+	 * @see {@link #command(String, String, int, int, int, int, byte[])}
 	 */
 	SshCommand createCommand(String command) throws SshException;
 
 	/**
 	 * 
 	 * <p>
-	 * Execute a command on the remote server, open the channel. This method is
+	 * Execute a command on the remote server with a pseudo tty, open the channel. This method is
+	 * intended for simpler cases and is at it's best when used with
+	 * try-with-resource. E.g. <code>
+	 * <pre>
+	 * try(client.command("ls /etc")) {
+	 * 	// Do stuff. The channel will be automatically closed when leaving the scope of the try.
+	 * }
+	 * </pre>
+	 * </code>
+	 * </p>
+	 * <p>
+	 * Note, this method does not give you the opportunity to add any listeners
+	 * before the shell is started, so data may be missed if you wish to use
+	 * listeners. In this case, use {@link #createCommand(String)} instead.
+	 * </p>
+	 * <p>
+	 * Remember to close the channel when you are finished with it using
+	 * {@link SshLifecycleComponent#close()} or use try-with-resource.
+	 * 
+	 * @param command
+	 *            command to execute
+	 * @param termType
+	 *            terminal type, or use <code>null</code> to NOT request a pseudo
+	 *            terminal
+	 * @param cols
+	 *            width of terminal in characters (use zero if not pseudo terminal
+	 *            should be requested)
+	 * @param rows
+	 *            height of terminal in characters (use zero if not pseudo terminal
+	 *            should be requested)
+	 * @param pixWidth
+	 *            width of terminal in pixels (if known, otherwise use zero)
+	 * @param pixHeight
+	 *            height of terminal in pixels (if known, otherwise use zero)
+	 * @param terminalModes
+	 *            terminal modes (or null or empty array)
+	 * @return channel
+	 * @throws SshException
+	 *             on any error
+	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
+	 * @see {@link #command(String)}
+	 * @see {@link #createCommand(String)}
+	 */
+	SshCommand command(String command, String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) throws SshException;
+	
+	/**
+	 * Execute a command on the remote server with a pseudo tty.
+	 * <p>
+	 * Note, this method does not actually start the command and open the channel,
+	 * you must call {@link SshLifecycleComponent#open()} to do that.
+	 * <p>
+	 * Remember to close the channel when you are finished with it using
+	 * {@link SshLifecycleComponent#close()}.
+	 * 
+	 * @param command
+	 *            command to execute
+	 * @param termType
+	 *            terminal type, or use <code>null</code> to NOT request a pseudo
+	 *            terminal
+	 * @param cols
+	 *            width of terminal in characters (use zero if not pseudo terminal
+	 *            should be requested)
+	 * @param rows
+	 *            height of terminal in characters (use zero if not pseudo terminal
+	 *            should be requested)
+	 * @param pixWidth
+	 *            width of terminal in pixels (if known, otherwise use zero)
+	 * @param pixHeight
+	 *            height of terminal in pixels (if known, otherwise use zero)
+	 * @param terminalModes
+	 *            terminal modes (or null or empty array)
+	 * @return channel
+	 * @throws SshException
+	 *             on any error
+	 * @see {@link #command(String, String, int, int, int, int, byte[])}
+	 * @see {@link #command(String)}
+	 * @see {@link #createCommand(String)}
+	 */
+	SshCommand createCommand(String command, String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) throws SshException;
+
+	/**
+	 * 
+	 * <p>
+	 * Execute a command on the remote server without a pseudo tty, open the channel. This method is
 	 * intended for simpler cases and is at it's best when used with
 	 * try-with-resource. E.g. <code>
 	 * <pre>
@@ -355,8 +490,12 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @return channel
 	 * @throws SshException
 	 *             on any error
+	 * @see {@link #command(String, String, int, int, int, int, byte[])}
+	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
+	 * @see {@link #createCommand(String)}
 	 */
 	SshCommand command(String command) throws SshException;
+
 
 	/**
 	 * Create a {@link SocketFactory} whose connections are actually tunneled over
@@ -368,18 +507,6 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @throws SshException
 	 */
 	SocketFactory createTunneledSocketFactory() throws SshException;
-
-	/**
-	 * Create a new SCP client. This may be used for simple file transfer. For a
-	 * more fully featured file-system like approach, use {@link #createSftpClient}.
-	 * 
-	 * @return scp client
-	 * @throws SshException
-	 *             on any error
-	 * @see {@link #createSCP()}
-	 */
-	@Deprecated
-	SshSCPClient createSCPClient() throws SshException;
 
 	/**
 	 * Create a new SCP client. This may be used for simple file transfer. For a
@@ -416,22 +543,6 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @see {@link #createSCP()}
 	 */
 	SshSCPClient scp() throws SshException;
-
-	/**
-	 * Create a new SFTP client that may be used to perform file operations.
-	 * <p>
-	 * Note, this method does not actually start the client, you must call
-	 * {@link SshLifecycleComponent#open()} to do that.
-	 * <p>
-	 * Remember to close the client when you are finished with it using
-	 * {@link SshLifecycleComponent#close()}.
-	 * 
-	 * @return SFTP client
-	 * @throws SshException
-	 * @see {@link #createSftp()}
-	 */
-	@Deprecated
-	SftpClient createSftpClient() throws SshException;
 
 	/**
 	 * Create a new SFTP client that may be used to perform file operations.
@@ -501,15 +612,6 @@ public interface SshClient extends Closeable, AutoCloseable {
 	SshPublicKeySubsystem publicKeySubsystem() throws SshException;
 
 	/**
-	 * Disconnect this client.
-	 * 
-	 * @throws SshException
-	 * @see {@link #close()}
-	 * @deprecated
-	 */
-	void disconnect() throws SshException;
-
-	/**
 	 * Close this client, but don't complain if it is not connected or there are
 	 * other errors.
 	 */
@@ -560,6 +662,20 @@ public interface SshClient extends Closeable, AutoCloseable {
 	String getUsername();
 
 	/**
+	 * Get the currently connected host.
+	 * 
+	 * @return host
+	 */
+	String getHostname();
+
+	/**
+	 * Get the currently connected port.
+	 * 
+	 * @return port
+	 */
+	int getPort();
+
+	/**
 	 * Get the number of channels that are currently open.
 	 * 
 	 * @return open channels
@@ -592,7 +708,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @param timeout
 	 *            timeout
-	 * @throws IOException
+	 * @throws IOException on I/O error
 	 */
 	void setTimeout(int timeout) throws IOException;
 
@@ -601,7 +717,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * A timeout of zero indicates infinite timeout
 	 * 
 	 * @return timeout
-	 * @throws IOException
+	 * @throws IOException on I/O error
 	 */
 	int getTimeout() throws IOException;
 
@@ -611,7 +727,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @param channelHandler
 	 *            channel handler to add
-	 * @throws SshException
+	 * @throws SshException on any error
 	 */
 	void addChannelHandler(SshChannelHandler channelHandler) throws SshException;
 
@@ -621,7 +737,16 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @param channelHandler
 	 *            channel handler to remove
-	 * @throws SshException
+	 * @throws SshException on any error
 	 */
 	void removeChannelHandler(SshChannelHandler channelHandler) throws SshException;
+
+	/**
+	 * Force a key exchange. Provider must support {@link Capability#FORCE_KEY_EXCHANGE}
+	 * or {@link UnsupportedOperationException}.
+	 * 
+	 * @throws SshException on any error
+	 * @throws UnsupportedOperationException if not supported
+	 */
+	void forceKeyExchange() throws SshException;
 }

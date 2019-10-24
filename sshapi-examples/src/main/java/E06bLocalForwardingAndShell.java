@@ -47,9 +47,9 @@ public class E06bLocalForwardingAndShell {
 				});
 			}
 
-			try (SshPortForward local = client.localForward(null, 8443, "www.jadaptive.com", 443)) {
+			try (SshPortForward local = client.localForward(null, 8443, "www.google.com", 443)) {
 
-				System.out.println("Point your browser to https://localhost:8443/en/");
+				System.out.println("Point your browser to https://localhost:8443/");
 				
 				// Create the shell channel, tunnel will be active until that exits
 				try (SshShell shell = client.shell("dumb", 80, 24, 0, 0, null)) {

@@ -56,8 +56,4 @@ public class SimpleKeyboardInteractiveAuthenticator implements SshKeyboardIntera
 		return (String[])answers.toArray(new String[0]);
 	}
 
-	public String getTypeName() {
-		return "keyboard-interactive";
-	}
-
 }

@@ -28,6 +28,11 @@ package net.sf.sshapi.auth;
  */
 public interface SshKeyboardInteractiveAuthenticator extends SshAuthenticator {
 
+	@Override
+	default String getTypeName() {
+		return "keyboard-interactive";
+	}
+
 	/**
 	 * Challenge the user with a number of questions.
 	 * 

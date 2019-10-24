@@ -48,10 +48,15 @@ public class SshException extends IOException {
 	 */
 	public final static Code ALREADY_OPEN = new Code("open");
 	/**
-	 * An attempt was made to 'close' a resource, an {@link SshPortForward} for
-	 * example, but the resource was already closed.
+	 * An attempt was made to use a resource that must be open, a {@link SshPortForward} for
+	 * example, but the resource was already closed. 
 	 */
 	public final static Code NOT_OPEN = new Code("notOpen");
+	/**
+	 * An attempt was made to use a resource that must be required authentication, but
+	 * authentication is not yet complete.
+	 */
+	public final static Code NOT_AUTHENTICATED = new Code("notAuthenticated");
 	/**
 	 * The {@link SshConfiguration} requested use of a feature not supported by
 	 * the provider in use.

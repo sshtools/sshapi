@@ -25,10 +25,19 @@ package net.sf.sshapi.impl.maverick16;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
 import com.maverick.ssh.components.SshKeyPair;
+import com.maverick.ssh.components.jce.Ssh2RsaPrivateKey;
+import com.maverick.ssh.components.jce.SshX509RsaSha1PublicKey;
 import com.sshtools.publickey.InvalidPassphraseException;
 import com.sshtools.publickey.OpenSSHPublicKeyFile;
 import com.sshtools.publickey.SECSHPublicKeyFile;
@@ -39,6 +48,7 @@ import com.sshtools.publickey.SshPublicKeyFileFactory;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
@@ -49,7 +59,6 @@ import net.sf.sshapi.identity.SshPublicKeyFile;
  * private keys used for authentication.
  */
 public class MaverickIdentityManager implements SshIdentityManager {
-
 	@Override
 	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in) throws SshException {
 		try {
@@ -69,8 +78,8 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public SshPrivateKeyFile create(net.sf.sshapi.identity.SshKeyPair pair, int format, char[] passphrase,
-			String comment) throws SshException {
+	public SshPrivateKeyFile create(net.sf.sshapi.identity.SshKeyPair pair, int format, char[] passphrase, String comment)
+			throws SshException {
 		int typeNo = SshPrivateKeyFileFactory.OPENSSH_FORMAT;
 		if (format == SshPrivateKeyFile.VENDOR_OPENSSH) {
 			typeNo = SshPrivateKeyFileFactory.OPENSSH_FORMAT;
@@ -79,8 +88,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		} else if (format == SshPrivateKeyFile.VENDOR_SSHTOOLS) {
 			typeNo = SshPrivateKeyFileFactory.SSHTOOLS_FORMAT;
 		} else {
-			throw new SshException(SshException.UNSUPPORTED_FEATURE,
-					"Private key file format " + format + " not supported.");
+			throw new SshException(SshException.UNSUPPORTED_FEATURE, "Private key file format " + format + " not supported.");
 		}
 		try {
 			MaverickPrivateKeyFile pk = new MaverickPrivateKeyFile(SshPrivateKeyFileFactory.create(convertPair(pair),
@@ -98,9 +106,9 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
+	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException {
 		try {
-			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(translateKeyType(keyType), keyBits);
+			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(keyType.toAlgoName(), keyBits);
 			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pair.getPublicKey()),
 					new MaverickPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
@@ -110,18 +118,9 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 	}
 
-	private static String translateKeyType(String type) {
-		if (type.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
-			return SshKeyPairGenerator.SSH2_RSA;
-		} else {
-			return SshKeyPairGenerator.SSH2_DSA;
-		}
-	}
-
 	@Override
 	public List<Integer> getSupportedKeyLengths() {
-		return Arrays
-				.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
+		return Arrays.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
 	}
 
 	@Override
@@ -168,7 +167,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	}
 
 	class MaverickPrivateKeyFile implements SshPrivateKeyFile {
-
 		private com.sshtools.publickey.SshPrivateKeyFile privateKeyFile;
 		private SshKeyPair pair;
 
@@ -185,7 +183,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			} catch (InvalidPassphraseException e) {
 				SshConfiguration.getLogger().log(Level.WARN, "Failed to decode supposedly unencrypted key.");
 			}
-
 		}
 
 		@Override
@@ -199,8 +196,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			} catch (InvalidPassphraseException e) {
-				throw new SshException(SshException.INCORRECT_PASSPHRASE,
-						"Could not decrypte key, invalid passphrase.");
+				throw new SshException(SshException.INCORRECT_PASSPHRASE, "Could not decrypte key, invalid passphrase.");
 			}
 		}
 
@@ -220,13 +216,11 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			}
 			try {
 				pair = privateKeyFile.toKeyPair(new String(passphrase));
-				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null, 
-						null, convertType(privateKeyFile.getType()));
+				privateKeyFile = SshPrivateKeyFileFactory.create(pair, null, null, convertType(privateKeyFile.getType()));
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			} catch (InvalidPassphraseException e) {
-				throw new SshException(SshException.INCORRECT_PASSPHRASE,
-						"Could not decrypte key, invalid passphrase.");
+				throw new SshException(SshException.INCORRECT_PASSPHRASE, "Could not decrypte key, invalid passphrase.");
 			}
 		}
 
@@ -243,8 +237,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			} else if (typeName.equals("SSH1")) {
 				return SshPrivateKeyFileFactory.SSH1_FORMAT;
 			}
-			throw new SshException(SshException.PRIVATE_KEY_FORMAT_NOT_SUPPORTED,
-					"Cannot write keys in " + typeName + " format");
+			throw new SshException(SshException.PRIVATE_KEY_FORMAT_NOT_SUPPORTED, "Cannot write keys in " + typeName + " format");
 		}
 
 		@Override
@@ -285,7 +278,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	}
 
 	class MaverickPublicKeyFile implements SshPublicKeyFile {
-
 		private byte[] formattedKey;
 		private String options;
 		private String comment;
@@ -312,7 +304,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 				throw new SshException(SshException.UNSUPPORTED_FEATURE,
 						"Unsupported public key file of type " + keyFile.getClass());
 			}
-
 		}
 
 		@Override
@@ -341,4 +332,33 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		}
 	}
 
+	@Override
+	public net.sf.sshapi.identity.SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key,
+			char[] keyPassphrase) throws SshException {
+		try {
+			KeyStore keystore = KeyStore.getInstance("PKCS12");
+			try {
+				keystore.load(pkcs12Keystore, keystorePassphrase);
+			} finally {
+				pkcs12Keystore.close();
+			}
+			RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(key, keyPassphrase);
+			X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
+			SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
+			Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
+			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pubkey), new MaverickPrivateKey(privkey));
+		} catch (IOException ioe) {
+			throw new SshException("Failed to import X509 key.", ioe);
+		} catch (KeyStoreException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (CertificateException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (UnrecoverableKeyException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (com.maverick.ssh.SshException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		}
+	}
 }

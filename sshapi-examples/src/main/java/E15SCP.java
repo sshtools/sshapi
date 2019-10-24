@@ -56,7 +56,7 @@ public class E15SCP {
 				createNewFile(fileToUpload);
 
 				// Now upload the file,
-				System.out.println("Upoading first file ..");
+				System.out.println("Uploading first file ..");
 				scp.put(fileToUpload.getName(), null, fileToUpload, false);
 				System.out.println("File uploaded ..");
 
@@ -76,8 +76,10 @@ public class E15SCP {
 				File destinationDir = new File("download-test-directory");
 
 				System.out.println("Clearing temporary directory to upload");
-				Util.delTree(dir);
-				Util.delTree(destinationDir);
+				if(dir.exists())
+					Util.delTree(dir);
+				if(destinationDir.exists())
+					Util.delTree(destinationDir);
 
 				System.out.println("Creating temporary directory to upload");
 				dir.mkdirs();

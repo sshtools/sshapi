@@ -23,6 +23,8 @@
  */
 package net.sf.sshapi;
 
+import net.sf.sshapi.SshPrivateKey.Algorithm;
+
 /**
  * Represents the the public key portion of a key pair.
  */
@@ -37,15 +39,11 @@ public interface SshPublicKey {
 	byte[] getEncodedKey() throws SshException;
 
 	/**
-	 * Get the public key algorithm used. Will be one of
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_ECDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_ED25519}
+	 * Get the public key algorithm used.
 	 * 
 	 * @return algorithm
 	 */
-	String getAlgorithm();
+	Algorithm getAlgorithm();
 
 	/**
 	 * Get the key fingerprint.

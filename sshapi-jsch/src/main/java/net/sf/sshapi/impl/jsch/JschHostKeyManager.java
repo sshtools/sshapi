@@ -26,8 +26,13 @@ package net.sf.sshapi.impl.jsch;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
+import com.jcraft.jsch.HostKey;
+import com.jcraft.jsch.HostKeyRepository;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.UserInfo;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -37,12 +42,6 @@ import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.util.Util;
 
-import com.jcraft.jsch.HostKey;
-import com.jcraft.jsch.HostKeyRepository;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.UserInfo;
-
 /**
  * JSch host key management supports the OpenSSH known_hosts format. This class
  * adapts that to the SSHAPI {@link SshHostKeyManager} interface.
@@ -51,7 +50,7 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 
 	private HostKeyRepository hkr;
 	private JSch jsch;
-	private List temporaryKeys = new ArrayList();
+	private List<SshHostKey> temporaryKeys = new ArrayList<>();
 	private File file;
 
 	public JschHostKeyManager(SshConfiguration configuration) throws SshException {
@@ -129,19 +128,19 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 
 	@Override
 	public SshHostKey[] getKeys() {
-		List hostKeys = new ArrayList();
+		List<SshHostKey> hostKeys = new ArrayList<>();
 		HostKey[] keys = hkr.getHostKey();
 		if (keys != null) {
 			for (int i = 0; i < keys.length; i++) {
 				hostKeys.add(new JschHostKey(keys[i]));
 			}
 		}
-		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshHostKey[0]);
 	}
 
 	@Override
 	protected SshHostKey[] doGetKeysForHost(String host, String type) {
-		List keys = new ArrayList();
+		List<SshHostKey> keys = new ArrayList<>();
 
 		// Stored
 		HostKey[] hk = hkr.getHostKey(host, type);
@@ -152,14 +151,13 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 		}
 
 		// Try temporary keys
-		for (Iterator i = temporaryKeys.iterator(); i.hasNext();) {
-			SshHostKey k = (SshHostKey) i.next();
+		for (SshHostKey k : temporaryKeys) {
 			if (k.getHost().equals(host) && k.getType().equals(type)) {
 				keys.add(k);
 			}
 		}
 
-		return keys.size() == 0 ? null : (SshHostKey[]) keys.toArray(new SshHostKey[0]);
+		return keys.size() == 0 ? null : keys.toArray(new SshHostKey[0]);
 	}
 
 	class JschHostKey extends AbstractHostKey {

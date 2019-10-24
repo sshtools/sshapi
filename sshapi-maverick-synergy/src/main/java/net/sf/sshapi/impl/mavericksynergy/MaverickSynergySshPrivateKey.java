@@ -27,12 +27,11 @@ public class MaverickSynergySshPrivateKey implements com.sshtools.common.ssh.com
 	}
 
 	public String getAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override
 	public byte[] sign(byte[] data, String signingAlgorithm) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }

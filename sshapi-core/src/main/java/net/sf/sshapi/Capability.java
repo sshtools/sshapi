@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi;
 
+import net.sf.sshapi.sftp.SftpHandle;
 
 /**
  * Represents a feature that a provider implementation is capable of. Clients
@@ -120,6 +121,14 @@ public class Capability {
 	 */
 	public final static Capability FILE_TRANSFER_EVENTS = new Capability("fileTransferEvents");
 	/**
+	 * The provider supports local forwards.
+	 */
+	public final static Capability LOCAL_PORT_FORWARD = new Capability("localPortForward");
+	/**
+	 * The provider supports remote forwards.
+	 */
+	public final static Capability REMOTE_PORT_FORWARD = new Capability("localPortForward");
+	/**
 	 * The provider supports SCP. See {@link SshClient#createSCPClient()}.
 	 */
 	public final static Capability SCP = new Capability("scp");
@@ -163,6 +172,35 @@ public class Capability {
 	 * The provider supports channel handlers. See {@link SshChannelHandler}.
 	 */
 	public final static Capability CHANNEL_HANDLERS = new Capability("channelHandlers");
+	/**
+	 * The provider supports X11 forwarding.
+	 */
+	public final static Capability X11_FORWARDING = new Capability("x11Forwarding");
+	/**
+	 * The provider supports a shell.
+	 */
+	public final static Capability SHELL = new Capability("shell");
+	/**
+	 * The provider forcing a key exchange.
+	 */
+	public final static Capability FORCE_KEY_EXCHANGE = new Capability("forceKex");
+	
+	/**
+	 * The provider supports raw SFTP usage (i.e. using a {@link SftpHandle} to read or write).
+	 */
+	public final static Capability RAW_SFTP = new Capability("rawSftp");
+	/**
+	 * The provider supports loading of public / private keys from an X509 keystore.
+	 */
+	public final static Capability X509_PUBLIC_KEY = new Capability("x509PublicKey");
+	/**
+	 * The provider supports text / binary mode for SFTP.
+	 */
+	public final static Capability SFTP_TRANSFER_MODE = new Capability("sftpTransferMode");
+	/**
+	 * The provider supports setting of last modified time.
+	 */
+	public final static Capability SET_LAST_MODIFIED = new Capability("setLastModified");
 
 	/**
 	 * The provider supports a agent for key authentication. One of the other
@@ -179,14 +217,6 @@ public class Capability {
 	 * The provider supports an SSH agent for key authentication.
 	 */
 	public final static Capability OPENSSH_AGENT = new Capability("openssh-agent");
-	/**
-	 * The provider supports X11 forwarding.
-	 */
-	public final static Capability X11_FORWARDING = new Capability("x11-forwarding");
-	/**
-	 * The provider supports a shell.
-	 */
-	public final static Capability SHELL = new Capability("shell");
 
 	private String name;
 

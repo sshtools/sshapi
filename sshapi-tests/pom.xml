@@ -1,0 +1,126 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<applicationVersion>${project.version}</applicationVersion>
+		<projectDescription>${project.description}</projectDescription>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>sshapi-tests</artifactId>
+	<name>SSHAPI Tests</name>
+	<description>Unit and integration tests.</description>
+	<parent>
+		<artifactId>sshapi-group</artifactId>
+		<groupId>com.sshtools</groupId>
+		<version>2.0.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<url>${scmWebRoot}/${project.artifactId}/</url>
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<targetPath>.</targetPath>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-core</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-16</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type> 
+			<scope>compile</scope>
+		</dependency> 
+		 
+		 <!-- <dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-j2ssh</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency> --> 
+		
+		<!--
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-jsch</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>-->
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-synergy-server</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-filesystem</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-session</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.25</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.19</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshd</artifactId>
+			<version>1.6.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.netty</groupId>
+			<artifactId>netty</artifactId>
+			<version>3.2.10.Final</version>
+		</dependency>
+
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>public-releases</id>
+			<url>http://artifactory.javassh.com/public-releases/</url>
+		</repository>
+	</repositories>
+
+</project>

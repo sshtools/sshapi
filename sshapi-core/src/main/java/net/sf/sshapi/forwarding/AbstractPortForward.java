@@ -58,6 +58,11 @@ public abstract class AbstractPortForward extends AbstractLifecycleComponent<Ssh
 		return open;
 	}
 
+	@Override
+	public int getBoundPort() {
+		return 0;
+	}
+
 	public final void open() throws SshException {
 		if (open) {
 			throw new SshException(SshException.ALREADY_OPEN, "The port forward is already open");

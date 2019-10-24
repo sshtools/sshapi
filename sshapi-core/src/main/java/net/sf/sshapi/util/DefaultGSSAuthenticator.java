@@ -262,10 +262,6 @@ public class DefaultGSSAuthenticator implements SshGSSAPIAuthenticator {
 		};
 	}
 
-	public String getTypeName() {
-		return "gssapi-with-mic";
-	}
-
 	public char[] promptForPassword(SshClient session, String message) {
 		return null;
 	}

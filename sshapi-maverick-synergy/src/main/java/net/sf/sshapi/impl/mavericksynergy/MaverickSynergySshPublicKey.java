@@ -44,12 +44,12 @@ public class MaverickSynergySshPublicKey implements com.sshtools.common.ssh.comp
 
 	@Override
 	public String getAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override
 	public String getSigningAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override

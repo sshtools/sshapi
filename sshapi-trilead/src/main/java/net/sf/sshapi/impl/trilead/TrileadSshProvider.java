@@ -25,7 +25,6 @@ package net.sf.sshapi.impl.trilead;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import com.trilead.ssh2.crypto.cipher.BlockCipherFactory;
@@ -81,7 +80,9 @@ public class TrileadSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-				Capability.TUNNELED_SOCKET_FACTORY, Capability.HOST_KEY_VERIFICATION, Capability.SHELL });
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
+				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+				Capability.REMOTE_PORT_FORWARD });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

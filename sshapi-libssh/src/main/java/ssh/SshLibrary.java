@@ -4346,6 +4346,18 @@ public interface SshLibrary extends Library {
 	 */
 	long sftp_read(sftp_file_struct file, Pointer buf, NativeSize count);
 	/**
+	 * @brief Read from a file using an opened sftp file handle.<br>
+	 * @param file          The opened sftp file handle to be read from.<br>
+	 * @param buf           Pointer to buffer to recieve read data.<br>
+	 * @param count         Size of the buffer in bytes.<br>
+	 * @return              Number of bytes written, < 0 on error with ssh and sftp<br>
+	 *                      error set.<br>
+	 * @see sftp_get_error()<br>
+	 * Original signature : <code>ssize_t sftp_read(sftp_file, void*, size_t)</code><br>
+	 * <i>native declaration : /usr/include/libssh/sftp.h:332</i>
+	 */
+	long sftp_read(sftp_file_struct file, ByteBuffer buf, NativeSize count);
+	/**
 	 * @brief Start an asynchronous read from a file using an opened sftp file handle.<br>
 	 * Its goal is to avoid the slowdowns related to the request/response pattern<br>
 	 * of a synchronous read. To do so, you must call 2 functions:<br>
@@ -4403,6 +4415,20 @@ public interface SshLibrary extends Library {
 	 * <i>native declaration : /usr/include/libssh/sftp.h:387</i>
 	 */
 	long sftp_write(sftp_file_struct file, Pointer buf, NativeSize count);
+	/**
+	 * @brief Write to a file using an opened sftp file handle.<br>
+	 * @param file          Open sftp file handle to write to.<br>
+	 * @param buf           Pointer to buffer to write data.<br>
+	 * @param count         Size of buffer in bytes.<br>
+	 * @return              Number of bytes written, < 0 on error with ssh and sftp<br>
+	 *                      error set.<br>
+	 * @see                 sftp_open()<br>
+	 * @see                 sftp_read()<br>
+	 * @see                 sftp_close()<br>
+	 * Original signature : <code>ssize_t sftp_write(sftp_file, const void*, size_t)</code><br>
+	 * <i>native declaration : /usr/include/libssh/sftp.h:387</i>
+	 */
+	long sftp_write(sftp_file_struct file, ByteBuffer buf, NativeSize count);
 	/**
 	 * @brief Seek to a specific location in a file.<br>
 	 * @param file         Open sftp file handle to seek in.<br>

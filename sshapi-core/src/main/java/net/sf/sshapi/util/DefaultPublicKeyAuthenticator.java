@@ -46,17 +46,38 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 	private byte[] privateKeyData;
 	private File privateKeyFile;
 
+
+	/**
+	 * Constructor
+	 * 
+	 * @param privateKeyData A file containing a DSA or RSA private key of the
+	 *            user in OpenSSH key format.
+	 */
+	public DefaultPublicKeyAuthenticator(byte[] privateKeyData) {
+		this(null, privateKeyData);
+	}
+
 	/**
 	 * Constructor
 	 * 
 	 * @param passphrasePrompt invoked when passphrase is required
 	 * @param privateKeyData A file containing a DSA or RSA private key of the
 	 *            user in OpenSSH key format.
-	 * @throws IOException on any IO error
 	 */
-	public DefaultPublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) throws IOException {
+	public DefaultPublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) {
 		this.passphrasePrompt = passphrasePrompt;
 		this.privateKeyData = privateKeyData;
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param privateKeyFile A file containing a DSA or RSA private key of the
+	 *            user in OpenSSH key format.
+	 * @throws IOException on any IO error
+	 */
+	public DefaultPublicKeyAuthenticator(File privateKeyFile) throws IOException {
+		this(null, privateKeyFile);
 	}
 
 	/**
@@ -71,21 +92,6 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 		this.passphrasePrompt = passphrasePrompt;
 		this.privateKeyFile = privateKeyFile;
 	}
-	// byte[] buff = new byte[256];
-	// ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	// FileInputStream fin = new FileInputStream(pemFile);
-	// try {
-	// while (true) {
-	// int len = fin.read(buff);
-	// if (len < 0)
-	// break;
-	// baos.write(buff, 0, len);
-	// }
-	// privateKey = baos.toByteArray();
-	// } finally {
-	// fin.close();
-	// }
-	// }
 
 	public byte[] getPrivateKey() {
 		if (privateKeyData == null) {
@@ -109,7 +115,7 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 		if (privateKeyFile == null) {
 			if (privateKeyData != null) {
 				try {
-					privateKeyFile = File.createTempFile("pk", "tmp");
+					privateKeyFile = File.createTempFile("pkey", ".tmp");
 					privateKeyFile.deleteOnExit();
 					try (FileOutputStream out = new FileOutputStream(privateKeyFile)) {
 						out.write(privateKeyData);
@@ -128,6 +134,6 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 	}
 
 	public char[] promptForPassphrase(SshClient session, String message) {
-		return passphrasePrompt.promptForPassword(session, message);
+		return passphrasePrompt == null ? null : passphrasePrompt.promptForPassword(session, message);
 	}
 }

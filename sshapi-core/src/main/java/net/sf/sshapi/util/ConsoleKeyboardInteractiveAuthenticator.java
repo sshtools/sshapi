@@ -48,8 +48,4 @@ public class ConsoleKeyboardInteractiveAuthenticator implements SshKeyboardInter
 		return answers;
 	}
 
-	public String getTypeName() {
-		return "keyboard-interactive";
-	}
-
 }

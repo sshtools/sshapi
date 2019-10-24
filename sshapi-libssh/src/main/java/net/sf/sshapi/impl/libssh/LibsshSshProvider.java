@@ -86,7 +86,8 @@ public class LibsshSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION,
 				Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.SSH1, Capability.SCP,
 				Capability.SFTP, Capability.FILE_TRANSFER_EVENTS, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
-				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION });
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SET_LAST_MODIFIED, 
+				Capability.LOCAL_PORT_FORWARD, Capability.RAW_SFTP });
 	}
 
 	@Override

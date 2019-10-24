@@ -40,6 +40,16 @@ public class SimplePasswordAuthenticator implements SshPasswordAuthenticator {
 	 * @param password
 	 *            password
 	 */
+	public SimplePasswordAuthenticator(String password) {
+		this(password.toCharArray());
+	}
+
+	/**
+	 * Constructor for when only password is going to be prompted for.
+	 * 
+	 * @param password
+	 *            password
+	 */
 	public SimplePasswordAuthenticator(char[] password) {
 		this.password = password;
 	}
@@ -57,9 +67,5 @@ public class SimplePasswordAuthenticator implements SshPasswordAuthenticator {
 
 	public char[] promptForPassword(SshClient session, String message) {
 		return password;
-	}
-
-	public String getTypeName() {
-		return "password";
 	}
 }

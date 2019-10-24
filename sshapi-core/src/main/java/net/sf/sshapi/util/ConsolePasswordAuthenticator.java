@@ -37,8 +37,4 @@ public class ConsolePasswordAuthenticator implements SshPasswordAuthenticator {
 		String password = Util.prompt(message);
 		return password.equals("") ? null : password.toCharArray();
 	}
-
-	public String getTypeName() {
-		return "password";
-	}
 }

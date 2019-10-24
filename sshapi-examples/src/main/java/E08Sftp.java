@@ -125,6 +125,15 @@ public class E08Sftp {
 							} else {
 								System.out.println("rename requires two file or directory names to create");
 							}
+						}  else if (cmd.startsWith("ln ")) {
+							if (cmd.length() > 3) {
+								String[] toLink = cmd.substring(3).split(" ");
+								toLink[0] = translatePath(cwd, toLink[0]);
+								toLink[1] = translatePath(cwd, toLink[1]);
+								sftp.rename(toLink[0], toLink[1]);
+							} else {
+								System.out.println("link requires two file or directory names to create");
+							}
 						} else if (cmd.startsWith("get ")) {
 							if (cmd.length() > 4) {
 								String toGet = cmd.substring(4);

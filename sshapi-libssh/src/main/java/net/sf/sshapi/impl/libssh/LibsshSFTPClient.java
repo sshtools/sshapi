@@ -1,18 +1,20 @@
 package net.sf.sshapi.impl.libssh;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.sun.jna.Memory;
 
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_session;
@@ -27,7 +29,8 @@ class LibsshSFTPClient extends AbstractSftpClient {
 	private ssh_session libSshSession;
 	private sftp_session_struct sftp;
 
-	public LibsshSFTPClient(SshLibrary library, ssh_session libSshSession) {
+	public LibsshSFTPClient(SshProvider provider, SshConfiguration configuration, SshLibrary library, ssh_session libSshSession) {
+		super(provider, configuration);
 		this.library = library;
 		this.libSshSession = libSshSession;
 	}
@@ -70,10 +73,8 @@ class LibsshSFTPClient extends AbstractSftpClient {
 				while ((attributes = library.sftp_readdir(sftp, dir)) != null) {
 					SftpFile f = attributesToFile(path, attributes);
 					files.add(f);
-					System.out.println("Found " + f);
 				}
 
-				System.out.println("Checking EOF");
 				if (library.sftp_dir_eof(dir) == 0) {
 					throw new SshException("Failed to list directory " + path + ". "
 							+ library.ssh_get_error(libSshSession.getPointer()));
@@ -82,16 +83,13 @@ class LibsshSFTPClient extends AbstractSftpClient {
 				closeDir(dir);
 			}
 			dir = null;
-			System.out.println("Done listing");
 			return files.toArray(new SftpFile[0]);
 		}
 	}
 
 	private void closeDir(sftp_dir_struct dir) throws SshException {
 		int ret;
-		System.out.println("Closing dir");
 		ret = library.sftp_closedir(dir);
-		System.out.println("Closed dir with status " + ret);
 		if (ret != SshLibrary.SSH_OK) {
 			throw new SshException(SshException.GENERAL,
 					"Failed to close directory. " + library.ssh_get_error(libSshSession.getPointer()));
@@ -106,7 +104,6 @@ class LibsshSFTPClient extends AbstractSftpClient {
 	@Override
 	public SftpFile stat(String path) throws SshException {
 		synchronized (sftp) {
-			System.out.println("Stat '" + path + "'");
 			sftp_attributes_struct attr = library.sftp_stat(sftp, path);
 			if (attr == null)
 				throw new LibsshSFTPException(String.format("Could not find file. %s", path));
@@ -122,6 +119,15 @@ class LibsshSFTPClient extends AbstractSftpClient {
 			if (ret != SshLibrary.SSH_OK) {
 				throw new LibsshSFTPException(String.format("Could not create folder. %s", path));
 			}
+		}
+	}
+
+	@Override
+	public void symlink(String path, String target) throws SshException {
+		synchronized (sftp) {
+			int ret = library.sftp_symlink(sftp, path, target);
+			if (ret != SshLibrary.SSH_OK)
+				throw new LibsshSFTPException(String.format("Could not symlink file. %s", path));
 		}
 	}
 
@@ -155,56 +161,48 @@ class LibsshSFTPClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public void get(String path, OutputStream out) throws SshException {
+	public SftpHandle file(String path, OpenMode... modes) throws SftpException {
 		synchronized (sftp) {
 			sftp_file_struct file;
-			file = library.sftp_open(sftp, path, LibsshClient.O_RDONLY, 0);
+			file = library.sftp_open(sftp, path, OpenMode.toPOSIX(modes), LibsshClient.S_IRWXU);
 			if (file == null)
-				throw new LibsshSFTPException(String.format("Could not open file. %s", path));
-			try {
-				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE * 4);
-				long nbytes = library.sftp_read(file, buf, new NativeSize(buf.size()));
-				while (nbytes > 0) {
-					try {
-						out.write(buf.getByteArray(0, (int) nbytes));
-					} catch (IOException e) {
-						throw new SshException(SshException.GENERAL, "Failed to write to target stream.", e);
-					}
-					nbytes = library.sftp_read(file, buf, new NativeSize(buf.size()));
+				throw new LibsshSFTPException(String.format("Could not open file. %s. Flags %s", path, Arrays.asList(modes)));
+			
+			return new SftpHandle() {
+				
+				private long position;
+				
+				@Override
+				public void close() throws IOException {
+					library.sftp_close(file);
 				}
-
-				if (nbytes < 0) {
-					throw new SshException(SshException.GENERAL,
-							"Failed to read remote file. " + library.ssh_get_error(libSshSession.getPointer()));
-				}
-			} finally {
-				library.sftp_close(file);
-			}
-		}
-	}
-
-	@Override
-	public void put(String path, InputStream in, int permissions) throws SshException {
-		synchronized (sftp) {
-			sftp_file_struct file = library.sftp_open(sftp, path, LibsshClient.O_WRONLY | LibsshClient.O_CREAT | LibsshClient.O_TRUNC, permissions);
-			if (file == null)
-				throw new LibsshSFTPException(String.format("Could not open file for writing. %s. ", path));
-			try {
-				Memory buf = new Memory(LibsshClient.SFTP_BUFFER_SIZE * 4);
-				byte[] nb = new byte[64];
-				int r;
-				while( ( r = in.read(nb)) != -1) {
-					buf.write(0, nb, 0, r);
-					int w = (int) library.sftp_write(file, buf, new NativeSize(r));
-					if(w != r) {
+				
+				@Override
+				public SftpHandle write(ByteBuffer buffer) throws SftpException {
+					int len = buffer.limit() - buffer.position();
+					int w = (int) library.sftp_write(file, buffer, new NativeSize(len));
+					if(w != len) {
 						throw new LibsshSFTPException("Failed to write to target.");
 					}
+					return this;
 				}
-			} catch (IOException e) {
-				throw new SshException(SshException.GENERAL, "Failed to read from source.", e);
-			} finally {
-				library.sftp_close(file);
-			}
+				
+				@Override
+				public int read(ByteBuffer buffer) throws SftpException {
+					return (int) library.sftp_read(file, buffer, new NativeSize(buffer.limit()));
+				}
+				
+				@Override
+				public SftpHandle position(long position) {
+					this.position = position;
+					return this;
+				}
+				
+				@Override
+				public long position() {
+					return position;
+				}
+			};
 		}
 	}
 

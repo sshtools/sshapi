@@ -52,10 +52,6 @@ public class DefaultAgentAuthenticator implements SshAgentAuthenticator {
 	public DefaultAgentAuthenticator(SshAgent agent) {
 		this.agent = agent;
 	}
-
-	public String getTypeName() {
-		return "agent";
-	}
 	
 	public SshAgent getAgent(SshConfiguration configuration) {
 		@SuppressWarnings("resource")

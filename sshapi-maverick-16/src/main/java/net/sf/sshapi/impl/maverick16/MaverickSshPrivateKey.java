@@ -29,7 +29,7 @@ public class MaverickSshPrivateKey implements com.maverick.ssh.components.SshPri
 
 	@Override
 	public String getAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override

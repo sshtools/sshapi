@@ -44,12 +44,12 @@ public class MaverickSshPublicKey implements com.maverick.ssh.components.SshPubl
 
 	@Override
 	public String getAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override
 	public String getSigningAlgorithm() {
-		return key.getAlgorithm();
+		return key.getAlgorithm().toAlgoName();
 	}
 
 	@Override

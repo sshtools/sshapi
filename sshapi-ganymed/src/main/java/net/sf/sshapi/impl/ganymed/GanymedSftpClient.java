@@ -24,8 +24,7 @@
 package net.sf.sshapi.impl.ganymed;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,14 +38,15 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 
 class GanymedSftpClient extends AbstractSftpClient {
-
 	private final Connection session;
 	private SFTPv3Client client;
 
-	public GanymedSftpClient(Connection session) {
+	public GanymedSftpClient(GanymedSshClient client, Connection session) {
+		super(client.getProvider(), client.getConfiguration());
 		this.session = session;
 	}
 
@@ -56,202 +56,93 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public InputStream get(String path, final long filePointer) throws SshException {
-		final SftpFile file = stat(path);
+	public SftpHandle file(String path, OpenMode... modes) throws SftpException {
 		try {
-			final SFTPv3FileHandle handle = client.openFileRO(path);
-			try {
-				final byte[] buf = new byte[32768];
-				return new InputStream() {
-					private long fileOffset = filePointer;
-					private byte[] b = new byte[1];
+			return createHandle(client.openFile(path, OpenMode.toFlags(modes), null));
+		} catch (IOException ioe) {
+			throw new SftpException(SftpException.IO_ERROR, String.format("Failed to open file."), ioe);
+		}
+	}
 
-					@Override
-					public int read() throws IOException {
-						int r = read(b, 0, 1);
-						if (r == -1) {
-							return -1;
-						}
-						return b[0];
-					}
+	private SftpHandle createHandle(SFTPv3FileHandle nativeHandle) {
+		return new SftpHandle() {
+			private long position;
+			private byte[] writeBuffer;
+			private byte[] readBuffer;
 
-					@Override
-					public int read(byte[] b, int off, int len) throws IOException {
-						if (fileOffset >= file.getSize()) {
-							return -1;
-						}
-						int r = client.read(handle, fileOffset, buf, 0, buf.length);
-						if (r > 0) {
-							fileOffset += r;
-						}
-						return r;
-					}
-
-					@Override
-					public void close() throws IOException {
-						client.closeFile(handle);
-					}
-				};
-			} finally {
-				client.closeFile(handle);
+			@Override
+			public void close() throws IOException {
+				try {
+					client.closeFile(nativeHandle);
+				} finally {
+					writeBuffer = null;
+					readBuffer = null;
+				}
 			}
+
+			@Override
+			public SftpHandle write(ByteBuffer buffer) throws SftpException {
+				int len = buffer.limit() - buffer.position();
+				if (writeBuffer == null || writeBuffer.length != len) {
+					writeBuffer = new byte[len];
+				}
+				buffer.get(writeBuffer);
+				try {
+					client.write(nativeHandle, position, writeBuffer, 0, len);
+				} catch (IOException e) {
+					throw new SftpException(SftpException.IO_ERROR, e);
+				}
+				position += len;
+				return this;
+			}
+
+			@Override
+			public int read(ByteBuffer buffer) throws SftpException {
+				int len = buffer.limit() - buffer.position();
+				if(len < 1)
+					throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE, "Run out of buffer space reading a file.");
+				if (readBuffer == null || readBuffer.length != len) {
+					readBuffer = new byte[len];
+				}
+				try {
+					int read = client.read(nativeHandle, position, readBuffer, 0, len);
+					if(read != -1) { 
+						buffer.put(readBuffer, 0, read);
+						position += read;
+					}
+					return read;
+				} catch (IOException e) {
+					throw new SftpException(SftpException.IO_ERROR, e);
+				}
+			}
+
+			@Override
+			public long position() {
+				return position;
+			}
+
+			@Override
+			public SftpHandle position(long position) {
+				this.position = position;
+				return this;
+			}
+		};
+	}
+
+	@Override
+	public int getSftpVersion() {
+		return client.getProtocolVersion();
+	}
+
+	@Override
+	public void symlink(String path, String target) throws SshException {
+		try {
+			client.createSymlink(path, target);
 		} catch (SFTPException sftpe) {
-			throw new SftpException(sftpe.getServerErrorCode(), sftpe.getLocalizedMessage());
+			throw new GanymedSftpException(sftpe, String.format("Could not link file. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
-	}
-
-	@Override
-	public InputStream get(String path) throws SshException {
-		return get(path, 0);
-	}
-
-	@Override
-	public void get(String path, OutputStream out, long filePointer) throws SshException {
-		SftpFile file = stat(path);
-		try {
-			SFTPv3FileHandle handle = client.openFileRO(path);
-			try {
-				byte[] buf = new byte[32768];
-				long fileOffset = filePointer;
-				while (fileOffset < file.getSize()) {
-					int r = client.read(handle, fileOffset, buf, 0, buf.length);
-					out.write(buf, 0, r);
-					fileOffset += r;
-				}
-				out.flush();
-			} finally {
-				client.closeFile(handle);
-			}
-		} catch (SFTPException sftpe) {
-			throw new GanymedSftpException(sftpe, String.format("Could not open file. %s", path));
-		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, e);
-		}
-	}
-
-	@Override
-	public void get(String path, OutputStream out) throws SshException {
-		get(path, out, 0l);
-	}
-
-	@Override
-	public OutputStream put(String path, int permissions) throws SshException {
-		return super.put(path, permissions, 0);
-	}
-
-	@Override
-	public OutputStream put(String path, int permissions, final long offset) throws SshException {
-		SftpFile currentFile = null;
-		try {
-			currentFile = stat(path);
-		} catch (SshException sshe) {
-			if (sshe.getCode() != SftpException.SSH_FX_NO_SUCH_FILE) {
-				throw sshe;
-			}
-		}
-
-		try {
-			SFTPv3FileHandle handle;
-			if (currentFile == null) {
-				SFTPv3FileAttributes attr = new SFTPv3FileAttributes();
-				attr.permissions = Integer.valueOf(permissions);
-				handle = client.createFileTruncate(path, attr);
-			} else {
-				handle = client.openFileRW(path);
-			}
-			final SFTPv3FileHandle finalHandle = handle;
-			return new OutputStream() {
-
-				@Override
-				public void write(int b) throws IOException {
-					try {
-						client.write(finalHandle, offset, new byte[] { (byte) b }, 0, 1);
-					} catch (IOException ioe) {
-						throw ioe;
-					} catch (Exception e) {
-						IOException ioException = new IOException();
-						ioException.initCause(e);
-						throw ioException;
-					}
-				}
-
-				@Override
-				public void write(byte[] b, int off, int len) throws IOException {
-					try {
-						client.write(finalHandle, offset, b, off, len);
-					} catch (IOException ioe) {
-						throw ioe;
-					} catch (Exception e) {
-						IOException ioException = new IOException();
-						ioException.initCause(e);
-						throw ioException;
-					}
-				}
-
-				@Override
-				public void flush() throws IOException {
-				}
-
-				@Override
-				public void close() throws IOException {
-					client.closeFile(finalHandle);
-				}
-			};
-		} catch (SFTPException sftpe) {
-			throw new GanymedSftpException(sftpe, String.format("Could not write file. %s", path));
-		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, e);
-		}
-	}
-
-	@Override
-	public void put(String path, InputStream in, int permissions) throws SshException {
-		SftpFile currentFile = null;
-		try {
-			currentFile = stat(path);
-		} catch (SshException sshe) {
-			if (sshe.getCode() != SftpException.SSH_FX_NO_SUCH_FILE) {
-				throw sshe;
-			}
-		}
-
-		try {
-			SFTPv3FileHandle handle;
-			if (currentFile == null) {
-				SFTPv3FileAttributes attr = new SFTPv3FileAttributes();
-				attr.permissions = Integer.valueOf(permissions);
-				handle = client.createFileTruncate(path, attr);
-			} else {
-				handle = client.openFileRW(path);
-			}
-			try {
-				byte[] buf = new byte[32768];
-				long fileOffset = 0;
-				while (true) {
-					int r = in.read(buf);
-					if (r == -1) {
-						break;
-					}
-					try {
-						client.write(handle, fileOffset, buf, 0, r);
-					} catch (IOException e) {
-						throw e;
-					} catch (Exception e) {
-						throw new SshException(e);
-					}
-					fileOffset += r;
-				}
-			} finally {
-				client.closeFile(handle);
-			}
-		} catch (SFTPException sftpe) {
-			throw new GanymedSftpException(sftpe, String.format("Could not write file. %s", path));
-		} catch (IOException e) {
-			throw new SshException(SshException.IO_ERROR, e);
-		}
-
 	}
 
 	@Override
@@ -263,7 +154,6 @@ class GanymedSftpClient extends AbstractSftpClient {
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		}
-
 	}
 
 	@Override
@@ -283,9 +173,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 	private SftpFile entryToFile(String path, SFTPv3DirectoryEntry entry) {
 		String fullPath = Util.concatenatePaths(path, entry.filename);
 		SFTPv3FileAttributes attributes = entry.attributes;
-		SftpFile file = new SftpFile(convertType(attributes), fullPath,
-				attributes.size == null ? 0 : attributes.size.longValue(), convertIntDate(attributes.mtime), 0,
-				convertIntDate(attributes.atime), toInt(attributes.gid), toInt(attributes.uid),
+		SftpFile file = new SftpFile(convertType(attributes), fullPath, attributes.size == null ? 0 : attributes.size.longValue(),
+				convertIntDate(attributes.mtime), 0, convertIntDate(attributes.atime), toInt(attributes.gid), toInt(attributes.uid),
 				toInt(attributes.permissions));
 		return file;
 	}
@@ -372,9 +261,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	private SftpFile entryToFile(String path, SFTPv3FileAttributes entry) {
-		return new SftpFile(convertType(entry), path, entry.size == null ? 0 : entry.size.longValue(),
-				convertIntDate(entry.mtime), 0, convertIntDate(entry.atime), toInt(entry.gid), toInt(entry.uid),
-				toInt(entry.permissions));
+		return new SftpFile(convertType(entry), path, entry.size == null ? 0 : entry.size.longValue(), convertIntDate(entry.mtime),
+				0, convertIntDate(entry.atime), toInt(entry.gid), toInt(entry.uid), toInt(entry.permissions));
 	}
 
 	int convertType(SFTPv3FileAttributes attrs) {
@@ -388,17 +276,19 @@ class GanymedSftpClient extends AbstractSftpClient {
 			return SftpFile.TYPE_UNKNOWN;
 		}
 	}
-
 	/*
 	 * The SftpClient.write method is re-implemented here as it is bugged in the
-	 * current release of Ganymed. Again, reflection is needed to work around this
+	 * current release of Ganymed. Again, reflection is needed to work around
+	 * this
 	 */
 
-	// private void XXXXwrite(SFTPv3FileHandle handle, long fileOffset, byte[] src,
+	// private void XXXXwrite(SFTPv3FileHandle handle, long fileOffset, byte[]
+	// src,
 	// int srcoff, int len)
 	// throws IOException, SecurityException, NoSuchMethodException,
 	// NoSuchFieldException,
-	// IllegalArgumentException, IllegalAccessException, InvocationTargetException,
+	// IllegalArgumentException, IllegalAccessException,
+	// InvocationTargetException,
 	// SftpException {
 	// if (handle.getClient() != client)
 	// throw new IOException("The file handle was created with another
@@ -414,7 +304,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 	// if (writeRequestLen > 32768)
 	// writeRequestLen = 32768;
 	//
-	// Method m = client.getClass().getDeclaredMethod("generateNextRequestID", new
+	// Method m = client.getClass().getDeclaredMethod("generateNextRequestID",
+	// new
 	// Class[0]);
 	// m.setAccessible(true);
 	// int req_id = ((Integer) m.invoke(client, null)).intValue();
@@ -443,7 +334,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 	// m = client.getClass().getDeclaredMethod("receiveMessage", new Class[] {
 	// int.class });
 	// m.setAccessible(true);
-	// byte[] resp = (byte[]) m.invoke(client, new Object[] { Integer.valueOf(34000)
+	// byte[] resp = (byte[]) m.invoke(client, new Object[] {
+	// Integer.valueOf(34000)
 	// });
 	//
 	// TypesReader tr = new TypesReader(resp);
@@ -455,7 +347,8 @@ class GanymedSftpClient extends AbstractSftpClient {
 	// throw new IOException("The server sent an invalid id field.");
 	//
 	// if (t != Packet.SSH_FXP_STATUS)
-	// throw new IOException("The SFTP server sent an unexpected packet type (" + t
+	// throw new IOException("The SFTP server sent an unexpected packet type ("
+	// + t
 	// + ")");
 	//
 	// int errorCode = tr.readUINT32();
@@ -467,7 +360,6 @@ class GanymedSftpClient extends AbstractSftpClient {
 	// throw new SftpException(errorCode, errorMessage);
 	// }
 	// }
-
 	@Override
 	public void chmod(String path, int permissions) throws SshException {
 		try {

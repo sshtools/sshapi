@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.sshtools.client.PseudoTerminalModes;
 import com.sshtools.client.SessionChannelNG;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.common.shell.ShellPolicy;
@@ -45,10 +46,23 @@ class MaverickSynergySshCommand extends AbstractDataProducingComponent<SshChanne
 	private OutputStream outputStream;
 	private Connection<SshClientContext> con;
 	private String command;
+	private int cols;
+	private int rows;
+	private int pixWidth;
+	private int pixHeight;
+	private byte[] terminalModes;
+	private String termType;
 
-	MaverickSynergySshCommand(final Connection<SshClientContext> con, String command) {
+	MaverickSynergySshCommand(final Connection<SshClientContext> con, String command, String termType, int cols, int rows,
+			int pixWidth, int pixHeight, byte[] terminalModes) {
 		this.con = con;
 		this.command = command;
+		this.termType = termType;
+		this.terminalModes = terminalModes;
+		this.cols = cols;
+		this.rows = rows;
+		this.pixWidth = pixWidth;
+		this.pixHeight = pixHeight;
 	}
 
 	@Override
@@ -78,6 +92,19 @@ class MaverickSynergySshCommand extends AbstractDataProducingComponent<SshChanne
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize());
 		con.openChannel(session);
+		if (termType != null) {
+			PseudoTerminalModes ptm = new PseudoTerminalModes();
+			if (terminalModes != null) {
+				try {
+					for (int i = 0; i < terminalModes.length; i++) {
+						ptm.setTerminalMode(terminalModes[i], true);
+					}
+				} catch (com.sshtools.common.ssh.SshException e) {
+					throw new SshException("Failed to set terminal modes.", e);
+				}
+			}
+			session.allocatePseudoTerminal(termType, cols, rows, pixWidth, pixHeight, ptm);
+		}
 		if (!session.getOpenFuture().waitFor(30000).isSuccess()) {
 			throw new IllegalStateException("Couldb not open session channel");
 		}

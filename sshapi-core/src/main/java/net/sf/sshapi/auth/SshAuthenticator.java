@@ -37,5 +37,5 @@ public interface SshAuthenticator {
 	 * 
 	 * @return name
 	 */
-	public String getTypeName();
+	String getTypeName();
 }

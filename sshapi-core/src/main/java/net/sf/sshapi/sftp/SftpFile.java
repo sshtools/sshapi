@@ -82,6 +82,42 @@ public class SftpFile {
 	private final long accessed;
 	private final int permissions;
 
+	/** Permissions flag: Permits the owner of a file to read the file. */
+	public final static int S_IRUSR = 0x100;
+
+	/** Permissions flag: Permits the owner of a file to write to the file. */
+	public final static int S_IWUSR = 0x80;
+
+	/**
+	 * Permissions flag: Permits the owner of a file to execute the file or to
+	 * search the file's directory.
+	 */
+	public final static int S_IXUSR = 0x40;
+
+	/** Permissions flag: Permits a file's group to read the file. */
+	public final static int S_IRGRP = 0x20;
+
+	/** Permissions flag: Permits a file's group to write to the file. */
+	public final static int S_IWGRP = 0x10;
+
+	/** Permissions flag: Permits others to read the file. */
+	public final static int S_IROTH = 0x04;
+
+	/** Permissions flag: Permits others to write to the file. */
+	public final static int S_IWOTH = 0x02;
+
+	/**
+	 * Permissions flag: Permits a file's group to execute the file or to search
+	 * the file's directory.
+	 */
+	public final static int S_IXGRP = 0x08;
+
+	/**
+	 * Permissions flag: Permits others to execute the file or to search the
+	 * file's directory.
+	 */
+	public final static int S_IXOTH = 0x01;
+
 	/**
 	 * Constructor.
 	 * 

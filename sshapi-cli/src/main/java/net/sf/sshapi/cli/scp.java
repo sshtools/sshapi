@@ -1,19 +1,18 @@
 package net.sf.sshapi.cli;
 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
-import org.apache.commons.cli.PosixParser;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
@@ -35,7 +34,7 @@ import net.sf.sshapi.util.BatchHostKeyValidator;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
 import net.sf.sshapi.util.ConsoleKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.util.ConsolePasswordAuthenticator;
-import net.sf.sshapi.util.PEMFilePublicKeyAuthenticator;
+import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -119,7 +118,7 @@ public class scp implements SshFileTransferListener, Logger {
 		}
 
 		if (cipher != null) {
-			List ciphers = provider.getSupportedCiphers(configuration.getProtocolVersion());
+			List<String> ciphers = provider.getSupportedCiphers(configuration.getProtocolVersion());
 			if (ciphers.contains(cipher)) {
 				throw new SshException(SshException.UNSUPPORTED_FEATURE, "The cipher " + cipher + " is not supported.");
 			}
@@ -167,9 +166,8 @@ public class scp implements SshFileTransferListener, Logger {
 
 	void localToRemote() throws SshException, IOException {
 		String targetPath = getPath(target);
-		SshClient client = connect(getConnectionDetails(target));
-		try {
-			SshSCPClient scp = client.createSCPClient();
+		try(SshClient client = connect(getConnectionDetails(target))) {
+			SshSCPClient scp = client.createSCP();
 			scp.addFileTransferListener(this);
 			scp.open();
 			try {
@@ -177,9 +175,7 @@ public class scp implements SshFileTransferListener, Logger {
 			} finally {
 				scp.close();
 			}
-		} finally {
-			client.disconnect();
-		}
+		} 
 	}
 
 	File checkPath(String path) throws FileNotFoundException {
@@ -194,7 +190,7 @@ public class scp implements SshFileTransferListener, Logger {
 		// Connect
 		SshClient client = provider.createClient(configuration);
 		client.connect(extractUsername(connectionDetails), extractHostname(connectionDetails), port);
-		List authenticators = new ArrayList();
+		List<SshAuthenticator> authenticators = new ArrayList<>();
 		SshPasswordAuthenticator pwAuth = null;
 
 		// Create the non-batch authenticators
@@ -208,7 +204,7 @@ public class scp implements SshFileTransferListener, Logger {
 
 		// Key authentication
 		if (identityFile != null && identityFile.exists()) {
-			authenticators.add(new PEMFilePublicKeyAuthenticator(pwAuth, identityFile));
+			authenticators.add(new DefaultPublicKeyAuthenticator(pwAuth, identityFile));
 		}
 
 		// Add the non-batch authenticators
@@ -218,10 +214,9 @@ public class scp implements SshFileTransferListener, Logger {
 		}
 
 		// Now authenticate
-		for (Iterator it = authenticators.iterator(); it.hasNext();) {
-			SshAuthenticator auth = (SshAuthenticator) it.next();
+		for (SshAuthenticator auth : authenticators) {
 			for (int i = 0; i < 3; i++) {
-				if (client.authenticate(new SshAuthenticator[] { auth })) {
+				if (client.authenticate(auth)) {
 					return client;
 				}
 			}
@@ -261,11 +256,11 @@ public class scp implements SshFileTransferListener, Logger {
 	}
 
 	void parseCommandLine(String[] args) throws ParseException, URISyntaxException {
-		Parser parser = new PosixParser();
+		DefaultParser parser = new DefaultParser();
 		CommandLine commandLine = parser.parse(options, args);
 		process(commandLine, args);
 
-		List argList = commandLine.getArgList();
+		List<String> argList = commandLine.getArgList();
 		if (argList.size() != 2) {
 			throw new ParseException("");
 		}

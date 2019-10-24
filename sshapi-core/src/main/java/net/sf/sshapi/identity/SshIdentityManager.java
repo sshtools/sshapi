@@ -26,9 +26,11 @@ package net.sf.sshapi.identity;
 import java.io.InputStream;
 import java.util.List;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshPublicKey;
 
@@ -82,7 +84,7 @@ public interface SshIdentityManager {
 	 * @return key pair
 	 * @throws SshException if pair cannot be generated.
 	 */
-	SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException;
+	SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException;
 
 	/**
 	 * Create a {@link SshPrivateKeyFile} that will allow you obtain a formatted
@@ -153,4 +155,11 @@ public interface SshIdentityManager {
 	 * @throws SshException if public key file may not be created
 	 */
 	SshPublicKeyFile create(SshPublicKey key, String options, String comment, int format) throws SshException;
+	
+	/**
+	 * Import an X509 keystore. Provider must support {@link Capability#X509_PUBLIC_KEY}.
+	 * 
+	 * @throws SshException on error importing 
+	 */
+	SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key, char[] keyPassphrase) throws SshException;
 }

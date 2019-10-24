@@ -88,9 +88,13 @@ public class SshConfiguration {
 	/** SSH2 RSA Public Key **/
 	public static final String PUBLIC_KEY_SSHRSA = "ssh-rsa";
 	/** SSH2 ECDSA **/
-	public static final String PUBLIC_KEY_ECDSA = "ecdsa";
+	public static final String PUBLIC_KEY_ECDSA_256 = "ecdsa-sha2-nistp256";
+	/** SSH2 ECDSA **/
+	public static final String PUBLIC_KEY_ECDSA_384 = "ecdsa-sha2-nistp384";
+	/** SSH2 ECDSA **/
+	public static final String PUBLIC_KEY_ECDSA_521 = "ecdsa-sha2-nistp521";
 	/** SSH2 ED25519 Key **/
-	public static final String PUBLIC_KEY_ED25519 = "ed25519";
+	public static final String PUBLIC_KEY_ED25519 = "ssh-ed25519";
 	/** SSH1 RSA Public Key **/
 	public static final String PUBLIC_KEY_SSHRSA1 = "rsa1";
 	/** SSH1 Cipher **/
@@ -149,6 +153,7 @@ public class SshConfiguration {
 	private long tunnelWindowSizeMax = TUNNEL_WINDOW_SIZE_MAX;
 	private long tunnelWindowSize = TUNNEL_WINDOW_SIZE_MAX;
 	private long tunnelPacketSize = TUNNEL_MAXIMUM_PACKET_SIZE;
+	private int streamBufferSize = SFTP_MAXIMUM_PACKET_SIZE;
 	private static SshHostKeyValidator defaultHostKeyValidator = new DumbWithWarningHostKeyValidator();
 	/**
 	 * Do reverse DNS lookups for hosts in the known_hosts (
@@ -906,6 +911,26 @@ public class SshConfiguration {
 	}
 
 	/**
+	 * Get the size of the buffer to use internally when transferring files or joining streams.
+	 * 
+	 * @return file transfer buffer size
+	 */
+	public int getStreamBufferSize() {
+		return streamBufferSize;
+	}
+
+	/**
+	 * Get the size of the buffer to use internally when transferring files or joining streams.
+	 * 
+	 * @param streamBufferSize file transfer buffer size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setStreamBufferSize(int streamBufferSize) {
+		this.streamBufferSize = streamBufferSize;
+		return this;
+	}
+
+	/**
 	 * Utility to create a client that may be used with this configuration. It
 	 * uses the DefaultProviderFactory, so if you want to custom how providers
 	 * are selected, do not use this method.
@@ -931,9 +956,6 @@ public class SshConfiguration {
 	 * @throws SshException on error
 	 */
 	public SshClient open(String spec, SshAuthenticator... authenticators) throws SshException {
-		// Create the client using that configuration
-		if (authenticators.length < 1)
-			throw new IllegalArgumentException("At least one authenticator must be provided.");
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
 		SshClient client = provider.createClient(this);
 		client.connect(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
@@ -955,8 +977,6 @@ public class SshConfiguration {
 	 */
 	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
 		// Create the client using that configuration
-		if (authenticators.length < 1)
-			throw new IllegalArgumentException("At least one authenticator must be provided.");
 		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
 		SshClient client = provider.createClient(this);
 		client.connect(username, hostname, port, authenticators);

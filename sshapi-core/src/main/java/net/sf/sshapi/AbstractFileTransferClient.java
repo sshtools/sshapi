@@ -49,7 +49,7 @@ public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<
 	 * @param length
 	 *            length of file
 	 */
-	protected void fireFileTransferStarted(String path, String targetPath, long length) {
+	public void fireFileTransferStarted(String path, String targetPath, long length) {
 		if (fileTransferListeners != null) {
 			for (int i = fileTransferListeners.size() - 1; i >= 0; i--)
 				fileTransferListeners.get(i).startedTransfer(path, targetPath, length);
@@ -66,7 +66,7 @@ public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<
 	 * @param progress
 	 *            number of bytes progressed
 	 */
-	protected void fireFileTransferProgressed(String path, String targetPath, long progress) {
+	public void fireFileTransferProgressed(String path, String targetPath, long progress) {
 		if (fileTransferListeners != null) {
 			for (int i = fileTransferListeners.size() - 1; i >= 0; i--)
 				fileTransferListeners.get(i).transferProgress(path, targetPath, progress);
@@ -81,7 +81,7 @@ public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<
 	 * @param targetPath
 	 *            target path
 	 */
-	protected void fireFileTransferFinished(String path, String targetPath) {
+	public void fireFileTransferFinished(String path, String targetPath) {
 		if (fileTransferListeners != null) {
 			for (int i = fileTransferListeners.size() - 1; i >= 0; i--)
 				fileTransferListeners.get(i).finishedTransfer(path, targetPath);

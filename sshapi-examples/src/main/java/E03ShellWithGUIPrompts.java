@@ -84,9 +84,5 @@ public class E03ShellWithGUIPrompts {
 				return null;
 			}
 		}
-
-		public String getTypeName() {
-			return "password";
-		}
 	}
 }

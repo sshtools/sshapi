@@ -31,7 +31,7 @@ import net.sf.sshapi.SshLifecycleComponent;
  * {@link SshSession#createLocalForward(String, int, String, int)} and
  * {@link SshSession#createRemoteForward(String, int, String, int)} methods both
  * create instances of of this class. That object may then be used to start and
- * stop the actal tunell.
+ * stop the actual tunnel.
  * 
  */
 public interface SshPortForward extends SshLifecycleComponent<SshPortForwardListener, SshPortForward> {
@@ -83,4 +83,13 @@ public interface SshPortForward extends SshLifecycleComponent<SshPortForwardList
 	 * Get if the tunnel is open or closed
 	 */
 	boolean isOpen();
+
+	/**
+	 * If the forward was started with a zero port (meaning next available port is chosen),
+	 * this will return the actual port bound. Note, not all providers will support this,
+	 * zero will be returned if they do not.
+	 * 
+	 * @return bound port of zero if unsupported
+	 */
+	int getBoundPort();
 }

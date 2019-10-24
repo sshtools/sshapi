@@ -32,4 +32,9 @@ import net.sf.sshapi.agent.SshAgent;
  */
 public interface SshAgentAuthenticator extends SshAuthenticator {
 	SshAgent getAgent(SshConfiguration configuration) throws SshException;
+
+	@Override
+	default String getTypeName() {
+		return "agent";
+	}
 }

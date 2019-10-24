@@ -47,6 +47,14 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 		}
 	}
 
+	@Override
+	public void closeQuietly() {
+		try {
+			close();
+		} catch (Exception e) {
+		}
+	}
+
 	/**
 	 * Inform all listeners the component has opened.
 	 */

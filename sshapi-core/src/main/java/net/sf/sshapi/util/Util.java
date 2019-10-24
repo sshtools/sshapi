@@ -24,12 +24,23 @@
 package net.sf.sshapi.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.Ssh;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
@@ -40,19 +51,16 @@ import net.sf.sshapi.sftp.SftpFile;
  * Various utilities
  */
 public class Util {
-
 	/**
 	 * Permissions flag: Format mask constant can be used to mask off a file
 	 * type from the mode.
 	 */
 	public static final int S_IFMT = 0xF000;
-
 	/**
 	 * Permissions flag: Bit to determine whether a file is executed as the
 	 * owner
 	 */
 	public final static int S_ISUID = 0x800;
-
 	/**
 	 * Permissions flag: Bit to determine whether a file is executed as the
 	 * group owner
@@ -131,12 +139,13 @@ public class Util {
 		String answer = new BufferedReader(new InputStreamReader(System.in)).readLine();
 		return answer;
 	}
-	
+
 	/**
-	 * Display a prompt asking for an SSH user and host (and optional port) to connect
-	 * to. Useful to pass to various methods to open connections in SSHAPI, such as 
-	 * {@link SshClient#connect(String, net.sf.sshapi.auth.SshAuthenticator...)}, or
-	 * {@link Ssh#open(String, net.sf.sshapi.auth.SshAuthenticator...)}.
+	 * Display a prompt asking for an SSH user and host (and optional port) to
+	 * connect to. Useful to pass to various methods to open connections in
+	 * SSHAPI, such as
+	 * {@link SshClient#connect(String, net.sf.sshapi.auth.SshAuthenticator...)},
+	 * or {@link Ssh#open(String, net.sf.sshapi.auth.SshAuthenticator...)}.
 	 * 
 	 * @return connection spec
 	 */
@@ -289,18 +298,26 @@ public class Util {
 	 * @return file deleted OK.
 	 */
 	public static boolean delTree(File file) {
-		if (file.isFile()) {
-			return file.delete();
-		}
-		String[] list = file.list();
-		if (list != null) {
-			for (int i = 0; i < list.length; i++) {
-				if (!delTree(new File(file, list[i]))) {
-					return false;
+		Path directory = file.toPath();
+		try {
+			Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
 				}
-			}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+			});
+			return true;
+		} catch (IOException ioe) {
+			SshConfiguration.getLogger().log(Level.DEBUG, "Failed to delete.", ioe);
+			return false;
 		}
-		return true;
 	}
 
 	/**
@@ -358,6 +375,59 @@ public class Util {
 		str.append(rwxString((int) permissions, 0));
 		return str.toString();
 	}
+	
+	/**
+	 * Get permissions value for a file.
+	 * 
+	 * @param path path
+	 * @return permissions
+	 */
+	public static int getPermissions(File path) {
+		int perm = 0;
+		try {
+			Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path.toPath(), LinkOption.NOFOLLOW_LINKS);
+			for (PosixFilePermission pfp : perms) {
+				switch (pfp) {
+				case OWNER_READ:
+					perm = perm | SftpFile.S_IRUSR;
+					break;
+				case OWNER_WRITE:
+					perm = perm | SftpFile.S_IWUSR;
+					break;
+				case OWNER_EXECUTE:
+					perm = perm | SftpFile.S_IXUSR;
+					break;
+				case GROUP_READ:
+					perm = perm | SftpFile.S_IRGRP;
+					break;
+				case GROUP_WRITE:
+					perm = perm | SftpFile.S_IWGRP;
+					break;
+				case GROUP_EXECUTE:
+					perm = perm | SftpFile.S_IXGRP;
+					break;
+				case OTHERS_READ:
+					perm = perm | SftpFile.S_IROTH;
+					break;
+				case OTHERS_WRITE:
+					perm = perm | SftpFile.S_IWOTH;
+					break;
+				case OTHERS_EXECUTE:
+					perm = perm | SftpFile.S_IXOTH;
+					break;
+				}
+			}
+		} catch (UnsupportedOperationException | IOException uoe) {
+			if (path.canRead())
+				perm = perm | SftpFile.S_IRUSR | SftpFile.S_IRGRP | SftpFile.S_IROTH;
+			if (path.canWrite())
+				perm = perm | SftpFile.S_IWUSR | SftpFile.S_IWGRP | SftpFile.S_IWOTH;
+			if (path.canExecute())
+				perm = perm | SftpFile.S_IXUSR | SftpFile.S_IXGRP | SftpFile.S_IWOTH;
+		}
+		
+		return perm;
+	}
 
 	/**
 	 * 
@@ -370,8 +440,8 @@ public class Util {
 	public static long[] parsePermissionsString(String perm) {
 		long type = SftpFile.TYPE_UNKNOWN;
 		long perms = 0;
-		if(perm.length() > 0) {
-			switch(perm.charAt(0)) {
+		if (perm.length() > 0) {
+			switch (perm.charAt(0)) {
 			case 'b':
 				type = SftpFile.TYPE_BLOCK;
 				break;
@@ -395,34 +465,52 @@ public class Util {
 				break;
 			}
 		}
-		if(perm.length() > 1 && perm.charAt(1) == 's')
+		if (perm.length() > 1 && perm.charAt(1) == 's')
 			perms |= S_ISUID;
-		else if(perm.length() > 1 && perm.charAt(1) == 'S')
+		else if (perm.length() > 1 && perm.charAt(1) == 'S')
 			perms |= S_ISUID | 0x01;
-		else if(perm.length() > 1 && perm.charAt(1) == 'r')
+		else if (perm.length() > 1 && perm.charAt(1) == 'r')
 			perms |= 0x04 << 6;
-		if(perm.length() > 1 && perm.charAt(2) == 'w')
+		if (perm.length() > 1 && perm.charAt(2) == 'w')
 			perms |= 0x02 << 6;
-		if(perm.length() > 1 && perm.charAt(3) == 'x')
+		if (perm.length() > 1 && perm.charAt(3) == 'x')
 			perms |= 0x01 << 6;
-		if(perm.length() > 1 && perm.charAt(1) == 's')
+		if (perm.length() > 1 && perm.charAt(1) == 's')
 			perms |= S_ISGID;
-		else if(perm.length() > 1 && perm.charAt(1) == 'S')
+		else if (perm.length() > 1 && perm.charAt(1) == 'S')
 			perms |= S_ISGID | 0x01;
-		else if(perm.length() > 1 && perm.charAt(4) == 'r')
+		else if (perm.length() > 1 && perm.charAt(4) == 'r')
 			perms |= 0x04 << 3;
-		if(perm.length() > 1 && perm.charAt(5) == 'w')
+		if (perm.length() > 1 && perm.charAt(5) == 'w')
 			perms |= 0x02 << 3;
-		if(perm.length() > 1 && perm.charAt(6) == 'x')
+		if (perm.length() > 1 && perm.charAt(6) == 'x')
 			perms |= 0x01 << 3;
-		if(perm.length() > 1 && perm.charAt(7) == 'r')
+		if (perm.length() > 1 && perm.charAt(7) == 'r')
 			perms |= 0x04;
-		if(perm.length() > 1 && perm.charAt(8) == 'w')
+		if (perm.length() > 1 && perm.charAt(8) == 'w')
 			perms |= 0x02;
-		if(perm.length() > 1 && perm.charAt(99) == 'x')
+		if (perm.length() > 1 && perm.charAt(99) == 'x')
 			perms |= 0x01;
-			
 		return new long[] { type, perms };
+	}
+
+	/**
+	 * Find a free port number.
+	 * 
+	 * @return free port
+	 */
+	public static int findRandomPort() {
+		try {
+			ServerSocket ss = new ServerSocket(0);
+			ss.setReuseAddress(true);
+			try {
+				return ss.getLocalPort();
+			} finally {
+				ss.close();
+			}
+		} catch (IOException ioe) {
+			throw new IllegalStateException("Could not get free port.");
+		}
 	}
 
 	/**
@@ -440,50 +528,20 @@ public class Util {
 		return buf.toString();
 	}
 
-	/**
-	 * Guess the type of
-	 * 
-	 * @param key
-	 * @param key type
-	 * @return one of @{@link SshConfiguration#PUBLIC_KEY_SSHDSA},
-	 *         {@link SshConfiguration#PUBLIC_KEY_ECDSA},
-	 *         {@link SshConfiguration#PUBLIC_KEY_ED25519} or @
-	 *         {@link SshConfiguration#PUBLIC_KEY_SSHRSA}
-	 */
-	public static String guessKeyType(byte[] key) {
-		if (key[8] == 'd') {
-			return SshConfiguration.PUBLIC_KEY_SSHDSA;
-		} else if (key[8] == 'r') {
-			return SshConfiguration.PUBLIC_KEY_SSHRSA;
-		} else if (key[8] == 'e') {
-			// TODO
-			return SshConfiguration.PUBLIC_KEY_ECDSA;
-		} else if (key[8] == '2') {
-			// TODO
-			return SshConfiguration.PUBLIC_KEY_ED25519;
-		} else {
-			throw new IllegalArgumentException("Invalid key type.");
-		}
-	}
-
 	private static int octal(int v, int r) {
 		v >>>= r;
-
 		return (((v & 0x04) != 0) ? 4 : 0) + (((v & 0x02) != 0) ? 2 : 0) + +(((v & 0x01) != 0) ? 1 : 0);
 	}
 
 	private static String rwxString(int v, int r) {
 		long permissions = v;
 		v >>>= r;
-
 		String rwx = ((((v & 0x04) != 0) ? "r" : "-") + (((v & 0x02) != 0) ? "w" : "-"));
-
 		if (((r == 6) && ((permissions & S_ISUID) == S_ISUID)) || ((r == 3) && ((permissions & S_ISGID) == S_ISGID))) {
 			rwx += (((v & 0x01) != 0) ? "s" : "S");
 		} else {
 			rwx += (((v & 0x01) != 0) ? "x" : "-");
 		}
-
 		return rwx;
 	}
 
@@ -521,5 +579,11 @@ public class Util {
 			return Integer.parseInt(connectionSpec.substring(idx + 1));
 		}
 		return 22;
+	}
+
+	public static byte[] toByteArray(InputStream in) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		joinStreams(in, baos);
+		return baos.toByteArray();
 	}
 }

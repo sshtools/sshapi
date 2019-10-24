@@ -23,42 +23,117 @@
  */
 package net.sf.sshapi.impl.mavericksynergy;
 
-import java.io.FilterOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.sshtools.client.SshClient;
+import com.sshtools.client.sftp.DirectoryOperation;
 import com.sshtools.client.sftp.SftpClient;
+import com.sshtools.client.tasks.FileTransferProgress;
 import com.sshtools.common.sftp.SftpFileAttributes;
 import com.sshtools.common.sftp.SftpStatusException;
+import com.sshtools.common.util.EOLProcessor;
 import com.sshtools.common.util.UnsignedInteger64;
 
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpHandle;
+import net.sf.sshapi.sftp.SftpInputStream;
+import net.sf.sshapi.sftp.SftpOperation;
+import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSynergySftpClient extends AbstractSftpClient {
-
 	private final SshClient client;
-	private SftpClient sftpClient;
+	private int defaultLocalEOL;
+	private int defaultRemoteEOL;
 	private String home;
+	private SftpClient sftpClient;
 
-	MaverickSynergySftpClient(SshClient client) { 
-		this.client = client;
+	MaverickSynergySftpClient(MaverickSynergySshClient client) {
+		super(client.getProvider(), client.getConfiguration());
+		defaultLocalEOL = EOLProcessor.TEXT_SYSTEM;
+		this.client = client.getNativeClient();
 	}
 
-	public void onClose() throws SshException {
+	@Override
+	public void chgrp(String path, int gid) throws SshException {
 		try {
-			sftpClient.exit();
-		} catch (com.sshtools.common.ssh.SshException sshe) {
-			throw new SshException(SshException.GENERAL, sshe);
+			sftpClient.chgrp(String.valueOf(gid), path);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(e.getLocalizedMessage());
 		}
 	}
 
+	@Override
+	public void chmod(final String path, final int permissions) throws SshException {
+		try {
+			sftpClient.chmod(permissions, path);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(e.getLocalizedMessage());
+		}
+	}
+
+	@Override
+	public void chown(String path, int uid) throws SshException {
+		try {
+			sftpClient.chown(String.valueOf(uid), path);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(e.getLocalizedMessage());
+		}
+	}
+
+	@Override
+	public SftpOperation download(String remotedir, File localdir, boolean recurse, boolean sync, boolean commit)
+			throws SshException {
+		try {
+			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync, commit,
+					createProgress(localdir.toString())));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	public SftpHandle file(String path, OpenMode... modes) throws net.sf.sshapi.sftp.SftpException {
+		try {
+			return createHandle(sftpClient.openFile(path, OpenMode.toFlags(modes)));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (com.sshtools.common.ssh.SshException ioe) {
+			throw new SftpException(SshException.IO_ERROR, String.format("Failed to open file."), ioe);
+		}
+	}
+
+	@Override
+	public String getDefaultPath() throws SshException {
+		return home;
+	}
+
+	@Override
 	public SftpFile[] ls(String path) throws SshException {
 		try {
 			com.sshtools.client.sftp.SftpFile[] entries = sftpClient.ls(path);
@@ -74,44 +149,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
-	private SftpFile entryToFile(String path, com.sshtools.client.sftp.SftpFile entry)
-			throws SftpStatusException, com.sshtools.common.ssh.SshException {
-		String fullPath = Util.concatenatePaths(path, entry.getFilename());
-		SftpFileAttributes attr = entry.getAttributes();
-
-		// Bug in Maverick <= 1.6.6
-		Date accessedDateTime;
-		try {
-			accessedDateTime = attr.getAccessedDateTime();
-		} catch (NullPointerException npe) {
-			accessedDateTime = new Date(attr.getAccessedTime().longValue() * 1000);
-		}
-		SftpFile file = new SftpFile(convertType(attr), fullPath, attr.getSize().longValue(),
-				attr.getModifiedDateTime().getTime(), attr.getCreationDateTime().getTime(), accessedDateTime.getTime(),
-				toInt(attr.getGID()), toInt(attr.getUID()), attr.getPermissions().intValue());
-		return file;
-	}
-
-	long convertIntDate(Integer date) {
-		return date == null ? 0 : date.intValue() * 1000l;
-	}
-
-	public void onOpen() throws SshException {
-		try {
-			sftpClient = new SftpClient(client);
-			sftpClient.cd(getDefaultPath());
-		} catch (com.sshtools.common.ssh.SshException e) {
-			throw new SshException(SshException.GENERAL, "Failed to start SFTP.", e);
-		}  catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} 
-		home = sftpClient.pwd();
-	}
-
-	public String getDefaultPath() throws SshException {
-		return home;
-	}
-
+	@Override
 	public void mkdir(String path, int permissions) throws SshException {
 		try {
 			sftpClient.mkdir(path);
@@ -122,6 +160,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void mkdirs(String path, int permissions) throws SshException {
 		try {
 			sftpClient.mkdirs(path);
@@ -132,6 +171,47 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
+	public void onClose() throws SshException {
+		try {
+			sftpClient.exit();
+		} catch (com.sshtools.common.ssh.SshException sshe) {
+			throw new SshException(SshException.GENERAL, sshe);
+		}
+	}
+
+	@Override
+	public void onOpen() throws SshException {
+		try {
+			sftpClient = new SftpClient(client);
+			sftpClient.cd(getDefaultPath());
+			if (getSftpVersion() > 3) {
+				defaultRemoteEOL = sftpClient.getRemoteEOL();
+				if (eolPolicy != null)
+					onEOLPolicyChange(eolPolicy);
+				if (transferMode != null)
+					onTransferModeChange(transferMode);
+			}
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(SshException.GENERAL, "Failed to start SFTP.", e);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		}
+		home = sftpClient.pwd();
+	}
+
+	@Override
+	public void rename(String path, String newPath) throws SshException {
+		try {
+			sftpClient.rename(path, newPath);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
 	public void rm(String path) throws SshException {
 		try {
 			SftpFile file = stat(path);
@@ -148,6 +228,18 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
+	public void rm(String path, boolean recurse) throws SftpException, SshException {
+		try {
+			sftpClient.rm(path, true, recurse);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
 	public void rmdir(String path) throws SshException {
 		try {
 			SftpFile file = stat(path);
@@ -164,6 +256,21 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
+	public void setLastModified(String path, long modtime) throws SshException {
+		try {
+			SftpFileAttributes stat = sftpClient.stat(path);
+			UnsignedInteger64 a = stat.getAccessedTime();
+			stat.setTimes(a, new UnsignedInteger64(modtime));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public SftpFile stat(String path) throws SshException {
 		try {
 			SftpFileAttributes entry = sftpClient.stat(path);
@@ -175,19 +282,119 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
-	private SftpFile entryToFile(String path, SftpFileAttributes entry) {
-		return new SftpFile(convertType(entry), path, entry.getSize().longValue(),
-				entry.getModifiedDateTime().getTime(), entry.getCreationTime().longValue(),
-				entry.getAccessedTime().longValue(), toInt(entry.getGID()), toInt(entry.getUID()),
-				entry.getPermissions().intValue());
+	@Override
+	public void symlink(String path, String target) throws SshException {
+		try {
+			sftpClient.symlink(target, path);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
 	}
 
-	int toInt(String val) {
+	@Override
+	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
+			throws SshException {
 		try {
-			return Integer.parseInt(val);
+			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync, commit,
+					createProgress(localdir.getPath())));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
 		}
-		return 0;
+	}
+
+	@Override
+	protected InputStream doGet(String path, long filePointer) throws SshException {
+		try {
+			InputStream in = sftpClient.getInputStream(path, filePointer);
+			return new SftpInputStream(in, this, path, in.toString());
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to open remote file for reading.", e);
+		}
+	}
+
+	@Override
+	protected void doGet(String path, OutputStream out, long filePointer) throws SshException {
+		try {
+			sftpClient.get(path, out, createProgress(out.toString()), filePointer);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	protected OutputStream doUpload(final String path) throws SshException {
+		try {
+			OutputStream out = sftpClient.getOutputStream(path);
+			return new SftpOutputStream(out, this, path, out.toString());
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to open remote file for writing.", e);
+		}
+	}
+
+	@Override
+	protected void doUpload(String path, InputStream in) throws SshException {
+		try {
+			sftpClient.put(in, path, createProgress(in.toString()));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to write remote file.", e);
+		}
+	}
+
+	@Override
+	protected void onEOLPolicyChange(EOLPolicy... eolPolicy) {
+		if (sftpClient != null) {
+			if (getSftpVersion() > 3) {
+				if (eolPolicy == null || (eolPolicy[0] == null)) {
+					sftpClient.setForceRemoteEOL(false);
+					sftpClient.setRemoteEOL(defaultRemoteEOL);
+					sftpClient.setLocalEOL(defaultLocalEOL);
+				} else {
+					List<EOLPolicy> pols = Arrays.asList(eolPolicy);
+					sftpClient.setForceRemoteEOL(pols.contains(EOLPolicy.FORCE_REMOTE));
+					if (pols.contains(EOLPolicy.REMOTE_CR))
+						sftpClient.setRemoteEOL(SftpClient.EOL_CR);
+					else if (pols.contains(EOLPolicy.REMOTE_CR_LF))
+						sftpClient.setRemoteEOL(SftpClient.EOL_CRLF);
+					else if (pols.contains(EOLPolicy.REMOTE_LF))
+						sftpClient.setRemoteEOL(SftpClient.EOL_LF);
+					else
+						sftpClient.setRemoteEOL(defaultRemoteEOL);
+					if (pols.contains(EOLPolicy.LOCAL_CR))
+						sftpClient.setLocalEOL(SftpClient.EOL_CR);
+					else if (pols.contains(EOLPolicy.REMOTE_CR_LF))
+						sftpClient.setLocalEOL(SftpClient.EOL_CRLF);
+					else if (pols.contains(EOLPolicy.REMOTE_LF))
+						sftpClient.setLocalEOL(SftpClient.EOL_LF);
+					else
+						sftpClient.setLocalEOL(defaultLocalEOL);
+				}
+			} else {
+				SshConfiguration.getLogger().log(Level.WARN,
+						String.format("EOL settings are not available for version %d of SFTP", getSftpVersion()));
+			}
+		}
+	}
+
+	@Override
+	protected void onTransferModeChange(TransferMode transferMode) {
+		if (sftpClient != null)
+			sftpClient.setTransferMode(transferMode == TransferMode.TEXT ? SftpClient.MODE_TEXT : SftpClient.MODE_BINARY);
+	}
+
+	long convertIntDate(Integer date) {
+		return date == null ? 0 : date.intValue() * 1000l;
 	}
 
 	int convertType(SftpFileAttributes attrs) {
@@ -208,151 +415,213 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
-	public InputStream get(String path, long filePointer) throws SshException {
+	int toInt(String val) {
 		try {
-			return sftpClient.getInputStream(path, filePointer);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+			return Integer.parseInt(val);
 		} catch (Exception e) {
-			throw new SshException("Failed to open remote file for reading.", e);
 		}
+		return 0;
 	}
 
-	public InputStream get(String path) throws SshException {
-		try {
-			return sftpClient.getInputStream(path);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to open remote file for reading.", e);
-		}
-	}
+	private SftpHandle createHandle(com.sshtools.client.sftp.SftpFile nativeHandle) {
+		return new SftpHandle() {
+			private long position;
+			private byte[] readBuffer;
+			private byte[] writeBuffer;
 
-	public OutputStream put(final String path, final int permissions) throws SshException {
-		return put(path, permissions, 0);
-	}
-
-	public OutputStream put(final String path, final int permissions, long pointer) throws SshException {
-		if (pointer > 0) {
-			// TODO should be able to simulate this
-			throw new UnsupportedOperationException();
-		}
-		try {
-			final OutputStream pout = sftpClient.getOutputStream(path);
-			return new FilterOutputStream(pout) {
-				public void write(byte b[], int off, int len) throws IOException {
-					// Never did get why this is needed ???
-					out.write(b, off, len);
-				}
-
-				public void close() throws IOException {
-					super.close();
-					if (permissions > -1) {
-						try {
-							sftpClient.chmod(permissions, path);
-						} catch (SftpStatusException e) {
-							IOException ioe = new IOException("Failed to set permissions on file close.");
-							ioe.initCause(e);
-							throw ioe;
-						} catch (com.sshtools.common.ssh.SshException e) {
-							IOException ioe = new IOException("Failed to set permissions on file close.");
-							ioe.initCause(e);
-							throw ioe;
-						}
+			@Override
+			public void close() throws IOException {
+				try {
+					try {
+						nativeHandle.close();
+					} catch (SftpStatusException e) {
+						throw new IOException("Failed to close.", e);
+					} catch (com.sshtools.common.ssh.SshException e) {
+						throw new IOException("Failed to close.", e);
 					}
+				} finally {
+					writeBuffer = null;
+					readBuffer = null;
 				}
-			};
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to open remote file for writing.", e);
-		}
-	}
-
-	public void chmod(final String path, final int permissions) throws SshException {
-		try {
-			sftpClient.chmod(permissions, path);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.sshtools.common.ssh.SshException e) {
-			throw new SshException(e.getLocalizedMessage());
-		}
-	}
-
-	public void get(String path, OutputStream out) throws SshException {
-		try {
-			sftpClient.get(path, out);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
-		}
-	}
-
-	public void get(String path, OutputStream out, long filePointer) throws SshException {
-		try {
-			sftpClient.get(path, out, filePointer);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
-		}
-	}
-
-	public void put(String path, InputStream in, int permissions) throws SshException {
-		try {
-			sftpClient.put(in, path);
-			if (permissions > -1) {
-				sftpClient.chmod(permissions, path);
 			}
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to write remote file.", e);
-		}
+
+			@Override
+			public long position() {
+				return position;
+			}
+
+			@Override
+			public SftpHandle position(long position) {
+				this.position = position;
+				return this;
+			}
+
+			@Override
+			public int read(ByteBuffer buffer) throws SftpException {
+				int len = buffer.limit() - buffer.position();
+				if (len < 1)
+					throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE, "Run out of buffer space reading a file.");
+				if (readBuffer == null || readBuffer.length != len) {
+					readBuffer = new byte[len];
+				}
+				try {
+					try {
+						int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
+								readBuffer, 0, len);
+						if (read != -1) {
+							buffer.put(readBuffer, 0, read);
+							position += read;
+						}
+						return read;
+					} catch (SftpStatusException sftpE) {
+						throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+					} catch (com.sshtools.common.ssh.SshException ioe) {
+						throw new SftpException(SshException.IO_ERROR, String.format("Failed to write to file."), ioe);
+					}
+				} catch (IOException e) {
+					throw new SftpException(SshException.IO_ERROR, e);
+				}
+			}
+
+			@Override
+			public SftpHandle write(ByteBuffer buffer) throws SftpException {
+				int len = buffer.limit() - buffer.position();
+				if (writeBuffer == null || writeBuffer.length != len) {
+					writeBuffer = new byte[len];
+				}
+				buffer.get(writeBuffer);
+				try {
+					nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position), writeBuffer,
+							0, len);
+				} catch (SftpStatusException sftpE) {
+					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+				} catch (com.sshtools.common.ssh.SshException ioe) {
+					throw new SftpException(SshException.IO_ERROR, String.format("Failed to write to file."), ioe);
+				}
+				position += len;
+				return this;
+			}
+		};
 	}
 
-	public void rename(String path, String newPath) throws SshException {
-		try {
-			sftpClient.rename(path, newPath);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
-		}
+	private FileTransferProgress createProgress(String localdir) {
+		return new FileTransferProgress() {
+			private String path;
+
+			@Override
+			public void completed() {
+				fireFileTransferFinished(path, localdir);
+			}
+
+			@Override
+			public boolean isCancelled() {
+				return false;
+			}
+
+			@Override
+			public void progressed(long progress) {
+				fireFileTransferProgressed(path, localdir, progress);
+			}
+
+			@Override
+			public void started(long length, String path) {
+				this.path = path;
+				fireFileTransferStarted(path, localdir, length);
+			}
+		};
 	}
 
-	public void setLastModified(String path, long modtime) throws SshException {
+	private SftpFile entryToFile(String path, com.sshtools.client.sftp.SftpFile entry)
+			throws SftpStatusException, com.sshtools.common.ssh.SshException {
+		String fullPath = Util.concatenatePaths(path, entry.getFilename());
+		SftpFileAttributes attr = entry.getAttributes();
+		// Bug in Maverick <= 1.6.6
+		Date accessedDateTime;
 		try {
-			SftpFileAttributes stat = sftpClient.stat(path);
-			UnsignedInteger64 a = stat.getAccessedTime();
-			stat.setTimes(a, new UnsignedInteger64(modtime));
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
+			accessedDateTime = attr.getAccessedDateTime();
+		} catch (NullPointerException npe) {
+			accessedDateTime = new Date(attr.getAccessedTime().longValue() * 1000);
 		}
-
-		throw new UnsupportedOperationException();
+		SftpFile file = new SftpFile(convertType(attr), fullPath, attr.getSize().longValue(), attr.getModifiedDateTime().getTime(),
+				attr.getCreationDateTime().getTime(), accessedDateTime.getTime(), toInt(attr.getGID()), toInt(attr.getUID()),
+				attr.getPermissions().intValue());
+		return file;
 	}
 
-	public void chown(String path, int uid) throws SshException {
-		try {
-			sftpClient.chown(String.valueOf(uid), path);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.sshtools.common.ssh.SshException e) {
-			throw new SshException(e.getLocalizedMessage());
-		}
+	private SftpFile entryToFile(String path, SftpFileAttributes entry) {
+		return new SftpFile(convertType(entry), path, entry.getSize().longValue(), entry.getModifiedDateTime().getTime(),
+				entry.getCreationTime().longValue(), entry.getAccessedTime().longValue(), toInt(entry.getGID()),
+				toInt(entry.getUID()), entry.getPermissions().intValue());
 	}
 
-	public void chgrp(String path, int gid) throws SshException {
-		try {
-			sftpClient.chgrp(String.valueOf(gid), path);
-		} catch (SftpStatusException sftpE) {
-			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-		} catch (com.sshtools.common.ssh.SshException e) {
-			throw new SshException(e.getLocalizedMessage());
+	@SuppressWarnings("unchecked")
+	private SftpOperation toOperation(DirectoryOperation op) {
+		List<String> updated = new ArrayList<String>();
+		for (Object f : op.getUpdatedFiles())
+			updated.add(f.toString());
+		List<String> unchanged = new ArrayList<String>();
+		for (Object f : op.getUnchangedFiles())
+			unchanged.add(f.toString());
+		List<String> deleted = new ArrayList<String>();
+		for (Object f : op.getDeletedFiles())
+			deleted.add(f.toString());
+		List<String> created = new ArrayList<String>();
+		for (Object f : op.getNewFiles())
+			created.add(f.toString());
+		Set<String> all = new LinkedHashSet<>();
+		all.addAll(updated);
+		all.addAll(unchanged);
+		all.addAll(deleted);
+		all.addAll(created);
+		Map<String, Exception> errors = new HashMap<String, Exception>();
+		for (Map.Entry<Object, Exception> en : ((Map<Object, Exception>) op.getFailedTransfers()).entrySet()) {
+			errors.put(en.toString(), en.getValue());
 		}
+		ArrayList<String> allList = new ArrayList<>(all);
+		return new SftpOperation() {
+			@Override
+			public List<String> all() {
+				return allList;
+			}
+
+			@Override
+			public List<String> created() {
+				return created;
+			}
+
+			@Override
+			public List<String> deleted() {
+				return deleted;
+			}
+
+			@Override
+			public Map<String, Exception> errors() {
+				return errors;
+			}
+
+			@Override
+			public long files() {
+				return op.getFileCount();
+			}
+
+			@Override
+			public long size() {
+				try {
+					return op.getTransferSize();
+				} catch (SftpStatusException | com.sshtools.common.ssh.SshException e) {
+					throw new IllegalStateException("Failed to get transfer size.", e);
+				}
+			}
+
+			@Override
+			public List<String> unchanged() {
+				return unchanged;
+			}
+
+			@Override
+			public List<String> updated() {
+				return updated;
+			}
+		};
 	}
 }

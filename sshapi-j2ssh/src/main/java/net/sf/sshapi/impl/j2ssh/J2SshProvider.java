@@ -73,7 +73,8 @@ public class J2SshProvider extends AbstractProvider {
 				Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SCP,
 				Capability.SFTP, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY, Capability.DATA_TIMEOUTS,
-				Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL });
+				Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+				Capability.REMOTE_PORT_FORWARD });
 	}
 
 	public SshHostKeyManager createHostKeyManager(SshConfiguration configuration) throws net.sf.sshapi.SshException {

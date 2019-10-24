@@ -23,21 +23,79 @@
  */
 package net.sf.sshapi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a private key.
  */
 public interface SshPrivateKey {
+	
+	/**
+	 * Algorithm
+	 */
+	public enum Algorithm {
+		RSA1,
+		SSH_DSS,
+		SSH_RSA,
+		ECDSA,
+		ED25519,
+		ERROR,
+		UNKNOWN;
+		
+		public static Algorithm fromAlgoName(String algoName) {
+			return Algorithm.valueOf(algoName.toUpperCase().replace("-", "_"));
+		}
+		
+		public String toAlgoName() {
+			if(this == ERROR || this == Algorithm.UNKNOWN)
+				throw new IllegalArgumentException("Not actually a valid algorithm");
+			return name().toLowerCase().replace("_", "-");
+		}
+		
+		public String toKeyType(int bits) {
+			switch(this) {
+			case RSA1:
+				return SshConfiguration.PUBLIC_KEY_SSHRSA1;
+			case SSH_DSS:
+				return SshConfiguration.PUBLIC_KEY_SSHDSA;
+			case SSH_RSA:
+				return SshConfiguration.PUBLIC_KEY_SSHRSA;
+			case ECDSA:
+				switch(bits) {
+				case 256:
+					return SshConfiguration.PUBLIC_KEY_ECDSA_256;	
+				case 384:
+					return SshConfiguration.PUBLIC_KEY_ECDSA_384;	
+				case 521:
+					return SshConfiguration.PUBLIC_KEY_ECDSA_521;
+				default:
+					throw new UnsupportedOperationException(String.format("%d is an unsupported bit length.", bits));
+				}
+			case ED25519:
+				return SshConfiguration.PUBLIC_KEY_ED25519;
+			default:
+				throw new UnsupportedOperationException(String.format("%s is an unsupported key type.", this));
+				
+			}
+		}
+
+		public static Algorithm[] algos() {
+			List<Algorithm> l = new ArrayList<>();
+			for(Algorithm a : values()) {
+				if(a != Algorithm.ERROR && a != UNKNOWN)
+					l.add(a);
+			}
+			return l.toArray(new Algorithm[0]);
+		}
+	}
 
 	/**
-	 * Get the private key algorithm used. Will be one of
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_SSHRSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_ECDSA},
-	 * {@link SshConfiguration#PUBLIC_KEY_ED25519}
+	 * Get the private key algorithm used. 
 	 * 
 	 * @return algorithm
 	 */
-	String getAlgorithm();
+	Algorithm getAlgorithm();
 
 	/**
 	 * Sign the data using this private key.

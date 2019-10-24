@@ -51,6 +51,13 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-openssh</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-ganymed</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>

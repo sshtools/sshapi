@@ -36,6 +36,10 @@ public interface Logger {
 		/**
 		 * Most extreme logging, should only be required to diagnose problems
 		 */
+		TRACE,
+		/**
+		 * Very extreme logging, should only be required to diagnose problems
+		 */
 		DEBUG,
 		/**
 		 * Log only information, usually high level events.

@@ -32,19 +32,6 @@ import net.sf.sshapi.SshPublicKey;
  */
 public class SshKeyPair {
 
-	/**
-	 * SSH1 RSA
-	 */
-	public static final String SSH1_RSA = "rsa1";
-	/**
-	 * SSH2 RSA
-	 */
-	public static final String SSH2_RSA = "ssh-rsa";
-	/**
-	 * SSH2 DSA
-	 */
-	public static final String SSH2_DSA = "ssh-dss";
-
 	private SshPublicKey publicKey;
 	private SshPrivateKey privateKey;
 

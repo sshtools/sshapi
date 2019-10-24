@@ -25,7 +25,6 @@ package net.sf.sshapi.impl.ganymed;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import ch.ethz.ssh2.crypto.cipher.BlockCipherFactory;
@@ -80,7 +79,9 @@ public class GanymedSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION });
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+				Capability.REMOTE_PORT_FORWARD });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

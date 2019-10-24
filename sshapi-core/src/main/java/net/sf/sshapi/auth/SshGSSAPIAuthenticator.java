@@ -33,6 +33,11 @@ import net.sf.sshapi.SshPasswordPrompt;
  */
 public interface SshGSSAPIAuthenticator extends SshAuthenticator, SshPasswordPrompt {
 
+	@Override
+	default String getTypeName() {
+		return "gssapi-with-mic";
+	}
+
 	/**
 	 * Get the JAAS configuration used for authentication.
 	 * 

@@ -127,7 +127,8 @@ public class JschSshProvider extends AbstractProvider {
 				Capability.HOST_KEY_MANAGEMENT, Capability.SFTP, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE,
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.SCP, Capability.FILE_TRANSFER_EVENTS,
 				Capability.DATA_TIMEOUTS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
-				Capability.SHELL });
+				Capability.SHELL, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+				Capability.REMOTE_PORT_FORWARD });
 	}
 
 	@Override

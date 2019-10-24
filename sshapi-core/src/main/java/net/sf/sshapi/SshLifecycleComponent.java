@@ -24,7 +24,6 @@
 package net.sf.sshapi;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * Many components of SSHAPI implement this interface, as they all follow the open() / close() pattern.
@@ -67,9 +66,7 @@ public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C exte
 	boolean isOpen();
 
 	/**
-	 * Close this component.
-	 * 
-	 * @throws SshException
+	 * Close this component sinking exceptions.
 	 */
-	void close() throws IOException;
+	void closeQuietly();
 }

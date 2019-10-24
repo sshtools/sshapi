@@ -56,31 +56,107 @@ import ssh.SshLibrary.ssh_key;
 import ssh.SshLibrary.ssh_session;
 
 public class LibsshClient extends AbstractClient {
-	public final static int S_IRWXU = 448;
+	public static final int FORWARDING_BUFFER_SIZE = 32768;
 	public final static int S_IRUSR = 256;
+	public final static int S_IRWXU = 448;
 	public final static int S_IWUSR = 128;
 	public final static int S_IXUSR = 64;
-	public final static int O_RDONLY = 0;
-	public final static int O_WRONLY = 1;
-	public final static int O_RDWR = 2;
-	public final static int O_CREAT =  8;
-	public final static int O_TRUNC = 16;
 	// TODO make configurable
 	public final static int SCP_BUFFER_SIZE = 32768;
 	public final static int SFTP_BUFFER_SIZE = 32768;
-	public static final int FORWARDING_BUFFER_SIZE = 32768;
+	final static Logger LOG = SshConfiguration.getLogger();
+
+	protected final static Pointer bytePointer(byte[] bytes) {
+		Memory mem = new Memory(bytes.length + 1);
+		for (int i = 0; i < bytes.length; i++)
+			mem.setByte(i, bytes[i]);
+		return mem;
+	}
+
+	protected final static Pointer stringPointer(String str) {
+		Memory mem = new Memory(str.length() + 1);
+		mem.setString(0, str);
+		return mem;
+	}
+
+	ssh_session libSshSession;
+	private boolean authenticated;
+	private boolean connected;
+	private Pointer hostname;
+	private SshLibrary library;
 	// Private instance variables
 	private String username;
-	private boolean connected;
-	ssh_session libSshSession;
-	private SshLibrary library;
-	private Pointer hostname;
-	private boolean authenticated;
-	final static Logger LOG = SshConfiguration.getLogger();
 
 	public LibsshClient(SshConfiguration configuration) {
 		super(configuration);
 		library = SshLibrary.INSTANCE;
+	}
+
+	@Override
+	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
+		if (authenticated)
+			throw new IllegalStateException("Already authenticated.");
+		try {
+			if (!doAuthentication(authenticators)) {
+				return false;
+			}
+			SshBannerHandler bannerHandler = getConfiguration().getBannerHandler();
+			if (bannerHandler != null) {
+				Pointer ret = library.ssh_get_issue_banner(libSshSession);
+				if (ret != null) {
+					bannerHandler.banner(ret.getString(0));
+				}
+			}
+			authenticated = true;
+			return true;
+		} catch (IOException ioe) {
+			throw new SshException(SshException.IO_ERROR, ioe);
+		}
+	}
+
+	@Override
+	public SocketFactory createTunneledSocketFactory() throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getChannelCount() {
+		// TODO Can't see anything in libssh, might have to count our own
+		// channels
+		return 0;
+	}
+
+	@Override
+	public String getRemoteIdentification() {
+		if (!isConnected()) {
+			throw new IllegalStateException("Not connected");
+		}
+		return "Unknown";
+	}
+
+	@Override
+	public int getRemoteProtocolVersion() {
+		if (!isConnected()) {
+			throw new IllegalStateException("Not connected");
+		}
+		// TODO get the actual remote version
+		return getConfiguration().getProtocolVersion() == SshConfiguration.SSH1_OR_SSH2 ? 2
+				: getConfiguration().getProtocolVersion();
+	}
+
+	@Override
+	public String getUsername() {
+		return username;
+	}
+
+	@Override
+	public boolean isAuthenticated() {
+		return isConnected() && authenticated;
+	}
+
+	@Override
+	public boolean isConnected() {
+		return connected;
 	}
 
 	@Override
@@ -138,18 +214,8 @@ public class LibsshClient extends AbstractClient {
 				// The key
 				SshHostKey hostKey = new SshHostKey() {
 					@Override
-					public String getType() {
-						return keyType;
-					}
-
-					@Override
-					public byte[] getKey() {
+					public String getComments() {
 						return null;
-					}
-
-					@Override
-					public String getHost() {
-						return hostname;
 					}
 
 					@Override
@@ -158,8 +224,18 @@ public class LibsshClient extends AbstractClient {
 					}
 
 					@Override
-					public String getComments() {
+					public String getHost() {
+						return hostname;
+					}
+
+					@Override
+					public byte[] getKey() {
 						return null;
+					}
+
+					@Override
+					public String getType() {
+						return keyType;
 					}
 				};
 				if (hostKeyValidator.verifyHost(hostKey) != SshHostKeyValidator.STATUS_HOST_KEY_VALID) {
@@ -172,49 +248,42 @@ public class LibsshClient extends AbstractClient {
 		}
 	}
 
-	protected final static Pointer stringPointer(String str) {
-		Memory mem = new Memory(str.length() + 1);
-		mem.setString(0, str);
-		return mem;
-	}
-
-	protected final static Pointer bytePointer(byte[] bytes) {
-		Memory mem = new Memory(bytes.length + 1);
-		for (int i = 0; i < bytes.length; i++)
-			mem.setByte(i, bytes[i]);
-		return mem;
+	@Override
+	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws SshException {
+		return new LibsshSshCommand(libSshSession, library, command, termType, cols, rows);
 	}
 
 	@Override
-	public SocketFactory createTunneledSocketFactory() throws SshException {
-		throw new UnsupportedOperationException();
+	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
+			final int remotePort) throws SshException {
+		return new LibsshLocalForward(libSshSession, library, localAddress, localPort, remoteHost, remotePort);
 	}
 
 	@Override
-	public SshSCPClient createSCP() throws SshException {
+	protected SshSCPClient doCreateSCP() throws SshException {
 		return new LibsshSCPClient(library, libSshSession);
 	}
 
 	@Override
-	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
-		if(authenticated)
-			throw new IllegalStateException("Already authenticated.");
-		try {
-			if (!doAuthentication(authenticators)) {
-				return false;
-			}
-			SshBannerHandler bannerHandler = getConfiguration().getBannerHandler();
-			if (bannerHandler != null) {
-				Pointer ret = library.ssh_get_issue_banner(libSshSession);
-				if (ret != null) {
-					bannerHandler.banner(ret.getString(0));
-				}
-			}
-			authenticated = true;
-			return true;
-		} catch (IOException ioe) {
-			throw new SshException(SshException.IO_ERROR, ioe);
+	protected SftpClient doCreateSftp() throws SshException {
+		return new LibsshSFTPClient(getProvider(), getConfiguration(), library, libSshSession);
+	}
+
+	@Override
+	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
+			throws SshException {
+		return new LibsshShell(libSshSession, library, termType, cols, rows, false);
+	}
+
+	@Override
+	protected void onClose() throws SshException {
+		if (!isConnected()) {
+			throw new SshException(SshException.NOT_OPEN, "Not connected.");
 		}
+		library.ssh_disconnect(libSshSession);
+		connected = false;
+		authenticated = false;
 	}
 
 	private boolean doAuthentication(SshAuthenticator[] authenticators) throws IOException, SshException {
@@ -285,83 +354,5 @@ public class LibsshClient extends AbstractClient {
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public String getRemoteIdentification() {
-		if (!isConnected()) {
-			throw new IllegalStateException("Not connected");
-		}
-		return "Unknown";
-	}
-
-	@Override
-	public int getRemoteProtocolVersion() {
-		if (!isConnected()) {
-			throw new IllegalStateException("Not connected");
-		}
-		// TODO get the actual remote version
-		return getConfiguration().getProtocolVersion() == SshConfiguration.SSH1_OR_SSH2 ? 2
-				: getConfiguration().getProtocolVersion();
-	}
-
-	@Override
-	public SshPortForward createLocalForward(final String localAddress, final int localPort, final String remoteHost,
-			final int remotePort) throws SshException {
-		return new LibsshLocalForward(libSshSession, library, localAddress, localPort, remoteHost, remotePort);
-	}
-
-	@Override
-	public SshPortForward createRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
-			final int localPort) throws SshException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws SshException {
-		return new LibsshShell(libSshSession, library, termType, cols, rows, false);
-	}
-
-	@Override
-	public SshCommand createCommand(final String command) throws SshException {
-		return new LibsshSshCommand(libSshSession, library, command);
-	}
-
-	@Override
-	public void disconnect() throws SshException {
-		if (!isConnected()) {
-			throw new SshException(SshException.NOT_OPEN, "Not connected.");
-		}
-		library.ssh_disconnect(libSshSession);
-		connected = false;
-		authenticated = false;
-	}
-
-	@Override
-	public boolean isConnected() {
-		return connected;
-	}
-
-	@Override
-	public boolean isAuthenticated() {
-		return isConnected() && authenticated;
-	}
-
-	@Override
-	public SftpClient createSftp() throws SshException {
-		return new LibsshSFTPClient(library, libSshSession);
-	}
-
-	@Override
-	public String getUsername() {
-		return username;
-	}
-
-	@Override
-	public int getChannelCount() {
-		// TODO Can't see anything in libssh, might have to count our own
-		// channels
-		return 0;
 	}
 }

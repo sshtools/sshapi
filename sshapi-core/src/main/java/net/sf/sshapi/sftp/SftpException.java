@@ -41,131 +41,138 @@ public class SftpException extends SshException {
 	/**
 	 * SSH_FX_OK
 	 */
-	public static final Code SSH_FX_OK = new SftpCode("sftp.ok", 0);
+	public static final SftpCode SSH_FX_OK = new SftpCode("sftp.ok", 0);
 	/**
 	 * SSH_FX_EOF
 	 */
-	public static final Code SSH_FX_EOF = new SftpCode("sftp.eof", 1);
+	public static final SftpCode SSH_FX_EOF = new SftpCode("sftp.eof", 1);
 	/**
 	 * SSH_FX_NO_SUCH_FILE
 	 */
-	public static final Code SSH_FX_NO_SUCH_FILE = new SftpCode("sftp.noSuchFile", 2);
+	public static final SftpCode SSH_FX_NO_SUCH_FILE = new SftpCode("sftp.noSuchFile", 2);
 	/**
 	 * SSH_FX_PERMISSION_DENIED
 	 */
-	public static final Code SSH_FX_PERMISSION_DENIED = new SftpCode("sftp.permissionDenied", 3);
+	public static final SftpCode SSH_FX_PERMISSION_DENIED = new SftpCode("sftp.permissionDenied", 3);
 	/**
 	 * SSH_FX_FAILURE
 	 */
-	public static final Code SSH_FX_FAILURE = new SftpCode("sftp.failure", 4);
+	public static final SftpCode SSH_FX_FAILURE = new SftpCode("sftp.failure", 4);
 	/**
 	 * SSH_FX_BAD_MESSAGE
 	 */
-	public static final Code SSH_FX_BAD_MESSAGE = new SftpCode("sftp.badMessage", 5);
+	public static final SftpCode SSH_FX_BAD_MESSAGE = new SftpCode("sftp.badMessage", 5);
 	/**
 	 * SSH_FX_BAD_MESSAGE
 	 */
-	public static final Code SSH_FX_NO_CONNECTION = new SftpCode("sftp.noConnection", 6);
+	public static final SftpCode SSH_FX_NO_CONNECTION = new SftpCode("sftp.noConnection", 6);
 	/**
 	 * SSH_FX_NO_CONNECTION
 	 */
-	public static final Code SSH_FX_CONNECTION_LOST = new SftpCode("sftp.connectionLost", 7);
+	public static final SftpCode SSH_FX_CONNECTION_LOST = new SftpCode("sftp.connectionLost", 7);
 	/**
 	 * SSH_FX_OP_UNSUPPORTED
 	 */
-	public static final Code SSH_FX_OP_UNSUPPORTED = new SftpCode("sftp.opUnsupported", 8);
+	public static final SftpCode SSH_FX_OP_UNSUPPORTED = new SftpCode("sftp.opUnsupported", 8);
 	/**
 	 * SSH_FX_NO_SUCH_PATH
 	 */
-	public static final Code SSH_FX_INVALID_HANDLE = new SftpCode("sftp.invalidHandle", 9);
+	public static final SftpCode SSH_FX_INVALID_HANDLE = new SftpCode("sftp.invalidHandle", 9);
 	/**
 	 * SSH_FX_NO_SUCH_PATH
 	 */
-	public static final Code SSH_FX_NO_SUCH_PATH = new SftpCode("sftp.noSuchPath", 10);
+	public static final SftpCode SSH_FX_NO_SUCH_PATH = new SftpCode("sftp.noSuchPath", 10);
 	/**
 	 * SSH_FX_FILE_ALREADY_EXISTS
 	 */
-	public static final Code SSH_FX_FILE_ALREADY_EXISTS = new SftpCode("sftp.fileAlreadyExists", 11);
+	public static final SftpCode SSH_FX_FILE_ALREADY_EXISTS = new SftpCode("sftp.fileAlreadyExists", 11);
 	/**
 	 * SSH_FX_WRITE_PROTECT
 	 */
-	public static final Code SSH_FX_WRITE_PROTECT = new SftpCode("sftp.writeProtect", 12);
+	public static final SftpCode SSH_FX_WRITE_PROTECT = new SftpCode("sftp.writeProtect", 12);
 	/**
 	 * SSH_FX_NO_MEDIA
 	 */
-	public static final Code SSH_FX_NO_MEDIA = new SftpCode("sftp.noMedia", 13);
+	public static final SftpCode SSH_FX_NO_MEDIA = new SftpCode("sftp.noMedia", 13);
 	/**
 	 * SSH_FX_NO_SPACE_ON_FILESYSTEM
 	 */
-	public static final Code SSH_FX_NO_SPACE_ON_FILESYSTEM = new SftpCode("sftp.noSpaceOnFileSystem", 14);
+	public static final SftpCode SSH_FX_NO_SPACE_ON_FILESYSTEM = new SftpCode("sftp.noSpaceOnFileSystem", 14);
 	/**
 	 * SSH_FX_QUOTA_EXCEEDED
 	 */
-	public static final Code SSH_FX_QUOTA_EXCEEDED = new SftpCode("sftp.quoteExceeded", 15);
+	public static final SftpCode SSH_FX_QUOTA_EXCEEDED = new SftpCode("sftp.quoteExceeded", 15);
 	/**
 	 * SSH_FX_UNKNOWN_PRINCIPAL
 	 */
-	public static final Code SSH_FX_UNKNOWN_PRINCIPAL = new SftpCode("sftp.unknownPrincipal", 16);
+	public static final SftpCode SSH_FX_UNKNOWN_PRINCIPAL = new SftpCode("sftp.unknownPrincipal", 16);
 	/**
 	 * SSH_FX_LOCK_CONFLICT
 	 */
-	public static final Code SSH_FX_LOCK_CONFLICT = new SftpCode("sftp.lockConflict", 17);
+	public static final SftpCode SSH_FX_LOCK_CONFLICT = new SftpCode("sftp.lockConflict", 17);
 	/**
 	 * SSH_FX_DIR_NOT_EMPTY
 	 */
-	public static final Code SSH_FX_DIR_NOT_EMPTY = new SftpCode("sftp.dirNotEmpty", 18);
+	public static final SftpCode SSH_FX_DIR_NOT_EMPTY = new SftpCode("sftp.dirNotEmpty", 18);
 	/**
 	 * SSH_FX_NOT_A_DIRECTORY
 	 */
-	public static final Code SSH_FX_NOT_A_DIRECTORY = new SftpCode("sftp.notADirectory", 19);
+	public static final SftpCode SSH_FX_NOT_A_DIRECTORY = new SftpCode("sftp.notADirectory", 19);
 	/**
 	 * SSH_FX_INVALID_FILENAME
 	 */
-	public static final Code SSH_FX_INVALID_FILENAME = new SftpCode("sftp.invalidFilename", 20);
+	public static final SftpCode SSH_FX_INVALID_FILENAME = new SftpCode("sftp.invalidFilename", 20);
 	/**
 	 * SSH_FX_LINK_LOOP
 	 */
-	public static final Code SSH_FX_LINK_LOOP = new SftpCode("sftp.linkLoop", 21);
+	public static final SftpCode SSH_FX_LINK_LOOP = new SftpCode("sftp.linkLoop", 21);
 	/**
 	 * SSH_FX_CANNOT_DELETE
 	 */
-	public static final Code SSH_FX_CANNOT_DELETE = new SftpCode("sftp.cannotDelete", 22);
+	public static final SftpCode SSH_FX_CANNOT_DELETE = new SftpCode("sftp.cannotDelete", 22);
 	/**
 	 * SSH_FX_INVALID_PARAMETER
 	 */
-	public static final Code SSH_FX_INVALID_PARAMETER = new SftpCode("sftp.invalidParameter", 23);
+	public static final SftpCode SSH_FX_INVALID_PARAMETER = new SftpCode("sftp.invalidParameter", 23);
 	/**
 	 * SSH_FX_FILE_IS_A_DIRECTORY
 	 */
-	public static final Code SSH_FX_FILE_IS_A_DIRECTORY = new SftpCode("sftp.fileIsADirectory", 24);
+	public static final SftpCode SSH_FX_FILE_IS_A_DIRECTORY = new SftpCode("sftp.fileIsADirectory", 24);
 	/**
 	 * SSH_FX_BYTE_RANGE_LOCK_CONFLICT
 	 */
-	public static final Code SSH_FX_BYTE_RANGE_LOCK_CONFLICT = new SftpCode("sftp.byteRangeLockConflict", 25);
+	public static final SftpCode SSH_FX_BYTE_RANGE_LOCK_CONFLICT = new SftpCode("sftp.byteRangeLockConflict", 25);
 	/**
 	 * SSH_FX_BYTE_RANGE_LOCK_REFUSED
 	 */
-	public static final Code SSH_FX_BYTE_RANGE_LOCK_REFUSED = new SftpCode("sftp.byteRangeLockRefused", 26);
+	public static final SftpCode SSH_FX_BYTE_RANGE_LOCK_REFUSED = new SftpCode("sftp.byteRangeLockRefused", 26);
 	/**
 	 * SSH_FX_DELETE_PENDING
 	 */
-	public static final Code SSH_FX_DELETE_PENDING = new SftpCode("sftp.deletePending", 27);
+	public static final SftpCode SSH_FX_DELETE_PENDING = new SftpCode("sftp.deletePending", 27);
 	/**
 	 * SSH_FX_FILE_CORRUPT
 	 */
-	public static final Code SSH_FX_FILE_CORRUPT = new SftpCode("sftp.fileCorrupt", 28);
+	public static final SftpCode SSH_FX_FILE_CORRUPT = new SftpCode("sftp.fileCorrupt", 28);
 	/**
 	 * SSH_FX_OWNER_INVALID
 	 */
-	public static final Code SSH_FX_OWNER_INVALID = new SftpCode("sftp.ownerInvalid", 29);
+	public static final SftpCode SSH_FX_OWNER_INVALID = new SftpCode("sftp.ownerInvalid", 29);
 	/**
 	 * SSH_FX_GROUP_INVALID
 	 */
-	public static final Code SSH_FX_GROUP_INVALID = new SftpCode("sftp.groupInvalid", 30);
+	public static final SftpCode SSH_FX_GROUP_INVALID = new SftpCode("sftp.groupInvalid", 30);
 	/**
 	 * SSH_FX_NO_MATCHING_BYTE_RANGE_LOCK
 	 */
-	public static final Code SSH_FX_NO_MATCHING_BYTE_RANGE_LOCK = new SftpCode("sftp.noMatchingByteRangeLock", 31);
+	public static final SftpCode SSH_FX_NO_MATCHING_BYTE_RANGE_LOCK = new SftpCode("sftp.noMatchingByteRangeLock", 31);
+	/**
+	 * Transfer cancelled
+	 */
+	public static final Code TRANSFER_CANCELLED = new Code("sftp.transferCancelled");/**
+	 * Transfer cancelled
+	 */
+	public static final Code OUT_OF_BUFFER_SPACE = new Code("sftp.outOfBufferSpace");
 
 	private static Map<Integer, Code> codes;
 
@@ -202,6 +209,47 @@ public class SftpException extends SshException {
 	 * 
 	 * @param serverErrorCode server error code
 	 * @param message message
+	 */
+	public SftpException(Code serverErrorCode, String message) {
+		super(serverErrorCode, message);
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param serverErrorCode server error code
+	 * @param message message
+	 * @param cause cause
+	 */
+	public SftpException(Code serverErrorCode, String message, Throwable cause) {
+		super(serverErrorCode, message, cause);
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param serverErrorCode server error code
+	 * @param cause cause
+	 */
+	public SftpException(Code serverErrorCode, Throwable cause) {
+		super(serverErrorCode, cause);
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param serverErrorCode server error code
+	 * @param cause cause
+	 */
+	public SftpException(int serverErrorCode, Throwable cause) {
+		super(getCodeForServerCode(serverErrorCode), cause);
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param serverErrorCode server error code
+	 * @param message message
 	 * @param cause cause
 	 */
 	public SftpException(int serverErrorCode, String message, Throwable cause) {
@@ -222,6 +270,8 @@ public class SftpException extends SshException {
 	 * SFTP error code.
 	 */
 	public static class SftpCode extends Code {
+		private int serverCode;
+
 		/**
 		 * Constructor.
 		 * 
@@ -234,6 +284,11 @@ public class SftpException extends SshException {
 				codes = new HashMap<>();
 			}
 			codes.put(new Integer(serverCode), this);
+			this.serverCode = serverCode;
+		}
+		
+		public int getServerCode() {
+			return serverCode;
 		}
 	}
 }

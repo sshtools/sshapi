@@ -5,13 +5,14 @@ import java.io.IOException;
 import com.sshtools.common.publickey.SshPublicKeyFile;
 
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 
 public class MaverickSynergyPublicKey implements SshPublicKey {
 
 	private byte[] key;
 	private String fingerPrint;
-	private String algorithm;
+	private Algorithm algorithm;
 	private int bitLength;
 	private com.sshtools.common.ssh.components.SshPublicKey publicKey;
 
@@ -23,7 +24,7 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 			throws com.sshtools.common.ssh.SshException {
 		this.publicKey = publicKey;
 		key = publicKey.getEncoded();
-		algorithm = publicKey.getAlgorithm();
+		algorithm = Algorithm.fromAlgoName(publicKey.getAlgorithm());
 		fingerPrint = publicKey.getFingerprint();
 		bitLength = publicKey.getBitLength();
 	}
@@ -44,7 +45,7 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 		return publicKey;
 	}
 
-	public String getAlgorithm() {
+	public Algorithm getAlgorithm() {
 		return algorithm;
 	}
 

@@ -2,6 +2,14 @@
 
 SSHAPI is a clean and modern API for accessing SSH servers in Java. However, it does not supply the support for the protocol itself, or any encryption code, it instead delegates this to an *SSH Provider*, which in turn uses one of many already available SSH libraries.
 
+```java
+	try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+		try(SftpClient sftp = client.sftp()) {
+			sftp.get("/home/myhome/stuff.txt", new File("stuff.txt"));
+		}
+	}
+```
+
 It was originally written with two purposes in mind.
 
  * We wanted a way to compare SSH APIs for performance to highlight issues in our own products.
@@ -59,6 +67,20 @@ NOTE, if you are using SNAPSHOT versions of the library, you will need to add th
 
 For full usage, see the examples.
 
+### Connecting, Authenticating and Creating A Shell
+
+```java
+	try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+		try(SshShell shell = client.shell()) {
+			InputStream in = shell.getInputStream();
+			OutputStream out = shell.getOutputStream();
+			
+			// Do something with I/O streams
+		}
+	}
+
+```
+
 ### Connecting, Authenticating and Creating A Shell with a Pseudo Tty
 
 ```java
@@ -89,6 +111,34 @@ For full usage, see the examples.
 	try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
 		try(ScpClient scp = client.scp()) {
 			scp.put("remote-name", null, new File("stuff.txt"), false);
+		}
+	}
+```
+
+### Random Access Read And Write
+ 
+```java
+	try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+		try(SftpClient sftp = client.sftp()) {
+		
+			// Write test file
+			try (SftpHandle handle = sftp.file("test-file.txt", Mode.SFTP_WRITE, Mode.SFTP_CREAT)) {
+				ByteBuffer buf = ByteBuffer.allocate(16);
+				buf.putInt(1);
+				buf.putInt(2);
+				buf.putInt(3);
+				buf.putInt(4);
+				buf.flip();
+				handle.writeTo(buf);
+			}
+				
+			// Read 4 bytes from test file from 4th byte, which is the 2nd 'int' written above
+			try (SftpHandle handle = sftp.file("test-file.txt", Mode.SFTP_READ)) {
+				ByteBuffer buf = ByteBuffer.allocate(4);
+				handle.position(4).readFrom(buf);
+				if(buf.getInt(0) != 2)
+					throw new IllegalStateException("Expected to receive value of 2.");
+			}
 		}
 	}
 ```

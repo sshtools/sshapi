@@ -6,6 +6,11 @@ package net.sf.sshapi;
  */
 public interface SshFileTransferListener {
 	/**
+	 * The path or target used when the path is not known.
+	 */
+	public final static String DEFAULT_SOURCE_OR_TARGET = "?";
+
+	/**
 	 * A new file transfer has started.
 	 * 
 	 * @param sourcePath path of file (may be <code>null</code> if the source is

@@ -5,6 +5,7 @@ import net.sf.sshapi.Capability;
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
@@ -87,9 +88,9 @@ public class E18IdentityManagement {
 		SshKeyPair keyPair;
 		StringTokenizer t = new StringTokenizer(cmd);
 		t.nextToken();
-		String type = t.nextToken();
+		Algorithm algo = Algorithm.fromAlgoName(t.nextToken());
 		int bits = Integer.parseInt(t.nextToken());
-		keyPair = mgr.generateKeyPair(type, bits);
+		keyPair = mgr.generateKeyPair(algo, bits);
 		if (keyPair == null) {
 			System.out.println("No key pair generated");
 		} else {

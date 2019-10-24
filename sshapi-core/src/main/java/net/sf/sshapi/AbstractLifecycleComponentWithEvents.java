@@ -23,6 +23,8 @@
  */
 package net.sf.sshapi;
 
+import net.sf.sshapi.Logger.Level;
+
 /**
  * Abstract implementation of an {@link AbstractLifecycleComponent} that fires
  * events when the lifecycle methods are called. Most SSHAPI lifecycle
@@ -31,7 +33,6 @@ package net.sf.sshapi;
  */
 public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
 		extends AbstractLifecycleComponent<L, C> {
-
 	private boolean open;
 
 	public final boolean isOpen() {
@@ -54,13 +55,13 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 	}
 
 	public final void close() throws SshException {
-		if (!isOpen()) {
-			throw new SshException(SshException.NOT_OPEN, "Channel not open.");
-		}
-		fireClosing();
-		onClose();
-		open = false;
-		fireClosed();
+		if (isOpen()) {
+			fireClosing();
+			onClose();
+			open = false;
+			fireClosed();
+		} else
+			SshConfiguration.getLogger().log(Level.DEBUG, String.format("Request to close %s, but it wasn't open", toString()));
 	}
 
 	protected abstract void onOpen() throws SshException;

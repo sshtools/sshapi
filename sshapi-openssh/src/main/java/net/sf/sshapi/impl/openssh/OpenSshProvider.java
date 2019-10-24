@@ -39,10 +39,31 @@ import net.sf.sshapi.SshConfiguration;
  * Provider implementation for Maverick SSH.
  */
 public class OpenSshProvider extends AbstractProvider {
-
-	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION,
-			Capability.SSH1, Capability.SSH2, Capability.PASSWORD_AUTHENTICATION, 
-			Capability.HOST_KEY_VERIFICATION };
+	/**
+	 * Command to use for 'ssh'. By default, this is just 'ssh', but a full path
+	 * may be specified.
+	 */
+	public final static String CFG_OPENSSH_SSH_COMMAND = "sshapi.openssh.sshCommand";
+	/**
+	 * Command to use for 'ssh'. By default, this is just 'sftp', but a full
+	 * path may be specified.
+	 */
+	public final static String CFG_OPENSSH_SFTP_COMMAND = "sshapi.openssh.sftpCommand";
+	/**
+	 * Command to use for 'ssh'. By default, this is just 'scp', but a full path
+	 * may be specified.
+	 */
+	public final static String CFG_OPENSSH_SCP_COMMAND = "sshapi.openssh.scpCommand";
+	/**
+	 * Command to use for 'ssh-keygen'. By default, this is just 'ssh-keygen', but a full path
+	 * may be specified.
+	 */
+	public final static String CFG_OPENSSH_SSH_KEYGEN_COMMAND = "sshapi.openssh.sshKeyGenCommand";
+	
+	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
+			Capability.SSH2, Capability.PASSWORD_AUTHENTICATION, Capability.SFTP,
+			Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SHELL, Capability.SCP, Capability.LOCAL_PORT_FORWARD
+			 };
 
 	/**
 	 * Constructor
@@ -60,8 +81,45 @@ public class OpenSshProvider extends AbstractProvider {
 		// Class.forName("com.sshtools.client.SshClient", false,
 		// getClass().getClassLoader());
 		// } catch (ClassNotFoundException cnfe) {
-		// throw new UnsupportedOperationException("Maverick is not on the CLASSPATH");
+		// throw new UnsupportedOperationException("Maverick is not on the
+		// CLASSPATH");
 		// }
+	}
+
+	@Override
+	public String getVersion() {
+		ProcessBuilder b = new ProcessBuilder("ssh", "-V");
+		try {
+			b.redirectErrorStream(true);
+			Process p = b.start();
+			try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+				return r.readLine().split("\\s+")[0];
+			} finally {
+				p.waitFor();
+			}
+		} catch (InterruptedException ie) {
+			return super.getVersion();
+		} catch (IOException ioe) {
+			return super.getVersion();
+		}
+	}
+
+	@Override
+	public String getVendor() {
+		ProcessBuilder b = new ProcessBuilder("ssh", "-V");
+		try {
+			b.redirectErrorStream(true);
+			Process p = b.start();
+			try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+				return r.readLine().split("\\s+")[1].split(",")[0];
+			} finally {
+				p.waitFor();
+			}
+		} catch (InterruptedException ie) {
+			return super.getVersion();
+		} catch (IOException ioe) {
+			return super.getVersion();
+		}
 	}
 
 	public List<Capability> getCapabilities() {
@@ -94,7 +152,6 @@ public class OpenSshProvider extends AbstractProvider {
 
 	public void seed(long seed) {
 	}
-
 
 	private List<String> readLines(String... cmd) {
 		ProcessBuilder pb = new ProcessBuilder(cmd);

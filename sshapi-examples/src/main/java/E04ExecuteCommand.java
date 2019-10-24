@@ -14,16 +14,14 @@ public class E04ExecuteCommand {
 	/**
 	 * Entry point.
 	 * 
-	 * @param arg
-	 *            command line arguments
+	 * @param arg command line arguments
 	 * @throws Exception
 	 */
 	public static void main(String[] arg) throws Exception {
-
+		
 		// Create the client using that configuration and connect
-		try (SshClient client = Ssh.open(Util.promptConnectionSpec(),
-				new ConsolePasswordAuthenticator())) {
-
+		try (SshClient client = Ssh.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
+			
 			// Execute the command and read back its output
 			try (SshCommand command = client.command("ls /etc")) {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(command.getInputStream()));
@@ -32,6 +30,5 @@ public class E04ExecuteCommand {
 					System.out.println(line);
 			}
 		}
-
 	}
 }

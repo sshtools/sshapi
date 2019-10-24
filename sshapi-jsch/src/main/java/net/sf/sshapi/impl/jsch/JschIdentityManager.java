@@ -36,6 +36,7 @@ import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshKeyPair;
@@ -138,14 +139,14 @@ class JschIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
+	public SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException {
 		try {
 			int type = -1;
-			if (keyType.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
+			if (keyType.equals(Algorithm.SSH_RSA)) {
 				type = KeyPair.RSA;
-			} else if (keyType.equals(SshConfiguration.PUBLIC_KEY_SSHDSA)) {
+			} else if (keyType.equals(Algorithm.SSH_DSS)) {
 				type = KeyPair.DSA;
-			} else if (keyType.equals(SshConfiguration.PUBLIC_KEY_ECDSA)) {
+			} else if (keyType.equals(Algorithm.ECDSA)) {
 				type = KeyPair.ECDSA;
 			} else {
 				throw new SshException(SshException.UNSUPPORTED_FEATURE, "Algoritm " + keyType + " is not supported.");
@@ -254,18 +255,18 @@ class JschIdentityManager implements SshIdentityManager {
 		}
 
 		@Override
-		public String getAlgorithm() {
+		public Algorithm getAlgorithm() {
 			switch(kpair.getKeyType()) {
 			case KeyPair.DSA:
-				return "dsa";
+				return Algorithm.SSH_DSS;
 			case KeyPair.ECDSA:
-				return "ecdsa";
+				return Algorithm.ECDSA;
 			case KeyPair.RSA:
-				return "rsa";
+				return Algorithm.SSH_RSA;
 			case KeyPair.ERROR:
-				return "error";
+				return Algorithm.ERROR;
 			default:
-				return "unknown";
+				return Algorithm.UNKNOWN;
 			}
 		}
 
@@ -282,13 +283,13 @@ class JschIdentityManager implements SshIdentityManager {
 		}
 
 		@Override
-		public String getAlgorithm() {
+		public Algorithm getAlgorithm() {
 			if(keyPair.getKeyType() == KeyPair.DSA)
-				return SshConfiguration.PUBLIC_KEY_SSHDSA;
+				return Algorithm.SSH_DSS;
 			else if(keyPair.getKeyType() == KeyPair.RSA)
-				return SshConfiguration.PUBLIC_KEY_SSHRSA;
+				return Algorithm.SSH_RSA;
 			else if(keyPair.getKeyType() == KeyPair.ECDSA)
-				return SshConfiguration.PUBLIC_KEY_ECDSA;
+				return Algorithm.ECDSA;
 			else 
 				throw new IllegalStateException("Unsupported public key algorithm.");
 				
@@ -358,6 +359,13 @@ class JschIdentityManager implements SshIdentityManager {
 	}
 
 	public SshPublicKeyFile parse(byte[] loadFile) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key, char[] keyPassphrase)
+			throws SshException {
+		// TODO Can apparently support X509 but I can't find how
 		throw new UnsupportedOperationException();
 	}
 

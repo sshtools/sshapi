@@ -333,9 +333,9 @@
 	<modules>
 		<module>sshapi-core</module>
 		<module>sshapi-examples</module>
+		<module>sshapi-maverick-synergy</module>
 		<module>sshapi-maverick</module>
 		<module>sshapi-maverick-16</module>
-		<module>sshapi-maverick-synergy</module>
 		<module>sshapi-ganymed</module>
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>
@@ -343,9 +343,11 @@
 		<module>sshapi-trilead</module>
 		<module>sshapi-openssh</module>
 		<module>sshapi-commons-vfs</module>
+		<module>sshapi-performance-tests</module>
 		<module>sshapi-cli</module>
 		<module>sshapi-site</module>
 		<module>wagon-sshapi</module>
+		<module>sshapi-tests</module>
 		<!-- <module>../sshapi-assembly</module> <module>../sshapi-site</module> -->
 	</modules>
 	<profiles>

@@ -29,4 +29,9 @@ import net.sf.sshapi.SshPasswordPrompt;
  * Authenticator implementation used for simple "password" authentication.
  */
 public interface SshPasswordAuthenticator extends SshAuthenticator, SshPasswordPrompt {
+
+	@Override
+	default String getTypeName() {
+		return "password";
+	}
 }

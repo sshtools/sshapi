@@ -44,10 +44,10 @@ public class E06LocalForwarding {
 				});
 			}
 
-			try (SshPortForward local = client.localForward(null, 8900, "sshtools.com", 80)) {
+			try (SshPortForward local = client.localForward(null, 8443, "www.google.com", 443)) {
 				// Wait for two minute
-				System.out.println("Point your browser to http://localhost:8900, you should "
-						+ "see the home page for JavaSSH. This connection will close in 2 minutes.");
+				System.out.println("Point your browser to https://localhost:8443, you should "
+						+ "see the home page for Google. This connection will close in 2 minutes.");
 				Thread.sleep(120000);
 			}
 		}

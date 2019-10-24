@@ -7,6 +7,7 @@ import net.sf.sshapi.util.Util;
  * provider and list and choose the SSH implementation to use.
  */
 public class E99ChoosingAProvider {
+	
 	/**
 	 * Entry point.
 	 * 
@@ -30,11 +31,11 @@ public class E99ChoosingAProvider {
 		System.setProperty(DefaultProviderFactory.PROVIDER_CLASS_NAME, provider.getClass().getName());
 		  
 		String[] tests = new String[] { "E01Shell", "E02ShellWithConsolePrompts", "E03ShellWithGUIPrompts",
-					"E04ExecuteCommand", "E05X11Forwarding", "E06bLocalForwardingAndShell", "E6LocalForwarding",
+					"E04ExecuteCommand", "E05X11Forwarding", "E06bLocalForwardingAndShell", "E06LocalForwarding",
 					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeyboardInteractiveAuthentication",
 					"E12ChangeKeyPassphrase", "E13ExtendedHostKeyValidation", "E14HostKeyManagement",
 					"E15SCP", "E16PublicKeySubsystem", "E17TunneledSocketFactory", "E19ShellUsingGSSAPI",
-					"E20CustomChannel", "E21AgentAuthentication" };
+					"E20CustomChannel", "E21AgentAuthentication", "E22RawSFTP" };
 		System.out.println();
 		for(int i = 0 ; i < tests.length ; i++)
 			System.out.println((i+ 1) + ". " + tests[i]);

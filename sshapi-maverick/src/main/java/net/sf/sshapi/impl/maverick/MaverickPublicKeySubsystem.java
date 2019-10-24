@@ -91,7 +91,7 @@ class MaverickPublicKeySubsystem extends
 
 				@Override
 				public String getAlgorithm() {
-					return key.getAlgorithm();
+					return key.getAlgorithm().toAlgoName();
 				}
 			}, comment);
 		} catch (com.sshtools.ssh.SshException e) {

@@ -25,6 +25,13 @@ package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,10 +40,13 @@ import com.sshtools.common.publickey.SshKeyPairGenerator;
 import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.common.publickey.SshPublicKeyFileFactory;
 import com.sshtools.common.ssh.components.SshKeyPair;
+import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
+import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
@@ -84,27 +94,15 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 		return SshKeyPair.getKeyPair(privateKey.privateKey, publicKey.getPublicKey());
 	}
 
-	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(String keyType, int keyBits) throws SshException {
+	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException {
 		try {
-			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(translateKeyType(keyType), keyBits);
+			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(keyType.toAlgoName(), keyBits);
 			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pair.getPublicKey()),
 					new MaverickSynergyPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
 		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
-		}
-	}
-
-	private static String translateKeyType(String type) {
-		if (type.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
-			return SshKeyPairGenerator.SSH2_RSA;
-		} else if (type.equals(SshConfiguration.PUBLIC_KEY_ECDSA)) {
-			return SshKeyPairGenerator.ECDSA;
-		} if (type.equals(SshConfiguration.PUBLIC_KEY_ED25519)) {
-			return SshKeyPairGenerator.ED25519;
-		}  else {
-			return SshKeyPairGenerator.SSH2_DSA;
 		}
 	}
 
@@ -242,6 +240,36 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 				throw new SshException(SshException.GENERAL, e);
 			}
 		}
+	}
+
+	@Override
+	public net.sf.sshapi.identity.SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key,
+			char[] keyPassphrase) throws SshException {
+		try {
+			KeyStore keystore = KeyStore.getInstance("PKCS12");
+			try {
+				keystore.load(pkcs12Keystore, keystorePassphrase);
+			} finally {
+				pkcs12Keystore.close();
+			}
+			RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(key, keyPassphrase);
+			X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
+			SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
+			Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
+			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pubkey), new MaverickSynergyPrivateKey(privkey));
+		} catch (IOException ioe) {
+			throw new SshException("Failed to import X509 key.", ioe);
+		} catch (KeyStoreException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (CertificateException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (UnrecoverableKeyException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException("Failed to import X509 key.", e);
+		} 
 	}
 
 	class MaverickPublicKeyFile implements SshPublicKeyFile {

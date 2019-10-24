@@ -24,11 +24,17 @@ class LibsshSshCommand
 	private SshLibrary library;
 	private String command;
 	private ssh_session libSshSession;
+	private String termType;
+	private int cols;
+	private int rows;
 
-	public LibsshSshCommand(ssh_session libSshSession, SshLibrary library, String command) {
+	public LibsshSshCommand(ssh_session libSshSession, SshLibrary library, String command, String termType, int cols, int rows) {
 		this.library = library;
 		this.command = command;
 		this.libSshSession = libSshSession;
+		this.termType = termType;
+		this.cols = cols;
+		this.rows = rows;
 	}
 
 	@Override
@@ -77,6 +83,12 @@ class LibsshSshCommand
 			if (ret != SshLibrary.SSH_OK) {
 				throw new SshException(SshException.GENERAL, "Failed to open session for command channel.");
 			}
+			if (termType != null) {
+				ret = library.ssh_channel_request_pty_size(channel, termType, cols, rows);
+				if (ret != SshLibrary.SSH_OK) {
+					throw new SshException(SshException.FAILED_TO_OPEN_SHELL, "Failed to set PTY size");
+				}
+			}
 
 			try {
 				ret = library.ssh_channel_request_exec(channel, command);
@@ -86,7 +98,7 @@ class LibsshSshCommand
 
 				in = new LibsshInputStream(library, channel, false);
 				out = new LibsshOutputStream(library, channel);
-				ext = null;
+				ext = new LibsshInputStream(library, channel, true);
 
 			} catch (SshException sshe) {
 				library.ssh_channel_close(channel);

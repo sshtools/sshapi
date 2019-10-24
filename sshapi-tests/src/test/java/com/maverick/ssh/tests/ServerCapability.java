@@ -1,0 +1,5 @@
+package com.maverick.ssh.tests;
+
+public enum ServerCapability {
+	SFTP_LS_RETURNS_DOTS, SUPPORTS_OWNERS, SUPPORTS_GROUPS, SUPPORTS_PERMISSIONS, CAN_DO_MULTIFACTOR_AUTH, SYMLINKS
+}
