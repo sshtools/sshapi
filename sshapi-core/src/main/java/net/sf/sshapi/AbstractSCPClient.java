@@ -8,6 +8,10 @@ import java.io.File;
  */
 public abstract class AbstractSCPClient extends
 		AbstractFileTransferClient<SshLifecycleListener<SshSCPClient>, SshSCPClient> implements SshSCPClient {
+	
+	protected AbstractSCPClient(SshProvider provider) {
+		super(provider);
+	}
 
 	protected void onOpen() throws SshException {
 	}

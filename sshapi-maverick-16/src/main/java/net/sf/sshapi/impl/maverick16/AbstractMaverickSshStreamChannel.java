@@ -31,17 +31,20 @@ import com.maverick.ssh.ChannelEventListener;
 import com.maverick.ssh.SshChannel;
 import com.maverick.ssh.SshSession;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshProvider;
 
 abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshExtendedChannel<L, C>, ChannelEventListener {
+		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C>, ChannelEventListener {
 	private final com.maverick.ssh.SshSession session;
 
-	AbstractMaverickSshStreamChannel(com.maverick.ssh.SshSession session) {
+	AbstractMaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, com.maverick.ssh.SshSession session) {
+		super(provider, configuration);
 		this.session = session;
 	}
 

@@ -10,6 +10,7 @@ import net.sf.sshapi.Logger;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshSCPClient;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_scp;
@@ -24,7 +25,8 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	private SshLibrary library;
 	private ssh_session libSshSession;
 
-	public LibsshSCPClient(SshLibrary library, ssh_session libSshSession) {
+	public LibsshSCPClient(SshProvider provider, SshLibrary library, ssh_session libSshSession) {
+		super(provider);
 		this.library = library;
 		this.libSshSession = libSshSession;
 	}

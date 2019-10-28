@@ -25,6 +25,7 @@ package net.sf.sshapi.forwarding;
 
 import net.sf.sshapi.AbstractLifecycleComponent;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 
 /**
  * Abstract implementation of {@link SshPortForward} that maintains the
@@ -34,6 +35,10 @@ public abstract class AbstractPortForward extends AbstractLifecycleComponent<Ssh
 
 	private boolean open;
 	private int timeout;
+	
+	protected AbstractPortForward(SshProvider provider) {
+		super(provider);
+	}
 
 	public void close() throws SshException {
 		if (!open) {

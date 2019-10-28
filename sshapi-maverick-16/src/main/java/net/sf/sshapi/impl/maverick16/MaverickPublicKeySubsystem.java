@@ -32,6 +32,7 @@ import com.sshtools.publickey.PublicKeySubsystemException;
 import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 
@@ -48,7 +49,8 @@ class MaverickPublicKeySubsystem extends
 	 * @param ssh2Session
 	 *            session
 	 */
-	MaverickPublicKeySubsystem(Ssh2Session ssh2Session) {
+	MaverickPublicKeySubsystem(SshProvider provider, Ssh2Session ssh2Session) {
+		super(provider);
 		this.ssh2Session = ssh2Session;
 	}
 

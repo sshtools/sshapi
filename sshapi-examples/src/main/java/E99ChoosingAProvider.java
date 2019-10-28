@@ -1,5 +1,9 @@
+
 import net.sf.sshapi.DefaultProviderFactory;
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.util.ConsoleLogger;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -7,6 +11,9 @@ import net.sf.sshapi.util.Util;
  * provider and list and choose the SSH implementation to use.
  */
 public class E99ChoosingAProvider {
+	static {
+		((ConsoleLogger)SshConfiguration.getLogger()).setDefaultLevel(Level.INFO);
+	}
 	
 	/**
 	 * Entry point.
@@ -35,7 +42,7 @@ public class E99ChoosingAProvider {
 					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeyboardInteractiveAuthentication",
 					"E12ChangeKeyPassphrase", "E13ExtendedHostKeyValidation", "E14HostKeyManagement",
 					"E15SCP", "E16PublicKeySubsystem", "E17TunneledSocketFactory", "E19ShellUsingGSSAPI",
-					"E20CustomChannel", "E21AgentAuthentication", "E22RawSFTP" };
+					"E20CustomChannel", "E21AgentAuthentication", "E22RawSFTP", "E23NonBlockingConsole", "E24NonBlockingConsoleTasks" };
 		System.out.println();
 		for(int i = 0 ; i < tests.length ; i++)
 			System.out.println((i+ 1) + ". " + tests[i]);

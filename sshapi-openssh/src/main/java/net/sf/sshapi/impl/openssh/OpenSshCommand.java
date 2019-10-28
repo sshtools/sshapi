@@ -26,14 +26,13 @@ package net.sf.sshapi.impl.openssh;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.TimeUnit;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshException;
 
-class OpenSshCommand extends AbstractDataProducingComponent<SshChannelListener<SshCommand>, SshCommand> implements SshCommand {
+class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCommand>, SshCommand> implements SshCommand {
 	private ProcessBuilder pb;
 	private Process process;
 	private final String termType;
@@ -42,6 +41,7 @@ class OpenSshCommand extends AbstractDataProducingComponent<SshChannelListener<S
 	private OpenSshClient client;
 
 	OpenSshCommand(OpenSshClient client, ProcessBuilder pb, String termType, String command) {
+		super(client.getProvider(), client.getConfiguration());
 		this.pb = pb;
 		this.termType = termType;
 		this.command = command;

@@ -30,24 +30,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.sshapi.Capability;
-import net.sf.sshapi.DefaultProviderFactory;
-import net.sf.sshapi.SshClient;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshCommand;
-import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.SshProxyServerDetails;
-import net.sf.sshapi.agent.SshAgent;
-import net.sf.sshapi.auth.SshAuthenticator;
-import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
-import net.sf.sshapi.auth.SshPasswordAuthenticator;
-import net.sf.sshapi.hostkeys.SshHostKeyManager;
-import net.sf.sshapi.util.ConsoleHostKeyValidator;
-import net.sf.sshapi.util.ConsolePasswordAuthenticator;
-import net.sf.sshapi.util.DefaultAgentAuthenticator;
-import net.sf.sshapi.util.PEMFilePublicKeyAuthenticator;
-
 import org.apache.maven.wagon.CommandExecutionException;
 import org.apache.maven.wagon.CommandExecutor;
 import org.apache.maven.wagon.ConnectionException;
@@ -69,6 +51,24 @@ import org.apache.maven.wagon.providers.ssh.knownhost.KnownHostsProvider;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.resource.Resource;
 import org.codehaus.plexus.util.IOUtil;
+
+import net.sf.sshapi.Capability;
+import net.sf.sshapi.DefaultProviderFactory;
+import net.sf.sshapi.SshClient;
+import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.SshProxyServerDetails;
+import net.sf.sshapi.agent.SshAgent;
+import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
+import net.sf.sshapi.auth.SshPasswordAuthenticator;
+import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.util.ConsoleHostKeyValidator;
+import net.sf.sshapi.util.ConsolePasswordAuthenticator;
+import net.sf.sshapi.util.DefaultAgentAuthenticator;
+import net.sf.sshapi.util.PEMFilePublicKeyAuthenticator;
 
 /**
  * AbstractJschWagon
@@ -286,8 +286,8 @@ public abstract class AbstractSSHAPIWagon extends StreamWagon implements SshWago
 	public void closeConnection() {
 		if (session != null) {
 			try {
-				session.disconnect();
-			} catch (SshException e) {
+				session.close();
+			} catch (IOException e) {
 			}
 			session = null;
 		}

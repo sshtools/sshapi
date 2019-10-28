@@ -30,7 +30,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
+import java.nio.ByteBuffer;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -585,5 +587,18 @@ public class Util {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		joinStreams(in, baos);
 		return baos.toByteArray();
+	}
+	
+	public static byte[] toBytes(String data) {
+		try {
+			return data.getBytes("UTF-8");
+		}
+		catch(UnsupportedEncodingException use) {
+			return data.getBytes();
+		}
+	}
+
+	public static ByteBuffer wrap(String data) {
+		return ByteBuffer.wrap(toBytes(data));
 	}
 }

@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import net.sf.sshapi.AbstractLifecycleComponentWithEvents;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
-import net.sf.sshapi.SshDataListener;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 // Crazy name :)SshLifecycleListener<SshShell>, SshShell
 
-public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannelListener<SshShell>, SshShell> implements SshShell {
+public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private LibsshInputStream in;
 	private LibsshInputStream ext;
 	private LibsshOutputStream out;
@@ -26,8 +27,9 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannel
 	private boolean useExtendedStream;
 	private ssh_session libSshSession;
 
-	public LibsshShell(ssh_session libSshSession, SshLibrary library, String termType, int cols, int rows,
-			boolean useExtendedStream) {
+	public LibsshShell(SshProvider provider, SshConfiguration configuration, ssh_session libSshSession, SshLibrary library,
+			String termType, int cols, int rows, boolean useExtendedStream) {
+		super(provider, configuration);
 		this.libSshSession = libSshSession;
 		this.library = library;
 		this.termType = termType;
@@ -52,14 +54,6 @@ public class LibsshShell extends AbstractLifecycleComponentWithEvents<SshChannel
 					"Shell channel not opened. If you use SshClient.createShell(), you must also call SshShell.open(). Alternatively use SshClient.shell() which will return an opened shell.");
 		}
 		return out;
-	}
-
-	@Override
-	public void addDataListener(SshDataListener<SshShell> listener) {
-	}
-
-	@Override
-	public void removeDataListener(SshDataListener<SshShell> listener) {
 	}
 
 	@Override

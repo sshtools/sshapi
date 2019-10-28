@@ -30,14 +30,15 @@ import com.sshtools.ssh.ChannelEventListener;
 import com.sshtools.ssh.SshSession;
 
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 
 class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListener<SshShell>, SshShell>
 		implements SshShell, ChannelEventListener {
-
-	MaverickSshShell(SshSession session) {
-		super(session);
+	MaverickSshShell(SshProvider provider, SshConfiguration configuration, SshSession session) {
+		super(provider, configuration, session);
 	}
 
 	@Override
@@ -63,6 +64,5 @@ class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListen
 		} catch (com.sshtools.ssh.SshException e) {
 			throw new SshException(SshException.GENERAL, e);
 		}
-
 	}
 }

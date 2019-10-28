@@ -70,7 +70,7 @@ import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
 
 import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
@@ -251,13 +251,14 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	class MaverickSshChannel
-			extends AbstractDataProducingComponent<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
+			extends AbstractSshStreamChannel<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
 			implements net.sf.sshapi.SshChannel {
 		private ChannelData channelData;
 		private String name;
 		private MaverickSynergySshChannel ssh2Channel;
 
 		public MaverickSshChannel(String name, ChannelData channelData) {
+			super(getProvider(), getConfiguration());
 			this.channelData = channelData;
 			this.name = name;
 		}
@@ -649,7 +650,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		synchronized (sshClient) {
-			return new MaverickSynergySshCommand(sshClient.getConnection(), termType, command, cols, rows, pixWidth, pixHeight,
+			return new MaverickSynergySshCommand(getProvider(), getConfiguration(), sshClient.getConnection(), termType, command, cols, rows, pixWidth, pixHeight,
 					terminalModes);
 		}
 	}
@@ -659,7 +660,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			final int remotePort) throws net.sf.sshapi.SshException {
 		ConnectionProtocolClient client = (ConnectionProtocolClient) sshClient.getConnection().getConnectionProtocol();
 		final String fLocalAddress = localAddress == null ? "0.0.0.0" : localAddress;
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
 			@Override
@@ -695,7 +696,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			final int localPort) throws net.sf.sshapi.SshException {
 		ConnectionProtocolClient client = (ConnectionProtocolClient) sshClient.getConnection().getConnectionProtocol();
 		final String fRemoteHost = remoteHost == null ? "0.0.0.0" : remoteHost;
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
 			@Override
@@ -742,7 +743,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws net.sf.sshapi.SshException {
 		synchronized (sshClient) {
-			return new MaverickSynergySshShell(sshClient.getConnection(), termType, cols, rows, pixWidth, pixHeight, terminalModes);
+			return new MaverickSynergySshShell(getProvider(), getConfiguration(), sshClient.getConnection(), termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		}
 	}
 

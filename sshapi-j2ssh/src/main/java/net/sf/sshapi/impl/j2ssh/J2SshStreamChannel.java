@@ -27,14 +27,15 @@ import com.sshtools.j2ssh.session.SessionChannelClient;
 
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshCommand;
 
 abstract class J2SshStreamChannel
 		extends AbstractJ2SshStreamChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
-	public J2SshStreamChannel(SshConfiguration configuration, SessionChannelClient channel) {
-		super(configuration, channel);
+	public J2SshStreamChannel(SshProvider provider, SshConfiguration configuration, SessionChannelClient channel) {
+		super(provider, configuration, channel);
 	}
 
 }

@@ -25,6 +25,7 @@ final class GanymedSCPClient extends AbstractSCPClient {
 	 * @param ganymedSshClient
 	 */
 	GanymedSCPClient(GanymedSshClient ganymedSshClient) {
+		super(ganymedSshClient.getProvider());
 		this.ganymedSshClient = ganymedSshClient;
 	}
 

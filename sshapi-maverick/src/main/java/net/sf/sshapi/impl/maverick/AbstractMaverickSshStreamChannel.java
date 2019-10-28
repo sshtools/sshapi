@@ -26,22 +26,27 @@ package net.sf.sshapi.impl.maverick;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
 import com.sshtools.ssh.ChannelEventListener;
 import com.sshtools.ssh.SshChannel;
 import com.sshtools.ssh.SshSession;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshInput;
+import net.sf.sshapi.SshProvider;
 
 abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshExtendedChannel<L, C> {
+		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final SshSession session;
 
-	AbstractMaverickSshStreamChannel(SshSession session) {
+	AbstractMaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, SshSession session) {
+		super(provider, configuration);
 		this.session = session;
 	}
 

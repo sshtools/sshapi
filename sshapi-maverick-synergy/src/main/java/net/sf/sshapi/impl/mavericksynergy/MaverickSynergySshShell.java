@@ -33,12 +33,14 @@ import com.sshtools.client.SshClientContext;
 import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.common.ssh.Connection;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 
-class MaverickSynergySshShell extends AbstractDataProducingComponent<SshChannelListener<SshShell>, SshShell> implements SshShell {
+class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private SessionChannelNG session;
 	private InputStream extendedInputStream;
 	private InputStream inputStream;
@@ -51,8 +53,9 @@ class MaverickSynergySshShell extends AbstractDataProducingComponent<SshChannelL
 	private int pixHeight;
 	private byte[] terminalModes;
 
-	MaverickSynergySshShell(final Connection<SshClientContext> con, String termType, int cols, int rows, int pixWidth,
+	MaverickSynergySshShell(SshProvider provider, SshConfiguration configuration, final Connection<SshClientContext> con, String termType, int cols, int rows, int pixWidth,
 			int pixHeight, byte[] terminalModes) {
+		super(provider, configuration);
 		this.termType = termType;
 		this.terminalModes = terminalModes;
 		this.cols = cols;

@@ -11,6 +11,10 @@ public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<
 		extends AbstractLifecycleComponentWithEvents<L, C> {
 
 	private List<SshFileTransferListener> fileTransferListeners;
+	
+	protected AbstractFileTransferClient(SshProvider provider) {
+		super(provider);
+	}
 
 	/**
 	 * Add a new listener to be informed when file transfers start, progress or

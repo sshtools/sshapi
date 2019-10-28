@@ -26,27 +26,47 @@ package net.sf.sshapi.impl.jsch;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
 import com.jcraft.jsch.Channel;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshInput;
+import net.sf.sshapi.SshProvider;
 
 abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshExtendedChannel<L, C> {
+		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Channel channel;
-	private final SshConfiguration configuration;
 
 	private InputStream in;
 	private OutputStream out;
 	private InputStream ext;
+	private SshInput errInput;
+	private Thread errThread;
 
-	public AbstractJschStreamChannel(SshConfiguration configuration, Channel channel) throws SshException {
+	public AbstractJschStreamChannel(SshProvider provider, SshConfiguration configuration, Channel channel) throws SshException {
+		super(provider, configuration);
 		this.channel = channel;
-		this.configuration = configuration;
+	}
+
+	@Override
+	public void setErrInput(SshInput errInput) {
+		if (!Objects.equals(errInput, this.errInput)) {
+			this.errInput = errInput;
+			if (errInput == null) {
+				errThread.interrupt();
+			} else {
+				try {
+					errThread = pump(errInput, getExtendedInputStream());
+				} catch (IOException e) {
+					throw new IllegalStateException("Failed to extended input stream.", e);
+				}
+			}
+		}
 	}
 
 	@Override

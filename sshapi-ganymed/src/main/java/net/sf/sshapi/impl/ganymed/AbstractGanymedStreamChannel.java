@@ -26,51 +26,59 @@ package net.sf.sshapi.impl.ganymed;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
 import ch.ethz.ssh2.Session;
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshInput;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.Util;
 
 abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshExtendedChannel<L, C> {
+		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 
+	private SshInput errInput;
+	private Thread errThread;
 	private final Session session;
-	private final SshConfiguration configuration;
 
-	public AbstractGanymedStreamChannel(SshConfiguration configuration, Session channel) throws SshException {
+	public AbstractGanymedStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration);
 		this.session = channel;
-		this.configuration = configuration;
 	}
 
+	@Override
 	public int exitCode() throws IOException {
 		Integer t = session.getExitStatus();
 		return t == null ? -1 : t.intValue();
 	}
 
-	public InputStream getInputStream() throws IOException {
-		return session.getStdout();
-	}
-
-	public OutputStream getOutputStream() throws IOException {
-		return session.getStdin();
-	}
-
+	@Override
 	public InputStream getExtendedInputStream() throws IOException {
 		return session.getStderr();
 	}
 
-	protected Session getSession() {
-		return session;
+	@Override
+	public InputStream getInputStream() throws IOException {
+		return session.getStdout();
 	}
 
+	@Override
+	public OutputStream getOutputStream() throws IOException {
+		return session.getStdin();
+	}
+
+	public abstract void onChannelOpen() throws SshException;
+
+	@Override
 	public void onClose() throws SshException {
 		session.close();
 	}
 
+	@Override
 	public final void onOpen() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
 			boolean singleConnection = Boolean.parseBoolean(
@@ -85,6 +93,24 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 		onChannelOpen();
 	}
 
-	public abstract void onChannelOpen() throws SshException;
+	@Override
+	public void setErrInput(SshInput errInput) {
+		if (!Objects.equals(errInput, this.errInput)) {
+			this.errInput = errInput;
+			if (errInput == null) {
+				errThread.interrupt();
+			} else {
+				try {
+					errThread = pump(errInput, getExtendedInputStream());
+				} catch (IOException e) {
+					throw new IllegalStateException("Failed to extended input stream.", e);
+				}
+			}
+		}
+	}
+
+	protected Session getSession() {
+		return session;
+	}
 
 }

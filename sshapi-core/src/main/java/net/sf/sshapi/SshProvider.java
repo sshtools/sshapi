@@ -24,6 +24,8 @@
 package net.sf.sshapi;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
@@ -232,6 +234,52 @@ public interface SshProvider {
 			SshAuthenticator... authenticators) throws SshException;
 
 	/**
+	 * Create a new client instance with the specified configuration and connect and
+	 * authenticate it, but do not block. Instead, a {@link SshFuture} will be returned
+	 * allowing monitoring of the state.
+	 * <p>
+	 * IMPLEMENTATION NOTE: The provider implementation is expected to invoke
+	 * {@link SshClient#init(SshProvider)} after construction.
+	 * 
+	 * @param configuration
+	 *            configuration
+	 * @param username
+	 *            user name
+	 * @param hostname
+	 *            hostname
+	 * @param port
+	 *            port
+	 * @param authenticators
+	 *            authenticators
+	 * @return future
+	 * @throws UnsupportedOperationException
+	 *             if the provider configuration is not valid
+	 */
+	Future<SshClient> openLater(SshConfiguration configuration, String username, String hostname, int port,
+			SshAuthenticator... authenticators);
+
+	/**
+	 * Create a new client instance with the specified configuration and connect and
+	 * authenticate it, but do not block. Instead, a {@link SshFuture} will be returned
+	 * allowing monitoring of the state.
+	 * <p>
+	 * IMPLEMENTATION NOTE: The provider implementation is expected to invoke
+	 * {@link SshClient#init(SshProvider)} after construction.
+	 * 
+	 * @param configuration
+	 *            configuration
+	 * @param spec
+	 *            connection spec in the format username[:password]@host[:port]
+	 * @param authenticators
+	 *            authenticators
+	 * @return future
+	 * @throws UnsupportedOperationException
+	 *             if the provider configuration is not valid
+	 */
+	Future<SshClient> openLater(SshConfiguration configuration, String spec,
+			SshAuthenticator... authenticators);
+
+	/**
 	 * Create a connection to the local agent using default or auto-detected
 	 * settings.
 	 * <p>
@@ -290,4 +338,12 @@ public interface SshProvider {
 	 *            seed
 	 */
 	void seed(long seed);
+	
+	/**
+	 * Get an {@link ExecutorService} that may be used to place background tasks onto. The
+	 * provider is responsible for configuring this with enough threads for it's operation.
+	 * 
+	 * @return executor service
+	 */
+	ExecutorService getExecutor();
 }

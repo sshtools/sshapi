@@ -33,12 +33,14 @@ import com.sshtools.client.SshClientContext;
 import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.common.ssh.Connection;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 
-class MaverickSynergySshCommand extends AbstractDataProducingComponent<SshChannelListener<SshCommand>, SshCommand>
+class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 	private SessionChannelNG session;
 	private InputStream extendedInputStream;
@@ -53,8 +55,9 @@ class MaverickSynergySshCommand extends AbstractDataProducingComponent<SshChanne
 	private byte[] terminalModes;
 	private String termType;
 
-	MaverickSynergySshCommand(final Connection<SshClientContext> con, String command, String termType, int cols, int rows,
+	MaverickSynergySshCommand(SshProvider provider, SshConfiguration configuration, final Connection<SshClientContext> con, String command, String termType, int cols, int rows,
 			int pixWidth, int pixHeight, byte[] terminalModes) {
+		super(provider, configuration);
 		this.con = con;
 		this.command = command;
 		this.termType = termType;

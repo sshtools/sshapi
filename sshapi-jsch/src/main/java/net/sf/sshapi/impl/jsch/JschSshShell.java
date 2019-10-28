@@ -34,6 +34,7 @@ import com.jcraft.jsch.ChannelShell;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
@@ -43,8 +44,8 @@ abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener
 
 	private InputStream ext;
 
-	public JschSshShell(SshConfiguration configuration, ChannelShell channel) throws SshException {
-		super(configuration, channel);
+	public JschSshShell(SshProvider provider, SshConfiguration configuration, ChannelShell channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
 	@Override

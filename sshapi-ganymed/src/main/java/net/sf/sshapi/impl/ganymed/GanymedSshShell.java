@@ -25,16 +25,38 @@ package net.sf.sshapi.impl.ganymed;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 import ch.ethz.ssh2.Session;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshInput;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 
 class GanymedSshShell extends AbstractGanymedStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
-	public GanymedSshShell(SshConfiguration configuration, Session channel) throws SshException {
-		super(configuration, channel);
+	private Thread errThread;
+	private SshInput errInput;
+
+	public GanymedSshShell(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration, channel);
+	}
+
+	@Override
+	public void setErrInput(SshInput errInput) {
+		if (!Objects.equals(errInput, this.errInput)) {
+			this.errInput = errInput;
+			if (errInput == null) {
+				errThread.interrupt();
+			} else {
+				try {
+					errThread = pump(errInput, getExtendedInputStream());
+				} catch (IOException e) {
+					throw new IllegalStateException("Failed to extended input stream.", e);
+				}
+			}
+		}
 	}
 
 	public InputStream getExtendedInputStream() throws IOException {
@@ -51,6 +73,5 @@ class GanymedSshShell extends AbstractGanymedStreamChannel<SshChannelListener<Ss
 
 	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
 		throw new UnsupportedOperationException("Ganymed does not support changing of window size.");
-
 	}
 }

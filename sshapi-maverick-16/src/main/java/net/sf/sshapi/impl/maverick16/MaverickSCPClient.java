@@ -18,6 +18,7 @@ class MaverickSCPClient extends AbstractSCPClient implements FileTransferProgres
 	 * @param maverickSshClient
 	 */
 	MaverickSCPClient(MaverickSshClient maverickSshClient) {
+		super(maverickSshClient.getProvider());
 		this.maverickSshClient = maverickSshClient;
 	}
 

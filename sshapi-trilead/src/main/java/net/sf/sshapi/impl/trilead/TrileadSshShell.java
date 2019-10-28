@@ -31,11 +31,12 @@ import com.trilead.ssh2.Session;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 
 class TrileadSshShell extends AbstractTrileadStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
-	public TrileadSshShell(SshConfiguration configuration, Session channel) throws SshException {
-		super(configuration, channel);
+	public TrileadSshShell(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
 	public InputStream getExtendedInputStream() throws IOException {

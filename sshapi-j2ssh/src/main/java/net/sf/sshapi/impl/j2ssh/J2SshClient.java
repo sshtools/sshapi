@@ -129,6 +129,10 @@ class J2SshClient extends AbstractClient {
 	class J2SSHSCPClient extends AbstractSCPClient {
 
 		private ScpClient client;
+		
+		J2SSHSCPClient() {
+			super(getProvider());
+		}
 
 		@Override
 		public void doPut(String remotePath, String mode, File sourceFile, boolean recursive)
@@ -394,7 +398,7 @@ class J2SshClient extends AbstractClient {
 
 		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), localAddress, localPort,
 				remoteHost, remotePort);
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
@@ -424,7 +428,7 @@ class J2SshClient extends AbstractClient {
 
 		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), remoteHost, remotePort,
 				localAddress, localPort);
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
@@ -458,7 +462,7 @@ class J2SshClient extends AbstractClient {
 		try {
 			SessionChannelClient session = con.openSessionChannel();
 			requestPty(termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			return new J2SshShell(getConfiguration(), session);
+			return new J2SshShell(getProvider(), getConfiguration(), session);
 		} catch (net.sf.sshapi.SshException e) {
 			throw e;
 		} catch (Exception e) {
@@ -555,7 +559,7 @@ class J2SshClient extends AbstractClient {
 		try {
 			final SessionChannelClient session = con.openSessionChannel();
 			requestPty(termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			return new J2SshStreamChannel(getConfiguration(), session) {
+			return new J2SshStreamChannel(getProvider(), getConfiguration(), session) {
 				@Override
 				public void onChannelOpen() throws net.sf.sshapi.SshException {
 					try {

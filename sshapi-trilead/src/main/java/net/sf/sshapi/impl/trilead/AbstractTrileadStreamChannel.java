@@ -29,21 +29,21 @@ import java.io.OutputStream;
 
 import com.trilead.ssh2.Session;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.Util;
 
 abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshExtendedChannel<L, C> {
+		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Session session;
-	private final SshConfiguration configuration;
 
-	public AbstractTrileadStreamChannel(SshConfiguration configuration, Session channel) throws SshException {
+	public AbstractTrileadStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration);
 		this.session = channel;
-		this.configuration = configuration;
 	}
 
 	public int exitCode() throws IOException {

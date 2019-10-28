@@ -28,14 +28,15 @@ import com.jcraft.jsch.Channel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshCommand;
 
 abstract class JschStreamChannel
 		extends AbstractJschStreamChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
-	public JschStreamChannel(SshConfiguration configuration, Channel channel) throws SshException {
-		super(configuration, channel);
+	public JschStreamChannel(SshProvider provider, SshConfiguration configuration, Channel channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
 }

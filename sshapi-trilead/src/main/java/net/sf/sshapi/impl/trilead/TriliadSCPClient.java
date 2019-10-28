@@ -24,6 +24,7 @@ final class TriliadSCPClient extends AbstractSCPClient implements SshSCPClient {
 	 * @param ganymedSshClient
 	 */
 	TriliadSCPClient(TrileadSshClient ganymedSshClient) {
+		super(ganymedSshClient.getProvider());
 		this.ganymedSshClient = ganymedSshClient;
 	}
 

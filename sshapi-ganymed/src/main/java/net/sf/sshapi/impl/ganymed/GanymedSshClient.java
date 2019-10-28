@@ -260,7 +260,7 @@ class GanymedSshClient extends AbstractClient {
 		if (localAddress != null && !localAddress.equals("0.0.0.0")) {
 			throw new IllegalArgumentException("Ganymed does not supporting binding a local port forward to a particular address.");
 		}
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private LocalPortForwarder localPortForwarder;
 
 			@Override
@@ -291,7 +291,7 @@ class GanymedSshClient extends AbstractClient {
 	@Override
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			@Override
 			protected void onClose() throws SshException {
 				try {
@@ -321,7 +321,7 @@ class GanymedSshClient extends AbstractClient {
 			if (termType != null) {
 				sess.requestPTY(termType, cols, rows, 0, 0, terminalModes);
 			}
-			return new GanymedSshShell(getConfiguration(), sess);
+			return new GanymedSshShell(getProvider(), getConfiguration(), sess);
 		} catch (IOException e) {
 			throw new SshException("Failed to create shell channel.", e);
 		}
@@ -406,7 +406,7 @@ class GanymedSshClient extends AbstractClient {
 			if (termType != null) {
 				sess.requestPTY(termType, cols, rows, 0, 0, terminalModes);
 			}
-			return new GanymedStreamChannel(getConfiguration(), sess) {
+			return new GanymedStreamChannel(getProvider(), getConfiguration(), sess) {
 				@Override
 				public void onChannelOpen() throws SshException {
 					try {

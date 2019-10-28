@@ -5,20 +5,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
-import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
-class OpenSshShell extends AbstractDataProducingComponent<SshChannelListener<SshShell>, SshShell> implements SshShell {
+class OpenSshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private ProcessBuilder pb;
 	private Process process;
 	private final String termType;
 	private OpenSshClient client;
 
 	OpenSshShell(OpenSshClient client, ProcessBuilder pb, String termType) {
+		super(client.getProvider(), client.getConfiguration());
 		this.pb = pb;
 		this.termType =termType;
 		this.client = client;

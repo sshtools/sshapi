@@ -1,6 +1,10 @@
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
@@ -33,31 +37,54 @@ class ExampleUtilities {
 	}
 
 	static void joinShellToConsole(final SshShell channel) throws IOException, SshException {
-		new Thread() {
+		AtomicBoolean fin = new AtomicBoolean();
+		AtomicBoolean closed = new AtomicBoolean();
+		Thread mainThread = Thread.currentThread();
+		Thread readErrThread = new Thread() {
 			public void run() {
 				try {
-					Util.joinStreams(channel.getExtendedInputStream(), System.err);
+					Util.joinStreams(channel.getExtendedInputStream(), channel.getOutputStream());
 				} catch (Exception e) {
 				}
+				System.out.println("Exited readErrThread");
 			}
-		}.start();
+		};
+		readErrThread.start();
 		Thread readInThread = new Thread() {
 			public void run() {
-				try {
-					Util.joinStreams(System.in, channel.getOutputStream());
+				/*
+				 * Wrapping in a channel allows this thread to be interrupted
+				 * (on Linux at least, other OS's .. YMMV
+				 */
+				try (InputStream in = Channels.newInputStream((new FileInputStream(FileDescriptor.in)).getChannel())) {
+					Util.joinStreams(in, channel.getOutputStream());
 					channel.getInputStream().close();
 				} catch (Exception e) {
 				}
+				System.out.println("Exited readInThread");
+				if (!closed.get()) {
+					closed.set(true);
+					try {
+						channel.close();
+					} catch (IOException e) {
+					}
+					if (!fin.get())
+						mainThread.interrupt();
+				}
 			}
 		};
-		readInThread.setDaemon(true);
 		readInThread.start();
 		Util.joinStreams(channel.getInputStream(), System.out);
-		System.out.println("Left Console Input");
-		try {
-			readInThread.join(1000);
-		} catch (InterruptedException ie) {
-			readInThread.interrupt();
+		fin.set(true);
+		System.out.println("Finished reading");
+		readInThread.interrupt();
+		readErrThread.interrupt();
+		if (!closed.get()) {
+			closed.set(true);
+			try {
+				channel.close();
+			} catch (IOException e) {
+			}
 		}
 	}
 

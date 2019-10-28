@@ -120,8 +120,7 @@ class JschIdentityManager implements SshIdentityManager {
 				// Get a copy
 				KeyPair kPairCopy = KeyPair.load(jsch, tempFile.getAbsolutePath());
 				if (passphrase != null) {
-					kPairCopy.setPassphrase(new String(passphrase));
-					kPairCopy.writePrivateKey(tempFile.getAbsolutePath());
+					kPairCopy.writePrivateKey(tempFile.getAbsolutePath(), new String(passphrase).getBytes());
 					kPairCopy = KeyPair.load(jsch, tempFile.getAbsolutePath());
 					kPairCopy.decrypt(new String(passphrase));
 				}

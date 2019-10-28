@@ -26,16 +26,17 @@ package net.sf.sshapi.impl.trilead;
 import com.trilead.ssh2.Session;
 
 import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshProvider;
 
 abstract class TrileadStreamChannel
 		extends AbstractTrileadStreamChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
-	public TrileadStreamChannel(SshConfiguration configuration, Session channel) throws SshException {
-		super(configuration, channel);
+	public TrileadStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
 }

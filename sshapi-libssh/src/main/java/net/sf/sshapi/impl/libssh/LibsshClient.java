@@ -251,18 +251,18 @@ public class LibsshClient extends AbstractClient {
 	@Override
 	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws SshException {
-		return new LibsshSshCommand(libSshSession, library, command, termType, cols, rows);
+		return new LibsshSshCommand(getProvider(), getConfiguration(), libSshSession, library, command, termType, cols, rows);
 	}
 
 	@Override
 	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
 			final int remotePort) throws SshException {
-		return new LibsshLocalForward(libSshSession, library, localAddress, localPort, remoteHost, remotePort);
+		return new LibsshLocalForward(getProvider(), libSshSession, library, localAddress, localPort, remoteHost, remotePort);
 	}
 
 	@Override
 	protected SshSCPClient doCreateSCP() throws SshException {
-		return new LibsshSCPClient(library, libSshSession);
+		return new LibsshSCPClient(getProvider(), library, libSshSession);
 	}
 
 	@Override
@@ -273,7 +273,7 @@ public class LibsshClient extends AbstractClient {
 	@Override
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException {
-		return new LibsshShell(libSshSession, library, termType, cols, rows, false);
+		return new LibsshShell(getProvider(), getConfiguration(), libSshSession, library, termType, cols, rows, true);
 	}
 
 	@Override

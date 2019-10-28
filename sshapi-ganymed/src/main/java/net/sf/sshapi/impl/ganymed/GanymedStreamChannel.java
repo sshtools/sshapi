@@ -27,14 +27,15 @@ import ch.ethz.ssh2.Session;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshCommand;
 
 abstract class GanymedStreamChannel
 		extends AbstractGanymedStreamChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
-	public GanymedStreamChannel(SshConfiguration configuration, Session channel) throws SshException {
-		super(configuration, channel);
+	public GanymedStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
 }

@@ -46,7 +46,7 @@ public class ScpIntegrationTest extends AbstractClientFiles {
 				compare(file, localFile);
 			}
 			return null;
-		}, 60000);
+		}, 120000);
 	}
 
 	@Test

@@ -25,6 +25,7 @@ package net.sf.sshapi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Abstract implementation of an {@link SshLifecycleComponent}, providing some
@@ -33,6 +34,25 @@ import java.util.List;
 public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> implements SshLifecycleComponent<L, C> {
 
 	private List<L> listeners;
+
+	protected final SshProvider provider;
+	
+	protected AbstractLifecycleComponent(SshProvider provider) {
+		this.provider = provider;
+	}
+
+	@Override
+	public Future<Void> openLater() throws SshException {
+		AbstractFuture<Void> openFuture = new AbstractFuture<Void>() {
+			@Override
+			Void doFuture() throws Exception {
+				open();
+				return null;
+			}
+		};
+		provider.getExecutor().submit(openFuture.createRunnable());
+		return openFuture;
+	}
 
 	public final synchronized void addListener(L listener) {
 		if (listeners == null) {
@@ -53,6 +73,17 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 			close();
 		} catch (Exception e) {
 		}
+	}
+
+	@Override
+	public Future<Void> closeLater() {
+		return new AbstractFuture<Void>() {
+			@Override
+			Void doFuture() throws Exception {
+				close();
+				return null;
+			}
+		};
 	}
 
 	/**
@@ -87,7 +118,7 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 				listeners.get(i).closing((C) this);
 		}
 	}
-	
+
 	protected List<L> getListeners() {
 		return listeners;
 	}

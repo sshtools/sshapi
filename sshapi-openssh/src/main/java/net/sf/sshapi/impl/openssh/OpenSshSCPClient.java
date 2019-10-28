@@ -40,6 +40,7 @@ class OpenSshSCPClient extends AbstractSCPClient implements AbstractOpenSshClien
 	private List<String> original;
 
 	OpenSshSCPClient(ProcessBuilder pb, OpenSshClient client) {
+		super(client.getProvider());
 		this.pb = pb;
 		this.client = client;
 		original = new ArrayList<>(pb.command());

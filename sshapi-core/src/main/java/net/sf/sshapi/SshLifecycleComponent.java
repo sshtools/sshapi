@@ -24,6 +24,7 @@
 package net.sf.sshapi;
 
 import java.io.Closeable;
+import java.util.concurrent.Future;
 
 /**
  * Many components of SSHAPI implement this interface, as they all follow the open() / close() pattern.
@@ -53,8 +54,19 @@ public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C exte
 	 * 
 	 * @throws SshException
 	 * @see {@link #close()}
+	 * @see {@link #closeLater()}
 	 */
 	void open() throws SshException;
+
+	/**
+	 * Open the component without blocking. Remember to {@link #close()} or {@link #closeLater()} the component when
+	 * you are finished with it.
+	 * 
+	 * @throws SshException
+	 * @see {@link #close()}
+	 * @see {@link #closeLater()}
+	 */
+	Future<Void> openLater() throws SshException;
 
 	/**
 	 * Get if this component is currently open.
@@ -69,4 +81,12 @@ public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C exte
 	 * Close this component sinking exceptions.
 	 */
 	void closeQuietly();
+	
+	/**
+	 * Close this component, but do not block, instead return a future to monitor the progress
+	 * of the close operation.
+	 * 
+	 * @return future
+	 */
+	Future<Void> closeLater();
 }

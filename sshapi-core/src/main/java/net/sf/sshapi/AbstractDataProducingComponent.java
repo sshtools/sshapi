@@ -34,6 +34,10 @@ public abstract class AbstractDataProducingComponent<L extends SshLifecycleListe
 		extends AbstractLifecycleComponentWithEvents<L, C> implements SshDataProducingComponent<L, C> {
 
 	private List<SshDataListener<C>> dataListeners = new ArrayList<>();
+	
+	protected AbstractDataProducingComponent(SshProvider provider) {
+		super(provider);
+	}
 
 	public final synchronized void addDataListener(SshDataListener<C> listener) {
 		dataListeners.add(listener);

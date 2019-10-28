@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
 
@@ -239,20 +240,20 @@ public class SshConfiguration {
 		this.properties = properties;
 		this.hostKeyValidator = hostKeyValidator;
 	}
-	
+
 	/**
-	 * Get the {@link SshAgent} in use. This will be added to the client as a channel
-	 *  handler if set (you may do this yourself if you wish).
+	 * Get the {@link SshAgent} in use. This will be added to the client as a
+	 * channel handler if set (you may do this yourself if you wish).
 	 * 
 	 * @return agent
 	 */
 	public SshAgent getAgent() {
 		return agent;
 	}
-	
+
 	/**
-	 * Set the {@link SshAgent} in use. This will be added to the client as a channel
-	 * handler if set (you may do this yourself if you wish).
+	 * Set the {@link SshAgent} in use. This will be added to the client as a
+	 * channel handler if set (you may do this yourself if you wish).
 	 * 
 	 * @param agent agent
 	 * @return this for chaining
@@ -263,8 +264,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for no
-	 * hint.
+	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for
+	 * no hint.
 	 * 
 	 * @return tunnel max window size
 	 */
@@ -273,8 +274,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for no
-	 * hint.
+	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for
+	 * no hint.
 	 * 
 	 * @param tunnelWindowSize Tunnel window size max
 	 * @return this for chaining
@@ -285,7 +286,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the window size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * Get the window size <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
 	 * 
 	 * @return tunnel window size
 	 */
@@ -305,7 +307,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * Get the packet size <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
 	 * 
 	 * @return tunnel packet size
 	 */
@@ -314,7 +317,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
+	 * Set the packet size <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
 	 * 
 	 * @param tunnelPacketSize tunnel packet size
 	 * @return this for chaining
@@ -409,7 +413,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the window size <strong>hint</strong> for shell. Use zero for no hint.
+	 * Get the window size <strong>hint</strong> for shell. Use zero for no
+	 * hint.
 	 * 
 	 * @return shell window size
 	 */
@@ -429,7 +434,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the packet size <strong>hint</strong> for shell. Use zero for no hint.
+	 * Get the packet size <strong>hint</strong> for shell. Use zero for no
+	 * hint.
 	 * 
 	 * @return Shell packet size
 	 */
@@ -438,7 +444,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the packet size <strong>hint</strong> for shells. Use zero for no hint.
+	 * Set the packet size <strong>hint</strong> for shells. Use zero for no
+	 * hint.
 	 * 
 	 * @param shellPacketSize shell packet size
 	 * @return this for chaining
@@ -882,7 +889,8 @@ public class SshConfiguration {
 		for (Iterator<Capability> i = requiredCapabilities.iterator(); i.hasNext();) {
 			Capability c = (Capability) i.next();
 			if (!provider.getCapabilities().contains(c)) {
-				throw new UnsupportedOperationException("Capability " + c + " is required, but not supported by the provider " + provider.getName());
+				throw new UnsupportedOperationException(
+						"Capability " + c + " is required, but not supported by the provider " + provider.getName());
 			}
 		}
 	}
@@ -911,7 +919,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the size of the buffer to use internally when transferring files or joining streams.
+	 * Get the size of the buffer to use internally when transferring files or
+	 * joining streams.
 	 * 
 	 * @return file transfer buffer size
 	 */
@@ -920,7 +929,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the size of the buffer to use internally when transferring files or joining streams.
+	 * Get the size of the buffer to use internally when transferring files or
+	 * joining streams.
 	 * 
 	 * @param streamBufferSize file transfer buffer size
 	 * @return this for chaining
@@ -956,10 +966,24 @@ public class SshConfiguration {
 	 * @throws SshException on error
 	 */
 	public SshClient open(String spec, SshAuthenticator... authenticators) throws SshException {
-		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
-		SshClient client = provider.createClient(this);
-		client.connect(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
-		return client;
+		return DefaultProviderFactory.getInstance().getProvider(this).open(this, Util.extractUsername(spec),
+				Util.extractHostname(spec), Util.extractPort(spec), authenticators);
+	}
+
+	/**
+	 * Utility to create a client that may be used with this configuration and
+	 * connect to a host as a particular user, optionally authenticating, but do
+	 * not block. Instead a future is returned allowing monitoring of state. .
+	 * It uses the DefaultProviderFactory, so if you want to custom how
+	 * providers are selected, do not use this method.
+	 * 
+	 * @param spec connection spec in the format
+	 *            username[:password]@hostname[:port]
+	 * @param authenticators authenticators
+	 * @return future
+	 */
+	public Future<SshClient> openLater(String spec, SshAuthenticator... authenticators) {
+		return openLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
 	}
 
 	/**
@@ -976,10 +1000,23 @@ public class SshConfiguration {
 	 * @throws SshException on error
 	 */
 	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
-		// Create the client using that configuration
-		SshProvider provider = DefaultProviderFactory.getInstance().getProvider(this);
-		SshClient client = provider.createClient(this);
-		client.connect(username, hostname, port, authenticators);
-		return client;
+		return DefaultProviderFactory.getInstance().getProvider(this).open(this, username, hostname, port, authenticators);
+	}
+
+	/**
+	 * Utility to create a client that may be used with this configuration and
+	 * connect to a host as a particular user, optionally authenticating, but do
+	 * not block. Instead a future is returned allowing monitoring of state. It
+	 * uses the DefaultProviderFactory, so if you want to custom how providers
+	 * are selected, do not use this method.
+	 * 
+	 * @param username user name
+	 * @param hostname hostname
+	 * @param port port
+	 * @param authenticators authenticators
+	 * @return future
+	 */
+	public Future<SshClient> openLater(String username, String hostname, int port, SshAuthenticator... authenticators) {
+		return DefaultProviderFactory.getInstance().getProvider(this).openLater(this, username, hostname, port, authenticators);
 	}
 }

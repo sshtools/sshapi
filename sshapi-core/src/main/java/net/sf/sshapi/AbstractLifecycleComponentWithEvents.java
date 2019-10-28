@@ -34,6 +34,10 @@ import net.sf.sshapi.Logger.Level;
 public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
 		extends AbstractLifecycleComponent<L, C> {
 	private boolean open;
+	
+	protected AbstractLifecycleComponentWithEvents(SshProvider provider) {
+		super(provider);
+	}
 
 	public final boolean isOpen() {
 		return open;

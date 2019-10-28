@@ -95,6 +95,10 @@ public class SshException extends IOException {
 	 */
 	public final static Code AUTHENTICATION_CANCELLED = new Code("authenticationCancelled");
 	/**
+	 * Connection was cancelled by user while connecting (non-blocking mode)
+	 */
+	public final static Code CONNECTION_CANCELLED = new Code("connectionCancelled");
+	/**
 	 * Too many authentication attempts
 	 */
 	public final static Code AUTHENTICATION_ATTEMPTS_EXCEEDED = new Code("authenticationAttemptsExceeded");
@@ -123,6 +127,11 @@ public class SshException extends IOException {
 	 * There is an agent, but failed to connect to it.
 	 */
 	public final static Code FAILED_TO_CONNECT_TO_AGENT = new Code("failedToConnectToAgent");
+	/**
+	 * A task was interrupted.
+	 */
+	public final static Code INTERRUPTED = new Code("interrupted");
+	
 	private static final long serialVersionUID = 1L;
 	// Private instance variables
 	private final Code code;

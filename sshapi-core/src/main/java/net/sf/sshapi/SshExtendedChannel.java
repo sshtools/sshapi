@@ -11,6 +11,15 @@ import java.io.InputStream;
 
 public interface SshExtendedChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
 		extends SshStreamChannel<L, C> {
+	
+	/**
+	 * Set the callback that will be invoked when bytes are available on the error stream of this
+	 * channel. This is the non-blocking variant of using {@link #getErrorStream()}.
+	 * 
+	 *  @param input handler
+	 */
+	void setErrInput(SshInput input);
+	
 	/**
 	 * Get the extended input stream.
 	 * 

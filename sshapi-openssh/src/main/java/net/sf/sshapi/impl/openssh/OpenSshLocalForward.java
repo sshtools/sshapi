@@ -34,6 +34,7 @@ class OpenSshLocalForward extends AbstractPortForward {
 	private OpenSshClient client;
 
 	OpenSshLocalForward(OpenSshClient client, ProcessBuilder pb) {
+		super(client.getProvider());
 		this.pb = pb;
 		this.client = client;
 	}

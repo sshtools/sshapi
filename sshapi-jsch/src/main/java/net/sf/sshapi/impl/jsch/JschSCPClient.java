@@ -23,6 +23,7 @@ final class JschSCPClient extends AbstractSCPClient {
 	 * @param jschSshClient
 	 */
 	public JschSCPClient(JschSshClient jschSshClient) {
+		super(jschSshClient.getProvider());
 		sshClient = jschSshClient;
 	}
 

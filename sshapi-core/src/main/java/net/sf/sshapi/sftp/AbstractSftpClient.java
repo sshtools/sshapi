@@ -70,11 +70,10 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 		implements SftpClient {
 	protected SshConfiguration configuration;
 	protected EOLPolicy[] eolPolicy;
-	protected SshProvider provider;
 	protected TransferMode transferMode = TransferMode.BINARY;
 
 	protected AbstractSftpClient(SshProvider provider, SshConfiguration configuration) {
-		this.provider = provider;
+		super(provider);
 		this.configuration = configuration;
 	}
 
@@ -787,16 +786,4 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 		}
 	}
 
-	private void recurseMarkForDeletion(SftpFile file, DefaultSftpOperation op) throws SshException {
-		SftpFile[] list = ls(file.getPath());
-		op.deleted().add(file.toString());
-		for (int i = 0; i < list.length; i++) {
-			file = list[i];
-			if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
-				recurseMarkForDeletion(file, op);
-			} else if (file.isFile()) {
-				op.deleted().add(file.toString());
-			}
-		}
-	}
 }

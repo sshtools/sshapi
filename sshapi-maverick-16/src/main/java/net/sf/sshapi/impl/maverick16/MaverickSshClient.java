@@ -77,6 +77,7 @@ import com.sshtools.publickey.SshPrivateKeyFileFactory;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
 import net.sf.sshapi.AbstractSocket;
+import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannel.ChannelData;
@@ -202,13 +203,14 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	class MaverickSshChannel
-			extends AbstractDataProducingComponent<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
+			extends AbstractSshStreamChannel<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
 			implements net.sf.sshapi.SshChannel {
 		private ChannelData channelData;
 		private String name;
 		private Ssh2Channel ssh2Channel;
 
 		public MaverickSshChannel(String name, ChannelData channelData) {
+			super(getProvider(), getConfiguration());
 			this.channelData = channelData;
 			this.name = name;
 		}
@@ -456,6 +458,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		private SshTunnel tunnel;
 
 		public TunnelChannel(SshTunnel tunnel) {
+			super(getProvider());
 			this.tunnel = tunnel;
 			tunnel.addChannelEventListener(new ChannelEventListener() {
 				@Override
@@ -669,7 +672,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
 			final int remotePort) throws net.sf.sshapi.SshException {
 		final String fLocalAddress = localAddress == null ? "0.0.0.0" : localAddress;
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
 			@Override
@@ -704,7 +707,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		try {
 			final com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (session instanceof Ssh2Session) {
-				return new MaverickPublicKeySubsystem((Ssh2Session) session);
+				return new MaverickPublicKeySubsystem(getProvider(), (Ssh2Session) session);
 			} else {
 				session.close();
 			}
@@ -720,7 +723,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws net.sf.sshapi.SshException {
 		final String fRemoteHost = remoteHost == null ? "0.0.0.0" : remoteHost;
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
 			@Override
@@ -758,8 +761,8 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (termType != null) {
 				requestPty(client, termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			}
-			return new MaverickSshShell(session);
+			} 
+			return new MaverickSshShell(getProvider(), getConfiguration(), session);
 		} catch (net.sf.sshapi.SshException sshe) {
 			throw sshe;
 		} catch (Exception e) {
@@ -910,8 +913,8 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			final com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (termType != null) {
 				requestPty(client, termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			}
-			return new MaverickSshStreamChannel(session) {
+			} 
+			return new MaverickSshStreamChannel(getProvider(), getConfiguration(), session) {
 				@Override
 				public void onChannelOpen() throws net.sf.sshapi.SshException {
 					try {

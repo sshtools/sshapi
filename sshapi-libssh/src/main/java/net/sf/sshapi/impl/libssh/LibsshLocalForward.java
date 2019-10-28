@@ -13,6 +13,7 @@ import java.util.Set;
 import com.sun.jna.Memory;
 
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
 import ssh.SshLibrary;
@@ -32,8 +33,9 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 	private ServerSocketChannel ssc;
 	private boolean closed;
 
-	public LibsshLocalForward(ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
+	public LibsshLocalForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
 			int remotePort) {
+		super(provider);
 		this.libSshSession = libSshSession;
 		this.library = library;
 		this.localAddress = localAddress;

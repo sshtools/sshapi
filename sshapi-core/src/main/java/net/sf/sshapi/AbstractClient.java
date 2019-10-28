@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
 
@@ -76,6 +77,18 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
+	public Future<Boolean> authenticateLater(SshAuthenticator... authenticators) {
+		AbstractFuture<Boolean> authenticateFuture = new AbstractFuture<Boolean>() {
+			@Override
+			Boolean doFuture() throws Exception {
+				return authenticate(authenticators);
+			}
+		};
+		getProvider().getExecutor().submit(authenticateFuture.createRunnable());
+		return authenticateFuture;
+	}
+
+	@Override
 	public void close() throws IOException {
 		try {
 			onClose();
@@ -107,6 +120,22 @@ public abstract class AbstractClient implements SshClient {
 		SshCommand sshCommand = createCommand(command, termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		sshCommand.open();
 		return sshCommand;
+	}
+
+	@Override
+	public final Future<Void> connectLater(String spec, SshAuthenticator... authenticators) {
+		return connectLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
+	}
+
+	@Override
+	public Future<Void> connectLater(String username, String hostname, int port, SshAuthenticator... authenticators) {
+		return new AbstractFuture<Void>() {
+			@Override
+			Void doFuture() throws Exception {
+				connect(username, hostname, port, authenticators);;
+				return null;
+			}
+		};
 	}
 
 	@Override
@@ -368,10 +397,40 @@ public abstract class AbstractClient implements SshClient {
 		return shell;
 	}
 
+	@Override
+	public Future<SshShell> shellLater() {
+		return shellLater(null, 0, 0, 0, 0, null);
+	}
+
+	@Override
+	public Future<SshShell> shellLater(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) {
+		return new AbstractFuture<SshShell>() {
+			{
+				getProvider().getExecutor().execute(createRunnable());
+			}
+
+			@Override
+			SshShell doFuture() throws Exception {
+				return shell(termType, cols, rows, pixWidth, pixHeight, terminalModes);
+			}
+		};
+	}
+
+	@Override
+	public Future<Void> closeLater() {
+		return new AbstractFuture<Void>() {
+			@Override
+			Void doFuture() throws Exception {
+				close();
+				return null;
+			}
+		};
+	}
+
 	protected void checkConnectedAndAuthenticated() throws SshException {
-		if(!isConnected())
+		if (!isConnected())
 			throw new SshException(SshException.NOT_OPEN, String.format("Not connected."));
-		if(!isAuthenticated())
+		if (!isAuthenticated())
 			throw new SshException(SshException.NOT_AUTHENTICATED, String.format("Not connected."));
 	}
 

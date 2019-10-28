@@ -681,8 +681,8 @@ class JschSshClient extends AbstractClient implements Logger {
 				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
 			}
-			channel.setCommand(command);
-			return new JschStreamChannel(getConfiguration(), channel) {
+			channel.setCommand(command); 
+			return new JschStreamChannel(getProvider(), getConfiguration(), channel) {
 				@Override
 				protected void onChannelClose() throws SshException {
 					channelCount--;
@@ -701,7 +701,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	@Override
 	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
 			final int remotePort) throws SshException {
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
 			@Override
@@ -741,7 +741,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	@Override
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
-		return new AbstractPortForward() {
+		return new AbstractPortForward(getProvider()) {
 			@Override
 			protected void onClose() throws SshException {
 				try {
@@ -789,7 +789,7 @@ class JschSshClient extends AbstractClient implements Logger {
 				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
 			}
-			return new JschSshShell(getConfiguration(), channel) {
+			return new JschSshShell(getProvider(), getConfiguration(), channel) {
 				@Override
 				protected void onChannelClose() throws SshException {
 					channelCount--;

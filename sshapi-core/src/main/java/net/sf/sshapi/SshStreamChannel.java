@@ -26,15 +26,33 @@ package net.sf.sshapi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.concurrent.Future;
 
 /**
- * Extension to {@link SshLifecycleComponent} for channels who expost I/O
+ * Extension to {@link SshLifecycleComponent} for channels who expose I/O
  * streams, such as executing a command, or a {@link SshShell}.
  * 
  */
 public interface SshStreamChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
 		extends SshDataProducingComponent<L, C> {
+	
+	/**
+	 * Set the callback that will be invoked when bytes are available on the input of this
+	 * channel. This is the non-blocking variant of using {@link #getInputStream()}.
+	 * 
+	 *  @param input handler
+	 */
+	void setInput(SshInput input);
 
+	/**
+	 * Write bytes to the output of this channel without block. This is the non-blocking
+	 * variant of using {@link #getOutputStream()}. 
+	 * 
+	 * @return future
+	 */
+	Future<Void> writeLater(ByteBuffer buffer);
+	
 	/**
 	 * Get the input stream for this channel.
 	 * 

@@ -27,13 +27,15 @@ import com.sshtools.ssh.SshSession;
 
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshProvider;
 
 abstract class MaverickSshStreamChannel
 		extends AbstractMaverickSshStreamChannel<SshChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
-	public MaverickSshStreamChannel(SshSession session) {
-		super(session);
+	public MaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, SshSession session) {
+		super(provider, configuration, session);
 	}
 
 }

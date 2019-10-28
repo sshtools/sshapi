@@ -17,13 +17,14 @@ It was originally written with two purposes in mind.
  
 However, it is now a viable complete SSH api with other advantages :-
 
- * Adds a modern API over the top of legacy APIs (e.g. try-with-resource support).
+ * Adds a modern API over the top of legacy APIs (e.g. try-with-resource support and non-blocking I/O).
  * If a new cipher becomes fashionable, and one provider implements it first, in many cases you can simply switch to it   with no code changes. 
  * If a vulnerability is discovered in one library, switch to another, again just by swapping the provider bridge in use.
  * If you have different performance or security requirements based on configuration, you can leave the choice to users
  * Different SSH libraries have different licenses, give yourself or your users choices based on these concerns.
  * You can compare yourself the performance or behaviour of one API against another.
  * Get near native SSH performance using the libssh provider (work in progress).
+ * If the provider supports non-blocking usage, it will be used, otherwise SSHAPI will simulate non-blocking usage.
  
 ## Installation
 
@@ -281,4 +282,41 @@ For full usage, see the examples.
 	try (SshClient client = config.open("me@localhost", new DefaultAgentAuthenticator())) {
 		// Do SSH stuff
 	}
+```
+
+### Non-blocking usage
+
+SSHAPI can use a non-blocking pattern if you prefer that. For most methods, there will be an equivalent **Later** method. For example `shell()` has a `shellLater()`. These methods will not block, nor will they throw an exception. Instead, a `Future` is returned, that may be used to retrieve the shell object when it is ready, or cancel the operation. If an exception occurs during the operation, the future will also return that.
+
+#### Non-blocking Shell
+
+```java
+	Future<SshClient> future = Ssh.openLater("me@localhost", new ConsolePasswordAuthenticator())
+	
+	// At some point after this you can attempt to retrieve the SshClient instance from the future. This will block until it's available. You can request a timeout too
+	SshClient client = future.get(10, TimeUnit.SECONDS);
+	
+	// Shells act in the same way
+	Future<SftpClient> shellFuture = client.shellLater();
+	SshShell shell = shellFuture.get(); 
+	
+	// To handle data coming from the remote server, set the input handler
+	shell.setInput((buffer) -> {
+		// Do something with ByteBuffer (buffer is pre-flipped to limit() will be length of data, position() will be zero
+	});
+	
+	// To send data to the shell simple use writeLater(). You use the future to 
+	// wait for when this actually happens.
+	Future<Void> writeFuture = shell.writeLater(ByteBuffer.wrap("Test!".getBytes()));
+	writeFuture.get();
+	
+	// Now you can close, and of course, wait for the close to complete if you want
+	Future<Void> closeShellFuture = shell.closeLater();
+	closeShellFuture.get();
+	
+	// And finally close the client too
+	Future<Void> closeFuture = client.closeLater();
+	closeFuture.get();
+	
+	
 ```
