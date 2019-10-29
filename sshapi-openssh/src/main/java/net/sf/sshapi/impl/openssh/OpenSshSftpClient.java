@@ -228,7 +228,7 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return defaultPath;
 	}
 

@@ -10,6 +10,7 @@ import com.sshtools.agent.KeyConstraints;
 import com.sshtools.agent.client.AgentSocketType;
 import com.sshtools.agent.client.SshAgentClient;
 import com.sshtools.agent.exceptions.AgentNotAvailableException;
+import com.sshtools.common.ssh.SshKeyFingerprint;
 import com.sshtools.common.util.IOUtils;
 
 import net.sf.sshapi.DefaultChannelData;
@@ -181,7 +182,7 @@ public class MaverickSynergyAgent implements SshAgent {
 			Map<SshPublicKey, String> keys = new HashMap<>();
 			for (Map.Entry<com.sshtools.common.ssh.components.SshPublicKey, String> en : nativeKeys.entrySet()) {
 				try {
-					keys.put(new MaverickSynergyPublicKey(en.getKey()), en.getValue());
+					keys.put(new MaverickSynergyPublicKey(SshKeyFingerprint.MD5_FINGERPRINT, en.getKey()), en.getValue());
 				} catch (com.sshtools.common.ssh.SshException e) {
 					throw new SshException(SshException.GENERAL, "Failed to convert key to SSHAPI.", e);
 				}

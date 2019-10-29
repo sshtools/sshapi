@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -215,14 +216,16 @@ public class MaverickSSHServerServiceImpl extends AbstractServer implements
 			//
 			// Set the finger print in the configuration
 			//
+			List<String> fps = new ArrayList<String>();
 			for (SshKeyPair p : sshContext.getHostKeys()) {
 				try {
-					configuration.setFingerprint(p.getPublicKey()
+					fps.add(p.getPublicKey()
 							.getFingerprint());
 				} catch (SshException sshe) {
 					throw new SshIOException(sshe);
 				}
 			}
+			configuration.setFingerprints(fps.toArray(new String[0]));
 
 			//
 			// Authentication

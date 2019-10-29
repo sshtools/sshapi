@@ -249,6 +249,7 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 			ByteBuffer buf = ByteBuffer.allocate(configuration.getStreamBufferSize());
 			try (SftpHandle h = file(path, OpenMode.SFTP_READ)) {
 				int r;
+				h.position(filePointer);
 				while ((r = h.read(buf)) != -1) {
 					out.write(buf.array(), 0, r);
 					h.position(h.position() + r);
@@ -325,7 +326,7 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 
 	@Override
 	public final void put(File source, String path) throws SshException, IOException {
-		put(source, path, Util.getPermissions(source));
+		put(source, path, -1);
 	}
 
 	@Override
@@ -366,11 +367,12 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 				in = new SftpInputStream(in, this, path, in.toString());
 				int r;
 				byte[] b = buf.array();
+				h.position(offset);
 				while ((r = in.read(b, 0, b.length)) != -1) {
-					buf.rewind();
 					buf.limit(r);
 					h.write(buf);
 					h.position(h.position() + r);
+					buf.clear();
 				}
 			} catch (IOException e) {
 				if (e instanceof SshException)
@@ -433,6 +435,16 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	}
 
 	@Override
+	public SftpFile lstat(String path) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String readLink(String path) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void resumePut(File source, String path) throws SshException {
 		try (InputStream in = new FileInputStream(source)) {
 			try {
@@ -441,7 +453,9 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 					throw new SftpException(SftpException.SSH_FX_FILE_IS_A_DIRECTORY,
 							String.format("Remote path %s is a directory.", path));
 				else if (existing.isFile()) {
-					put(path, in, -1, existing.getSize());
+					long size = existing.getSize();
+					in.skip(size);
+					put(path, in, -1, size);
 				} else
 					throw new SftpException(SftpException.SSH_FX_NO_SUCH_FILE,
 							String.format("Remote path %s is not a file.", path));

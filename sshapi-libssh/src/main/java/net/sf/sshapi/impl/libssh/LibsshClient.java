@@ -26,6 +26,7 @@ package net.sf.sshapi.impl.libssh;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.SocketFactory;
 
@@ -52,6 +53,7 @@ import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
 import ssh.SshLibrary;
+import ssh.SshLibrary.ssh_auth_callback;
 import ssh.SshLibrary.ssh_key;
 import ssh.SshLibrary.ssh_session;
 
@@ -293,7 +295,7 @@ public class LibsshClient extends AbstractClient {
 		SshPasswordAuthenticator paw = (SshPasswordAuthenticator) authenticatorMap.get("password");
 		SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticatorMap.get("publickey");
 		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap.get("keyboard-interactive");
-		int ret = 0;
+		int ret = 0; 
 		ret = library.ssh_userauth_none(libSshSession, username);
 		if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
 			return true;
@@ -302,8 +304,24 @@ public class LibsshClient extends AbstractClient {
 		ret = SshLibrary.ssh_auth_e.SSH_AUTH_DENIED;
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_PUBLICKEY) != 0 && pk != null) {
 			PointerByReference keyRef = new PointerByReference();
-			if (library.ssh_pki_import_privkey_base64(new String(pk.getPrivateKey(), "US-ASCII"), null, null, null,
-					keyRef) == SshLibrary.SSH_OK) {
+			AtomicBoolean askedFor = new AtomicBoolean();
+			ssh_auth_callback cb = new ssh_auth_callback() {
+				@Override
+				public int apply(Pointer prompt, Pointer buf, NativeSize len, int echo, int verify, Pointer userdata) {
+					askedFor.set(true);
+					char[] pw = pk.promptForPassphrase(LibsshClient.this, prompt.getString(0));
+					if(pw == null)
+						return -1;
+					else {
+						buf.setString(0, new String(pw));
+					}
+					return 0;
+				}
+			};
+			
+			int result = library.ssh_pki_import_privkey_base64(new String(pk.getPrivateKey(), "US-ASCII"), null, cb, null,
+					keyRef);
+			if (result == SshLibrary.SSH_OK) {
 				ssh_key key = new ssh_key(keyRef.getValue());
 				PointerByReference pubkeyRef = new PointerByReference();
 				if (library.ssh_pki_export_privkey_to_pubkey(key, pubkeyRef) == SshLibrary.SSH_OK) {
@@ -316,7 +334,10 @@ public class LibsshClient extends AbstractClient {
 					}
 				}
 			}
-			return false;
+			if(askedFor.get())
+				return false;
+			else
+				throw new SshException(SshException.PRIVATE_KEY_FORMAT_NOT_SUPPORTED);
 		}
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_PASSWORD) != 0 && paw != null) {
 			char[] pw = paw.promptForPassword(this, "Password");
@@ -329,8 +350,8 @@ public class LibsshClient extends AbstractClient {
 			}
 		}
 		if ((remaining & SshLibrary.SSH_AUTH_METHOD_INTERACTIVE) != 0 && ki != null) {
-			int rc = library.ssh_userauth_kbdint(libSshSession, username, null);
-			while (rc == SshLibrary.ssh_auth_e.SSH_AUTH_INFO) {
+			ret = library.ssh_userauth_kbdint(libSshSession, username, null);
+			while (ret == SshLibrary.ssh_auth_e.SSH_AUTH_INFO) {
 				String name = library.ssh_userauth_kbdint_getname(libSshSession);
 				String instruction = library.ssh_userauth_kbdint_getinstruction(libSshSession);
 				int nprompts = library.ssh_userauth_kbdint_getnprompts(libSshSession);
@@ -342,12 +363,15 @@ public class LibsshClient extends AbstractClient {
 					echo[i] = b.get() > 0;
 				}
 				String[] answers = ki.challenge(name, instruction, prompts, echo);
-				if (answers != null) {
+				if (answers == null) {
+					throw new SshException(SshException.AUTHENTICATION_CANCELLED);
+				}
+				else {
 					for (int i = 0; i < answers.length; i++) {
 						library.ssh_userauth_kbdint_setanswer(libSshSession, i, answers[i]);
 					}
 				}
-				rc = library.ssh_userauth_kbdint(libSshSession, username, null);
+				ret = library.ssh_userauth_kbdint(libSshSession, username, null);
 			}
 			if (ret == SshLibrary.ssh_auth_e.SSH_AUTH_SUCCESS) {
 				return true;

@@ -280,19 +280,39 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 * Get the default path
 	 * 
 	 * @return default path
-	 * @throws SshException
 	 */
-	String getDefaultPath() throws SshException;
+	String getDefaultPath();
 
 	/**
 	 * Get an SFTP file object (containing all of it's attributes) given a path
-	 * in the remote file system.
+	 * in the remote file system. This method follows links.
 	 * 
 	 * @param path path
 	 * @return file object
 	 * @throws SshException on other error
 	 */
 	SftpFile stat(String path) throws SshException;
+
+	/**
+	 * Get an SFTP file object (containing all of it's attributes) given a path
+	 * in the remote file system. This method does NOT follow links.
+	 * 
+	 * @param path path
+	 * @return file object
+	 * @throws SshException on other error
+	 */
+	SftpFile lstat(String path) throws SshException;
+
+	/**
+	 * Get a the actual path given the path to a link. The provider must support
+	 * {@link Capability#SFTP_READ_LINK} or an {@link UnsupportedOperationException}
+	 * will be thrown.
+	 * 
+	 * @param path path
+	 * @return file object
+	 * @throws SshException on other error
+	 */
+	String readLink(String path) throws SshException;
 
 	/**
 	 * Create a directory. If any element of the parent path does not exist an
@@ -354,7 +374,12 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	void rm(String path, boolean recursive) throws SshException;
 
 	/**
-	 * Create a symbolic link
+	 * Create a symbolic link. The target is relative to the symlink itself. For 
+	 * example, if the path was <strong>myfolder/file.link</strong>, then for the
+	 * actual file to be in the same folder, but with a different name, the target would
+	 * be <strong>myoriginalfile</strong>. If it were in the parent directory, then it
+	 * would be <strong>../myoriginalfile</strong>. If it were in some directory not easily
+	 * reachable with a relative path, it would be <strong>/home/me/myoriginalfile</strong>.
 	 * 
 	 * @param path path of file to symlink.
 	 * @param target path to point symlink to

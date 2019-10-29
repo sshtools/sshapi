@@ -44,6 +44,7 @@ import com.maverick.sftp.SftpStatusException;
 import com.maverick.sftp.SftpSubsystemChannel;
 import com.maverick.ssh.SshClient;
 import com.maverick.util.UnsignedInteger64;
+import com.sshtools.sftp.DirectoryOperation;
 import com.sshtools.sftp.SftpClient;
 
 import net.sf.sshapi.SshException;
@@ -57,6 +58,77 @@ import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSftpClient extends AbstractSftpClient {
+	protected final class MaverickSftpOperation implements SftpOperation {
+		private final List<String> deleted;
+		private final DirectoryOperation op;
+		private final Map<String, Exception> errors;
+		private final List<String> created;
+		private final ArrayList<String> allList;
+		private final List<String> unchanged;
+		private final List<String> updated;
+
+		protected MaverickSftpOperation(List<String> deleted, DirectoryOperation op, Map<String, Exception> errors,
+				List<String> created, ArrayList<String> allList, List<String> unchanged, List<String> updated) {
+			this.deleted = deleted;
+			this.op = op;
+			this.errors = errors;
+			this.created = created;
+			this.allList = allList;
+			this.unchanged = unchanged;
+			this.updated = updated;
+		}
+
+		@Override
+		public List<String> all() {
+			return allList;
+		}
+
+		@Override
+		public List<String> created() {
+			return created;
+		}
+
+		@Override
+		public List<String> deleted() {
+			return deleted;
+		}
+
+		@Override
+		public Map<String, Exception> errors() {
+			return errors;
+		}
+
+		@Override
+		public long files() {
+			return op.getFileCount();
+		}
+
+		@Override
+		public long size() {
+			try {
+				return op.getTransferSize();
+			} catch (SftpStatusException | com.maverick.ssh.SshException e) {
+				throw new IllegalStateException("Failed to get transfer size.", e);
+			}
+		}
+
+		@Override
+		public List<String> unchanged() {
+			return unchanged;
+		}
+
+		@Override
+		public List<String> updated() {
+			return updated;
+		}
+
+		@Override
+		public String toString() {
+			return "MaverickSftpOperation [deleted=" + deleted + ", op=" + op + ", errors=" + errors + ", created=" + created
+					+ ", allList=" + allList + ", unchanged=" + unchanged + ", updated=" + updated + "]";
+		}
+	}
+
 	private final SshClient client;
 	private int defaultLocalEOL;
 	private int defaultRemoteEOL;
@@ -108,7 +180,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			throws SshException {
 		try {
 			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync, commit,
-					createProgress(localdir.getPath())));
+					createProgress(localdir.getPath(), 0)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -121,7 +193,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			throws SshException {
 		try {
 			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync, commit,
-					createProgress(localdir.getPath())));
+					createProgress(localdir.getPath(), 0)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -129,7 +201,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 		}
 	}
 
-	private FileTransferProgress createProgress(String target) {
+	private FileTransferProgress createProgress(String target, long offset) {
 		return new FileTransferProgress() {
 			private String path;
 
@@ -145,13 +217,15 @@ class MaverickSftpClient extends AbstractSftpClient {
 
 			@Override
 			public void progressed(long progress) {
-				fireFileTransferProgressed(path, target, progress);
+				long v = progress - offset;
+				if(v > 0)
+					fireFileTransferProgressed(path, target, v);
 			}
 
 			@Override
 			public void started(long length, String path) {
 				this.path = path;
-				fireFileTransferStarted(path, target, length);
+				fireFileTransferStarted(path, target, Math.max(0, length - offset));
 			}
 		};
 	}
@@ -168,7 +242,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return home;
 	}
 
@@ -361,14 +435,43 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
+	public String readLink(String path) throws SshException {
+		try {
+			return Util.relativeTo(sftpClient.getAbsolutePath(path), getDefaultPath());
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to read symlink.", e);
+		}
+	}
+
+	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			sftpClient.symlink(path, target);
+			sftpClient.getSubsystemChannel().createSymbolicLink(path, target);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create symlink.", e);
+		}
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		try {
+			SftpFileAttributes entry = sftpClient.statLink(path);
+			return entryToFile(path, entry);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
 			throw new SshException("Failed to create directory.", e);
 		}
+	}
+
+	@Override
+	protected boolean isUseRawSFTP(long offset) {
+		/* Maverick natively supports the main transfer methods regardless of it offset is used */
+		return false;
 	}
 
 	@Override
@@ -386,7 +489,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	protected void doGet(String path, OutputStream out, long filePointer) throws SshException {
 		try {
-			sftpClient.get(path, out, createProgress(out.toString()), filePointer);
+			sftpClient.get(path, out, createProgress(out.toString(), 0), filePointer);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -397,7 +500,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	protected void doPut(String path, InputStream in, long offset) throws SshException {
 		try {
-			sftpClient.put(in, path, createProgress(in.toString()));
+			sftpClient.put(in, path, createProgress(in.toString(), offset), offset);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -556,7 +659,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 				} catch (SftpStatusException sftpE) {
 					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 				} catch (com.maverick.ssh.SshException ioe) {
-					throw new SftpException(SftpException.IO_ERROR, String.format("Failed to write to file."), ioe);
+					throw new SftpException(SftpException.IO_ERROR, String.format("Failed to write to file %s.", nativeHandle.getAbsolutePath()), ioe);
 				}
 				position += len;
 				return this;
@@ -590,17 +693,18 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@SuppressWarnings("unchecked")
 	private SftpOperation toOperation(com.sshtools.sftp.DirectoryOperation op) {
 		List<String> updated = new ArrayList<String>();
+		String defaultPath = getDefaultPath();
 		for (Object f : op.getUpdatedFiles())
-			updated.add(f.toString());
+			updated.add(toOpPath(defaultPath, f));
 		List<String> unchanged = new ArrayList<String>();
 		for (Object f : op.getUnchangedFiles())
-			unchanged.add(f.toString());
+			unchanged.add(toOpPath(defaultPath, f));
 		List<String> deleted = new ArrayList<String>();
 		for (Object f : op.getDeletedFiles())
-			deleted.add(f.toString());
+			deleted.add(toOpPath(defaultPath, f));
 		List<String> created = new ArrayList<String>();
 		for (Object f : op.getNewFiles())
-			created.add(f.toString());
+			created.add(toOpPath(defaultPath, f));
 		Set<String> all = new LinkedHashSet<>();
 		all.addAll(updated);
 		all.addAll(unchanged);
@@ -611,50 +715,13 @@ class MaverickSftpClient extends AbstractSftpClient {
 			errors.put(en.toString(), en.getValue());
 		}
 		ArrayList<String> allList = new ArrayList<>(all);
-		return new SftpOperation() {
-			@Override
-			public List<String> all() {
-				return allList;
-			}
+		return new MaverickSftpOperation(deleted, op, errors, created, allList, unchanged, updated);
+	}
 
-			@Override
-			public List<String> created() {
-				return created;
-			}
-
-			@Override
-			public List<String> deleted() {
-				return deleted;
-			}
-
-			@Override
-			public Map<String, Exception> errors() {
-				return errors;
-			}
-
-			@Override
-			public long files() {
-				return op.getFileCount();
-			}
-
-			@Override
-			public long size() {
-				try {
-					return op.getTransferSize();
-				} catch (SftpStatusException | com.maverick.ssh.SshException e) {
-					throw new IllegalStateException("Failed to get transfer size.", e);
-				}
-			}
-
-			@Override
-			public List<String> unchanged() {
-				return unchanged;
-			}
-
-			@Override
-			public List<String> updated() {
-				return updated;
-			}
-		};
+	private String toOpPath(String defaultPath, Object f) {
+		if(f instanceof File)
+			return ((File) f).getPath();
+		else
+			return Util.relativeTo(f.toString(), defaultPath);
 	}
 }

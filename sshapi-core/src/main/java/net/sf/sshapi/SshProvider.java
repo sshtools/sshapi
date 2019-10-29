@@ -130,6 +130,19 @@ public interface SshProvider {
 	List<String> getSupportedCompression();
 
 	/**
+	 * Get a list of supported fingerprint algorithms. Each element will be a
+	 * {@link String} of the algorithm name. This affects what is returned by 
+	 * {@link SshPublicKey#getFingerprint()} and {@link SshHostKey#getFingerprint()} .
+	 * <p>
+	 * NOTE: Only applicable to SSH2
+	 * 
+	 * @return supported fingerprint hashing algorithms
+	 * @throws UnsupportedOperationException
+	 *             if SSH2 not supported
+	 */
+	List<String> getFingerprintHashingAlgorithms();
+
+	/**
 	 * Get a list of supported key exchange algorithms. Each element will be a
 	 * {@link String} of the key exchange name.
 	 * <p>

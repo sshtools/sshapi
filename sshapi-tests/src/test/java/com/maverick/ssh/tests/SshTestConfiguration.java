@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
 
 public class SshTestConfiguration {
@@ -55,7 +56,7 @@ public class SshTestConfiguration {
 	 * You can either change the default configuration name here or use the
 	 * system property sshapiTests.configurationResourceName
 	 */
-	private static final String DEFAULT_CONFIGURATION_NAME = SSHAPI_OPENSSH_CONFIGURATION_NAME;
+	private static final String DEFAULT_CONFIGURATION_NAME = SSHAPI_OPENSSH_LOCAL_CONFIGURATION_NAME;
 	private static SshTestConfiguration instance;
 	private static final String KEY_ADMIN_KEY = "adminKey";
 	private static final String KEY_ADMIN_USERNAME = "adminUsername";
@@ -82,6 +83,8 @@ public class SshTestConfiguration {
 	private static final String KEY_SUDO_PASSWORD = "sudoPassword";
 	private static final String KEY_UID = "uid";
 	private static final String KEY_USERNAME = "username";
+	private static final String KEY_FINGERPRINT_HASHING_ALGORITHM = "fingerprintHashingAlgorithm";
+	
 	public static SshTestConfiguration get() {
 		if (instance == null) {
 			Properties properties = new Properties();
@@ -159,6 +162,10 @@ public class SshTestConfiguration {
 		return getOrDefault(KEY_ADMIN_USERNAME, "root");
 	}
 
+	public String getFingerprintHashingAlgorithm() {
+		return getOrDefault(KEY_FINGERPRINT_HASHING_ALGORITHM, SshConfiguration.FINGERPRINT_MD5);
+	}
+
 	public int getAlternateGid() {
 		return Integer.parseInt(getOrFail(KEY_ALTERNATE_GID));
 	}
@@ -207,8 +214,8 @@ public class SshTestConfiguration {
 		return getOrFail(KEY_COMMAND_WITH_OUTPUT_RESULT);
 	}
 
-	public String getFingerprint() {
-		return getOrFail(KEY_FINGERPRINT);
+	public String[] getFingerprints() {
+		return getOrFail(KEY_FINGERPRINT).split("\n");
 	}
 
 	public int getGid() {
@@ -282,8 +289,8 @@ public class SshTestConfiguration {
 		return getOrFail(KEY_USERNAME);
 	}
 
-	public void setFingerprint(String fingerprint) {
-		properties.put(KEY_FINGERPRINT, fingerprint);
+	public void setFingerprints(String[] fingerprints) {
+		properties.put(KEY_FINGERPRINT, String.join("\n", fingerprints));
 	}
 
 	public void setPort(int port) {

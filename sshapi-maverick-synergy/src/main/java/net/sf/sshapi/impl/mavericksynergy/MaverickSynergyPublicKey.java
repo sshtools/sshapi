@@ -3,6 +3,7 @@ package net.sf.sshapi.impl.mavericksynergy;
 import java.io.IOException;
 
 import com.sshtools.common.publickey.SshPublicKeyFile;
+import com.sshtools.common.ssh.SshKeyFingerprint;
 
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
@@ -16,27 +17,31 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 	private int bitLength;
 	private com.sshtools.common.ssh.components.SshPublicKey publicKey;
 
-	public MaverickSynergyPublicKey(SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException, IOException {
-		init(publicKeyFile.toPublicKey());
+	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException, IOException {
+		init(fingerprintHashingAlgorithm, publicKeyFile.toPublicKey());
 	}
 
-	private void init(com.sshtools.common.ssh.components.SshPublicKey publicKey)
+	private void init(String fingerprintHashingAlgorithm, com.sshtools.common.ssh.components.SshPublicKey publicKey)
 			throws com.sshtools.common.ssh.SshException {
 		this.publicKey = publicKey;
 		key = publicKey.getEncoded();
 		algorithm = Algorithm.fromAlgoName(publicKey.getAlgorithm());
-		fingerPrint = publicKey.getFingerprint();
+		fingerPrint = MaverickSynergySshClient.stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(key, fingerprintHashingAlgorithm));
 		bitLength = publicKey.getBitLength();
 	}
 
-	public MaverickSynergyPublicKey(com.sshtools.common.ssh.components.SshPublicKey publicKey)
+	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, com.sshtools.common.ssh.components.SshPublicKey publicKey)
 			throws com.sshtools.common.ssh.SshException {
-		init(publicKey);
+		init(fingerprintHashingAlgorithm, publicKey);
 	}
 
-	public MaverickSynergyPublicKey(SshPublicKey publicKey) throws SshException {
+	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, SshPublicKey publicKey) throws SshException {
 		key = publicKey.getEncodedKey();
-		fingerPrint = publicKey.getFingerprint();
+		try {
+			fingerPrint = MaverickSynergySshClient.stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(key, fingerprintHashingAlgorithm));
+		} catch (com.sshtools.common.ssh.SshException e) {
+			throw new SshException(SshException.GENERAL, e);
+		}
 		algorithm = publicKey.getAlgorithm();
 		bitLength = publicKey.getBitLength();
 	}

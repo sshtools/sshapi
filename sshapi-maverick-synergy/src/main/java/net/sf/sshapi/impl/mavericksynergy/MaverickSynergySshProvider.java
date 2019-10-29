@@ -34,8 +34,6 @@ import java.util.List;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.client.components.Rsa1024Sha1;
 import com.sshtools.client.components.Rsa2048Sha256;
-import com.sshtools.common.logger.Log;
-import com.sshtools.common.logger.LoggerContext;
 import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.ssh.SshContext;
 import com.sshtools.common.ssh.SshException;
@@ -65,7 +63,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
 			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL,
 			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-			Capability.REMOTE_PORT_FORWARD };
+			Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK };
 	
 	private SshEngine engine;
 	private ComponentManager componentManager;
@@ -160,6 +158,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	}
 
 	public SshEngine getEngine() {
+		checkEngine();
 		return engine;
 	}
 
@@ -206,6 +205,12 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 		} catch (ClassNotFoundException cnfe) {
 		}
 		return caps;
+	}
+
+	@Override
+	public List<String> getFingerprintHashingAlgorithms() {
+		return Arrays.asList(SshConfiguration.FINGERPRINT_MD5, SshConfiguration.FINGERPRINT_SHA1,
+				SshConfiguration.FINGERPRINT_SHA256);
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

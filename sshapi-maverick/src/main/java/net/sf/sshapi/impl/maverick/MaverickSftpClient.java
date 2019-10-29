@@ -128,7 +128,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return home;
 	}
 
@@ -306,6 +306,18 @@ class MaverickSftpClient extends AbstractSftpClient {
 	public SftpFile stat(String path) throws SshException {
 		try {
 			SftpFileAttributes entry = sftpClient.stat(path);
+			return entryToFile(path, entry);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		try {
+			SftpFileAttributes entry = sftpClient.statLink(path);
 			return entryToFile(path, entry);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());

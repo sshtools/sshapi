@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
@@ -50,19 +51,28 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 	/**
 	 * Constructor
 	 * 
-	 * @param privateKeyData A file containing a DSA or RSA private key of the
-	 *            user in OpenSSH key format.
+	 * @param privateKeyData A file containing formatted key data
 	 */
 	public DefaultPublicKeyAuthenticator(byte[] privateKeyData) {
 		this(null, privateKeyData);
+	}
+
+
+	/**
+	 * Constructor
+	 * 
+	 * @param privateKeyData A stream providing formatted key data. Caller must close stream.
+	 * @throws IOException if stream cannot be read.
+	 */
+	public DefaultPublicKeyAuthenticator(InputStream privateKeyData) throws IOException {
+		this(Util.toByteArray(privateKeyData));
 	}
 
 	/**
 	 * Constructor
 	 * 
 	 * @param passphrasePrompt invoked when passphrase is required
-	 * @param privateKeyData A file containing a DSA or RSA private key of the
-	 *            user in OpenSSH key format.
+	 * @param privateKeyData A file containing formatted key data.
 	 */
 	public DefaultPublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) {
 		this.passphrasePrompt = passphrasePrompt;
@@ -72,8 +82,19 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 	/**
 	 * Constructor
 	 * 
-	 * @param privateKeyFile A file containing a DSA or RSA private key of the
-	 *            user in OpenSSH key format.
+	 * @param passphrasePrompt invoked when passphrase is required
+	 * @param privateKeyData A stream containing formatted key data. Caller must close stream.
+	 * @throws IOException if stream cannot be read.
+	 */
+	public DefaultPublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, InputStream privateKeyData) throws IOException {
+		this.passphrasePrompt = passphrasePrompt;
+		this.privateKeyData = Util.toByteArray(privateKeyData);
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param privateKeyFile A file containing formatted key data.
 	 * @throws IOException on any IO error
 	 */
 	public DefaultPublicKeyAuthenticator(File privateKeyFile) throws IOException {
@@ -84,8 +105,7 @@ public class DefaultPublicKeyAuthenticator implements SshPublicKeyAuthenticator 
 	 * Constructor
 	 * 
 	 * @param passphrasePrompt invoked when passphrase is required
-	 * @param privateKeyFile A file containing a DSA or RSA private key of the
-	 *            user in OpenSSH key format.
+	 * @param privateKeyFile A file containing formatted key data.
 	 * @throws IOException on any IO error
 	 */
 	public DefaultPublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, File privateKeyFile) throws IOException {

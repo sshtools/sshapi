@@ -53,6 +53,7 @@ import ch.ethz.ssh2.auth.AuthenticationManager;
 import ch.ethz.ssh2.channel.ChannelManager;
 import ch.ethz.ssh2.crypto.CryptoWishList;
 import ch.ethz.ssh2.crypto.PEMDecoder;
+import ch.ethz.ssh2.crypto.PEMDecryptException;
 import ch.ethz.ssh2.crypto.cipher.BlockCipherFactory;
 import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
@@ -143,6 +144,7 @@ class GanymedSshClient extends AbstractClient {
 			streamForwarder = connection.createLocalStreamForwarder(addr.getHostName(), addr.getPort());
 		}
 	}
+
 	class RemoteSocketFactory extends SocketFactory {
 		@Override
 		public Socket createSocket() throws IOException {
@@ -170,6 +172,7 @@ class GanymedSshClient extends AbstractClient {
 			return new RemoteSocket(connection, host, port);
 		}
 	}
+
 	class ServerHostKeyVerifierBridge implements ServerHostKeyVerifier {
 		private SshHostKeyValidator hostKeyValidator;
 
@@ -231,9 +234,7 @@ class GanymedSshClient extends AbstractClient {
 
 	// Private instance variables
 	Connection connection;
-
 	private boolean connected;
-
 	private final SecureRandom rng;
 
 	public GanymedSshClient(SshConfiguration configuration, SecureRandom rng) {
@@ -292,10 +293,17 @@ class GanymedSshClient extends AbstractClient {
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
+			private int boundPort;
+
+			@Override
+			public int getBoundPort() {
+				return boundPort;
+			}
+
 			@Override
 			protected void onClose() throws SshException {
 				try {
-					connection.cancelRemotePortForwarding(remotePort);
+					connection.cancelRemotePortForwarding(boundPort);
 				} catch (IOException e) {
 					throw new SshException("Failed to stop remote port forward.", e);
 				}
@@ -304,7 +312,10 @@ class GanymedSshClient extends AbstractClient {
 			@Override
 			protected void onOpen() throws SshException {
 				try {
-					connection.requestRemotePortForwarding(remoteHost, remotePort, localAddress, localPort);
+					boundPort = remotePort;
+					if (boundPort == 0)
+						boundPort = Util.findRandomPort();
+					connection.requestRemotePortForwarding(remoteHost, boundPort, localAddress, localPort);
 				} catch (IOException e) {
 					throw new SshException("Failed to open remote port forward.", e);
 				}
@@ -399,7 +410,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) throws SshException {
+	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws SshException {
 		try {
 			final Session sess = connection.openSession();
 			checkTerminalModes(terminalModes);
@@ -558,9 +570,17 @@ class GanymedSshClient extends AbstractClient {
 								throw new SshException("Authentication cancelled.");
 							}
 						}
-						if (connection.authenticateWithPublicKey(getUsername(), charArray, pw == null ? null : new String(pw))) {
-							// Authenticated!
-							return true;
+						try {
+							if (connection.authenticateWithPublicKey(getUsername(), charArray,
+									pw == null ? null : new String(pw))) {
+								// Authenticated!
+								return true;
+							}
+						} catch (IOException ioe) {
+							if (ioe.getCause() instanceof PEMDecryptException)
+								return false;
+							else
+								throw ioe;
 						}
 						// Return to main loop so getRemainingMethods is called
 						// again

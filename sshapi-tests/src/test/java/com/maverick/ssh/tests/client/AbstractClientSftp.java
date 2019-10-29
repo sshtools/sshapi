@@ -42,9 +42,10 @@ public abstract class AbstractClientSftp extends AbstractClientFiles {
 				compareDirs(f, remotePath + "/" + f.getName());
 			}
 		} else {
-			SftpFile attr = sftp.stat(resolveRemote(remotePath));
-			assertTrue(remotePath + " must exist", attr.isFile());
-			assertEquals(remotePath + " must have same size",
+			SftpFile rpath = sftp.stat(resolveRemote(remotePath));
+			SftpFile attr = rpath;
+			assertTrue(rpath + " must exist", attr.isFile());
+			assertEquals(rpath + " must have same size",
 					localFile.length(), attr.getSize());
 		}
 	}

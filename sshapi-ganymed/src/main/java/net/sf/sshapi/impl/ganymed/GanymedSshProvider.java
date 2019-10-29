@@ -81,7 +81,7 @@ public class GanymedSshProvider extends AbstractProvider {
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
 				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-				Capability.REMOTE_PORT_FORWARD });
+				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

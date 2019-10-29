@@ -145,7 +145,7 @@ public class MaverickSshProvider extends AbstractProvider {
 						Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
 						Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
 						Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-						Capability.REMOTE_PORT_FORWARD });
+						Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET });
 	}
 
 	@Override

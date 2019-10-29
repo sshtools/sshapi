@@ -98,6 +98,7 @@ public abstract class AbstractClientConnecting extends AbstractSshTest {
 
 	protected void connect() throws SshException, IOException {
 		SshConfiguration sshconfig = new SshConfiguration();
+		sshconfig.setFingerprintHashingAlgorithm(config.getFingerprintHashingAlgorithm());
 		sshconfig.setHostKeyValidator(new DumbHostKeyValidator());
 		SshConfiguration.getLogger().log(Level.INFO, "Connecting to " + config.getServer() + ":" + config.getPort());
 		ssh = sshconfig.createClient();

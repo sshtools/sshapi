@@ -197,7 +197,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		// TODO return the home dir?
 		return "/";
 	}
@@ -232,6 +232,29 @@ class GanymedSftpClient extends AbstractSftpClient {
 			throw new GanymedSftpException(sftpe, String.format("Could not remove directory. %s", path));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		try {
+			SFTPv3FileAttributes entry = client.lstat(path);
+			return entryToFile(path, entry);
+		} catch (SFTPException sftpE) {
+			throw new GanymedSftpException(sftpE, String.format("Could not find file. %s", path));
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
+		}
+	}
+
+	@Override
+	public String readLink(String path) throws SshException {
+		try {
+			return client.readLink(path);
+		} catch (SFTPException sftpE) {
+			throw new GanymedSftpException(sftpE, String.format("Could not find file. %s", path));
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
 		}
 	}
 

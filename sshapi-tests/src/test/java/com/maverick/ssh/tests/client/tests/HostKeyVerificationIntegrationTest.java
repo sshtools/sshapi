@@ -19,30 +19,37 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;
+import net.sf.sshapi.util.Util;
 
 public class HostKeyVerificationIntegrationTest extends AbstractSshTest {
 	class FingerprintHostKeyVerification implements SshHostKeyValidator {
-		private String fingerprint;
+		private String[] fingerprints;
 
-		FingerprintHostKeyVerification(String fingerprint) {
-			this.fingerprint = fingerprint;
+		FingerprintHostKeyVerification(String... fingerprints) {
+			this.fingerprints = fingerprints;
 		}
 
 		@Override
 		public int verifyHost(SshHostKey hostKey) throws net.sf.sshapi.SshException {
 			String actual = hostKey.getFingerprint();
-			return actual.equals(fingerprint) ? STATUS_HOST_KEY_VALID : STATUS_HOST_KEY_UNKNOWN;
+			for (String fp : fingerprints) {
+				System.out.println("Comparing " + fp + " against " + actual);
+				System.out.println(" for " + Util.formatAsHexString(hostKey.getKey(), ":"));
+				if (actual.equals(fp))
+					return STATUS_HOST_KEY_VALID;
+			}
+			return STATUS_HOST_KEY_UNKNOWN;
 		}
 	}
 
 	@Test
 	public void testCorrectFingerprint() throws Exception {
 		timeout(() -> {
-			String expected = config.getFingerprint();
+			String[] expected = config.getFingerprints();
 			/*
 			 * Do one connection to get the current fingerprint. Use this
 			 */
-			if (expected == null || expected.length() == 0) {
+			if (expected == null || expected.length == 0) {
 				SshConfiguration icon = new SshConfiguration();
 				List<String> fp = new ArrayList<>();
 				icon.setHostKeyValidator((v) -> {
@@ -52,7 +59,7 @@ public class HostKeyVerificationIntegrationTest extends AbstractSshTest {
 				try (SshClient c = icon.open(config.getUsername(), config.getServer(), config.getPort(),
 						new SimplePasswordAuthenticator(config.getPassword()))) {
 				}
-				expected = fp.get(0);
+				expected = new String[] { fp.get(0) };
 			}
 			SshConfiguration con = new SshConfiguration();
 			con.setHostKeyValidator(new FingerprintHostKeyVerification(expected));

@@ -92,7 +92,7 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return home;
 	}
 

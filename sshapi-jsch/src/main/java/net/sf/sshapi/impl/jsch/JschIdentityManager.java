@@ -361,11 +361,4 @@ class JschIdentityManager implements SshIdentityManager {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key, char[] keyPassphrase)
-			throws SshException {
-		// TODO Can apparently support X509 but I can't find how
-		throw new UnsupportedOperationException();
-	}
-
 }

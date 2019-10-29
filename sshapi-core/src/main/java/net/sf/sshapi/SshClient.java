@@ -365,7 +365,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param localBindAddress local address to bind to. Use <code>null</code>
 	 *            to bind to all addresses. Note, this may not be supported by
 	 *            all implementations.
-	 * @param localBindPort local port to listen on
+	 * @param localBindPort local port to listen on. Use port zero to bind to a random port. You can then use {@link SshPortForward#getBoundPort()} to retrieve the actual port used.
 	 * @param targetAddress remote host to tunnel to
 	 * @param targetPort remote port to tunnel to
 	 * @return local forward
@@ -388,7 +388,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param localBindAddress local address to bind to. Use <code>null</code>
 	 *            to bind to all addresses. Note, this may not be supported by
 	 *            all implementations.
-	 * @param localBindPort local port to listen on
+	 * @param localBindPort local port to listen on. Use port zero to bind to a random port. You can then use {@link SshPortForward#getBoundPort()} to retrieve the actual port used.
 	 * @param targetAddress remote host to tunnel to
 	 * @param targetPort remote port to tunnel to
 	 * @return local forward

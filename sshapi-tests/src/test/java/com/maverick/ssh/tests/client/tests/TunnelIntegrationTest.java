@@ -1,11 +1,13 @@
 package com.maverick.ssh.tests.client.tests;
 
+
 import static com.maverick.ssh.tests.Size.size;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +72,7 @@ public class TunnelIntegrationTest extends AbstractClientConnected {
 		int port = Util.findRandomPort();
 		try(SshPortForward fwd = ssh.localForward("0.0.0.0", port, echoServerAddress, echoServerPort)) {
 			int boundPort = fwd.getBoundPort();
-			Assume.assumeTrue("Bound port must be greater than zero. Suggests provider does not support returning actual bound port when zero is used for local port.", boundPort > 0);
+			Assert.assertEquals("Bound port must be same as known port", port, boundPort);
 			EchoClient ec = new EchoClient("127.0.0.1", boundPort, 10, 100,
 					1000, size().kib(1).toBytesInt(), size().kib(64)
 							.toBytesInt());
@@ -80,15 +82,37 @@ public class TunnelIntegrationTest extends AbstractClientConnected {
 	}
 
 	@Test
-	public void testRemoteForwarding() throws SshException, IOException {
+	public void testRemoteRandomPortForwarding() throws SshException, IOException {
 		Assume.assumeTrue("Must support remote forwarding", ssh.getProvider().getCapabilities().contains(Capability.REMOTE_PORT_FORWARD));
 		int echoServerPort = echoServer.getListeningPort();
-		int tunnelPort = 0;
 		String echoServerAddress = echoServer.getListeningAddress()
 				.getHostAddress();
 
 		try(SshPortForward fwd = ssh.remoteForward("127.0.0.1", 0, echoServerAddress, echoServerPort)) {
-			EchoClient ec = new EchoClient("127.0.0.1", tunnelPort, 10, 100,
+			int boundPort = fwd.getBoundPort();
+			Assume.assumeTrue("Bound port must be greater than zero. Suggests provider does not support returning actual bound port when zero is used for local port.", boundPort > 0);
+			EchoClient ec = new EchoClient("127.0.0.1", fwd.getBoundPort(), 10, 100,
+					1000, size().kib(1).toBytesInt(), size().kib(64)
+							.toBytesInt());
+			ec.run(10000);
+			assertEquals("There must be no errors", 0, ec.getErrors());
+		}
+
+	}
+
+	@Test
+	public void testRemoteForwardingKnownPort() throws SshException, IOException {
+		Assume.assumeTrue("Must support remote forwarding", ssh.getProvider().getCapabilities().contains(Capability.REMOTE_PORT_FORWARD));
+		int echoServerPort = echoServer.getListeningPort();
+		String echoServerAddress = echoServer.getListeningAddress()
+				.getHostAddress();
+
+		int port = Util.findRandomPort();
+
+		try(SshPortForward fwd = ssh.remoteForward("127.0.0.1", port, echoServerAddress, echoServerPort)) {
+			int boundPort = fwd.getBoundPort();
+			Assert.assertEquals("Bound port must be same as known port", port, boundPort);
+			EchoClient ec = new EchoClient("127.0.0.1", boundPort, 10, 100,
 					1000, size().kib(1).toBytesInt(), size().kib(64)
 							.toBytesInt());
 			ec.run(10000);

@@ -25,19 +25,11 @@ package net.sf.sshapi.impl.maverick16;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
+import com.maverick.ssh.SshKeyFingerprint;
 import com.maverick.ssh.components.SshKeyPair;
-import com.maverick.ssh.components.jce.Ssh2RsaPrivateKey;
-import com.maverick.ssh.components.jce.SshX509RsaSha1PublicKey;
 import com.sshtools.publickey.InvalidPassphraseException;
 import com.sshtools.publickey.OpenSSHPublicKeyFile;
 import com.sshtools.publickey.SECSHPublicKeyFile;
@@ -109,7 +101,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException {
 		try {
 			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(keyType.toAlgoName(), keyBits);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pair.getPublicKey()),
+			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(SshKeyFingerprint.MD5_FINGERPRINT, pair.getPublicKey()),
 					new MaverickPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
@@ -269,7 +261,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 						"Key is encrypted, you must decrypt it before extracing the keys.");
 			}
 			try {
-				return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pair.getPublicKey()),
+				return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(SshKeyFingerprint.MD5_FINGERPRINT, pair.getPublicKey()),
 						new MaverickPrivateKey(pair.getPrivateKey()));
 			} catch (com.maverick.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
@@ -289,7 +281,7 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			options = keyFile.getOptions();
 			try {
 				formattedKey = keyFile.getFormattedKey();
-				publicKey = new MaverickPublicKey(keyFile.toPublicKey());
+				publicKey = new MaverickPublicKey(SshKeyFingerprint.MD5_FINGERPRINT,  keyFile.toPublicKey());
 			} catch (Exception e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
@@ -329,36 +321,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 		@Override
 		public int getFormat() {
 			return format;
-		}
-	}
-
-	@Override
-	public net.sf.sshapi.identity.SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key,
-			char[] keyPassphrase) throws SshException {
-		try {
-			KeyStore keystore = KeyStore.getInstance("PKCS12");
-			try {
-				keystore.load(pkcs12Keystore, keystorePassphrase);
-			} finally {
-				pkcs12Keystore.close();
-			}
-			RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(key, keyPassphrase);
-			X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
-			SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
-			Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pubkey), new MaverickPrivateKey(privkey));
-		} catch (IOException ioe) {
-			throw new SshException("Failed to import X509 key.", ioe);
-		} catch (KeyStoreException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (CertificateException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (UnrecoverableKeyException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (com.maverick.ssh.SshException e) {
-			throw new SshException("Failed to import X509 key.", e);
 		}
 	}
 }

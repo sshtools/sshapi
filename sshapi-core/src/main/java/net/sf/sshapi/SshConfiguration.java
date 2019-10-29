@@ -98,6 +98,9 @@ public class SshConfiguration {
 	public static final String PUBLIC_KEY_ED25519 = "ssh-ed25519";
 	/** SSH1 RSA Public Key **/
 	public static final String PUBLIC_KEY_SSHRSA1 = "rsa1";
+	/** X509 RSA Public Key **/
+	public static final String PUBLIC_KEY_X509V3_RSA_SHA1 = "x509v3-sign-rsa-sha1";
+	
 	/** SSH1 Cipher **/
 	public static final String CIPHER_DES = "des";
 	/** SSH1 Cipher **/
@@ -120,6 +123,20 @@ public class SshConfiguration {
 	 * @see #getProtocolVersion()
 	 */
 	public final static int SSH1_OR_SSH2 = 3;
+	
+	/***
+	 * MD5 fingerprint hashes
+	 */
+	public final static String FINGERPRINT_MD5 = "md5";
+	/***
+	 * SHA256 fingerprint hashes
+	 */
+	public final static String FINGERPRINT_SHA256 = "sha256";
+	/***
+	 * SHA1 fingerprint hashes
+	 */
+	public final static String FINGERPRINT_SHA1 = "sha1";
+	
 	// Private statics
 	private static Logger logger = new ConsoleLogger();
 	// Private instance variables
@@ -141,6 +158,7 @@ public class SshConfiguration {
 	private SshProxyServerDetails proxyServer;
 	private String preferredSSH1Cipher;
 	private String sftpSSH1Path;
+	private String fingerprintHashingAlgorithm;
 	private SshAgent agent;
 	private List<Capability> requiredCapabilities = new ArrayList<>();
 	private SocketFactory socketFactory;
@@ -808,6 +826,26 @@ public class SshConfiguration {
 	 */
 	public SshConfiguration setPreferredPublicKey(String preferredPublicKey) {
 		this.preferredPublicKey = preferredPublicKey;
+		return this;
+	}
+
+	/**
+	 * Get the fingerprint hashing algorithm to use. 
+	 * 
+	 * @return fingerprint hashing algorithm
+	 */
+	public String getFingerprintHashingAlgorithm() {
+		return fingerprintHashingAlgorithm;
+	}
+
+	/**
+	 * Set the fingerprint hashing algorithm to use.
+	 * 
+	 * @param fingerprintHashingAlgorithm fingerprint hashing algorithm
+	 * @return this for chaining
+	 */
+	public SshConfiguration setFingerprintHashingAlgorithm(String fingerprintHashingAlgorithm) {
+		this.fingerprintHashingAlgorithm = fingerprintHashingAlgorithm;
 		return this;
 	}
 

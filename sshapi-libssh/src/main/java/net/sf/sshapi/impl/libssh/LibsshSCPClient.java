@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import com.sun.jna.Memory;
+
 import net.sf.sshapi.AbstractSCPClient;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.Logger.Level;
@@ -12,16 +15,13 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshSCPClient;
+import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_scp;
 import ssh.SshLibrary.ssh_session;
 
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.sun.jna.Memory;
-
 public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	final static Logger LOG = SshConfiguration.getLogger();
-
 	private SshLibrary library;
 	private ssh_session libSshSession;
 
@@ -47,7 +47,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	public void get(String remoteFilePath, File destinationFile, boolean recursive) throws net.sf.sshapi.SshException {
 		checkOpen();
 		ssh_scp scp = library.ssh_scp_new(libSshSession, SshLibrary.SSH_SCP_READ | (recursive ? SshLibrary.SSH_SCP_RECURSIVE : 0),
-			remoteFilePath);
+				remoteFilePath);
 		try {
 			try {
 				int ret = library.ssh_scp_init(scp);
@@ -69,12 +69,14 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 		int ret = 0;
 		while (true) {
 			ret = library.ssh_scp_pull_request(scp);
-			if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_EOF) {
+			if (ret == SshLibrary.SSH_ERROR) {
+				throw new SshException(SshException.GENERAL,
+						"Failed to receive pull request. " + library.ssh_get_error(libSshSession.getPointer()));
+			} else if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_EOF) {
 				break;
 			} else if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_WARNING) {
 				LibsshClient.LOG.log(Level.WARN, library.ssh_scp_request_get_warning(scp));
 			} else if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_ENDDIR) {
-				System.out.println("Leaving dir");
 				destinationFile = destinationFile.getParentFile();
 			} else if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_NEWDIR) {
 				String filename = library.ssh_scp_request_get_filename(scp);
@@ -83,37 +85,39 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 				if (!newDir.mkdirs()) {
 					throw new IOException("Failed to create local directory " + newDir);
 				}
+				Util.setPermissions(newDir, mode);
 				library.ssh_scp_accept_request(scp);
 				destinationFile = newDir;
-				System.out.println("New dir " + filename + " mode = " + mode);
 			} else if (ret == SshLibrary.ssh_scp_request_types.SSH_SCP_REQUEST_NEWFILE) {
 				long size = library.ssh_scp_request_get_size(scp).longValue();
 				String filename = library.ssh_scp_request_get_filename(scp);
 				int mode = library.ssh_scp_request_get_permissions(scp);
 				library.ssh_scp_accept_request(scp);
-				System.out.println("Getting " + filename + " (" + size + ") mode = " + mode);
 				Memory m = new Memory(LibsshClient.SCP_BUFFER_SIZE);
-
-				FileOutputStream fout = new FileOutputStream(destinationFile.isDirectory() ? new File(destinationFile, filename)
-					: destinationFile);
-
-				LOG.log(Level.WARN, "MODE not implemented");
+				File finalDestination = destinationFile.isDirectory() ? new File(destinationFile, filename) : destinationFile;
+				FileOutputStream fout = new FileOutputStream(
+						finalDestination);
 				fireFileTransferStarted(remoteFilePath, destinationFile.getPath(), size);
-
 				try {
-					long t = 0;
-					while (t < size) {
-						int read = library.ssh_scp_read(scp, m, new NativeSize(m.size()));
-						if (read == SshLibrary.SSH_ERROR) {
-							throw new IOException("I/O Error");
+					if (size > 0) {
+						long t = 0;
+						while (t < size) {
+							int read = library.ssh_scp_read(scp, m, new NativeSize(m.size()));
+							if (read == SshLibrary.SSH_ERROR) {
+								throw new IOException("I/O Error");
+							}
+							byte[] buf = m.getByteArray(0, read);
+							fout.write(buf);
+							fireFileTransferProgressed(remoteFilePath, destinationFile.getPath(), read);
+							t += read;
 						}
-						byte[] buf = m.getByteArray(0, read);
-						fout.write(buf);
-						fireFileTransferProgressed(remoteFilePath, destinationFile.getPath(), read);
-						t += read;
 					}
+					else
+						/* SCP won't get an EOF in this case so just leave */
+						break;
 				} finally {
 					fout.close();
+					Util.setPermissions(finalDestination, mode);
 					fireFileTransferFinished(remoteFilePath, destinationFile.getPath());
 				}
 			}
@@ -124,7 +128,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	protected void doPut(String remotePath, String mode, File sourceFile, boolean recursive) throws net.sf.sshapi.SshException {
 		checkOpen();
 		ssh_scp scp = library.ssh_scp_new(libSshSession, SshLibrary.SSH_SCP_WRITE | (recursive ? SshLibrary.SSH_SCP_RECURSIVE : 0),
-			remotePath);
+				remotePath);
 		try {
 			try {
 				int ret = library.ssh_scp_init(scp);
@@ -145,7 +149,6 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	void scpSend(String remotePath, ssh_scp scp, File sourceFile) throws IOException {
 		int ret = 0;
 		if (sourceFile.isFile()) {
-			System.out.println("Pushing file " + sourceFile.getName());
 			long sourceLength = sourceFile.length();
 			ret = library.ssh_scp_push_file(scp, sourceFile.getName(), new NativeSize(sourceLength), LibsshClient.S_IRWXU);
 			if (ret != SshLibrary.SSH_OK) {
@@ -163,7 +166,6 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 					fireFileTransferProgressed(sourceFile.getPath(), remotePath, r);
 					off += r;
 				}
-
 				// Hrrmmm, it seems we must write the entire file in one go?
 				library.ssh_scp_write(scp, outBuf, new NativeSize(sourceLength));
 			} finally {
@@ -171,7 +173,6 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 				fireFileTransferFinished(sourceFile.getPath(), remotePath);
 			}
 		} else {
-			System.out.println("Pushing directory " + sourceFile.getName());
 			ret = library.ssh_scp_push_directory(scp, sourceFile.getName(), LibsshClient.S_IRWXU);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new IOException("Failed to push directory. Error code " + ret);
@@ -180,12 +181,10 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 			for (int i = 0; i < files.length; i++) {
 				scpSend(remotePath, scp, new File(sourceFile, files[i]));
 			}
-			System.out.println("Leaving directory " + sourceFile.getName());
 			ret = library.ssh_scp_leave_directory(scp);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new IOException("Failed to leave directory. Error code " + ret);
 			}
 		}
 	}
-
 }

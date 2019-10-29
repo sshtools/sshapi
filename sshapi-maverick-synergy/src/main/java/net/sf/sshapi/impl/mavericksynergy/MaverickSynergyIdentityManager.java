@@ -25,13 +25,6 @@ package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,9 +32,8 @@ import com.sshtools.common.publickey.InvalidPassphraseException;
 import com.sshtools.common.publickey.SshKeyPairGenerator;
 import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.common.publickey.SshPublicKeyFileFactory;
+import com.sshtools.common.ssh.SshKeyFingerprint;
 import com.sshtools.common.ssh.components.SshKeyPair;
-import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
-import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
@@ -97,7 +89,7 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 	public net.sf.sshapi.identity.SshKeyPair generateKeyPair(Algorithm keyType, int keyBits) throws SshException {
 		try {
 			SshKeyPair pair = SshKeyPairGenerator.generateKeyPair(keyType.toAlgoName(), keyBits);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pair.getPublicKey()),
+			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(SshKeyFingerprint.MD5_FINGERPRINT,pair.getPublicKey()),
 					new MaverickSynergyPrivateKey(pair.getPrivateKey()));
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
@@ -234,42 +226,12 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 						"Key is encrypted, you must decrypt it before extracing the keys.");
 			}
 			try {
-				return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pair.getPublicKey()),
+				return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(SshKeyFingerprint.MD5_FINGERPRINT,pair.getPublicKey()),
 						new MaverickSynergyPrivateKey(pair.getPrivateKey()));
 			} catch (com.sshtools.common.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
 		}
-	}
-
-	@Override
-	public net.sf.sshapi.identity.SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key,
-			char[] keyPassphrase) throws SshException {
-		try {
-			KeyStore keystore = KeyStore.getInstance("PKCS12");
-			try {
-				keystore.load(pkcs12Keystore, keystorePassphrase);
-			} finally {
-				pkcs12Keystore.close();
-			}
-			RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(key, keyPassphrase);
-			X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
-			SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
-			Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickSynergyPublicKey(pubkey), new MaverickSynergyPrivateKey(privkey));
-		} catch (IOException ioe) {
-			throw new SshException("Failed to import X509 key.", ioe);
-		} catch (KeyStoreException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (CertificateException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (UnrecoverableKeyException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (com.sshtools.common.ssh.SshException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} 
 	}
 
 	class MaverickPublicKeyFile implements SshPublicKeyFile {
@@ -285,7 +247,7 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 			options = keyFile.getOptions();
 			try {
 				formattedKey = keyFile.getFormattedKey();
-				publicKey = new MaverickSynergyPublicKey(keyFile.toPublicKey());
+				publicKey = new MaverickSynergyPublicKey(SshKeyFingerprint.MD5_FINGERPRINT,keyFile.toPublicKey());
 			} catch (Exception e) {
 				throw new SshException(SshException.GENERAL, e);
 			}

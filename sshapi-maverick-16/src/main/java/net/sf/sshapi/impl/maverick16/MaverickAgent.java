@@ -13,6 +13,7 @@ import com.maverick.agent.KeyConstraints;
 import com.maverick.agent.client.AgentSocketType;
 import com.maverick.agent.client.SshAgentClient;
 import com.maverick.agent.exceptions.AgentNotAvailableException;
+import com.maverick.ssh.SshKeyFingerprint;
 import com.maverick.util.IOUtil;
 
 import net.sf.sshapi.DefaultChannelData;
@@ -183,7 +184,7 @@ public class MaverickAgent implements SshAgent {
 			Map<SshPublicKey, String> keys = new HashMap<>();
 			for (Map.Entry<com.maverick.ssh.components.SshPublicKey, String> en : nativeKeys.entrySet()) {
 				try {
-					keys.put(new MaverickPublicKey(en.getKey()), en.getValue());
+					keys.put(new MaverickPublicKey(SshKeyFingerprint.MD5_FINGERPRINT, en.getKey()), en.getValue());
 				} catch (com.maverick.ssh.SshException e) {
 					throw new SshException(SshException.GENERAL, "Failed to convert key to SSHAPI.", e);
 				}

@@ -5,16 +5,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 
+import com.maverick.ssh.components.jce.SshX509RsaSha1PublicKey;
 import com.maverick.ssh.tests.client.tests.X509AuthenticationIntegrationTest;
-
-import net.sf.sshapi.Capability;
-import net.sf.sshapi.DefaultProviderFactory;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.identity.SshIdentityManager;
-import net.sf.sshapi.identity.SshKeyPair;
-import net.sf.sshapi.identity.SshPrivateKeyFile;
-import net.sf.sshapi.identity.SshPublicKeyFile;
+import com.sshtools.common.publickey.SshPublicKeyFileFactory;
 
 /**
  * This tool reads a PKCS12 keystore from resources and generates an OpenSSH
@@ -31,13 +27,14 @@ public class X509KeyExport {
 	}
 
 	public void run() throws Exception {
-		SshConfiguration cfg = new SshConfiguration().addRequiredCapability(Capability.X509_PUBLIC_KEY);
-		SshIdentityManager idm = DefaultProviderFactory.getInstance().getProvider(cfg).createIdentityManager(cfg);
-		SshKeyPair keypair = idm.importX509(getClass().getResourceAsStream("/" + name + "/keystore"),
-				X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray(), "mykey",
-				X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray());
+		KeyStore keystore = KeyStore.getInstance("PKCS12");
+		char[] keystorePassphrase = X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray();
+		keystore.load(getClass().getResourceAsStream("/" + name + "/keystore"), keystorePassphrase);
+		X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
+		SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
 		File toFile = new File(new File(new File("resources"), name), "authorized_keys");
-		SshPublicKeyFile file = idm.create(keypair.getPublicKey(), null, "test@localhost", SshPrivateKeyFile.VENDOR_OPENSSH);
+		com.sshtools.publickey.SshPublicKeyFile file = com.sshtools.publickey.SshPublicKeyFileFactory.create(pubkey,
+				"test@localhost", SshPublicKeyFileFactory.OPENSSH_FORMAT);
 		try (FileOutputStream fw = new FileOutputStream(toFile)) {
 			fw.write(file.getFormattedKey());
 		}

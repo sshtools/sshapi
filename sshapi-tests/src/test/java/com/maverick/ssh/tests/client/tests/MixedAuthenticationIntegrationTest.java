@@ -20,7 +20,7 @@ public class MixedAuthenticationIntegrationTest extends
 	
 	@Before
 	public void checkServerCaps() {
-		assertCapabilities(ServerCapability.CAN_DO_MULTIFACTOR_AUTH);
+		assertServerCapabilities(ServerCapability.CAN_DO_MULTIFACTOR_AUTH);
 	}
 
 	@Test

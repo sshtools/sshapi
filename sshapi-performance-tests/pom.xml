@@ -42,7 +42,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
@@ -67,7 +67,7 @@
 			<artifactId>sshapi-trilead</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>com.sshtools</groupId>
@@ -91,7 +91,7 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-j2ssh</artifactId>
 			<version>${project.version}</version>
@@ -105,7 +105,7 @@
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>org.slf4j</groupId>

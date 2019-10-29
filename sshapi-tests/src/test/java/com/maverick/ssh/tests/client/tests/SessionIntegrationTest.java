@@ -90,15 +90,19 @@ public class SessionIntegrationTest extends AbstractClientConnected {
 	@Test
 	public void testExecuteWithInputPty() throws Exception {
 		timeout(() -> {
-			try (SshCommand command = ssh.command(config.getCommandWithInput())) {
+			try (SshCommand command = ssh.command(config.getCommandWithInput(), "dumb", 80, 24, 0, 0, null)) {
 				// Send. Note, must close the stream to receive the input
 				try (OutputStream outputStream = command.getOutputStream()) {
-					outputStream.write(config.getCommandWithInputPtyInput().getBytes());
+					String str = config.getCommandWithInputPtyInput();
+					byte[] bytes = str.getBytes();
+					outputStream.write(bytes);
 					outputStream.flush();
 				}
 				// Read result
-				assertEquals("Output from command should match that expected", config.getCommandWithInputPtyResult(),
-						IOUtils.toString(command.getInputStream(), "UTF-8"));
+				String str2 = IOUtils.toString(command.getInputStream(), "UTF-8");
+				String str1 = config.getCommandWithInputPtyResult();
+				assertEquals("Output from command should match that expected", str1,
+						str2);
 			}
 			return null;
 		}, 30000);

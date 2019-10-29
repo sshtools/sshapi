@@ -21,7 +21,7 @@ import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
-public class LibsshLocalForward extends AbstractPortForward implements SshPortForward, Runnable {
+public class LibsshRemoteForward extends AbstractPortForward implements SshPortForward, Runnable {
 
 	private ssh_session libSshSession;
 	private SshLibrary library;
@@ -35,7 +35,7 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 	private boolean closed;
 	private int boundPort;
 
-	public LibsshLocalForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
+	public LibsshRemoteForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
 			int remotePort) {
 		super(provider);
 		this.libSshSession = libSshSession;
@@ -63,7 +63,7 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 			if(boundPort == 0) {
 				boundPort = Util.findRandomPort();
 			}
-			int ret = library.channel_open_forward(channel, remoteHost, remotePort, localAddress, boundPort);
+			int ret = library.ssh_channel_open_reverse_forward(channel, remoteHost, remotePort, localAddress, boundPort);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new SshException(SshException.GENERAL, "Failed to open channel for local port forward to " + remoteHost + ":"
 					+ remotePort);

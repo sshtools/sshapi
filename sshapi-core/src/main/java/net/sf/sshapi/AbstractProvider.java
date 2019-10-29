@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -95,6 +96,11 @@ public abstract class AbstractProvider implements SshProvider {
 	@Override
 	public SshIdentityManager createIdentityManager(SshConfiguration configuration) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<String> getFingerprintHashingAlgorithms() {
+		return Arrays.asList(SshConfiguration.FINGERPRINT_MD5);
 	}
 
 	@Override

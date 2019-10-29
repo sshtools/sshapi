@@ -75,7 +75,7 @@ public class MaverickSshProvider extends AbstractProvider {
 			Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
 			Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.FORCE_KEY_EXCHANGE,
 			Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-			Capability.REMOTE_PORT_FORWARD };
+			Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK };
 	private SshConnector con;
 	static {
 		// Warning for slow startup on Linux / Solaris
@@ -211,6 +211,12 @@ public class MaverickSshProvider extends AbstractProvider {
 			throw new UnsupportedOperationException(e);
 		}
 		return macs;
+	}
+
+	@Override
+	public List<String> getFingerprintHashingAlgorithms() {
+		return Arrays.asList(SshConfiguration.FINGERPRINT_MD5, SshConfiguration.FINGERPRINT_SHA1,
+				SshConfiguration.FINGERPRINT_SHA256);
 	}
 
 	@Override

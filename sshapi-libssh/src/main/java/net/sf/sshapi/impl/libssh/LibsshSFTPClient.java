@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import com.sun.jna.Pointer;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -97,7 +98,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return "/";
 	}
 
@@ -109,6 +110,25 @@ class LibsshSFTPClient extends AbstractSftpClient {
 				throw new LibsshSFTPException(String.format("Could not find file. %s", path));
 			SftpFile f = attributesToFile(path, attr);
 			return f;
+		}
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		synchronized (sftp) {
+			sftp_attributes_struct attr = library.sftp_lstat(sftp, path);
+			if (attr == null)
+				throw new LibsshSFTPException(String.format("Could not find file. %s", path));
+			SftpFile f = attributesToFile(path, attr);
+			return f;
+		}
+	}
+
+	@Override
+	public String readLink(String path) throws SshException {
+		synchronized (sftp) {
+			Pointer res = library.sftp_readlink(sftp, path);
+			return res.getString(0);
 		}
 	}
 

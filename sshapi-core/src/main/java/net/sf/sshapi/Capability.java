@@ -201,6 +201,14 @@ public class Capability {
 	 * The provider supports setting of last modified time.
 	 */
 	public final static Capability SET_LAST_MODIFIED = new Capability("setLastModified");
+	/**
+	 * The provider supports setting of last modified time.
+	 */
+	public final static Capability RECURSIVE_SCP_GET = new Capability("recursiveScpGet");
+	/**
+	 * The provider supports reading a symbolic links target ({@link SftpClient#readLink(String)}).
+	 */
+	public final static Capability SFTP_READ_LINK = new Capability("sftpReadLink");
 
 	/**
 	 * The provider supports a agent for key authentication. One of the other

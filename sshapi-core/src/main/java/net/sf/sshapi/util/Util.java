@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import net.sf.sshapi.Logger.Level;
@@ -116,14 +117,26 @@ public class Util {
 	}
 
 	/**
-	 * Format a byte array as a hex string.
+	 * Format a byte array as a hex string with no delimiter
 	 * 
 	 * @param arr byte array
 	 * @return hex string
 	 */
 	public static String formatAsHexString(byte[] arr) {
+		return formatAsHexString(arr, "");
+	}
+
+	/**
+	 * Format a byte array as a hex string.
+	 * 
+	 * @param arr byte array
+	 * @return hex string
+	 */
+	public static String formatAsHexString(byte[] arr, String delimiter) {
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < arr.length; i++) {
+			if(i > 0 && delimiter != null && delimiter.length() > 0)
+				buf.append(delimiter);
 			buf.append(toPaddedHexString(arr[i], 2));
 		}
 		return buf.toString();
@@ -352,6 +365,8 @@ public class Util {
 	 * @return directory portion of path.
 	 */
 	public static String dirname(String remotePath) {
+		if(remotePath.equals(""))
+			return null;
 		String dir = ".";
 		int idx = remotePath.lastIndexOf("/");
 		if (idx != -1) {
@@ -377,9 +392,47 @@ public class Util {
 		str.append(rwxString((int) permissions, 0));
 		return str.toString();
 	}
-	
+
 	/**
-	 * Get permissions value for a file.
+	 * Set permissions value for a file.
+	 * 
+	 * @param path path
+	 * @return permissions
+	 */
+	public static void setPermissions(File path, int permissions) {
+		try {
+			Set<PosixFilePermission> perms = new LinkedHashSet<>();
+			if ((permissions & SftpFile.S_IRUSR) != 0)
+				perms.add(PosixFilePermission.OWNER_READ);
+			if ((permissions & SftpFile.S_IWUSR) != 0)
+				perms.add(PosixFilePermission.OWNER_WRITE);
+			if ((permissions & SftpFile.S_IXUSR) != 0)
+				perms.add(PosixFilePermission.OWNER_EXECUTE);
+			if ((permissions & SftpFile.S_IRGRP) != 0)
+				perms.add(PosixFilePermission.GROUP_READ);
+			if ((permissions & SftpFile.S_IWGRP) != 0)
+				perms.add(PosixFilePermission.GROUP_WRITE);
+			if ((permissions & SftpFile.S_IXGRP) != 0)
+				perms.add(PosixFilePermission.GROUP_EXECUTE);
+			if ((permissions & SftpFile.S_IROTH) != 0)
+				perms.add(PosixFilePermission.OTHERS_READ);
+			if ((permissions & SftpFile.S_IWOTH) != 0)
+				perms.add(PosixFilePermission.OTHERS_WRITE);
+			if ((permissions & SftpFile.S_IXOTH) != 0)
+				perms.add(PosixFilePermission.OTHERS_EXECUTE);
+			Files.setPosixFilePermissions(path.toPath(), perms);
+		} catch (UnsupportedOperationException | IOException uoe) {
+			path.setReadable((permissions & SftpFile.S_IRUSR) != 0);
+			path.setWritable((permissions & SftpFile.S_IWUSR) != 0);
+			path.setExecutable((permissions & SftpFile.S_IXUSR) != 0);
+		}
+	}
+
+	/**
+	 * Get permissions value for a file. If {@link PosixFilePermission} can be
+	 * used, user, group and other permissions will be included. If not,
+	 * {@link File#canRead()} etc will be used to get just the permissions for
+	 * the current user.
 	 * 
 	 * @param path path
 	 * @return permissions
@@ -427,7 +480,6 @@ public class Util {
 			if (path.canExecute())
 				perm = perm | SftpFile.S_IXUSR | SftpFile.S_IXGRP | SftpFile.S_IWOTH;
 		}
-		
 		return perm;
 	}
 
@@ -588,17 +640,76 @@ public class Util {
 		joinStreams(in, baos);
 		return baos.toByteArray();
 	}
-	
+
 	public static byte[] toBytes(String data) {
 		try {
 			return data.getBytes("UTF-8");
-		}
-		catch(UnsupportedEncodingException use) {
+		} catch (UnsupportedEncodingException use) {
 			return data.getBytes();
 		}
 	}
 
 	public static ByteBuffer wrap(String data) {
 		return ByteBuffer.wrap(toBytes(data));
+	}
+
+	/**
+	 * Return what another path would be if it were relative to the original
+	 * path. If the path cannot be relative to the orignial path, it will be
+	 * returned as is.
+	 * 
+	 * @param original original path
+	 * @param other other path
+	 * @return other path relative to original path
+	 */
+	public static String relativeTo(String original, String other) {
+		String[] otherDirectories = other.equals("/") ? new String[] { "" } : other.split("/");
+		String[] originalDirectories = original.equals("/") ? new String[] { "" } : original.split("/");
+
+        //Get the shortest of the two paths
+        int length = otherDirectories.length < originalDirectories.length ? otherDirectories.length : originalDirectories.length;
+
+        //Use to determine where in the loop we exited
+        int lastCommonRoot = -1;
+        int index;
+
+        //Find common root
+        for (index = 0; index < length; index++)
+            if (otherDirectories[index].equals(originalDirectories[index]))
+                lastCommonRoot = index;
+            else
+                break;
+
+        //If we didn't find a common prefix then throw
+        if (lastCommonRoot == -1) {
+        	if(original.startsWith("/"))
+        		throw new IllegalArgumentException("Paths do not have a common base");
+        	else
+        		return original;
+        }
+
+        //Build up the relative path
+        StringBuilder relativePath = new StringBuilder();
+
+        //Add on the ..
+        for (index = lastCommonRoot + 1; index < otherDirectories.length; index++)
+            if (otherDirectories[index].length() > 0)
+                relativePath.append("../");
+
+        //Add on the folders
+        for (index = lastCommonRoot + 1; index < originalDirectories.length - 1; index++)
+            relativePath.append(originalDirectories[index] + "/");
+        relativePath.append(originalDirectories[originalDirectories.length - 1]);
+
+        return relativePath.toString();
+	}
+
+	public static void main(String[] args) {
+		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/home/testuser"));
+		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/home"));
+		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/"));
+		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/tmp"));
+		System.err.println(relativeTo("/tmp/testfile1", "/home/testuser"));
+		System.err.println(relativeTo("testdirectory/testfile1", "/home/testuser"));
 	}
 }

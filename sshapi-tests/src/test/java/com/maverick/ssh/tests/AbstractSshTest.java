@@ -153,7 +153,7 @@ public class AbstractSshTest {
 	 * 
 	 * @param capabilities
 	 */
-	protected void assertCapabilities(ServerCapability... capabilities) {
+	protected void assertServerCapabilities(ServerCapability... capabilities) {
 		Assume.assumeTrue("Must have capabilities " + capabilities, checkCapabilities(capabilities));
 	}
 

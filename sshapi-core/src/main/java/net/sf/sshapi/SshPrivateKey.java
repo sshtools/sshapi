@@ -40,6 +40,7 @@ public interface SshPrivateKey {
 		SSH_RSA,
 		ECDSA,
 		ED25519,
+		X509V3_SIGN_RSA_SHA1,
 		ERROR,
 		UNKNOWN;
 		
@@ -61,6 +62,8 @@ public interface SshPrivateKey {
 				return SshConfiguration.PUBLIC_KEY_SSHDSA;
 			case SSH_RSA:
 				return SshConfiguration.PUBLIC_KEY_SSHRSA;
+			case X509V3_SIGN_RSA_SHA1:
+				return SshConfiguration.PUBLIC_KEY_X509V3_RSA_SHA1;
 			case ECDSA:
 				switch(bits) {
 				case 256:

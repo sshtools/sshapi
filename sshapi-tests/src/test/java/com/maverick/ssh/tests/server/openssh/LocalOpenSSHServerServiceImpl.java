@@ -6,6 +6,7 @@ import static com.maverick.ssh.tests.Util.runToFileAndCheckReturn;
 import static com.maverick.ssh.tests.Util.runWithFileInput;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,6 +20,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +38,9 @@ import com.maverick.ssh.tests.AbstractServer;
 import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.SshTestConfiguration;
 import com.maverick.ssh.tests.Util;
+
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshConfiguration;
 
 /**
  * <p>
@@ -62,13 +67,13 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 	private File patchDir;
 
 	protected void doStop() throws Exception {
-		System.out.println("Stopping server on " + configuration.getPort());
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Stopping server on %d", configuration.getPort()));
 		if (serverProcess != null) {
 			File pidFile = new File(targetDir, "sshd.pid");
 			if (pidFile.exists()) {
 				try (FileReader fr = new FileReader(pidFile)) {
 					int pid = Integer.parseInt(IOUtils.toString(fr).trim());
-					System.out.println("Attempting to kill " + pid);
+					SshConfiguration.getLogger().log(Level.INFO, String.format("Attempting to kill %d", pid));
 					runAndCheckReturn(
 							configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "kill", String.valueOf(pid))));
 				}
@@ -78,8 +83,13 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 				Field field = serverProcess.getClass().getDeclaredField("pid");
 				field.setAccessible(true);
 				int pid = ((Long) field.getLong(serverProcess)).intValue();
-				System.out.println("Attempting to kill " + pid);
-				runAndCheckReturn(configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "kill", String.valueOf(pid))));
+				SshConfiguration.getLogger().log(Level.INFO, String.format("Attempting to kill %d", pid));
+				try {
+					runAndCheckReturn(
+							configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "kill", String.valueOf(pid))));
+				} catch (IOException ioe) {
+					SshConfiguration.getLogger().log(Level.WARN, "Error from killing sshd.", ioe);
+				}
 			}
 			// Wait for server to actually stop
 			for (int i = 0; i < 100; i++) {
@@ -118,7 +128,8 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 			hookAdded = true;
 		}
 		return Arrays.asList(ServerCapability.SFTP_LS_RETURNS_DOTS, ServerCapability.SUPPORTS_GROUPS,
-				ServerCapability.SUPPORTS_PERMISSIONS, ServerCapability.SUPPORTS_OWNERS, ServerCapability.SYMLINKS);
+				ServerCapability.SUPPORTS_PERMISSIONS, ServerCapability.SUPPORTS_OWNERS, ServerCapability.SYMLINKS,
+				ServerCapability.X509);
 	}
 
 	protected void doStart() throws Exception {
@@ -158,29 +169,18 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		if (!targetDir.exists()) {
 			runMakeInstall();
 		}
-		/*
-		 * TODO Get the host key, its seems to be the DSA key that is used,
-		 * presumably this is configurable somewhere. Find a better of
-		 * determining which one we need
-		 */
 		File serverConfigDir = new File(targetDir, "etc");
-		File serverPubKey = new File(serverConfigDir, "ssh_host_dsa_key.pub");
-		ProcessBuilder pb = new ProcessBuilder(new File(new File(targetDir, "bin"), "ssh-keygen").getPath(), "-lf",
-				serverPubKey.getAbsolutePath());
-		pb.redirectErrorStream(true);
-		Process p = pb.start();
-		String keystring = IOUtils.toString(p.getInputStream(), "UTF-8");
-		String fp = keystring.split("\\s+")[1].split(":")[1];
-		configuration.setFingerprint(fp);
-		// Set some configuration
 		File sshdConfig = new File(serverConfigDir, "sshd_config");
 		runAndCheckReturn(
 				configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "chmod", "o+w", sshdConfig.getAbsolutePath())));
 		OpenSSHConfigFileParser parser = new OpenSSHConfigFileParser(sshdConfig);
 		parser.set("UsePAM", "yes");
 		parser.set("PasswordAuthentication", "yes");
-		parser.set("ChallengeResponseAuthentication", "no");
+		parser.set("ChallengeResponseAuthentication", "yes");
 		parser.set("PidFile", new File(targetDir, "sshd.pid").getAbsolutePath());
+		parser.set("KexAlgorithms", "+diffie-hellman-group1-sha1");
+		parser.set("Ciphers", "+3des-cbc");
+		parser.set("PubkeyAcceptedKeyTypes", "+ssh-dss");
 		// if(methods.size() > 0) {
 		// parser.set("AuthenticationMethods", Util.listToSeparatedString(',',
 		// methods));
@@ -193,6 +193,28 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 				configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "chmod", "o-w", sshdConfig.getAbsolutePath())));
 		// Finally actually start the server
 		runServer();
+		//
+		//
+		List<String> fps = new ArrayList<String>();
+		for (File file : serverConfigDir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().endsWith(".pub");
+			}
+		})) {
+			ProcessBuilder pb = new ProcessBuilder(new File(new File(targetDir, "bin"), "ssh-keygen").getPath(), "-E",
+					configuration.getFingerprintHashingAlgorithm(), "-lf", file.getAbsolutePath());
+			pb.redirectErrorStream(true);
+			SshConfiguration.getLogger().log(Level.INFO, String.format("Loading server key %s.", file));
+			Process p = pb.start();
+			String keystring = IOUtils.toString(p.getInputStream(), "UTF-8");
+			String fp = keystring.split("\\s+")[1];
+			int idx = fp.indexOf(':');
+			fp = fp.substring(idx + 1);
+			SshConfiguration.getLogger().log(Level.INFO, String.format("        %s.", fp));
+			fps.add(fp);
+		}
+		configuration.setFingerprints(fps.toArray(new String[0]));
 	}
 
 	private void applyPatches() throws MalformedURLException, IOException, InterruptedException {
@@ -217,7 +239,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 					runToFileAndCheckReturn(patchFile, pb);
 				}
 				// Patch
-				System.out.println("Patching " + sourceDir + " with " + patchFile);
+				SshConfiguration.getLogger().log(Level.INFO, String.format("Patching %s with %s", sourceDir, patchFile));
 				runWithFileInput(patchFile, configureCommand(sourceDir, new ProcessBuilder(args).redirectErrorStream(true)), false);
 				// runAndCheckReturnWithFileInput(patchFile,
 				// configureCommand(sourceDir, new
@@ -261,21 +283,21 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 	}
 
 	void sudoRm(File dir) throws IOException, InterruptedException {
-		System.out.println("Removing " + dir.getAbsolutePath());
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Removing %s", dir));
 		runAndCheckReturn(configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "rm", "-fr", dir.getAbsolutePath())));
 	}
 
 	void runMakeInstall() throws IOException, InterruptedException {
-		System.out.println("Installing");
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Installing server from  %s", sourceDir));
 		runAndCheckReturn(configureCommandForSudo(sourceDir, new ProcessBuilder("sudo", "-A", "make", "install")));
 	}
 
 	void runServer() throws IOException, InterruptedException {
-		System.out.println("Starting server on " + configuration.getPort());
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Starting server on %d", configuration.getPort()));
 		File sshd = new File(new File(targetDir, "sbin"), "sshd");
 		List<String> args = Arrays.asList("sudo", "-A", sshd.getAbsolutePath(), "-p", String.valueOf(configuration.getPort()), "-D",
 				"-e");
-		System.out.println(Util.listToSeparatedString(' ', args));
+		SshConfiguration.getLogger().log(Level.INFO, String.format("    %s", Util.listToSeparatedString(' ', args)));
 		ProcessBuilder pb = new ProcessBuilder(args);
 		configureCommandForSudo(targetDir, pb);
 		pb.redirectErrorStream(true);
@@ -287,23 +309,24 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 				Socket s = new Socket(configuration.getServer(), configuration.getPort());
 				s.setReuseAddress(true);
 				s.close();
-				Thread.sleep(100);
-			} catch (ConnectException e) {
 				return;
+			} catch (ConnectException e) {
 			}
+			Thread.sleep(100);
 		}
 		throw new IOException("Server did not appear to start.");
 	}
 
 	void runConfigure() throws IOException, InterruptedException {
-		System.out.println("Configuring (compile in " + sourceDir + ", install to " + targetDir + ")");
+		SshConfiguration.getLogger().log(Level.INFO,
+				String.format("Configuring (compile in %s, install to %s", sourceDir, targetDir));
 		// PAM is needed for KBI
 		runAndCheckReturn(configureCommand(sourceDir,
 				new ProcessBuilder("./configure", "--prefix=" + targetDir.getAbsolutePath(), "--with-pam")));
 	}
 
 	void runAutoreconf() throws IOException, InterruptedException {
-		System.out.println("Autoreconf");
+		SshConfiguration.getLogger().log(Level.INFO, "Running Autoreconf");
 		// PAM is needed for KBI
 		runAndCheckReturn(configureCommand(sourceDir, new ProcessBuilder("autoreconf")));
 	}
@@ -314,7 +337,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		url = url.replace("${openssh.version}", serviceProperties.getProperty("openssh.version"));
 		String name = url.substring(url.lastIndexOf("/") + 1);
 		URL urlObj = new URL(url);
-		System.out.println("Opening " + urlObj);
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Download %s", urlObj));
 		File archiveFile = new File(rootDir, name);
 		FileOutputStream fos = new FileOutputStream(archiveFile);
 		try {
@@ -322,7 +345,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		} finally {
 			fos.close();
 		}
-		System.out.println("Downloaded to " + archiveFile);
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Download to %s", archiveFile));
 		FileInputStream fin = new FileInputStream(archiveFile);
 		try {
 			GzipCompressorInputStream gzIn = new GzipCompressorInputStream(fin);

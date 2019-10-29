@@ -2,17 +2,17 @@ package com.maverick.ssh.tests.client.tests;
 
 import static org.junit.Assert.assertTrue;
 
-import java.security.KeyStore;
-
 import org.junit.Assume;
 import org.junit.Test;
 
+import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.client.AbstractClientConnecting;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
-import net.sf.sshapi.identity.SshIdentityManager;
-import net.sf.sshapi.identity.SshKeyPair;
+import net.sf.sshapi.auth.SshX509PublicKeyAuthenticator;
+import net.sf.sshapi.util.DefaultX509PublicKeyAuthenticator;
+import net.sf.sshapi.util.SimplePasswordAuthenticator;
 
 /**
  * <p>
@@ -37,21 +37,17 @@ public class X509AuthenticationIntegrationTest extends AbstractClientConnecting 
 	 */
 	@Test
 	public void testX509Valid() throws Exception {
+		assertServerCapabilities(ServerCapability.X509);
 		Assume.assumeTrue("Must support X509", ssh.getProvider().getCapabilities().contains(Capability.X509_PUBLIC_KEY));
-		SshPublicKeyAuthenticator pk = createKey("x509-valid", PASSPHRASE);
+		SshX509PublicKeyAuthenticator pk = createKey("x509-valid", PASSPHRASE);
 		boolean result = ssh.authenticate(pk);
 		assertTrue("Authentication must be complete.", result);
 		assertTrue("Must be connected", ssh.isConnected());
 	}
 
-	private SshPublicKeyAuthenticator createKey(String key, String passphrase) throws Exception {
-		KeyStore keystore = KeyStore.getInstance("PKCS12");
-		SshIdentityManager idm = ssh.getProvider().createIdentityManager(ssh.getConfiguration());
-		SshKeyPair keypair = idm.importX509(getClass().getResourceAsStream("/" + key + "/keystore"),
-				X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray(), "mykey",
-				X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray());
-		// TODO
-		throw new UnsupportedOperationException();
-//		return new DefaultPublicKeyAuthenticator(keypair);
+	private SshX509PublicKeyAuthenticator createKey(String key, String passphrase) throws Exception {
+		char[] pwd = X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray();
+		return new DefaultX509PublicKeyAuthenticator("mykey", new SimplePasswordAuthenticator(pwd),
+				getClass().getResourceAsStream("/" + key + "/keystore"));
 	}
 }

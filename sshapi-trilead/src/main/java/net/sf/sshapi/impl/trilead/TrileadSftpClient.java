@@ -189,7 +189,7 @@ class TrileadSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		// TODO return the home dir?
 		return "/";
 	}
@@ -240,6 +240,29 @@ class TrileadSftpClient extends AbstractSftpClient {
 			throw new SftpException(sftpe.getServerErrorCode(), sftpe.getLocalizedMessage());
 		} catch (IOException e) {
 			throw new SshException(SshException.IO_ERROR, e);
+		}
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		try {
+			SFTPv3FileAttributes entry = client.lstat(path);
+			return entryToFile(path, entry);
+		} catch (SFTPException sftpE) {
+			throw new SftpException(sftpE.getServerErrorCode(), sftpE.getLocalizedMessage());
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
+		}
+	}
+
+	@Override
+	public String readLink(String path) throws SshException {
+		try {
+			return client.readLink(path);
+		} catch (SFTPException sftpE) {
+			throw new SftpException(sftpE.getServerErrorCode(), sftpE.getLocalizedMessage());
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, "Failed to list directory.", e);
 		}
 	}
 

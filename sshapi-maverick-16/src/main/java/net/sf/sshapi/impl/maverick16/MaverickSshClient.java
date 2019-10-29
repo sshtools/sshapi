@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi.impl.maverick16;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +32,13 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,10 +57,13 @@ import com.maverick.ssh.SshChannel;
 import com.maverick.ssh.SshClient;
 import com.maverick.ssh.SshConnector;
 import com.maverick.ssh.SshException;
+import com.maverick.ssh.SshKeyFingerprint;
 import com.maverick.ssh.SshTransport;
 import com.maverick.ssh.SshTunnel;
 import com.maverick.ssh.components.SshKeyPair;
 import com.maverick.ssh.components.SshPublicKey;
+import com.maverick.ssh.components.jce.Ssh2RsaPrivateKey;
+import com.maverick.ssh.components.jce.SshX509RsaSha1PublicKey;
 import com.maverick.ssh1.Ssh1Client;
 import com.maverick.ssh1.Ssh1Context;
 import com.maverick.ssh2.BannerDisplay;
@@ -95,6 +106,7 @@ import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
+import net.sf.sshapi.auth.SshX509PublicKeyAuthenticator;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
 import net.sf.sshapi.forwarding.SshPortForwardTunnel;
@@ -127,7 +139,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 						@Override
 						public String getFingerprint() {
 							try {
-								return pk.getFingerprint();
+								return stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(getKey(), getMaverickFingerprintAlgo()));
 							} catch (SshException e) {
 								throw new RuntimeException(e);
 							}
@@ -683,7 +695,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {
-					forwarding.stopLocalForwarding(fLocalAddress + ":" + localPort, true);
+					forwarding.stopLocalForwarding(fLocalAddress + ":" + boundPort, true);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to stop local forward.", e);
 				} finally {
@@ -761,7 +773,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (termType != null) {
 				requestPty(client, termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			} 
+			}
 			return new MaverickSshShell(getProvider(), getConfiguration(), session);
 		} catch (net.sf.sshapi.SshException sshe) {
 			throw sshe;
@@ -913,7 +925,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			final com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (termType != null) {
 				requestPty(client, termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			} 
+			}
 			return new MaverickSshStreamChannel(getProvider(), getConfiguration(), session) {
 				@Override
 				public void onChannelOpen() throws net.sf.sshapi.SshException {
@@ -961,8 +973,22 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 	}
 
+	String getMaverickFingerprintAlgo() {
+		if(SshConfiguration.FINGERPRINT_SHA1.equals(getConfiguration().getFingerprintHashingAlgorithm()))
+			return SshKeyFingerprint.SHA1_FINGERPRINT;
+		else if(SshConfiguration.FINGERPRINT_SHA256.equals(getConfiguration().getFingerprintHashingAlgorithm()))
+			return SshKeyFingerprint.SHA256_FINGERPRINT;
+		else
+			return SshKeyFingerprint.MD5_FINGERPRINT;
+	}
+
 	SshClient getNativeClient() {
 		return client;
+	}
+	
+	static String stripAlgorithmFromFingerprint(String fingerprint) {
+		int idx = fingerprint.indexOf(':');
+		return idx == -1 ? fingerprint : fingerprint.substring(idx + 1);
 	}
 
 	private void configureSSH2() throws SshException {
@@ -1009,6 +1035,33 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 					return answer == null ? null : new String(answer);
 				}
 			};
+		} else if (authenticator instanceof SshX509PublicKeyAuthenticator) {
+			SshX509PublicKeyAuthenticator pk = (SshX509PublicKeyAuthenticator) authenticator;
+			try {
+				KeyStore keystore = KeyStore.getInstance("PKCS12");
+				char[] keystorePassphrase = pk.promptForKeyPassphrase(this, "Passphrase");
+				if (keystorePassphrase == null)
+					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_CANCELLED);
+				keystore.load(new ByteArrayInputStream(pk.getPrivateKey()), keystorePassphrase);
+				char[] keyPassphrase = pk.promptForKeyPassphrase(this, "Passphrase");
+				if (keyPassphrase == null)
+					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_CANCELLED);
+				RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(pk.getAlias(), keyPassphrase);
+				X509Certificate x509 = (X509Certificate) keystore.getCertificate(pk.getAlias());
+				SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
+				Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
+				PublicKeyAuthentication pka = new PublicKeyAuthentication();
+				pka.setUsername(client.getUsername());
+				pka.setPrivateKey(privkey);
+				pka.setPublicKey(pubkey);
+				return pka;
+			} catch (net.sf.sshapi.SshException sshe) {
+				throw sshe;
+			} catch (IOException ioe) {
+				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, ioe);
+			} catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException kse) {
+				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, kse);
+			}
 		} else if (authenticator instanceof SshPublicKeyAuthenticator) {
 			SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticator;
 			try {

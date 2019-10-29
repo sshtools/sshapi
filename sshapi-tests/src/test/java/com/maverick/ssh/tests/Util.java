@@ -139,11 +139,11 @@ public class Util {
 		// Create an "askpass" script. This supplies root password to sudo
 		// throws IOException, InterruptedException {
 		File resultFile = new File(outputFile.getParentFile(), outputFile.getName() + ".out");
-		String cTemplate = IOUtils.toString(Util.class.getResource("/askpass.c.template"))
+		String cTemplate = IOUtils.toString(Util.class.getResource("/askpass.c.template"), "UTF-8")
 				.replace("%PASSWORD%", new String(password)).replace("%OUTPUT_FILE%", resultFile.getAbsolutePath());
 		File parentFile = outputFile.getParentFile();
 		File askPassFileSource = new File(parentFile, outputFile.getName() + ".c");
-		FileUtils.writeStringToFile(askPassFileSource, cTemplate);
+		FileUtils.writeStringToFile(askPassFileSource, cTemplate, "UTF-8");
 		ProcessBuilder pb = new ProcessBuilder("gcc", "-o", outputFile.getAbsolutePath(), askPassFileSource.getName());
 		configureCommand(parentFile, pb);
 		runAndCheckReturn(pb);

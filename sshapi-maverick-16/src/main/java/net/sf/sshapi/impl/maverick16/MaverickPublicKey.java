@@ -2,6 +2,7 @@ package net.sf.sshapi.impl.maverick16;
 
 import java.io.IOException;
 
+import com.maverick.ssh.SshKeyFingerprint;
 import com.sshtools.publickey.SshPublicKeyFile;
 
 import net.sf.sshapi.SshException;
@@ -16,20 +17,25 @@ public class MaverickPublicKey implements SshPublicKey {
 	private byte[] key;
 	private com.maverick.ssh.components.SshPublicKey publicKey;
 
-	public MaverickPublicKey(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
-		init(publicKey);
+	public MaverickPublicKey(String hashingAlgorithm, com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
+		init(hashingAlgorithm, publicKey);
 	}
 
-	public MaverickPublicKey(SshPublicKey publicKey) throws SshException {
+	public MaverickPublicKey(String hashingAlgorithm, SshPublicKey publicKey) throws SshException {
 		key = publicKey.getEncodedKey();
+		try {
+			fingerPrint = MaverickSshClient.stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(publicKey.getEncodedKey(), hashingAlgorithm));
+		} catch (com.maverick.ssh.SshException e) {
+			throw new SshException(SshException.GENERAL, e);
+		}
 		fingerPrint = publicKey.getFingerprint();
 		algorithm = publicKey.getAlgorithm();
 		bitLength = publicKey.getBitLength();
 	}
 
-	public MaverickPublicKey(SshPublicKeyFile publicKeyFile) throws com.maverick.ssh.SshException,
+	public MaverickPublicKey(String hashingAlgorithm, SshPublicKeyFile publicKeyFile) throws com.maverick.ssh.SshException,
 			IOException {
-		init(publicKeyFile.toPublicKey());
+		init(hashingAlgorithm, publicKeyFile.toPublicKey());
 	}
 
 	@Override
@@ -56,11 +62,11 @@ public class MaverickPublicKey implements SshPublicKey {
 		return publicKey;
 	}
 
-	private void init(com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
+	private void init(String hashingAlgorithm, com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
 		this.publicKey = publicKey;
 		key = publicKey.getEncoded();
 		algorithm = Algorithm.fromAlgoName(publicKey.getAlgorithm());
-		fingerPrint = publicKey.getFingerprint();
+		fingerPrint = MaverickSshClient.stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(key, hashingAlgorithm));
 		bitLength = publicKey.getBitLength();
 	}
 }

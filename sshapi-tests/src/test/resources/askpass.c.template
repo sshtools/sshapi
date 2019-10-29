@@ -1,0 +1,17 @@
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+        printf("%PASSWORD%\n");
+        if(argc > 1) {
+                FILE *file = fopen("%OUTPUT_FILE%", "w");
+                if(file == 0) {
+                        fputs("Could not open arguments file for writing", stderr);
+                        return 1;
+                }
+                int i = 1;
+                for( ; i < argc; i++) {
+                        fprintf(file, "%s\n", argv[i]);
+                }
+                fclose(file);
+        }
+        return 0;
+}

@@ -36,7 +36,6 @@ import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import ssh.SshLibrary;
 
 public class LibsshSshProvider extends AbstractProvider {
-
 	static {
 		SshLibrary.INSTANCE.ssh_init();
 	}
@@ -46,18 +45,21 @@ public class LibsshSshProvider extends AbstractProvider {
 		String ver = SshLibrary.INSTANCE.ssh_version(0);
 		SshConfiguration.getLogger().log(Level.INFO, String.format("libssh version %s", ver));
 	}
-	
+
 	@Override
 	public String getVersion() {
 		return getVersion(getNumericVersion());
 	}
-	
+
 	long getNumericVersion() {
 		return getVersion(SshLibrary.INSTANCE.ssh_version(0));
 	}
-	
+
 	String getVersion(long number) {
-		return String.format("%d.%d.%d", number % 10000, ( number - ( number % 10000 ) ) % 100, number - (( number - ( number % 10000 ) ) % 100));
+		long major = number % 10000;
+		long minor = (number - major) % 100;
+		long build = number - minor;
+		return String.format("%d.%d.%d", major, minor, build);
 	}
 
 	long getVersion(String version) {
@@ -83,17 +85,21 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	@Override
 	public List<Capability> getCapabilities() {
-		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION,
-				Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.SSH1, Capability.SCP,
-				Capability.SFTP, Capability.FILE_TRANSFER_EVENTS, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
-				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SET_LAST_MODIFIED, 
-				Capability.LOCAL_PORT_FORWARD, Capability.RAW_SFTP });
+		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION,
+				Capability.SSH2, Capability.SSH1, Capability.SCP, Capability.SFTP, Capability.FILE_TRANSFER_EVENTS,
+				Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
+				Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SET_LAST_MODIFIED, Capability.RAW_SFTP,
+				Capability.SFTP_READ_LINK,
+				/*
+				 * Capability.LOCAL_PORT_FORWARD,
+				 * Capability.REMOTE_PORT_FORWARD,
+				 */ Capability.RECURSIVE_SCP_GET });
 	}
 
 	@Override
 	public List<String> getSupportedCiphers(int protocolVersion) {
-		return Arrays.asList(new String[] { "aes256-ctr", "aes192-ctr", "aes128-ctr", "aes256-cbc", "aes192-cbc",
-				"aes128-cbc", "3des-cbc", "blowfish-cbc", "none" });
+		return Arrays.asList(new String[] { "aes256-ctr", "aes192-ctr", "aes128-ctr", "aes256-cbc", "aes192-cbc", "aes128-cbc",
+				"3des-cbc", "blowfish-cbc", "none" });
 	}
 
 	@Override
@@ -119,8 +125,8 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	@Override
 	public List<String> getSupportedKeyExchange() {
-		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
-				"diffie-hellman-group1-sha1", "diffie-hellman-group14-sha1" });
+		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256", "diffie-hellman-group1-sha1",
+				"diffie-hellman-group14-sha1" });
 	}
 
 	@Override

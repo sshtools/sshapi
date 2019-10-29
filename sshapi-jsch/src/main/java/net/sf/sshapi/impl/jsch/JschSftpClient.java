@@ -98,8 +98,28 @@ class JschSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String getDefaultPath() throws SshException {
+	public String getDefaultPath() {
 		return home;
+	}
+
+	@Override
+	public SftpFile lstat(String path) throws SshException {
+		try {
+			SftpATTRS attrs = channel.lstat(path);
+			return new SftpFile(convertType(attrs), path, attrs.getSize(), attrs.getMTime() * 1000, 0, attrs.getATime() * 1000,
+					attrs.getGId(), attrs.getUId(), attrs.getPermissions());
+		} catch (SftpException e) {
+			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
+		}
+	}
+
+	@Override
+	public String readLink(String path) throws SshException {
+		try {
+			return channel.readlink(path);
+		} catch (SftpException e) {
+			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
