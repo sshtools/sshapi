@@ -293,17 +293,11 @@ class GanymedSshClient extends AbstractClient {
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
-			private int boundPort;
-
-			@Override
-			public int getBoundPort() {
-				return boundPort;
-			}
 
 			@Override
 			protected void onClose() throws SshException {
 				try {
-					connection.cancelRemotePortForwarding(boundPort);
+					connection.cancelRemotePortForwarding(remotePort);
 				} catch (IOException e) {
 					throw new SshException("Failed to stop remote port forward.", e);
 				}
@@ -312,10 +306,7 @@ class GanymedSshClient extends AbstractClient {
 			@Override
 			protected void onOpen() throws SshException {
 				try {
-					boundPort = remotePort;
-					if (boundPort == 0)
-						boundPort = Util.findRandomPort();
-					connection.requestRemotePortForwarding(remoteHost, boundPort, localAddress, localPort);
+					connection.requestRemotePortForwarding(remoteHost, remotePort, localAddress, localPort);
 				} catch (IOException e) {
 					throw new SshException("Failed to open remote port forward.", e);
 				}

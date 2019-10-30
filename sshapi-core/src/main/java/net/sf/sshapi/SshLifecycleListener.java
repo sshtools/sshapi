@@ -32,8 +32,8 @@ package net.sf.sshapi;
 public interface SshLifecycleListener<C extends SshLifecycleComponent<?, C>> {
 
 	/**
-	 * A channel has been opened. This is called once the client has confirmed, or
-	 * received a confirmation from the server that a channel has been opened.
+	 * A component has been opened. This is called once the component has confirmed, or
+	 * received a component from the server that a component has been opened.
 	 * 
 	 * @param channel
 	 *            the opened channel.
@@ -42,17 +42,17 @@ public interface SshLifecycleListener<C extends SshLifecycleComponent<?, C>> {
 	}
 
 	/**
-	 * A channel is closing. This is called before a channel is confirmed as being
+	 * A component is closing. This is called before a component is confirmed as being
 	 * closed.
 	 * 
 	 * @param channel
-	 *            the channel closing.
+	 *            the component closing.
 	 */
 	default void closing(C channel) {
 	}
 
 	/**
-	 * A channel is c;osed. This is called after a channel is confirmed as being
+	 * A component is closed. This is called after a channel is confirmed as being
 	 * closed.
 	 * 
 	 * @param channel

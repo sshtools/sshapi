@@ -368,6 +368,12 @@ class TrileadSshClient extends AbstractClient {
 		}
 		return new AbstractPortForward(getProvider()) {
 			private LocalPortForwarder localPortForwarder;
+			private int boundPort;
+
+			@Override
+			public int getBoundPort() {
+				return boundPort;
+			}
 
 			@Override
 			protected void onClose() throws SshException {
@@ -375,13 +381,18 @@ class TrileadSshClient extends AbstractClient {
 					localPortForwarder.close();
 				} catch (IOException e) {
 					throw new SshException("Failed to stop local port forward.", e);
+				} finally {
+					boundPort = 0;
 				}
 			}
 
 			@Override
 			protected void onOpen() throws SshException {
 				try {
-					localPortForwarder = connection.createLocalPortForwarder(localPort, remoteHost, remotePort);
+					boundPort = localPort;
+					if(boundPort == 0)
+						boundPort = Util.findRandomPort();
+					localPortForwarder = connection.createLocalPortForwarder(boundPort, remoteHost, remotePort);
 				} catch (IOException e) {
 					throw new SshException("Failed to open local port forward.", e);
 				}

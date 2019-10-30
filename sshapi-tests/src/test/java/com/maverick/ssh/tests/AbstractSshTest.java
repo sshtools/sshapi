@@ -21,7 +21,7 @@ public class AbstractSshTest {
 	static {
 		PropertyConfigurator.configure(AbstractSshTest.class.getResource("/log4j.properties"));
 		System.setProperty("sshapi.logLevel", "INFO");
-//		System.setProperty("sshapi.extendTimeouts", "true");
+		System.setProperty("sshapi.extendTimeouts", "true");
 	}
 	
 	protected static SshTestConfiguration config;

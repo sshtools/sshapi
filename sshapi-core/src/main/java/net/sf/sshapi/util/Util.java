@@ -382,6 +382,18 @@ public class Util {
 	}
 
 	/**
+	 * Get an absolute path from a relative path given a base. If the path provided is already
+	 * absolute (begins with '/'), it will be returned as is.
+	 * 
+	 * @param path path
+	 * @param base base
+	 * @return absolute path
+	 */
+	public static String getAbsolutePath(String path, String base) {
+		return path == null || path.startsWith("/") ? path : ( base.equals("/") ? base : base + "/" ) + path;
+	}
+
+	/**
 	 * 
 	 * Returns a formatted permissions string. The file type is one of
 	 * {@link SftpFile#TYPES}.

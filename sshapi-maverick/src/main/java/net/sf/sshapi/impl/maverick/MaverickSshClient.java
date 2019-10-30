@@ -801,19 +801,31 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			final int remotePort) throws net.sf.sshapi.SshException {
 		final String fLocalAddress = localAddress == null ? "0.0.0.0" : localAddress;
 		return new AbstractPortForward(getProvider()) {
+			private int boundPort;
+			
+			@Override
+			public int getBoundPort() {
+				return boundPort;
+			}
+
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {
 					forwarding.stopLocalForwarding(fLocalAddress + ":" + localPort, true);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to stop local forward.", e);
+				} finally {
+					boundPort = 0;
 				}
 			}
 
 			@Override
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
-					forwarding.startLocalForwarding(fLocalAddress, localPort, remoteHost, remotePort);
+					boundPort = localPort;
+					if(boundPort == 0)
+						boundPort = Util.findRandomPort();
+					forwarding.startLocalForwarding(fLocalAddress, boundPort, remoteHost, remotePort);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to start local forward.", e);
 				}

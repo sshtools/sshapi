@@ -85,11 +85,11 @@ public interface SshPortForward extends SshLifecycleComponent<SshPortForwardList
 	boolean isOpen();
 
 	/**
-	 * If the forward was started with a zero port (meaning next available port is chosen),
+	 * If a local port forward was started with a zero port (meaning next available port is chosen),
 	 * this will return the actual port bound. Note, not all providers will support this,
-	 * zero will be returned if they do not.
+	 * zero will be returned if they do not. Remote port forwards will always return zero 
 	 * 
-	 * @return bound port of zero if unsupported
+	 * @return bound port of zero if unsupported or a remote forward
 	 */
 	int getBoundPort();
 }

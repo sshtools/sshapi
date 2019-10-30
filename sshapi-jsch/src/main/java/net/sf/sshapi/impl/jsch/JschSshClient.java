@@ -730,6 +730,7 @@ class JschSshClient extends AbstractClient implements Logger {
 						boundPort = session.setPortForwardingL(localAddress, localPort, remoteHost, remotePort);
 					if (boundPort < 1 && localPort > 0)
 						boundPort = localPort;
+
 					channelCount++;
 				} catch (JSchException e) {
 					throw new SshException("Failed to configure local port forward");
@@ -742,6 +743,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
 			final int localPort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
+			
 			@Override
 			protected void onClose() throws SshException {
 				try {

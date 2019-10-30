@@ -54,6 +54,7 @@ public abstract class AbstractClient implements SshClient {
 	private String hostname;
 	private int port;
 	private List<SshPortForwardListener> portForwardlisteners = new ArrayList<>();
+	private List<SshClientListener> listeners = new ArrayList<>();
 	private SshProvider provider;
 	private String username;
 
@@ -64,6 +65,34 @@ public abstract class AbstractClient implements SshClient {
 	 */
 	public AbstractClient(SshConfiguration configuration) {
 		this.configuration = configuration;
+	}
+
+	@Override
+	public Set<SshLifecycleComponent<?, ?>> getAllActiveComponents() {
+		return Collections.unmodifiableSet(activeComponents);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz) {
+		synchronized (activeComponents) {
+			Set<T> ts = new LinkedHashSet<>(); 
+			for(SshLifecycleComponent<?, ?> en : activeComponents) {
+				if(en.getClass().isAssignableFrom(clazz))
+					ts.add((T)en);
+			}
+			return Collections.unmodifiableSet(ts);
+		}
+	}
+
+	@Override
+	public void addListener(SshClientListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(SshClientListener listener) {
+		listeners.remove(listener);		
 	}
 
 	@Override
@@ -189,9 +218,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshCommand channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -204,9 +235,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshPortForward channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -218,9 +251,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshPublicKeySubsystem channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -233,9 +268,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshPortForward channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -247,9 +284,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshSCPClient channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -261,9 +300,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SftpClient channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -281,9 +322,11 @@ public abstract class AbstractClient implements SshClient {
 			@Override
 			public void closed(SshShell channel) {
 				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
 			}
 		});
 		activeComponents.add(client);
+		fireComponentCreated(client);
 		return client;
 	}
 
@@ -479,6 +522,16 @@ public abstract class AbstractClient implements SshClient {
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException {
 		throw new UnsupportedOperationException("Shell is is not supported in this implementation.");
+	}
+
+	protected void fireComponentCreated(SshLifecycleComponent<?, ?> component) {
+		for (int i = listeners.size() - 1; i >= 0; i--)
+			listeners.get(i).created(component);
+	}
+
+	protected void fireComponentRemoved(SshLifecycleComponent<?, ?> component) {
+		for (int i = listeners.size() - 1; i >= 0; i--)
+			listeners.get(i).removed(component);
 	}
 
 	protected void firePortForwardChannelClosed(int type, SshPortForwardTunnel channel) {

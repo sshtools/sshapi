@@ -26,6 +26,7 @@ package net.sf.sshapi;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
@@ -41,6 +42,40 @@ import net.sf.sshapi.sftp.SftpClient;
  * the server, authentication, and access to the sub-systems
  */
 public interface SshClient extends Closeable, AutoCloseable {
+	
+	/**
+	 * Add a listener to the list of those notified when client specific events occur,
+	 * such as the creation of new components such as {@link SshShell}.
+	 * 
+	 * @param listener listener to add
+	 */
+	void addListener(SshClientListener listener);
+	
+	/**
+	 * Remove a listener from the list of those notified when client specific events occur,
+	 * such as the creation of new components such as {@link SshShell}.
+	 * 
+	 * @param listener listener to remove
+	 */
+	void removeListener(SshClientListener listener);
+
+	/**
+	 * Get all active components. These may be {@link SshShell} instances, 
+	 * {@link SshPortForward} etc. The collection returned cannot be manipulated.
+	 * 
+	 * @return active components
+	 */
+	Set<SshLifecycleComponent<?, ?>> getAllActiveComponents();
+	
+	/**
+	 * Get all active components of a particular type.  This may be {@link SshShell}, 
+	 * {@link SshPortForward} etc. The collection returned cannot be manipulated.
+	 * 
+	 * @param type of component
+	 * @return active components
+	 */
+	<T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz);
+	
 	/**
 	 * Get the configuration this client is using
 	 * 

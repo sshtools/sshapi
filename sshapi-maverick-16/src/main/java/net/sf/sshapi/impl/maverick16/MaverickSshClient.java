@@ -736,12 +736,6 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			final int localPort) throws net.sf.sshapi.SshException {
 		final String fRemoteHost = remoteHost == null ? "0.0.0.0" : remoteHost;
 		return new AbstractPortForward(getProvider()) {
-			private int boundPort;
-
-			@Override
-			public int getBoundPort() {
-				return boundPort;
-			}
 
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
@@ -749,15 +743,13 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 					forwarding.cancelRemoteForwarding(fRemoteHost, remotePort);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to stop remote forward.", e);
-				} finally {
-					boundPort = 0;
 				}
 			}
 
 			@Override
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
-					boundPort = forwarding.requestRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
+					forwarding.requestRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to start remote forward.", e);
 				}

@@ -390,9 +390,18 @@ class J2SshClient extends AbstractClient {
 	@Override
 	protected SshPortForward doCreateLocalForward(String localAddress, int localPort, String remoteHost, int remotePort)
 			throws net.sf.sshapi.SshException {
+		if(localPort == 0) {
+			localPort = Util.findRandomPort();
+		}
 		final ForwardingConfiguration fwd = new ForwardingConfiguration("FWD" + (fwdName++), localAddress, localPort, remoteHost,
 				remotePort);
 		return new AbstractPortForward(getProvider()) {
+			
+			@Override
+			public int getBoundPort() {
+				return fwd.getPortToBind();
+			}
+
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {

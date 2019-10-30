@@ -16,7 +16,6 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
-import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
@@ -33,7 +32,6 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 	private Selector selector;
 	private ServerSocketChannel ssc;
 	private boolean closed;
-	private int boundPort;
 
 	public LibsshRemoteForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
 			int remotePort) {
@@ -48,7 +46,7 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 
 	@Override
 	public int getBoundPort() {
-		return boundPort;
+		return 0;
 	}
 
 	@Override
@@ -59,11 +57,7 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 		}
 
 		try {
-			boundPort = localPort;
-			if(boundPort == 0) {
-				boundPort = Util.findRandomPort();
-			}
-			int ret = library.ssh_channel_open_reverse_forward(channel, remoteHost, remotePort, localAddress, boundPort);
+			int ret = library.ssh_channel_open_reverse_forward(channel, remoteHost, remotePort, localAddress, localPort);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new SshException(SshException.GENERAL, "Failed to open channel for local port forward to " + remoteHost + ":"
 					+ remotePort);
@@ -71,7 +65,7 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 			try {
 				ssc = ServerSocketChannel.open();
 				ssc.configureBlocking(false);
-				ssc.socket().bind(new InetSocketAddress(localAddress, boundPort));
+				ssc.socket().bind(new InetSocketAddress(localAddress, localPort));
 				selector = Selector.open();
 				ssc.register(selector, SelectionKey.OP_ACCEPT);
 				new Thread(this).start();
@@ -88,7 +82,6 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 	@Override
 	protected void onClose() throws SshException {
 		closed = true;
-		boundPort = 0;
 		library.channel_close(channel);
 		library.ssh_channel_free(channel);
 	}

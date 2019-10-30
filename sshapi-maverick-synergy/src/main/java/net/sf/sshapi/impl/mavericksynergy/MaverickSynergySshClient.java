@@ -709,28 +709,20 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		ConnectionProtocolClient client = (ConnectionProtocolClient) sshClient.getConnection().getConnectionProtocol();
 		final String fRemoteHost = remoteHost == null ? "0.0.0.0" : remoteHost;
 		return new AbstractPortForward(getProvider()) {
-			private int boundPort;
-
-			@Override
-			public int getBoundPort() {
-				return boundPort;
-			}
 
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {
-					client.stopRemoteForwarding(fRemoteHost, boundPort);
+					client.stopRemoteForwarding(fRemoteHost, remotePort);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to stop remote forward.", e);
-				} finally {
-					boundPort = 0;
 				}
 			}
 
 			@Override
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
-					boundPort = client.startRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
+					client.startRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to start remote forward.", e);
 				}

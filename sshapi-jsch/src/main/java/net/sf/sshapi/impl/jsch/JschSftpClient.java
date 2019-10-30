@@ -46,6 +46,7 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpOutputStream;
+import net.sf.sshapi.util.Util;
 
 class JschSftpClient extends AbstractSftpClient {
 	private final ChannelSftp channel;
@@ -116,7 +117,7 @@ class JschSftpClient extends AbstractSftpClient {
 	@Override
 	public String readLink(String path) throws SshException {
 		try {
-			return channel.readlink(path);
+			return Util.relativeTo(channel.readlink(path), getDefaultPath());
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
 		}
@@ -241,7 +242,8 @@ class JschSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			channel.symlink(path, target);
+			String abspath = Util.getAbsolutePath(path, getDefaultPath());
+			channel.symlink(Util.getAbsolutePath(target, Util.dirname(abspath)), abspath);
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
 		}
