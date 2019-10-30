@@ -34,6 +34,240 @@
 			</testResource>
 		</testResources>
 	</build>
+	
+	<!-- Each of the test combinations is a profile that should be manually
+	     activated.
+	     
+	     There are 9 providers, and 4 servers giving a total of 36 possible combinations
+	     of API. However, some Maverick server APIs will not work with some versions of
+	     Maverick client APIs in the same runtime.
+	     
+	     There are profiles for both the server and client. One of each should be activated.
+	     
+	     Possible [server-config-name]s are :-
+	     		server-openssh-local
+	     		server-openssh
+	     		server-maverick
+	     		server-synergy
+	     		
+	     Possible [sshapi-provider-name]s are :-
+	     		client-maverick-synergy
+	     		client-maverick-16
+	     		client-maverick
+	     		client-ganymed
+	     		client-j2ssh
+	     		client-jsch
+	     		client-libssh
+	     		client-openssh
+	     		client-trilead
+	     		 
+	     
+	-->
+	     
+	<profiles>
+		<!-- Local OpenSSH server -->
+		<profile>
+			<id>server-openssh-local</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+					    <artifactId>maven-surefire-plugin</artifactId>
+					    <version>3.0.0-M3</version>
+					    <configuration>
+					    	<systemPropertyVariables>
+					    		<sshapiTests.configurationResourceName>/sshapi-client-openssh-local-server.properties</sshapiTests.configurationResourceName>
+					    	</systemPropertyVariables>
+					    </configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Remote OpenSSH server -->
+		<profile>
+			<id>server-openssh</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+					    <artifactId>maven-surefire-plugin</artifactId>
+					    <version>3.0.0-M3</version>
+					    <configuration>
+					    	<systemPropertyVariables>
+					    		<sshapiTests.configurationResourceName>/sshapi-client-openssh-server.properties</sshapiTests.configurationResourceName>
+					    	</systemPropertyVariables>
+					    </configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Local Maverick Legacy server -->
+		<profile>
+			<id>server-maverick</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+					    <artifactId>maven-surefire-plugin</artifactId>
+					    <version>3.0.0-M3</version>
+					    <configuration>
+					    	<systemPropertyVariables>
+					    		<sshapiTests.configurationResourceName>/sshapi-client-maverick-server.properties</sshapiTests.configurationResourceName>
+					    	</systemPropertyVariables>
+					    </configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Local Maverick Synergy server -->
+		<profile>
+			<id>server-maverick-synergy</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+					    <artifactId>maven-surefire-plugin</artifactId>
+					    <version>3.0.0-M3</version>
+					    <configuration>
+					    	<systemPropertyVariables>
+					    		<sshapiTests.configurationResourceName>/sshapi-client-maverick-synergy-server.properties</sshapiTests.configurationResourceName>
+					    	</systemPropertyVariables>
+					    </configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Maverick Synergy Client -->
+		<profile>
+			<id>client-maverick-synergy</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Maverick 1.6+ Client -->
+		<profile>
+			<id>client-maverick-16</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-16</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Unsupported (< 1.6) Maverick Client -->
+		<profile>
+			<id>client-maverick</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Ganymed Client -->
+		<profile>
+			<id>client-ganymed</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-ganymed</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- J2SSH -->
+		<profile>
+			<id>client-j2ssh</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-j2ssh</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- JSch -->
+		<profile>
+			<id>client-jsch</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-jsch</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- LibSSH -->
+		<profile>
+			<id>client-libssh</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-libssh</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- OpenSSH -->
+		<profile>
+			<id>client-openssh</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-openssh</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Trilead -->
+		<profile>
+			<id>client-trilead</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-trilead</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+	
 	<dependencies>
 		<dependency>
 			<groupId>com.sshtools</groupId>
@@ -43,38 +277,6 @@
 			<scope>compile</scope>
 		</dependency>
 		
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type> 
-			<scope>compile</scope>
-		</dependency> 
-		
-		<!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type> 
-			<scope>compile</scope>
-		</dependency> --> 
-		 
-		 <!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> --> 
-		
-		<!--
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-jsch</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>-->
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-synergy-server</artifactId>

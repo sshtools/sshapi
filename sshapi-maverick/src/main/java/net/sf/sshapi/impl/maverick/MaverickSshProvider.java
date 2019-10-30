@@ -41,6 +41,7 @@ import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Provider implementation for Maverick SSH.
@@ -93,7 +94,12 @@ public class MaverickSshProvider extends AbstractProvider {
 	 * Constructor
 	 */
 	public MaverickSshProvider() {
-		super("Maverick");
+		super("Maverick", "JADAPTIVE");
+	}
+
+	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("com.sshtools", "j2ssh-maverick");
 	}
 
 	@Override

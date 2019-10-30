@@ -37,6 +37,7 @@ import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Provider implementation for Ganymed
@@ -52,8 +53,13 @@ public class GanymedSshProvider extends AbstractProvider {
 	 * Constructor.
 	 */
 	public GanymedSshProvider() {
-		super("Ganymed");
+		super("Ganymed", "http://www.ganymed.ethz.ch/ssh2");
 		rng = new SecureRandom();
+	}
+
+	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("ch.ethz.ganymed", "ganymed-ssh2");
 	}
 
 	protected SshClient doCreateClient(SshConfiguration configuration) {

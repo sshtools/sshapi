@@ -74,13 +74,6 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-nassh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>

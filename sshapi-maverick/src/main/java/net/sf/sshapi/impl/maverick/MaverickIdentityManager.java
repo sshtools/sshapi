@@ -25,13 +25,6 @@ package net.sf.sshapi.impl.maverick;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,14 +35,12 @@ import com.sshtools.publickey.SshKeyPairGenerator;
 import com.sshtools.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.publickey.SshPublicKeyFileFactory;
 import com.sshtools.ssh.components.SshKeyPair;
-import com.sshtools.ssh.components.jce.Ssh2RsaPrivateKey;
-import com.sshtools.ssh.components.jce.SshX509RsaSha1PublicKey;
 
 import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshIdentityManager;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
@@ -272,36 +263,6 @@ public class MaverickIdentityManager implements SshIdentityManager {
 			} catch (com.sshtools.ssh.SshException e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
-		}
-	}
-
-	@Override
-	public net.sf.sshapi.identity.SshKeyPair importX509(InputStream pkcs12Keystore, char[] keystorePassphrase, String key,
-			char[] keyPassphrase) throws SshException {
-		try {
-			KeyStore keystore = KeyStore.getInstance("PKCS12");
-			try {
-				keystore.load(pkcs12Keystore, keystorePassphrase);
-			} finally {
-				pkcs12Keystore.close();
-			}
-			RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(key, keyPassphrase);
-			X509Certificate x509 = (X509Certificate) keystore.getCertificate("mykey");
-			SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
-			Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
-			return new net.sf.sshapi.identity.SshKeyPair(new MaverickPublicKey(pubkey), new MaverickPrivateKey(privkey));
-		} catch (IOException ioe) {
-			throw new SshException("Failed to import X509 key.", ioe);
-		} catch (KeyStoreException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (CertificateException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (UnrecoverableKeyException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new SshException("Failed to import X509 key.", e);
-		} catch (com.sshtools.ssh.SshException e) {
-			throw new SshException("Failed to import X509 key.", e);
 		}
 	}
 

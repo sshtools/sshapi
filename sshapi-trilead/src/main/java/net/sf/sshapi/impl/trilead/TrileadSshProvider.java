@@ -38,6 +38,7 @@ import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Provider implementation for Trilead
@@ -53,8 +54,13 @@ public class TrileadSshProvider extends AbstractProvider {
 	 * Constructor.
 	 */
 	public TrileadSshProvider() {
-		super("Trilead");
+		super("Trilead", "https://github.com/jenkinsci/trilead-ssh2");
 		rng = new SecureRandom();
+	}
+
+	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("com.trilead", "trilead-ssh2");
 	}
 
 	protected SshClient doCreateClient(SshConfiguration configuration) {

@@ -52,6 +52,7 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Provider implementation for Maverick SSH.
@@ -153,8 +154,13 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	 * Constructor
 	 */
 	public MaverickSynergySshProvider() {
-		super("Maverick Synergy");
+		super("Maverick Synergy", "JADAPTIVE");
 		componentManager = ComponentManager.getDefaultInstance();
+	}
+
+	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("com.sshtools", "maverick-synergy-client");
 	}
 
 	public SshEngine getEngine() {

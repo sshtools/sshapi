@@ -32,6 +32,7 @@ import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.util.Util;
 
 import com.sshtools.j2ssh.SshException;
 import com.sshtools.j2ssh.configuration.ConfigurationLoader;
@@ -56,7 +57,12 @@ public class J2SshProvider extends AbstractProvider {
 	 * Constructor.
 	 */
 	public J2SshProvider() {
-		super("J2SSH");
+		super("J2SSH", "SSHTools");
+	}
+
+	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("sshtools", "j2ssh-core");
 	}
 
 	public SshClient doCreateClient(SshConfiguration configuration) {

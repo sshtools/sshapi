@@ -43,10 +43,15 @@ public abstract class AbstractClientMultipleConnecting extends AbstractSshTest {
 	@Before
 	public final void onSetUp() throws Exception {
 		Assume.assumeTrue(config.getName().startsWith("sshapi-client-"));
+		onClientSetup();
 		if (getUsername().equals("root")) {
 			administrator = true;
 		}
 		connect();
+	}
+	
+	protected void onClientSetup() {
+		
 	}
 
 	protected String getUsername() {

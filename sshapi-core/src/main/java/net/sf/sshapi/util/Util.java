@@ -41,7 +41,13 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
 
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.Ssh;
@@ -704,12 +710,46 @@ public class Util {
         return relativePath.toString();
 	}
 
-	public static void main(String[] args) {
-		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/home/testuser"));
-		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/home"));
-		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/"));
-		System.err.println(relativeTo("/home/testuser/testdirectory/testfile1", "/tmp"));
-		System.err.println(relativeTo("/tmp/testfile1", "/home/testuser"));
-		System.err.println(relativeTo("testdirectory/testfile1", "/home/testuser"));
+	public static String getArtifactVersion(String groupId, String artifactId) {
+		String version = "0.0.0";
+	    // try to load from maven properties first
+	    try {
+	        Properties p = new Properties();
+	        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/maven/com.hypersocket/" + artifactId + "/pom.properties");
+	        if(is == null) {
+		        is = Util.class.getResourceAsStream("/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties");
+	        }
+	        if (is != null) {
+	            p.load(is);
+	            version = p.getProperty("version", "");
+	        }
+	    } catch (Exception e) {
+	        // ignore
+	    }
+
+	    // fallback to using Java API
+	    if (version == null) {
+	        Package aPackage = Util.class.getPackage();
+	        if (aPackage != null) {
+	            version = aPackage.getImplementationVersion();
+	            if (version == null) {
+	                version = aPackage.getSpecificationVersion();
+	            }
+	        }
+	    }
+
+	    if (version == null) {
+	    	try {
+	    		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+	            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+	            Document doc = docBuilder.parse (new File("pom.xml"));
+	            version = doc.getDocumentElement().getElementsByTagName("version").item(0).getTextContent();
+	    	} catch (Exception e) {
+				version = "0.0.0";
+			} 
+	        
+	    }
+
+	    return version;
 	}
 }

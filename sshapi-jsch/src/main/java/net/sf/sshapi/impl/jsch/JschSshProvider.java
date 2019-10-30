@@ -65,6 +65,11 @@ public class JschSshProvider extends AbstractProvider {
 	}
 
 	@Override
+	public String getVersion() {
+		return Util.getArtifactVersion("com.jcraft", "jsch");
+	}
+
+	@Override
 	public SshClient doCreateClient(SshConfiguration configuration) {
 		// Much of JSch configuration is global :(
 		configureAlgorithms(configuration);

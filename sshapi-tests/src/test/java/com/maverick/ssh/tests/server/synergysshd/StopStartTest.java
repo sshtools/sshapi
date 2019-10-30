@@ -2,6 +2,7 @@ package com.maverick.ssh.tests.server.synergysshd;
 
 import java.io.IOException;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.maverick.ssh.tests.client.AbstractClientMultipleConnected;
@@ -10,6 +11,11 @@ import net.sf.sshapi.SshClient;
 import net.sf.sshapi.sftp.SftpClient;
 
 public class StopStartTest extends AbstractClientMultipleConnected {
+
+	@Override
+	protected void onClientSetup() {
+		Assume.assumeTrue("Server must be Maverick Synergy", config.getName().endsWith("-synergy-server"));
+	}
 
 	@Test
 	public void stopStartTest() throws Exception {
