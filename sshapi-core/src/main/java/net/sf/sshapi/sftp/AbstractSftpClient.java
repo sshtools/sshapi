@@ -247,6 +247,7 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	public final void get(String path, OutputStream out, long filePointer) throws SshException {
 		if (isUseRawSFTP(filePointer)) {
 			ByteBuffer buf = ByteBuffer.allocate(configuration.getStreamBufferSize());
+			out = new SftpOutputStream(out, this, path, out.toString());
 			try (SftpHandle h = file(path, OpenMode.SFTP_READ)) {
 				int r;
 				h.position(filePointer);

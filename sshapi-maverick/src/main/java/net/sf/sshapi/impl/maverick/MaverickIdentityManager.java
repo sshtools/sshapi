@@ -61,6 +61,14 @@ public class MaverickIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
+	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in, char[] passphrase) throws SshException {
+		SshPrivateKeyFile kf = createPrivateKeyFromStream(in);
+		if(kf.isEncrypted())
+			kf.decrypt(passphrase);
+		return kf;
+	}
+
+	@Override
 	public SshPublicKeyFile createPublicKeyFromStream(InputStream in) throws SshException {
 		try {
 			return new MaverickPublicKeyFile(SshPublicKeyFileFactory.parse(in));

@@ -1,4 +1,4 @@
-package com.maverick.ssh.tests.server.mavericksshd;
+package com.maverick.ssh.tests.client.tests;
 
 import java.io.IOException;
 
@@ -14,9 +14,9 @@ public class StopStartTest extends AbstractClientMultipleConnected {
 
 	@Override
 	protected void onClientSetup() {
-		Assume.assumeTrue("Server must be Maverick SSHD", config.getName().endsWith("-maverick-server"));
+		Assume.assumeTrue("Server must be Maverick Synergy", config.getName().endsWith("-synergy-server"));
 	}
-	
+
 	@Test
 	public void stopStartTest() throws Exception {
 		

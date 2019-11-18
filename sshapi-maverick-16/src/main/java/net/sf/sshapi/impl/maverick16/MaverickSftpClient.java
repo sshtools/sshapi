@@ -475,6 +475,28 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
+	public void resumeGet(String path, File destination) throws SshException {
+		try {
+			sftpClient.get(path, destination.getAbsolutePath(), createProgress(destination.getAbsolutePath(), 0), true);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to resume get.", e);
+		}
+	}
+
+	@Override
+	public void resumePut(File source, String path) throws SshException {
+		try {
+			sftpClient.put(source.getAbsolutePath(), path, createProgress(source.getAbsolutePath(), 0), true);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to resume put.", e);
+		}
+	}
+
+	@Override
 	protected InputStream doGet(String path, long filePointer) throws SshException {
 		try {
 			InputStream in = sftpClient.getInputStream(path, filePointer);

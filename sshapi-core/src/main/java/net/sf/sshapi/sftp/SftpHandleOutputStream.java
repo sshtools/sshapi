@@ -18,7 +18,7 @@ public class SftpHandleOutputStream extends OutputStream {
 
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
-		buf.rewind();
+		buf.clear();
 		buf.put(b, off, len);
 		buf.flip();
 		h.write(buf);

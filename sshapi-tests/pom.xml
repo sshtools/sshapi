@@ -17,23 +17,23 @@
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
-		<outputDirectory>target/classes</outputDirectory>
 		<testOutputDirectory>target/test-classes</testOutputDirectory>
-		<resources>
-			<resource>
-				<targetPath>.</targetPath>
-				<directory>src/main/resources</directory>
-			</resource>
-		</resources>
 		<testResources>
 			<testResource>
 				<targetPath>.</targetPath>
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M3</version>
+			</plugin>
+		</plugins>
 	</build>
+
 	
 	<!-- Each of the test combinations is a profile that should be manually
 	     activated.
@@ -82,6 +82,15 @@
 					</plugin>
 				</plugins>
 			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-openssh</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		
 		<!-- Remote OpenSSH server -->
@@ -101,6 +110,15 @@
 					</plugin>
 				</plugins>
 			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-openssh</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		
 		<!-- Local Maverick Legacy server -->
@@ -120,6 +138,15 @@
 					</plugin>
 				</plugins>
 			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-maverick-sshd</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		
 		<!-- Local Maverick Synergy server -->
@@ -139,6 +166,15 @@
 					</plugin>
 				</plugins>
 			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-maverick-synergy</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 		
 		<!-- Maverick Synergy Client -->
@@ -267,7 +303,6 @@
 			</dependencies>
 		</profile>
 	</profiles>
-	
 	<dependencies>
 		<dependency>
 			<groupId>com.sshtools</groupId>
@@ -276,21 +311,12 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-synergy-server</artifactId>
-			<version>${maverickSynergyVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-virtual-filesystem</artifactId>
-			<version>${maverickSynergyVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-virtual-session</artifactId>
-			<version>${maverickSynergyVersion}</version>
+			<artifactId>sshapi-tests-core</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -307,7 +333,6 @@
 			<artifactId>commons-compress</artifactId>
 			<version>1.19</version>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -315,22 +340,10 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshd</artifactId>
-			<version>1.6.6</version>
-		</dependency>
-		<dependency>
 			<groupId>org.jboss.netty</groupId>
 			<artifactId>netty</artifactId>
 			<version>3.2.10.Final</version>
 		</dependency>
-
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>public-releases</id>
-			<url>http://artifactory.javassh.com/public-releases/</url>
-		</repository>
-	</repositories>
 
 </project>

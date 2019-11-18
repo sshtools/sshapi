@@ -1,3 +1,4 @@
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -40,7 +41,7 @@ public class E18IdentityManagement {
 			+ ", size may be one of " + mgr.getSupportedKeyLengths() + ", format may be one of "
 			+ mgr.getSupportedPublicKeyFileFormats());
 		System.out
-			.println("write <public-format> <private-format> <passphrase> <comment> - write out key. public format may be one of "
+			.println("write <public-format> <private-format> <comment> - write out key. public format may be one of "
 				+ mgr.getSupportedPublicKeyFileFormats() + ", private format may be one of "
 				+ mgr.getSupportedPrivateKeyFileFormats());
 		System.out.println("exit - quit this utility");
@@ -52,13 +53,24 @@ public class E18IdentityManagement {
 				keyPair = generate(mgr, cmd);
 			} else if (cmd.startsWith("write")) {
 				write(mgr, cmd, keyPair);
-			} else if (cmd.equals("get")) {
+			} else if (cmd.equals("load")) {
 				break;
 			} else if (cmd.equals("exit")) {
 				break;
 			} else {
 				System.out.println("Invalid command");
 			}
+		}
+	}
+
+	protected static void load(SshIdentityManager mgr, String cmd, SshKeyPair keyPair) throws SshException, IOException {
+		StringTokenizer t = new StringTokenizer(cmd);
+		t.nextToken();
+		String file = t.nextToken();
+		String passphrase = t.hasMoreTokens() ? t.nextToken() : null;
+		try(FileInputStream in = new FileInputStream(file)) {
+			SshPrivateKeyFile kf = passphrase == null ? mgr.createPrivateKeyFromStream(in) : mgr.createPrivateKeyFromStream(in, passphrase.toCharArray());
+			keyPair = kf.toKeyPair();
 		}
 	}
 

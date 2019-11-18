@@ -35,9 +35,9 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.net.SocketFactory;
 
@@ -342,7 +342,7 @@ class GanymedSshClient extends AbstractClient {
 			ChannelManager cm = (ChannelManager) cmF.get(connection);
 			Field cF = cm.getClass().getDeclaredField("channels");
 			cF.setAccessible(true);
-			Vector<?> channels = (Vector<?>) cF.get(cm);
+			Collection<?> channels = (Collection<?>) cF.get(cm);
 			return channels == null ? 0 : channels.size();
 		} catch (Exception e) {
 			throw new UnsupportedOperationException("Could not determine number of channels open.", e);

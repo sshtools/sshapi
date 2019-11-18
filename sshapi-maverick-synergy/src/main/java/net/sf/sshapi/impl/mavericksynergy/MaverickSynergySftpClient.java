@@ -325,8 +325,36 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new SshException("Failed to create directory.", e);
 		}
+	}
+
+	@Override
+	public void resumeGet(String path, File destination) throws SshException {
+		try {
+			sftpClient.get(path, destination.getAbsolutePath(), createProgress(destination.getAbsolutePath()), true);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to resume get.", e);
+		}
+	}
+
+	@Override
+	public void resumePut(File source, String path) throws SshException {
+		try {
+			sftpClient.put(source.getAbsolutePath(), path, createProgress(source.getAbsolutePath()), true);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to resume put.", e);
+		}
+	}
+
+	@Override
+	protected boolean isUseRawSFTP(long offset) {
+		return false;
 	}
 
 	@Override

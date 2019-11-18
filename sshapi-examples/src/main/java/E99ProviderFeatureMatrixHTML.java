@@ -48,7 +48,8 @@ public class E99ProviderFeatureMatrixHTML {
 		String[] mac = DefaultProviderFactory.getAllMAC();
 		String[] comp = DefaultProviderFactory.getAllCompression();
 		String[] pk = DefaultProviderFactory.getAllPublicKey();
-		String[][] strArrs = new String[][] { ciphers, key, mac, comp, pk };
+		String[] fp = DefaultProviderFactory.getAllFingerprintHashingAlgorithms();
+		String[][] strArrs = new String[][] { ciphers, key, mac, comp, pk, fp };
 
 		StringBuilder bui = new StringBuilder();
 		bui.append("<html>\n");
@@ -68,7 +69,7 @@ public class E99ProviderFeatureMatrixHTML {
 			if (i == 0) {
 				titles[i] = "Capability";
 			} else {
-				titles[i] = providers[i - 1].getName();
+				titles[i] = providers[i - 1].getName() + "<br/>" + providers[i - 1].getVersion() + "<br/>" + providers[i - 1].getVendor();
 			}
 			bui.append("        <td>");
 			bui.append(titles[i]);
@@ -174,6 +175,22 @@ public class E99ProviderFeatureMatrixHTML {
 			for (int k = 0; k < providers.length; k++) {
 				bui.append("        <td>");
 				if (providers[k].getSupportedPublicKey().contains(strArrs[4][i])) {
+					bui.append("X");
+				}
+				bui.append("</td>\n");
+			}
+		}
+
+		// Fingerprint algorithms
+		writeSection(providers, bui, "Fingerprint Algos.");
+		for (int i = 0; i < strArrs[5].length; i++) {
+			bui.append("      <tr>\n");
+			bui.append("        <td>");
+			bui.append(strArrs[5][i]);
+			bui.append("</td>\n");
+			for (int k = 0; k < providers.length; k++) {
+				bui.append("        <td>");
+				if (providers[k].getFingerprintHashingAlgorithms().contains(strArrs[5][i])) {
 					bui.append("X");
 				}
 				bui.append("</td>\n");

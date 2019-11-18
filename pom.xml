@@ -278,10 +278,10 @@
 							<report>index</report>
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
-							<report>project-team</report>
+							<!-- <report>project-team</report> -->
 							<!-- <report>project-summary</report> -->
-							<report>issue-tracking</report>
-							<report>license</report>
+							<!-- <report>issue-tracking</report> -->
+							<!-- <report>license</report> -->
 							<report>scm</report>
 						</reports>
 					</reportSet>
@@ -297,11 +297,11 @@
 				<artifactId>maven-clover-plugin</artifactId>
 				<version>2.4</version>
 			</plugin>
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
 				<version>2.7</version>
-			</plugin>
+			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
@@ -309,8 +309,8 @@
 				<configuration>
 					<targetJdk>${reportTargetRelease}</targetJdk>
 					<rulesets>
-						<ruleset>/rulesets/basic.xml</ruleset>
-						<ruleset>/rulesets/controversial.xml</ruleset>
+						<ruleset>/rulesets/java/basic.xml</ruleset>
+						<ruleset>/rulesets/java/controversial.xml</ruleset>
 					</rulesets>
 					<format>xml</format>
 					<linkXref>true</linkXref>
@@ -347,6 +347,10 @@
 		<module>sshapi-cli</module>
 		<module>sshapi-site</module>
 		<module>wagon-sshapi</module>
+		<module>sshapi-tests-core</module>
+		<module>sshapi-tests-server-maverick-synergy</module>
+		<module>sshapi-tests-server-maverick-sshd</module>
+		<module>sshapi-tests-server-openssh</module>
 		<module>sshapi-tests</module>
 		<!-- <module>../sshapi-assembly</module> <module>../sshapi-site</module> -->
 	</modules>

@@ -39,15 +39,11 @@ public class X509AuthenticationIntegrationTest extends AbstractClientConnecting 
 	public void testX509Valid() throws Exception {
 		assertServerCapabilities(ServerCapability.X509);
 		Assume.assumeTrue("Must support X509", ssh.getProvider().getCapabilities().contains(Capability.X509_PUBLIC_KEY));
-		SshX509PublicKeyAuthenticator pk = createKey("x509-valid", PASSPHRASE);
+		SshX509PublicKeyAuthenticator pk = new DefaultX509PublicKeyAuthenticator("mykey", new SimplePasswordAuthenticator(X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray()),
+				getClass().getResourceAsStream("/x509-valid/keystore"));
 		boolean result = ssh.authenticate(pk);
 		assertTrue("Authentication must be complete.", result);
 		assertTrue("Must be connected", ssh.isConnected());
 	}
 
-	private SshX509PublicKeyAuthenticator createKey(String key, String passphrase) throws Exception {
-		char[] pwd = X509AuthenticationIntegrationTest.PASSPHRASE.toCharArray();
-		return new DefaultX509PublicKeyAuthenticator("mykey", new SimplePasswordAuthenticator(pwd),
-				getClass().getResourceAsStream("/" + key + "/keystore"));
-	}
 }

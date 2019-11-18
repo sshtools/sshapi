@@ -34,7 +34,7 @@ public class HostKeyVerificationIntegrationTest extends AbstractSshTest {
 			String actual = hostKey.getFingerprint();
 			for (String fp : fingerprints) {
 				System.out.println("Comparing " + fp + " against " + actual);
-				System.out.println(" for " + Util.formatAsHexString(hostKey.getKey(), ":"));
+				System.out.println(" for " + hostKey.getKey().length + " bytes: " + Util.formatAsHexString(hostKey.getKey(), ":"));
 				if (actual.equals(fp))
 					return STATUS_HOST_KEY_VALID;
 			}

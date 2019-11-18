@@ -662,7 +662,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		synchronized (sshClient) {
-			return new MaverickSynergySshCommand(getProvider(), getConfiguration(), sshClient.getConnection(), termType, command, cols, rows, pixWidth, pixHeight,
+			return new MaverickSynergySshCommand(getProvider(), getConfiguration(), sshClient.getConnection(), command, termType, cols, rows, pixWidth, pixHeight,
 					terminalModes);
 		}
 	}

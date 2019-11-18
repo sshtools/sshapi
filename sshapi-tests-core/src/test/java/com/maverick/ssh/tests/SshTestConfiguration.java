@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
 
@@ -101,7 +102,30 @@ public class SshTestConfiguration {
 					properties.putAll(defaultProperties);
 				}
 				Properties cfgProperties = new Properties();
-				String configuration = System.getProperty("sshapiTests.configurationResourceName", DEFAULT_CONFIGURATION_NAME);
+				String configuration = System.getProperty("sshapiTests.configurationResourceName", null);
+				if(configuration == null || configuration.length() == 0) {
+					try {
+						Class.forName("com.maverick.ssh.tests.server.mavericksshd.MaverickSSHServerServiceImpl");
+						SshConfiguration.getLogger().log(Level.INFO, "Auto-detected Legacy Maverick SSHD server");
+					}
+					catch(Exception e) {
+						try {
+							Class.forName("com.maverick.ssh.tests.server.synergysshd.SynergySSHServerServiceImpl");
+							SshConfiguration.getLogger().log(Level.INFO, "Auto-detected Synergy SSHD server");
+						}
+						catch(Exception e2) {
+							try {
+								Class.forName("com.maverick.ssh.tests.server.openssh.LocalOpenSSHServerServiceImpl");
+								SshConfiguration.getLogger().log(Level.INFO, "Auto-detected OpenSSH server");
+							}
+							catch(Exception e3) {
+								SshConfiguration.getLogger().log(Level.WARN, String.format("Using default server configuration %s", DEFAULT_CONFIGURATION_NAME));
+								configuration = DEFAULT_CONFIGURATION_NAME;
+							}
+							configuration = DEFAULT_CONFIGURATION_NAME;
+						}
+					}
+				}
 				resource = SshTestConfiguration.class.getResource(configuration);
 				if (resource == null) {
 					throw new FileNotFoundException("Could not find the chosen test configuration file " + configuration);
@@ -130,7 +154,7 @@ public class SshTestConfiguration {
 						in.close();
 					}
 				} else {
-					System.err.println("WARNING: no user.properties file found");
+					SshConfiguration.getLogger().log(Level.WARN, "No user.properties file found");
 				}
 				instance = new SshTestConfiguration(name, properties);
 			} catch (IOException ioe) {

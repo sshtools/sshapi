@@ -680,6 +680,7 @@ class JschSshClient extends AbstractClient implements Logger {
 			if (termType != null) {
 				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
+				channel.setPty(true);
 			}
 			channel.setCommand(command); 
 			return new JschStreamChannel(getProvider(), getConfiguration(), channel) {
@@ -769,14 +770,39 @@ class JschSshClient extends AbstractClient implements Logger {
 
 	@Override
 	protected SshSCPClient doCreateSCP() throws SshException {
-		return new JschSCPClient(this);
+		return new JschSCPClient(this) {
+
+			@Override
+			protected void onClose() throws SshException {
+				super.onClose();
+				channelCount--;
+			}
+
+			@Override
+			protected void onOpen() throws SshException {
+				super.onOpen();
+				channelCount++;
+			}
+		};
 	}
 
 	@Override
 	protected SftpClient doCreateSftp() throws SshException {
 		try {
 			ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-			return new JschSftpClient(getProvider(), channel, getConfiguration());
+			return new JschSftpClient(getProvider(), channel, getConfiguration()) {
+				@Override
+				public void onClose() throws SshException {
+					super.onClose();
+					channelCount--;
+				}
+
+				@Override
+				public void onOpen() throws SshException {
+					super.onOpen();
+					channelCount++;
+				}
+			};
 		} catch (JSchException e) {
 			throw new SshException("Failed to open SFTP channel.", e);
 		}
@@ -790,7 +816,10 @@ class JschSshClient extends AbstractClient implements Logger {
 			if (termType != null) {
 				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
+				channel.setPty(true);
 			}
+			else
+				channel.setPty(false);
 			return new JschSshShell(getProvider(), getConfiguration(), channel) {
 				@Override
 				protected void onChannelClose() throws SshException {

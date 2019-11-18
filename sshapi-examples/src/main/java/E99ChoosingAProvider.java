@@ -26,7 +26,8 @@ public class E99ChoosingAProvider {
 		SshProvider[] providers = DefaultProviderFactory.getAllProviders();
 		System.out.println("Providers :-");
 		for (int i = 0; i < providers.length; i++) {
-			System.out.println("  " + (i + 1) + ": " + providers[i].getClass().getName());
+			System.out.println(String.format("  %2d : %-20s (%s %s)", i + 1, providers[i].getName(),
+					providers[i].getVersion(), providers[i].getVendor()));
 		}
 		SshProvider provider = providers[Integer.parseInt(Util.prompt("\nEnter the number for the provider you wish to use (1-"
 			+ providers.length + ")")) - 1];

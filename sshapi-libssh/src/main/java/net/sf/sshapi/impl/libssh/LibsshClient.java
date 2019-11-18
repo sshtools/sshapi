@@ -32,6 +32,7 @@ import javax.net.SocketFactory;
 
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.sun.jna.Memory;
+import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
@@ -201,19 +202,30 @@ public class LibsshClient extends AbstractClient {
 			connected = true;
 			SshHostKeyValidator hostKeyValidator = configuration.getHostKeyValidator();
 			if (hostKeyValidator != null) {
-				PointerByReference ref = new PointerByReference(new Memory(16));
+				// Type
+				// TODO - looks like it is always RSA - can't find way to get at
+				// key bytes
+				// final String keyType = Util.guessKeyType(hash);
+				final String keyType = SshConfiguration.PUBLIC_KEY_SSHRSA;
+				ssh_key key = new ssh_key();
+				PointerByReference pbr = new PointerByReference(key.getPointer());
+				rc = library.ssh_get_server_publickey(libSshSession, pbr);
+				if (rc != SshLibrary.SSH_OK) {
+					throw new SshException(SshException.GENERAL,
+							"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " retrieving public key");
+				}
+				// The key
+				final byte[] keybytes = pbr.getValue().getByteArray(0, 128);
+				
+
+				PointerByReference ref = new PointerByReference(new Memory(32));
 				// Fingerprint
 				int bytes = library.ssh_get_pubkey_hash(libSshSession, ref);
 				Pointer mem = ref.getValue();
 				final byte[] hash = mem.getByteArray(0, bytes);
 				Pointer f = library.ssh_get_hexa(hash, new NativeSize(bytes));
 				final String fingerPrint = f.getString(0);
-				// Type
-				// TODO - looks like it is always RSA - can't find way to get at
-				// key bytes
-				// final String keyType = Util.guessKeyType(hash);
-				final String keyType = SshConfiguration.PUBLIC_KEY_SSHRSA;
-				// The key
+				
 				SshHostKey hostKey = new SshHostKey() {
 					@Override
 					public String getComments() {
@@ -232,7 +244,7 @@ public class LibsshClient extends AbstractClient {
 
 					@Override
 					public byte[] getKey() {
-						return null;
+						return keybytes;
 					}
 
 					@Override

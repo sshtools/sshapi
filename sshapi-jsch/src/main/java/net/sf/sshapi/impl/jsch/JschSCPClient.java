@@ -16,7 +16,7 @@ import net.sf.sshapi.SshStreamChannel;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
 
-final class JschSCPClient extends AbstractSCPClient {
+class JschSCPClient extends AbstractSCPClient {
 	private final JschSshClient sshClient;
 
 	/**

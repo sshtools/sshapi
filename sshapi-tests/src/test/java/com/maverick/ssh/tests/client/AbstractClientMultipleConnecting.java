@@ -15,6 +15,7 @@ import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import net.sf.sshapi.util.DumbHostKeyValidator;
@@ -76,12 +77,14 @@ public abstract class AbstractClientMultipleConnecting extends AbstractSshTest {
 	}
 
 	protected void disconnect() throws SshException, IOException {
-		System.out.println("Disconnecting all clients");
+		SshConfiguration.getLogger().log(Level.INFO, "Disconnecting all client");
 		if (clients != null) {
 			for (SshClient ssh : clients) {
-				System.out.println("Disconnecting from " + config.getServer() + ":" + config.getPort());
-				ssh.close();
-				System.out.println("Disconnected from " + config.getServer() + ":" + config.getPort());
+				if(ssh.isConnected()) {
+					SshConfiguration.getLogger().log(Level.INFO, String.format("Disconnecting from %s:%d.", config.getServer(), config.getPort()));
+					ssh.close();
+					SshConfiguration.getLogger().log(Level.INFO, String.format("Disconnected from %s:%d.", config.getServer(), config.getPort()));
+				}
 			}
 			clients.clear();
 		}
@@ -95,14 +98,14 @@ public abstract class AbstractClientMultipleConnecting extends AbstractSshTest {
 	}
 
 	protected void connect() throws Exception {
-		System.out.println("Connecting " + getConnectionCount() + " clients");
+		SshConfiguration.getLogger().log(Level.INFO, String.format("Connecting %d clients.", getConnectionCount()));
 		SshConfiguration con = new SshConfiguration();
 		con.setHostKeyValidator(new DumbHostKeyValidator());
 		if (clients == null) {
 			clients = new ArrayList<SshClient>();
 		}
 		for (int i = 0; i < getConnectionCount(); i++) {
-			System.out.println("Connecting " + i + " to " + config.getServer() + ":" + config.getPort());
+			SshConfiguration.getLogger().log(Level.INFO, String.format("Connecting %d to %s:%d.", i, config.getServer(), config.getPort()));
 			clients.add(con.open(getUsername(), config.getServer(), config.getPort()));
 		}
 		onConnectingSetUp();

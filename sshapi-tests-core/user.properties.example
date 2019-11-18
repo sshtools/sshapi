@@ -1,0 +1,6 @@
+# One or two properties are user specific. Copy this file 
+# to user.properties (also make your source control ignore this 
+# new file)
+
+# Password used to get root privileges when installing and running server
+sudoPassword=qwerty123?

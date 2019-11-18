@@ -28,6 +28,7 @@ public class E99ProviderFeatureMatrix {
 		String[] mac = DefaultProviderFactory.getAllMAC();
 		String[] comp = DefaultProviderFactory.getAllCompression();
 		String[] pk = DefaultProviderFactory.getAllPublicKey();
+		String[] fp = DefaultProviderFactory.getAllFingerprintHashingAlgorithms();
 
 		// Calculate max width of cell
 		int width = 0;
@@ -189,6 +190,29 @@ public class E99ProviderFeatureMatrix {
 				try {
 					if (providers[k].getSupportedPublicKey().contains(
 							strArrs[4][i])) {
+						l.add("X");
+					} else {
+						l.add(" ");
+					}
+				} catch (Exception e) {
+					l.add("ERR");
+				}
+			}
+			print(false, (String[]) l.toArray(new String[0]), width,
+					sep.toString());
+		}
+
+		// Fingerprint Algorithms
+		System.out.println("\nFingerprint Algos.\n");
+		System.out.println(sep);
+		print(true, titles, width, sep.toString());
+		for (int i = 0; i < strArrs[5].length; i++) {
+			List<String> l = new ArrayList<>();
+			l.add(strArrs[5][i]);
+			for (int k = 0; k < providers.length; k++) {
+				try {
+					if (providers[k].getFingerprintHashingAlgorithms().contains(
+							strArrs[5][i])) {
 						l.add("X");
 					} else {
 						l.add(" ");

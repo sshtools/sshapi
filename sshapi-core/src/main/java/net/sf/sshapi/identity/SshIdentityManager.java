@@ -64,13 +64,34 @@ public interface SshIdentityManager {
 	 * implementation will detect the format and construct the key object
 	 * appropriately. The returned object is a {@link SshPrivateKeyFile} so may
 	 * then be persisted elsewhere if you wish, or you can just obtain the
-	 * {@link SshPrivateKeyFile}.
+	 * {@link SshPrivateKeyFile}. If the stream is a PKCS12 keystore, then it must
+	 * not be encrypted with a passphrase, and if the keys themselves are encrypted, the {@link SshPrivateKeyFile}
+	 * returned will still be encrypted (see {@link SshPrivateKeyFile#isEncrypted()} and {@link SshPrivateKeyFile#decrypt(char[])}.
 	 * 
 	 * @param in stream to read key from
 	 * @return private key file
 	 * @throws SshException if the raw data cannot be parsed into a private key
+	 * @see #createPrivateKeyFromStream(InputStream, char[])
 	 */
 	SshPrivateKeyFile createPrivateKeyFromStream(InputStream in) throws SshException;
+
+	/**
+	 * Parse a stream that provides a private key in some supported format. The
+	 * implementation will detect the format and construct the key object
+	 * appropriately. The returned object is a {@link SshPrivateKeyFile} so may
+	 * then be persisted elsewhere if you wish, or you can just obtain the
+	 * {@link SshPrivateKeyFile}. If the stream is a keystore, then the passphrase will
+	 * be that for the keystore, and if the keys themselves are encrypted, the {@link SshPrivateKeyFile}
+	 * returned will still be encrypted (see {@link SshPrivateKeyFile#isEncrypted()} and {@link SshPrivateKeyFile#decrypt(char[])}.
+	 * If passphrase is provided for a standard private key, then it will be used to decrypt that key. 
+	 * 
+	 * @param in stream to read key from
+	 * @param passphrase passphrase of either private key, or the stream itself in the case of a PKCS12 keytore. 
+	 * @return private key file
+	 * @throws SshException if the raw data cannot be parsed into a private key
+	 * @see #createPrivateKeyFromStream(InputStream)
+	 */
+	SshPrivateKeyFile createPrivateKeyFromStream(InputStream in, char[] passphrase) throws SshException;
 
 	/**
 	 * Generate a new key pair. Type must be one of the supported types, and key

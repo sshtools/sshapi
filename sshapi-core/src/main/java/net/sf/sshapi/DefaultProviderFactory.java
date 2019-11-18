@@ -259,6 +259,28 @@ public class DefaultProviderFactory implements SshProviderFactory {
 		return pk.toArray(new String[0]);
 	}
 
+	/**
+	 * Get all discovered fingerprint hashing algorithms. This is determine by examining
+	 * all providers for their algorithms and producing a unique list.
+	 * 
+	 * @return all fingerprint hashing algorithms
+	 */
+	public static String[] getAllFingerprintHashingAlgorithms() {
+		List<String> fps = new ArrayList<>();
+		SshProvider[] providers = getAllProviders();
+		for (int i = 0; i < providers.length; i++) {
+			try {
+				List<String> c = providers[i].getFingerprintHashingAlgorithms();
+				addList(fps, c);
+			} catch (UnsatisfiedLinkError ule) {
+				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+			} catch (Exception ex) {
+				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+			}
+		}
+		return fps.toArray(new String[0]);
+	}
+
 	private static void addList(List<String> kex, List<String> c) {
 		for (Iterator<String> it = c.iterator(); it.hasNext();) {
 			String cap = it.next();
