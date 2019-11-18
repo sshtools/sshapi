@@ -114,8 +114,8 @@ abstract class AbstractConnectionTest {
 			configuration.setPreferredKeyExchange(PROPERTIES.getProperty("kex", "diffie-hellman-group14-sha1"));
 			configuration.setPreferredPublicKey(PROPERTIES.getProperty("pubkey", SshConfiguration.PUBLIC_KEY_SSHRSA));
 			configuration.setSftpPacketSize(Long.parseLong(PROPERTIES.getProperty("sftppacketsize", "16384")));
-			configuration.setSftpWindowSize(Long.parseLong(PROPERTIES.getProperty("sftpwindowsize", "1048576")));
-			configuration.setSftpWindowSizeMax(Long.parseLong(PROPERTIES.getProperty("sftpmaxwindowsize", "1048576")));
+			configuration.setSftpWindowSize(Long.parseLong(PROPERTIES.getProperty("sftpwindowsize", "32768")));
+			configuration.setSftpWindowSizeMax(Long.parseLong(PROPERTIES.getProperty("sftpmaxwindowsize", "10485760")));
 		}
 		
 	}
@@ -147,6 +147,8 @@ abstract class AbstractConnectionTest {
 	}
 
 	public void start() throws Exception {
+		
+		System.in.read();
 		int repeats = Integer.parseInt(PROPERTIES.getProperty("repeats", "10"));
 		int warmUps = Integer.parseInt(PROPERTIES.getProperty("warmUps", "1"));
 		SshConfiguration.getLogger().log(Level.INFO, "Warming up");

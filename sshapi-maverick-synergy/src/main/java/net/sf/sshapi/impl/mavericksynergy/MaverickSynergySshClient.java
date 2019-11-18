@@ -116,15 +116,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				int maximumWindowSpace, int minimumWindowSpace, ChannelData channelData) {
 			super(channelType, con, maximumPacketSize, initialWindowSize, maximumWindowSpace, minimumWindowSpace);
 			this.channelData = channelData;
-			cached = new CachingDataWindow(initialWindowSize, maximumWindowSpace, minimumWindowSpace, maximumPacketSize);
-			channelInputStream = new ChannelInputStream(cached);
-			channelOutputStream = new ChannelOutputStream(this);
-		}
-
-		@Override
-		protected boolean checkWindowSpace() {
-			// TODO Auto-generated method stub
-			return false;
 		}
 
 		@Override
@@ -142,62 +133,38 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 		@Override
 		protected void onChannelClosed() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected void onChannelClosing() {
-			// TODO Auto-generated method stub
-		}
-
-		@Override
-		protected void onChannelData(ByteBuffer data) {
-			synchronized (localWindow) {
-				cached.put(data);
-			}
-			// TODO
-			// fireData(SshDataListener.EXTENDED, buf, off, len);
 		}
 
 		@Override
 		protected void onChannelFree() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected void onChannelOpen() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected void onChannelOpenConfirmation() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected void onChannelRequest(String type, boolean wantreply, byte[] requestdata) {
-			// TODO Auto-generated method stub
-		}
-
-		@Override
-		protected void onExtendedData(ByteBuffer data, int type) {
-			// TODO
-			// fireData(SshDataListener.EXTENDED, buf, off, len);
 		}
 
 		@Override
 		protected void onLocalEOF() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected void onRemoteEOF() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		protected byte[] openChannel(byte[] requestdata) throws WriteOperationRequest, ChannelOpenException {
-			// TODO Auto-generated method stub
 			return null;
 		}
 	}

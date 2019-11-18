@@ -57,6 +57,7 @@ public class SshConfiguration {
 	public static final int SFTP_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
 	public static final int TUNNEL_MAXIMUM_PACKET_SIZE = 32 * 1024;
 	public static final int TUNNEL_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
+	
 	/** The 3DES CBC cipher **/
 	public static final String CIPHER_TRIPLEDES_CBC = "3des-cbc";
 	/** The Blowfish CBC cipher */
@@ -164,13 +165,13 @@ public class SshConfiguration {
 	private SocketFactory socketFactory;
 	private int maxAuthAttempts = 3;
 	private long sftpWindowSizeMax = SFTP_WINDOW_SIZE_MAX;
-	private long sftpWindowSize = SFTP_WINDOW_SIZE_MAX;
+	private long sftpWindowSize = SFTP_MAXIMUM_PACKET_SIZE * 2;
 	private long sftpPacketSize = SFTP_MAXIMUM_PACKET_SIZE;
 	private long shellWindowSizeMax = SHELL_WINDOW_SIZE_MAX;
-	private long shellWindowSize = SHELL_WINDOW_SIZE_MAX;
+	private long shellWindowSize = SHELL_MAXIMUM_PACKET_SIZE * 2;
 	private long shellPacketSize = SHELL_MAXIMUM_PACKET_SIZE;
 	private long tunnelWindowSizeMax = TUNNEL_WINDOW_SIZE_MAX;
-	private long tunnelWindowSize = TUNNEL_WINDOW_SIZE_MAX;
+	private long tunnelWindowSize = TUNNEL_MAXIMUM_PACKET_SIZE * 2;
 	private long tunnelPacketSize = TUNNEL_MAXIMUM_PACKET_SIZE;
 	private int streamBufferSize = SFTP_MAXIMUM_PACKET_SIZE;
 	private static SshHostKeyValidator defaultHostKeyValidator = new DumbWithWarningHostKeyValidator();
