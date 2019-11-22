@@ -32,10 +32,7 @@ import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -63,7 +60,6 @@ import com.sshtools.common.publickey.InvalidPassphraseException;
 import com.sshtools.common.publickey.SshPrivateKeyFile;
 import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.common.shell.ShellPolicy;
-import com.sshtools.common.ssh.CachingDataWindow;
 import com.sshtools.common.ssh.Channel;
 import com.sshtools.common.ssh.ChannelFactory;
 import com.sshtools.common.ssh.ChannelNG;
@@ -77,8 +73,6 @@ import com.sshtools.common.ssh.Subsystem;
 import com.sshtools.common.ssh.UnsupportedChannelException;
 import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
-import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
-import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractSshStreamChannel;
@@ -107,7 +101,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 {
 
 	protected final class MaverickSynergySshChannel extends ChannelNG<SshClientContext> {
-		private CachingDataWindow cached;
 		private final ChannelData channelData;
 		private ChannelInputStream channelInputStream;
 		private ChannelOutputStream channelOutputStream;
@@ -166,6 +159,19 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		@Override
 		protected byte[] openChannel(byte[] requestdata) throws WriteOperationRequest, ChannelOpenException {
 			return null;
+		}
+
+		@Override
+		protected void onChannelData(ByteBuffer data) {
+		}
+
+		@Override
+		protected void onExtendedData(ByteBuffer data, int type) {
+		}
+
+		@Override
+		protected boolean checkWindowSpace() {
+			return false;
 		}
 	}
 
@@ -779,17 +785,19 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				char[] keyPassphrase = pk.promptForKeyPassphrase(this, "Passphrase");
 				if (keyPassphrase == null)
 					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_CANCELLED);
-				RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(pk.getAlias(), keyPassphrase);
-				X509Certificate x509 = (X509Certificate) keystore.getCertificate(pk.getAlias());
-				SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
-				Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
-				throw new UnsupportedOperationException("Errrr");
+
+				throw new UnsupportedOperationException("X509 support is not yet complete.");
+				
+//				RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(pk.getAlias(), keyPassphrase);
+//				X509Certificate x509 = (X509Certificate) keystore.getCertificate(pk.getAlias());
+//				SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
+//				Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
 //				return new PublicKeyAuthenticator(SshKeyPair.getKeyPair(pubkey, privkey));
 			} catch (net.sf.sshapi.SshException sshe) {
 				throw sshe;
 			} catch (IOException ioe) {
 				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, ioe);
-			} catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException kse) {
+			} catch (KeyStoreException | CertificateException | NoSuchAlgorithmException  kse) {
 				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, kse);
 			}
 		} else if (authenticator instanceof SshPublicKeyAuthenticator) {
