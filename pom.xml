@@ -329,6 +329,14 @@
 		</plugins>
 	</reporting>
 	<repositories>
+		<repository>
+			<id>oss-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots />
+		</repository>
 	</repositories>
 	<modules>
 		<module>sshapi-core</module>
