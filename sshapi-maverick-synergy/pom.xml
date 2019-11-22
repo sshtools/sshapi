@@ -109,4 +109,14 @@ This library is the provider bridge for SSHAPI.</description>
 			<version>1.0.7.Final</version>
 		</dependency>
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>oss-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots />
+		</repository>
+	</repositories>
 </project>
