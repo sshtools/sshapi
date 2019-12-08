@@ -46,7 +46,6 @@ class ExampleUtilities {
 					Util.joinStreams(channel.getExtendedInputStream(), channel.getOutputStream());
 				} catch (Exception e) {
 				}
-				System.out.println("Exited readErrThread");
 			}
 		};
 		readErrThread.start();
@@ -61,7 +60,6 @@ class ExampleUtilities {
 					channel.getInputStream().close();
 				} catch (Exception e) {
 				}
-				System.out.println("Exited readInThread");
 				if (!closed.get()) {
 					closed.set(true);
 					try {

@@ -37,6 +37,7 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshInput;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.util.SshChannelInputStream;
 
 abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
@@ -51,6 +52,11 @@ abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C exte
 	public AbstractJschStreamChannel(SshProvider provider, SshConfiguration configuration, Channel channel) throws SshException {
 		super(provider, configuration);
 		this.channel = channel;
+	}
+	
+	@Override
+	public boolean isOpen() {
+		return super.isOpen() && !channel.isClosed();
 	}
 
 	@Override
@@ -101,9 +107,9 @@ abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C exte
 	@Override
 	public void onOpen() throws SshException {
 		try {
-			in = channel.getInputStream();
+			in = new SshChannelInputStream(channel.getInputStream(), this);
 			out = channel.getOutputStream();
-			ext = channel.getExtInputStream();
+			ext = new SshChannelInputStream(channel.getExtInputStream(), this);
 			channel.connect(Integer.parseInt(
 					configuration.getProperties().getProperty(JschSshProvider.CFG_CHANNEL_CONNECT_TIMEOUT, "3000")));
 		} catch (Exception e) {

@@ -1,5 +1,6 @@
 package net.sf.sshapi.impl.libssh;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,6 +20,15 @@ public class LibsshInputStream extends InputStream {
 		this.channel = channel;
 		this.library = library;
 		this.stderr = stderr;
+	}
+
+	@Override
+	public int available() throws IOException {
+		int i = checkChannel();
+		if (i == -1) {
+			throw new EOFException();
+		}
+		return library.ssh_channel_poll(channel, stderr ? 1 : 0);
 	}
 
 	@Override

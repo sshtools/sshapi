@@ -114,6 +114,7 @@ import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSshClient extends AbstractClient implements ForwardingClientListener {
@@ -220,6 +221,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		private ChannelData channelData;
 		private String name;
 		private Ssh2Channel ssh2Channel;
+		private InputStream in;
 
 		public MaverickSshChannel(String name, ChannelData channelData) {
 			super(getProvider(), getConfiguration());
@@ -231,9 +233,16 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		public ChannelData getChannelData() {
 			return channelData;
 		}
+		
+		public boolean isOpen() {
+			return !ssh2Channel.isClosed();
+		}
 
 		@Override
 		public InputStream getInputStream() throws IOException {
+			if(in == null) {
+				in = new SshChannelInputStream(ssh2Channel.getInputStream(), this);
+			}
 			return ssh2Channel.getInputStream();
 		}
 

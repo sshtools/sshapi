@@ -26,8 +26,10 @@ package net.sf.sshapi.impl.trilead;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 
 import com.trilead.ssh2.Session;
+import com.trilead.ssh2.channel.Channel;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
@@ -35,15 +37,37 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
 abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Session session;
+	private Field flagField;
+	private Field channelField;
+	private Field eofField;
 
 	public AbstractTrileadStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
 		super(provider, configuration);
 		this.session = channel;
+	}
+
+	@Override
+	public boolean isOpen() {
+		try {
+			if (flagField == null) {
+				/* Blimey. Thanks for making this so difficult Trilead */
+				flagField = Session.class.getDeclaredField("flag_closed");
+				flagField.setAccessible(true);
+				channelField = Session.class.getDeclaredField("cn");
+				channelField.setAccessible(true);
+				eofField = Channel.class.getDeclaredField("EOF");
+				eofField.setAccessible(true);
+			}
+			return super.isOpen() && !(Boolean) flagField.getBoolean(session) && !(Boolean) eofField.getBoolean(channelField.get(session));
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public int exitCode() throws IOException {
@@ -52,7 +76,7 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	public InputStream getInputStream() throws IOException {
-		return session.getStdout();
+		return new SshChannelInputStream(session.getStdout(), this);
 	}
 
 	public OutputStream getOutputStream() throws IOException {
@@ -60,7 +84,7 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	public InputStream getExtendedInputStream() throws IOException {
-		return session.getStderr();
+		return new SshChannelInputStream(session.getStderr(), this);
 	}
 
 	protected Session getSession() {
@@ -73,11 +97,11 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 
 	public final void onOpen() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
-			boolean singleConnection = Boolean.parseBoolean(
-					configuration.getProperties().getProperty(TrileadSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));
+			boolean singleConnection = Boolean
+					.parseBoolean(configuration.getProperties().getProperty(TrileadSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));
 			try {
-				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Port(),
-						configuration.getX11Cookie(), singleConnection);
+				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Port(), configuration.getX11Cookie(),
+						singleConnection);
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			}
@@ -86,5 +110,4 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	public abstract void onChannelOpen() throws SshException;
-
 }

@@ -38,6 +38,7 @@ import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.util.SshChannelInputStream;
 
 abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C>, ChannelEventListener {
@@ -46,6 +47,11 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 	AbstractMaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, com.maverick.ssh.SshSession session) {
 		super(provider, configuration);
 		this.session = session;
+	}
+
+	@Override
+	public final boolean isOpen() {
+		return super.isOpen() && !session.isClosed();
 	}
 
 	@Override
@@ -59,12 +65,12 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return session.getInputStream();
+		return new SshChannelInputStream(session.getInputStream(), this);
 	}
 
 	@Override
 	public InputStream getExtendedInputStream() throws IOException {
-		return session.getStderrInputStream();
+		return new SshChannelInputStream(session.getStderrInputStream(), this);
 	}
 
 	@Override

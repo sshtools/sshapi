@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.util.Objects;
 
 import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.channel.Channel;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
@@ -36,6 +37,7 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshInput;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
 abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
@@ -51,6 +53,11 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	@Override
+	public boolean isOpen() {
+		return super.isOpen() && session.getState() == Channel.STATE_OPEN;
+	}
+
+	@Override
 	public int exitCode() throws IOException {
 		Integer t = session.getExitStatus();
 		return t == null ? -1 : t.intValue();
@@ -58,12 +65,12 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 
 	@Override
 	public InputStream getExtendedInputStream() throws IOException {
-		return session.getStderr();
+		return new SshChannelInputStream(session.getStderr(), this);
 	}
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return session.getStdout();
+		return new SshChannelInputStream(session.getStdout(), this);
 	}
 
 	@Override

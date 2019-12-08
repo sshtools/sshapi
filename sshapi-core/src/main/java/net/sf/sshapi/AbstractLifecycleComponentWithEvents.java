@@ -39,7 +39,7 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 		super(provider);
 	}
 
-	public final boolean isOpen() {
+	public boolean isOpen() {
 		return open;
 	}
 
@@ -53,7 +53,7 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 	}
 
 	protected final void checkOpen() {
-		if (!open) {
+		if (!isOpen()) {
 			throw new IllegalStateException("Not open");
 		}
 	}

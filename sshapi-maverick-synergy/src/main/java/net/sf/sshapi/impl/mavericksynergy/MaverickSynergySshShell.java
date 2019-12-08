@@ -39,6 +39,7 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.util.SshChannelInputStream;
 
 class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private SessionChannelNG session;
@@ -93,6 +94,11 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListe
 	}
 
 	@Override
+	public boolean isOpen() {
+		return super.isOpen() && !session.isClosed();
+	}
+
+	@Override
 	protected void onOpen() throws SshException {
 		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
@@ -119,8 +125,8 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListe
 		if (!session.startShell().waitFor(30000).isSuccess()) {
 			throw new IllegalStateException("Could not start shell.");
 		}
-		inputStream = session.getInputStream();
-		extendedInputStream = session.getErrorStream();
+		inputStream = new SshChannelInputStream(session.getInputStream(), this);
+		extendedInputStream = new SshChannelInputStream(session.getErrorStream(), this);
 		outputStream = session.getOutputStream();
 	}
 

@@ -408,7 +408,8 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 			};
 			return new SftpOutputStream(out, this, path, out.toString());
 		} else {
-			return new FilterOutputStream(doPut(path, offset)) {
+			OutputStream putOut = doPut(path, offset);
+			return new FilterOutputStream(putOut) {
 				@Override
 				public void close() throws IOException {
 					super.close();
@@ -418,7 +419,7 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 
 				@Override
 				public void write(byte[] b, int off, int len) throws IOException {
-					super.write(b, off, len);
+					putOut.write(b, off, len);
 				}
 			};
 		}
