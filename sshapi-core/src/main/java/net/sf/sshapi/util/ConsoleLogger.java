@@ -23,7 +23,7 @@
  */
 package net.sf.sshapi.util;
 
-import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -44,18 +44,23 @@ public class ConsoleLogger implements Logger {
 		this.level = level;
 	}
 
-	public void log(Level level, String message) {
+	@Override	
+	public void log(Level level, String message, Object... args) {
 		if (level.compareTo(this.level) >= 0) {
-			System.out.println("SSAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
-					+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + message);
+			System.out.println("SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
+					+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + MessageFormat.format(message, args));
 		}
 	}
 
-	public void log(Level level, String message, Throwable exception) {
-		log(level, message);
-		exception.printStackTrace(System.out);
+	@Override
+	public void log(Level level, String message, Throwable exception, Object... args) {
+		if (level.compareTo(this.level) >= 0) {
+			log(level, message, args);
+			exception.printStackTrace(System.out);
+		}
 	}
 
+	@Override
 	public boolean isLevelEnabled(Level level) {
 		return level.compareTo(this.level) >= 0;
 	}

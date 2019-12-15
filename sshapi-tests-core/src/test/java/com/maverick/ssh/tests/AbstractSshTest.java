@@ -13,15 +13,19 @@ import org.junit.BeforeClass;
 import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 
 import net.sf.sshapi.DefaultProviderFactory;
+import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.Logger.Level;
 
 public class AbstractSshTest {
+
+	protected static final Logger LOG;
+	
 	static {
 		PropertyConfigurator.configure(AbstractSshTest.class.getResource("/log4j.properties"));
-		System.setProperty("sshapi.logLevel", "INFO");
-//		System.setProperty("sshapi.extendTimeouts", "true");
+		System.setProperty("sshapi.logLevel", "DEBUG");
+		LOG = SshConfiguration.getLogger();
+		System.setProperty("sshapi.extendTimeouts", "true");
 	}
 	
 	protected static SshTestConfiguration config;
@@ -57,12 +61,12 @@ public class AbstractSshTest {
 						Thread.sleep(timeout * 10000);
 					} else
 						Thread.sleep(timeout);
-					SshConfiguration.getLogger().log(Level.ERROR, "Task timed out.");
+					SshConfiguration.getLogger().error("Task timed out.");
 					ex.set(true);
 					timedOut(runnable, timeout, tthread, dn);
 				} catch (InterruptedException ie) {
 					if (!dn.get())
-						SshConfiguration.getLogger().log(Level.ERROR, "No longer waiting for task to end.");
+						SshConfiguration.getLogger().error("No longer waiting for task to end.");
 				} catch (Exception e) {
 				}
 			}
@@ -81,8 +85,7 @@ public class AbstractSshTest {
 		tthread.interrupt();
 		Thread.sleep(timeout);
 		if (!dn.get()) {
-			SshConfiguration.getLogger().log(Level.ERROR, "The test " + runnable.toString() + " (thread " + tthread
-					+ ") appears to have hung, and cannot be interrupted. Exiting the JVM with error status.");
+			SshConfiguration.getLogger().error("The test {0} (thread {1} appears to have hung, and cannot be interrupted). Exiting the JVM with error status.", runnable.toString(), tthread);
 			System.exit(9);
 		}
 	}
@@ -106,38 +109,37 @@ public class AbstractSshTest {
 			}
 			long timestamp = System.currentTimeMillis();
 			SshProvider prov = DefaultProviderFactory.getInstance().getProvider(new SshConfiguration());
-			SshConfiguration.getLogger().log(Level.INFO, "Provider");
-			SshConfiguration.getLogger().log(Level.INFO, "    Name: " + prov.getName());
-			SshConfiguration.getLogger().log(Level.INFO, "    Version: " + prov.getVersion());
-			SshConfiguration.getLogger().log(Level.INFO, "    Vendor: " + prov.getVendor());
-			SshConfiguration.getLogger().log(Level.INFO, "    Class: " + prov.getClass().getName());
-			SshConfiguration.getLogger().log(Level.INFO, "Capabilities: " + prov.getCapabilities());
-			SshConfiguration.getLogger().log(Level.INFO, "Ciphers: " + prov.getSupportedCiphers(SshConfiguration.SSH2_ONLY));
-			SshConfiguration.getLogger().log(Level.INFO, "MAC: " + prov.getSupportedMAC());
-			SshConfiguration.getLogger().log(Level.INFO, "Compression: " + prov.getSupportedCompression());
-			SshConfiguration.getLogger().log(Level.INFO, "Key Exchange: " + prov.getSupportedKeyExchange());
-			SshConfiguration.getLogger().log(Level.INFO, "Public Key: " + prov.getSupportedPublicKey());
-			SshConfiguration.getLogger().log(Level.INFO,
-					String.format("Provider initialisation took %d", System.currentTimeMillis() - timestamp));
+			LOG.info("Provider");
+			LOG.info("    Name: " + prov.getName());
+			LOG.info("    Version: " + prov.getVersion());
+			LOG.info("    Vendor: " + prov.getVendor());
+			LOG.info("    Class: " + prov.getClass().getName());
+			LOG.info("Capabilities: " + prov.getCapabilities());
+			LOG.info("Ciphers: " + prov.getSupportedCiphers(SshConfiguration.SSH2_ONLY));
+			LOG.info("MAC: " + prov.getSupportedMAC());
+			LOG.info("Compression: " + prov.getSupportedCompression());
+			LOG.info("Key Exchange: " + prov.getSupportedKeyExchange());
+			LOG.info("Public Key: " + prov.getSupportedPublicKey());
+			LOG.info("Provider initialisation took {0}", System.currentTimeMillis() - timestamp);
 			server = config.getServerService();
 			server.start();
-			SshConfiguration.getLogger().log(Level.INFO, "-----------------------------");
-			SshConfiguration.getLogger().log(Level.INFO, "Stty                         ");
-			SshConfiguration.getLogger().log(Level.INFO, "");
+			LOG.info("-----------------------------");
+			LOG.info("Stty                         ");
+			LOG.info("");
 			ProcessBuilder pb = new ProcessBuilder("stty", "-a");
 			Process process = pb.start();
 			Util.monitorProcessOut(process);
 			Util.monitorProcessErr(process);
 			// assertEquals("Stty must return 0", 0, process.waitFor());
 			process.waitFor();
-			SshConfiguration.getLogger().log(Level.INFO, "-----------------------------");
-			SshConfiguration.getLogger().log(Level.INFO, "Environment                  ");
-			SshConfiguration.getLogger().log(Level.INFO, "");
+			LOG.info("-----------------------------");
+			LOG.info("Environment                  ");
+			LOG.info("");
 			for (Map.Entry<String, String> e : System.getenv().entrySet()) {
-				SshConfiguration.getLogger().log(Level.INFO, "   " + e.getKey() + "=" + e.getValue());
+				LOG.info("   " + e.getKey() + "=" + e.getValue());
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to setup.", e);
+			SshConfiguration.getLogger().error("Failed to setup.", e);
 		}
 	}
 

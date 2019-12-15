@@ -306,10 +306,10 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	/**
 	 * Get a the actual path given the path to a link. The provider must support
 	 * {@link Capability#SFTP_READ_LINK} or an {@link UnsupportedOperationException}
-	 * will be thrown.
+	 * will be thrown. The target returned will be an absolute path name.
 	 * 
 	 * @param path path
-	 * @return file object
+	 * @return full qualified target
 	 * @throws SshException on other error
 	 */
 	String readLink(String path) throws SshException;

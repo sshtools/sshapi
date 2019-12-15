@@ -46,7 +46,6 @@ import com.sshtools.common.ssh.compression.SshCompression;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.agent.SshAgent;
@@ -63,8 +62,10 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT, Capability.SFTP,
 			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
 			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL,
-			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-			Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK };
+			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, /*Capability.LOCAL_PORT_FORWARD,
+			Capability.REMOTE_PORT_FORWARD,*/ Capability.SFTP_READ_LINK, /*Capability.FORWARDING_CHANNELS,
+			Capability.TUNNELED_SOCKET_FACTORY, */Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
+			Capability.SCP, Capability.RECURSIVE_SCP_GET };
 	
 	private SshEngine engine;
 	private ComponentManager componentManager;
@@ -73,7 +74,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 		if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1
 				|| System.getProperty("os.name").toLowerCase().indexOf("solaris") != -1)
 				&& System.getProperty("java.security.egd") == null) {
-			SshConfiguration.getLogger().log(Level.WARN,
+			SshConfiguration.getLogger().warn(
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 		ComponentManager.enableCBCCiphers();
@@ -279,7 +280,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			rnd = JCEProvider.getSecureRandom();
 			rnd.setSeed(seed);
 		} catch (NoSuchAlgorithmException e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to set seed.", e);
+			SshConfiguration.getLogger().error("Failed to set seed.", e);
 		}
 	}
 

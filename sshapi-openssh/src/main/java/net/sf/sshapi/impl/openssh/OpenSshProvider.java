@@ -62,7 +62,8 @@ public class OpenSshProvider extends AbstractProvider {
 	
 	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH1,
 			Capability.SSH2, Capability.PASSWORD_AUTHENTICATION, Capability.SFTP,
-			Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SHELL, Capability.SCP, Capability.LOCAL_PORT_FORWARD, Capability.RECURSIVE_SCP_GET
+			Capability.PUBLIC_KEY_AUTHENTICATION, Capability.SHELL, Capability.SCP, Capability.LOCAL_PORT_FORWARD, Capability.RECURSIVE_SCP_GET,
+			Capability.TUNNELED_SOCKET_FACTORY, Capability.FORWARDING_CHANNELS, Capability.SFTP_RESUME
 			 };
 
 	/**

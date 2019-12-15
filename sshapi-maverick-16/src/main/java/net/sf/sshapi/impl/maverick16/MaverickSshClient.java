@@ -27,7 +27,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -39,10 +38,15 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.crypto.BadPaddingException;
 import javax.net.SocketFactory;
+
+import org.bouncycastle.openssl.EncryptionException;
 
 import com.maverick.agent.client.Ssh2AgentAuthentication;
 import com.maverick.ssh.ChannelEventListener;
@@ -87,10 +91,10 @@ import com.sshtools.publickey.SshPrivateKeyFileFactory;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
+import net.sf.sshapi.AbstractForwardingChannel;
 import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
 import net.sf.sshapi.SshChannelListener;
@@ -98,6 +102,7 @@ import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -118,6 +123,78 @@ import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSshClient extends AbstractClient implements ForwardingClientListener {
+	protected final static class ForwardingChannel extends AbstractForwardingChannel<MaverickSshClient>  implements ChannelEventListener {
+		private SshTunnel localForward;
+
+		protected ForwardingChannel(MaverickSshClient client, SshProvider provider, SshConfiguration configuration,
+				String hostname, int port) {
+			super(client, provider, configuration, hostname, port);
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringInputStream(localForward.getInputStream(), SshDataListener.RECEIVED);
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringOutputStream(localForward.getOutputStream());
+		}
+
+		@Override
+		protected void onOpen() throws net.sf.sshapi.SshException {
+			if (client == null || !client.isConnected()) {
+				throw new  net.sf.sshapi.SshException("Not connected.");
+			}
+			try {
+				localForward = client.client.openForwardingChannel(hostname, port, null, 0, "127.0.0.1", 0, null, this);
+			} catch (Exception e) {
+				throw new net.sf.sshapi.SshException("Failed to open direct-tcpip channel.", e);
+			}
+		}
+
+		@Override
+		protected void onCloseStream() throws net.sf.sshapi.SshException {
+			try {
+				localForward.close();
+			} catch (IOException e) {
+				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, "Failed to close direct-tcpip channel.", e);
+			}
+		}
+
+		@Override
+		public void extendedDataReceived(SshChannel channel, byte[] data, int off, int len, int extendedDataType) {
+		}
+
+		@Override
+		public void channelClosed(SshChannel channel) {
+		}
+
+		@Override
+		public void channelClosing(SshChannel channel) {
+		}
+
+		@Override
+		public void channelEOF(SshChannel channel) {
+		}
+
+		@Override
+		public void channelOpened(SshChannel channel) {
+		}
+
+		@Override
+		public void dataReceived(SshChannel channel, byte[] data, int off, int len) {
+		}
+
+		@Override
+		public void dataSent(SshChannel channel, byte[] data, int off, int len) {
+		}
+	}
+	
 	class BannerDisplayBridge implements BannerDisplay {
 		@Override
 		public void displayBanner(String message) {
@@ -167,7 +244,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 					});
 					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
 				} catch (net.sf.sshapi.SshException e) {
-					SshConfiguration.getLogger().log(Level.ERROR, "Failed to verify host key.", e);
+					SshConfiguration.getLogger().error("Failed to verify host key.", e);
 				}
 			} else {
 				System.out.println("The authenticity of host '" + host + "' can't be established.");
@@ -336,7 +413,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 
 		@Override
-		protected void onClose() throws net.sf.sshapi.SshException {
+		protected void onCloseStream() throws net.sf.sshapi.SshException {
 			ssh2Channel.close();
 		}
 
@@ -440,40 +517,6 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 	}
 
-	class RemoteSocketFactory extends SocketFactory {
-		private SshClient client;
-
-		public RemoteSocketFactory(SshClient client) {
-			this.client = client;
-		}
-
-		@Override
-		public Socket createSocket() throws IOException {
-			return new RemoteSocket(client);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress host, int port) throws IOException {
-			return new RemoteSocket(client, host.getHostAddress(), port);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-			return new RemoteSocket(client, address.getHostAddress(), port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-			return new RemoteSocket(client, host, port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
-				throws IOException, UnknownHostException {
-			return new RemoteSocket(client, host, port);
-		}
-	}
-
 	class TunnelChannel extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
 			implements SshPortForwardTunnel {
 		private SshTunnel tunnel;
@@ -555,6 +598,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	private SshTransport connectingTransport;
 	private ForwardingClient forwarding;
 	private Map<SshTunnel, TunnelChannel> forwardingChannels = new HashMap<>();
+	private Map<String, List<TunnelChannel>> forwardingChannelTunnels = new HashMap<>();
 	private int timeout;
 	private SshTransport transport;
 
@@ -650,17 +694,33 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 
 	@Override
 	public void channelClosed(int type, String key, SshTunnel tunnel) {
-		int sshapiType = getTypeForTunnel(type);
-		TunnelChannel channel = forwardingChannels.get(tunnel);
+		TunnelChannel channel;
+		int sshapiType;
+		synchronized(forwardingChannelTunnels) {
+			sshapiType = getTypeForTunnel(type);
+			channel = forwardingChannels.get(tunnel);
+			forwardingChannels.remove(tunnel);
+			if(channel != null) {
+				List<TunnelChannel> l = forwardingChannelTunnels.get(type + ":" + key);
+				if(l != null) {
+					l.remove(channel);
+					if(l.isEmpty())
+						forwardingChannelTunnels.remove(type + ":" + key);
+				}
+			}
+			forwardingChannelTunnels.notifyAll();
+		}
 		if (channel != null) {
 			try {
 				firePortForwardChannelClosed(sshapiType, channel);
 			} finally {
-				forwardingChannels.remove(tunnel);
 			}
 		} else {
-			SshConfiguration.getLogger().log(Level.WARN,
-					"Got a channel closed event for a channel we don't know about (" + key + ").");
+			SshConfiguration.getLogger().warn(
+					"Got a channel closed event for a channel we don't know about ({0}).", key);
+		} 
+		synchronized(forwardingChannelTunnels) {
+			forwardingChannelTunnels.notifyAll();
 		}
 	}
 
@@ -670,10 +730,27 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	@Override
+	public net.sf.sshapi.SshChannel doCreateForwardingChannel(String hostname, int port)
+			throws net.sf.sshapi.SshException {
+		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
+	}
+
+	@Override
 	public void channelOpened(int type, String key, SshTunnel tunnel) {
-		int sshapiType = getTypeForTunnel(type);
-		TunnelChannel channel = new TunnelChannel(tunnel);
-		forwardingChannels.put(tunnel, channel);
+		TunnelChannel channel;
+		int sshapiType;
+		synchronized(forwardingChannelTunnels) {
+			sshapiType = getTypeForTunnel(type);
+			channel = new TunnelChannel(tunnel);
+			forwardingChannels.put(tunnel, channel);
+			List<TunnelChannel> l = forwardingChannelTunnels.get(type + ":" + key);
+			if(l == null) {
+				l = new ArrayList<>();
+				forwardingChannelTunnels.put(type + ":" + key, l);
+			}
+			l.add(channel);
+		}
+		
 		// The channel is actually already open, but this will set its state
 		// correctly in the wrapper
 		try {
@@ -704,8 +781,13 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {
-					forwarding.stopLocalForwarding(fLocalAddress + ":" + boundPort, true);
-				} catch (SshException e) {
+					forwarding.stopLocalForwarding(fLocalAddress, boundPort, true);
+					synchronized(forwardingChannelTunnels) {
+						while(forwardingChannelTunnels.get(ForwardingClientListener.LOCAL_FORWARDING + ":" + fLocalAddress + ":" + boundPort) != null) {
+							forwardingChannelTunnels.wait(10000);
+						}
+					}
+				} catch (SshException | InterruptedException e) {
 					throw new net.sf.sshapi.SshException("Failed to stop local forward.", e);
 				} finally {
 					boundPort = 0;
@@ -770,7 +852,6 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	protected SshShell doCreateShell(String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		try {
-			SshConfiguration.getLogger().log(Level.DEBUG, "Opening session channel");
 			com.maverick.ssh.SshSession session = client.openSessionChannel();
 			if (termType != null) {
 				requestPty(client, termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
@@ -781,11 +862,6 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		} catch (Exception e) {
 			throw new net.sf.sshapi.SshException("Failed to open session channel.", e);
 		}
-	}
-
-	@Override
-	public SocketFactory createTunneledSocketFactory() throws net.sf.sshapi.SshException {
-		return new RemoteSocketFactory(client);
 	}
 
 	@Override
@@ -904,7 +980,8 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			}
 			connectingTransport = transport;
 			try {
-				client = con.connect(transport, username, true, null);
+				client = con.connect(transport, username, "true".equals(getConfiguration().getProperties()
+						.getProperty(MaverickSshProvider.CFG_BUFFERED, "true")), null);
 			} finally {
 				connectingTransport = null;
 			}
@@ -1076,7 +1153,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 						}
 						try {
 							pair = pkf.toKeyPair(new String(pa));
-						} catch (InvalidPassphraseException ipe) {
+						} catch (EncryptionException | InvalidPassphraseException ipe) {
 							if (i == 0) {
 								throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED);
 							}
@@ -1084,7 +1161,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 					} else {
 						try {
 							pair = pkf.toKeyPair("");
-						} catch (InvalidPassphraseException ipe) {
+						} catch (EncryptionException | InvalidPassphraseException ipe) {
 							throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_FAILED, ipe);
 						}
 					}
@@ -1195,8 +1272,6 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	private void requestPty(SshClient client, String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight,
 			byte[] terminalModes, com.maverick.ssh.SshSession session) throws net.sf.sshapi.SshException {
 		try {
-			SshConfiguration.getLogger().log(Level.DEBUG, "Requesting pty for " + termType + " " + colWidth + "x" + rowHeight + " ["
-					+ pixWidth + "x" + pixHeight + "] = " + terminalModes);
 			PseudoTerminalModes ptm = new PseudoTerminalModes(client);
 			if (terminalModes != null) {
 				for (int i = 0; i < terminalModes.length; i++) {

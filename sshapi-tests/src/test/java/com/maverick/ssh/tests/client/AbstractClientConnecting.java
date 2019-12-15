@@ -15,7 +15,6 @@ import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import net.sf.sshapi.util.DumbHostKeyValidator;
@@ -24,18 +23,9 @@ import net.sf.sshapi.util.Util;
 
 public abstract class AbstractClientConnecting extends AbstractSshTest {
 	protected boolean administrator;
-	private boolean threaded;
 
 	public boolean isAdministrator() {
 		return administrator;
-	}
-
-	public boolean isThreaded() {
-		return threaded;
-	}
-
-	public void setThreaded(boolean threaded) {
-		this.threaded = threaded;
 	}
 
 	protected SshClient ssh;
@@ -72,20 +62,20 @@ public abstract class AbstractClientConnecting extends AbstractSshTest {
 
 	protected void timedOut(Callable<Void> runnable, long timeout, Thread tthread, AtomicBoolean dn) throws InterruptedException {
 		if (ssh != null && ssh.isConnected()) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Trying disconnecting the client.");
+			LOG.warn("Trying disconnecting the client.");
 			ssh.closeQuietly();
 			Thread.sleep(timeout);
-			SshConfiguration.getLogger().log(Level.ERROR, "Disconnecting client had no effect, trying an interupt");
+			LOG.warn("Disconnecting client had no effect, trying an interupt");
 		}
 		super.timedOut(runnable, timeout, tthread, dn);
 	}
 
 	protected void disconnect() throws SshException, IOException {
 		if (ssh != null) {
-			SshConfiguration.getLogger().log(Level.INFO, "Disconnecting from " + config.getServer() + ":" + config.getPort());
+			LOG.info("Disconnecting from {0}:{1}", config.getServer(), config.getPort());
 			if (ssh.isConnected())
 				ssh.close();
-			SshConfiguration.getLogger().log(Level.INFO, "Disconnected from " + config.getServer() + ":" + config.getPort());
+			LOG.info("Disconnected from {0}:{1}", config.getServer(), config.getPort());
 		}
 	}
 
@@ -100,11 +90,11 @@ public abstract class AbstractClientConnecting extends AbstractSshTest {
 		SshConfiguration sshconfig = new SshConfiguration();
 		sshconfig.setFingerprintHashingAlgorithm(config.getFingerprintHashingAlgorithm());
 		sshconfig.setHostKeyValidator(new DumbHostKeyValidator());
-		SshConfiguration.getLogger().log(Level.INFO, "Connecting to " + config.getServer() + ":" + config.getPort());
+		LOG.info("Connecting to {0}:{1} as {2}",config.getServer(), config.getPort(), getUsername());
 		ssh = sshconfig.createClient();
 		long startedConnecting = System.currentTimeMillis();
 		ssh.connect(getUsername(), config.getServer(), config.getPort());
-		SshConfiguration.getLogger().log(Level.INFO, "Connected to " + config.getServer() + ":" + config.getPort() + ". Took " + (System.currentTimeMillis() - startedConnecting));
+		LOG.info("Connected to {0}:{1}. Took {2}",config.getServer(), config.getPort(), System.currentTimeMillis() - startedConnecting);
 	}
 
 	protected SshPublicKeyAuthenticator createKey(String key, String fileName, String passphrase) throws IOException {

@@ -34,6 +34,7 @@ import com.trilead.ssh2.channel.Channel;
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshProvider;
@@ -76,22 +77,22 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	public InputStream getInputStream() throws IOException {
-		return new SshChannelInputStream(session.getStdout(), this);
+		return new EventFiringInputStream(new SshChannelInputStream(session.getStdout(), this), SshDataListener.RECEIVED);
 	}
 
 	public OutputStream getOutputStream() throws IOException {
-		return session.getStdin();
+		return new EventFiringOutputStream(session.getStdin());
 	}
 
 	public InputStream getExtendedInputStream() throws IOException {
-		return new SshChannelInputStream(session.getStderr(), this);
+		return new EventFiringInputStream(new SshChannelInputStream(session.getStderr(), this), SshDataListener.EXTENDED);
 	}
 
 	protected Session getSession() {
 		return session;
 	}
 
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		session.close();
 	}
 

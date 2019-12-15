@@ -10,7 +10,6 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 
 import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.Logger.Level;
 
 public class RandomFilesGenerator {
 
@@ -70,8 +69,7 @@ public class RandomFilesGenerator {
 	
 	private void generateFiles(File parent) throws IOException {
 		for (int i = 0; i < FILE_SIZES.length; i++) {
-			SshConfiguration.getLogger().log(Level.INFO, "Creating test file " + i + " for size of "
-					+ FILE_SIZES[i] + " bytes");
+			SshConfiguration.getLogger().info("Creating test file {0} for size of {1} bytes ", i, FILE_SIZES[i]);
 			File f = new File(parent, "testfile" + i);
 			genFile(FILE_SIZES[i], f);
 			testFiles.add(f);

@@ -53,23 +53,23 @@ abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener
 		try {
 			try {
 				if(getConfiguration().getSftpPacketSize() > 0) {
-					Method m = Channel.class.getMethod("setLocalPacketSize", int.class);
+					Method m = Channel.class.getDeclaredMethod("setLocalPacketSize", int.class);
 					m.setAccessible(true);
-					m.invoke(getChannel(), getConfiguration().getSftpPacketSize());
+					m.invoke(getChannel(), (int)getConfiguration().getSftpPacketSize());
 				}
 				if(getConfiguration().getSftpWindowSize() > 0) {
-					Method m = Channel.class.getMethod("setLocalWindowSize", int.class);
+					Method m = Channel.class.getDeclaredMethod("setLocalWindowSize", int.class);
 					m.setAccessible(true);
-					m.invoke(getChannel(), getConfiguration().getSftpWindowSize());
+					m.invoke(getChannel(), (int)getConfiguration().getSftpWindowSize());
 				}
 				if(getConfiguration().getSftpWindowSizeMax() > 0) {
-					Method m = ChannelSftp.class.getMethod("setLocalWindowSize", int.class);
+					Method m = Channel.class.getDeclaredMethod("setLocalWindowSizeMax", int.class);
 					m.setAccessible(true);
-					m.invoke(getChannel(), getConfiguration().getSftpWindowSizeMax());
+					m.invoke(getChannel(), (int)getConfiguration().getSftpWindowSizeMax());
 				}
 			}
 			catch(Exception e) {
-				SshConfiguration.getLogger().log(Level.DEBUG, "Failed to set SFTP channel configuration via reflection.", e);
+				SshConfiguration.getLogger().warn("Failed to set SFTP channel configuration via reflection.", e);
 			}
 			if (!Util.nullOrTrimmedBlank(getConfiguration().getX11Host())) {
 				((ChannelShell) getChannel()).setXForwarding(true);

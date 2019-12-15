@@ -14,7 +14,6 @@ import com.sshtools.common.ssh.SshKeyFingerprint;
 import com.sshtools.common.util.IOUtils;
 
 import net.sf.sshapi.DefaultChannelData;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelListener;
@@ -127,7 +126,7 @@ public class MaverickSynergyAgent implements SshAgent {
 							try {
 								IOUtils.copy(socket.getInputStream(), channel.getOutputStream());
 							} catch (IOException e) {
-								SshConfiguration.getLogger().log(Level.ERROR, "I/O error during socket transfer", e);
+								SshConfiguration.getLogger().error("I/O error during socket transfer", e);
 								try {
 									channel.close();
 								} catch (IOException e1) {
@@ -146,7 +145,7 @@ public class MaverickSynergyAgent implements SshAgent {
 					try {
 						socket.getOutputStream().write(buf, off, len);
 					} catch (IOException e) {
-						SshConfiguration.getLogger().log(Level.ERROR, "I/O error during socket transfer", e);
+						SshConfiguration.getLogger().error("I/O error during socket transfer", e);
 						try {
 							ch.close();
 						} catch (IOException e1) {

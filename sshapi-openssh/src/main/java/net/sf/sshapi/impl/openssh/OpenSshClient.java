@@ -83,7 +83,7 @@ public class OpenSshClient extends AbstractClient {
 	}
 
 	protected static void debugArgs(List<String> args) {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Arguments: %s", String.join(" ", args)));
+		SshConfiguration.getLogger().info("Arguments: {0}", String.join(" ", args));
 		System.out.println(String.format("Arguments: %s", String.join(" ", args)));
 	}
 

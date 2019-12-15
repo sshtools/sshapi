@@ -39,6 +39,7 @@ import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.SshTestConfiguration;
 import com.maverick.ssh.tests.Util;
 
+import net.sf.sshapi.Logger;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 
@@ -53,6 +54,7 @@ import net.sf.sshapi.SshConfiguration;
  * support.
  */
 public class LocalOpenSSHServerServiceImpl extends AbstractServer {
+	private static final Logger LOG = SshConfiguration.getLogger();
 	private static boolean hookAdded = false;
 	private File rootDir;
 	private File sourceDir;
@@ -67,13 +69,13 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 	private File patchDir;
 
 	protected void doStop() throws Exception {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Stopping server on %d", configuration.getPort()));
+		LOG.info("Stopping server on {0}", configuration.getPort());
 		if (serverProcess != null) {
 			File pidFile = new File(targetDir, "sshd.pid");
 			if (pidFile.exists()) {
 				try (FileReader fr = new FileReader(pidFile)) {
 					int pid = Integer.parseInt(IOUtils.toString(fr).trim());
-					SshConfiguration.getLogger().log(Level.INFO, String.format("Attempting to kill %d", pid));
+					LOG.info("Attempting to kill {0}", pid);
 					runAndCheckReturn(
 							configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "kill", String.valueOf(pid))));
 				}
@@ -83,12 +85,12 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 				Field field = serverProcess.getClass().getDeclaredField("pid");
 				field.setAccessible(true);
 				int pid = ((Long) field.getLong(serverProcess)).intValue();
-				SshConfiguration.getLogger().log(Level.INFO, String.format("Attempting to kill %d", pid));
+				LOG.info("Attempting to kill {0}", pid);
 				try {
 					runAndCheckReturn(
 							configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "kill", String.valueOf(pid))));
 				} catch (IOException ioe) {
-					SshConfiguration.getLogger().log(Level.WARN, "Error from killing sshd.", ioe);
+					LOG.warn("Error from killing sshd.", ioe);
 				}
 			}
 			// Wait for server to actually stop
@@ -205,13 +207,13 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 			ProcessBuilder pb = new ProcessBuilder(new File(new File(targetDir, "bin"), "ssh-keygen").getPath(), "-E",
 					configuration.getFingerprintHashingAlgorithm(), "-lf", file.getAbsolutePath());
 			pb.redirectErrorStream(true);
-			SshConfiguration.getLogger().log(Level.INFO, String.format("Loading server key %s.", file));
+			LOG.info("Loading server key {0}.", file);
 			Process p = pb.start();
 			String keystring = IOUtils.toString(p.getInputStream(), "UTF-8");
 			String fp = keystring.split("\\s+")[1];
 			int idx = fp.indexOf(':');
 			fp = fp.substring(idx + 1);
-			SshConfiguration.getLogger().log(Level.INFO, String.format("        %s.", fp));
+			LOG.info("        {0}.", fp);
 			fps.add(fp);
 		}
 		configuration.setFingerprints(fps.toArray(new String[0]));
@@ -239,7 +241,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 					runToFileAndCheckReturn(patchFile, pb);
 				}
 				// Patch
-				SshConfiguration.getLogger().log(Level.INFO, String.format("Patching %s with %s", sourceDir, patchFile));
+				LOG.info("Patching {0} with {1}", sourceDir, patchFile);
 				runWithFileInput(patchFile, configureCommand(sourceDir, new ProcessBuilder(args).redirectErrorStream(true)), false);
 				// runAndCheckReturnWithFileInput(patchFile,
 				// configureCommand(sourceDir, new
@@ -278,26 +280,26 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 	}
 
 	void runMake() throws IOException, InterruptedException {
-		System.out.println("Compiling");
+		LOG.info("Compiling");
 		runAndCheckReturn(configureCommand(sourceDir, new ProcessBuilder("make")));
 	}
 
 	void sudoRm(File dir) throws IOException, InterruptedException {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Removing %s", dir));
+		LOG.info("Removing {0}", dir);
 		runAndCheckReturn(configureCommandForSudo(rootDir, new ProcessBuilder("sudo", "-A", "rm", "-fr", dir.getAbsolutePath())));
 	}
 
 	void runMakeInstall() throws IOException, InterruptedException {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Installing server from  %s", sourceDir));
+		LOG.info("Installing server from {0}", sourceDir);
 		runAndCheckReturn(configureCommandForSudo(sourceDir, new ProcessBuilder("sudo", "-A", "make", "install")));
 	}
 
 	void runServer() throws IOException, InterruptedException {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Starting server on %d", configuration.getPort()));
+		LOG.info("Starting server on {0}", configuration.getPort());
 		File sshd = new File(new File(targetDir, "sbin"), "sshd");
 		List<String> args = Arrays.asList("sudo", "-A", sshd.getAbsolutePath(), "-p", String.valueOf(configuration.getPort()), "-D",
 				"-e");
-		SshConfiguration.getLogger().log(Level.INFO, String.format("    %s", Util.listToSeparatedString(' ', args)));
+		LOG.info("    {0}", Util.listToSeparatedString(' ', args));
 		ProcessBuilder pb = new ProcessBuilder(args);
 		configureCommandForSudo(targetDir, pb);
 		pb.redirectErrorStream(true);
@@ -318,15 +320,14 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 	}
 
 	void runConfigure() throws IOException, InterruptedException {
-		SshConfiguration.getLogger().log(Level.INFO,
-				String.format("Configuring (compile in %s, install to %s", sourceDir, targetDir));
+		LOG.info("Configuring (compile in {0}, install to {1}", sourceDir, targetDir);
 		// PAM is needed for KBI
 		runAndCheckReturn(configureCommand(sourceDir,
 				new ProcessBuilder("./configure", "--prefix=" + targetDir.getAbsolutePath(), "--with-pam")));
 	}
 
 	void runAutoreconf() throws IOException, InterruptedException {
-		SshConfiguration.getLogger().log(Level.INFO, "Running Autoreconf");
+		LOG.info("Running Autoreconf");
 		// PAM is needed for KBI
 		runAndCheckReturn(configureCommand(sourceDir, new ProcessBuilder("autoreconf")));
 	}
@@ -337,7 +338,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		url = url.replace("${openssh.version}", serviceProperties.getProperty("openssh.version"));
 		String name = url.substring(url.lastIndexOf("/") + 1);
 		URL urlObj = new URL(url);
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Download %s", urlObj));
+		LOG.info("Download {0}", urlObj);
 		File archiveFile = new File(rootDir, name);
 		FileOutputStream fos = new FileOutputStream(archiveFile);
 		try {
@@ -345,7 +346,7 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		} finally {
 			fos.close();
 		}
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Download to %s", archiveFile));
+		LOG.info("Download to {0}", archiveFile);
 		FileInputStream fin = new FileInputStream(archiveFile);
 		try {
 			GzipCompressorInputStream gzIn = new GzipCompressorInputStream(fin);
@@ -386,7 +387,6 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 						try {
 							Files.setPosixFilePermissions(outFile.toPath(), pfp);
 						} catch (UnsupportedOperationException uoe) {
-							// LDP this breaks 1.5 build. Does it break the test
 							outFile.setExecutable(((entry.getMode() & 64) != 0) || ((entry.getMode() & 8) != 0),
 									((entry.getMode() & 8) == 0));
 							outFile.setReadable(((entry.getMode() & 256) != 0) || ((entry.getMode() & 32) != 0),

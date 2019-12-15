@@ -33,6 +33,7 @@ import ch.ethz.ssh2.channel.Channel;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshInput;
@@ -65,26 +66,40 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 
 	@Override
 	public InputStream getExtendedInputStream() throws IOException {
-		return new SshChannelInputStream(session.getStderr(), this);
+		return new EventFiringInputStream(new SshChannelInputStream(session.getStderr(), this), SshDataListener.EXTENDED) {
+			@Override
+			protected void fireEof() {
+				AbstractGanymedStreamChannel.this.fireEof();
+			}
+		};
 	}
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return new SshChannelInputStream(session.getStdout(), this);
+		return new EventFiringInputStream(new SshChannelInputStream(session.getStdout(), this), SshDataListener.RECEIVED) {
+			@Override
+			protected void fireEof() {
+				AbstractGanymedStreamChannel.this.fireEof();
+			}
+		};
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return session.getStdin();
+		return new EventFiringOutputStream(session.getStdin());
 	}
 
 	public abstract void onChannelOpen() throws SshException;
 
 	@Override
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		session.close();
 	}
-
+	
+	protected void beforeClose() throws SshException {
+		fireEof();
+	}
+	
 	@Override
 	public final void onOpen() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {

@@ -33,10 +33,31 @@ import net.sf.sshapi.Logger.Level;
  */
 public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
 		extends AbstractLifecycleComponent<L, C> {
+	protected static final Logger LOG = SshConfiguration.getLogger();
 	private boolean open;
-	
+	private boolean firesOwnCloseEvents;
+	private boolean closing;
+	protected Object closeLock = new Object();
+	private boolean closed;
+
 	protected AbstractLifecycleComponentWithEvents(SshProvider provider) {
 		super(provider);
+	}
+
+	public final boolean isFiresOwnCloseEvents() {
+		return firesOwnCloseEvents;
+	}
+
+	public final void setFiresOwnCloseEvents(boolean firesOwnCloseEvents) {
+		this.firesOwnCloseEvents = firesOwnCloseEvents;
+	}
+	
+	public final boolean isClosed() {
+		return closed;
+	}
+	
+	public final boolean isClosing() {
+		return closing;
 	}
 
 	public boolean isOpen() {
@@ -59,16 +80,46 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 	}
 
 	public final void close() throws SshException {
-		if (isOpen()) {
-			fireClosing();
-			onClose();
-			open = false;
-			fireClosed();
-		} else
-			SshConfiguration.getLogger().log(Level.DEBUG, String.format("Request to close %s, but it wasn't open", toString()));
+		if (!closing) {
+			if(LOG.isDebug())
+				LOG.debug("Closing {0}", hashCode());
+			/*
+			 * Do NOT use isOpen() here because that may be override, but we still want
+			 * events
+			 */
+			synchronized (closeLock) {
+				if (open && !closing) {
+					closing = true;
+					try {
+						try {
+							beforeClose();
+							if (!firesOwnCloseEvents)
+								fireClosing();
+							onClose();
+						} finally {
+							open = false;
+							closed = true;
+						}
+						if (!closeFired)
+							fireClosed();
+
+						if(LOG.isDebug())
+							LOG.debug("Closed {0}", hashCode());
+						return;
+					} finally {
+						closing = false;
+					}
+				}
+			}
+		}
+
+		LOG.debug("Request to close {0}, but it wasn't open", toString());
 	}
 
 	protected abstract void onOpen() throws SshException;
 
 	protected abstract void onClose() throws SshException;
+
+	protected void beforeClose() throws SshException {
+	}
 }

@@ -47,7 +47,7 @@ public class E06bLocalForwardingAndShell {
 				});
 			}
 
-			try (SshPortForward local = client.localForward(null, 8443, "www.google.com", 443)) {
+			try (SshPortForward local = client.localForward(null, 8443, "www.jadaptive.com", 443)) {
 
 				System.out.println("Point your browser to https://localhost:8443/");
 				

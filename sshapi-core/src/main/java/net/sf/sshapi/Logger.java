@@ -24,8 +24,9 @@
 package net.sf.sshapi;
 
 /**
- * Really simple logging interface. This is used by SSHAPI itself. Individiual
- * provides may use their own logging system.
+ * Really simple logging interface. This is used by SSHAPI itself. Individual
+ * provides may use their own logging system, although where possible SSHAPI
+ * will capture this an output through it's own log.
  */
 public interface Logger {
 
@@ -52,7 +53,11 @@ public interface Logger {
 		/**
 		 * Only log errors.
 		 */
-		ERROR
+		ERROR,
+		/**
+		 * Don't log anything.
+		 */
+		QUIET
 	}
 
 	/**
@@ -62,8 +67,9 @@ public interface Logger {
 	 *            level
 	 * @param message
 	 *            message
+	 * @param args formatting arguments
 	 */
-	void log(Level level, String message);
+	void log(Level level, String message, Object... args);
 
 	/**
 	 * Log a message and an optional exception at the specified level.
@@ -74,8 +80,9 @@ public interface Logger {
 	 *            message
 	 * @param exception
 	 *            exception
+	 * @param args formatting arguments
 	 */
-	void log(Level level, String message, Throwable exception);
+	void log(Level level, String message, Throwable exception, Object... args);
 
 	/**
 	 * Determine if messages at the specified log level will be displayed.
@@ -85,4 +92,129 @@ public interface Logger {
 	 * @return level enabled
 	 */
 	boolean isLevelEnabled(Level required);
+
+	/**
+	 * Log a message at the {@link Level#TRACE} level.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 */
+	default void trace(String message, Object... args) {
+		log(Level.TRACE, message, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#DEBUG} level.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 */
+	default void debug(String message, Object... args) {
+		log(Level.DEBUG, message, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#INFO} level.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 */
+	default void info(String message, Object... args) {
+		log(Level.DEBUG, message, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#WARN} level.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 * @param exception exception
+	 */
+	default void warn(String message, Object... args) {
+		log(Level.WARN, message, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#WARN} level with an optional stack trace.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 */
+	default void warn(String message, Throwable exception, Object... args) {
+		log(Level.WARN, message, exception, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#ERROR} level.
+	 * 
+	 * @param message
+	 *            message
+	 * @param args formatting arguments
+	 */
+	default void error(String message, Object... args) {
+		log(Level.ERROR, message, args);
+	}
+
+	/**
+	 * Log a message at the {@link Level#ERROR} level with an optional exception trace.
+	 * 
+	 * @param message
+	 *            message
+	 * @param exception exception
+	 * @param args formatting arguments
+	 */
+	default void error(String message, Throwable exception, Object... args) {
+		log(Level.ERROR, message, exception,  args);
+	}
+	
+	/**
+	 * Get if logs at level {@link Level#TRACE} will be output.
+	 * 
+	 * @return trace enabled
+	 */
+	default boolean isTrace() {
+		return isLevelEnabled(Level.TRACE);
+	}
+	
+	/**
+	 * Get if logs at level {@link Level#TRACE} will be output.
+	 * 
+	 * @return trace enabled
+	 */
+	default boolean isDebug() {
+		return isLevelEnabled(Level.DEBUG);
+	}
+	
+	/**
+	 * Get if logs at level {@link Level#INFO} will be output.
+	 * 
+	 * @return info enabled
+	 */
+	default boolean isInfo() {
+		return isLevelEnabled(Level.INFO);
+	}
+	
+	/**
+	 * Get if logs at level {@link Level#WARN} will be output.
+	 * 
+	 * @return warn enabled
+	 */
+	default boolean isWarn() {
+		return isLevelEnabled(Level.WARN);
+	}
+	
+	/**
+	 * Get if logs at level {@link Level#ERROR} will be output.
+	 * 
+	 * @return erro enabled
+	 */
+	default boolean isError() {
+		return isLevelEnabled(Level.ERROR);
+	}
+	
 }

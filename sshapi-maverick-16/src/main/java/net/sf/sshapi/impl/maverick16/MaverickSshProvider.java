@@ -38,7 +38,6 @@ import com.maverick.ssh2.Ssh2Context;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.agent.SshAgent;
@@ -54,6 +53,12 @@ public class MaverickSshProvider extends AbstractProvider {
 	 * The User-Agent Maverick identifies itself as when using HTTP proxy connection
 	 */
 	public final static String CFG_HTTP_PROXY_USER_AGENT = "sshapi.maverick.httpProxy.userAgent";
+	/**
+	 * The 'buffered' true/false flag that is passed to 
+	 * {@link SshConnector#connect(com.maverick.ssh.SshTransport, String, boolean, com.maverick.ssh.SshContext)}
+	 * and determines whether or not a thread is reading the SSH protocol. 
+	 */
+	public final static String CFG_BUFFERED = "sshapi.maverick.buffered";
 	/**
 	 * Look up proxied hostnames locally
 	 */
@@ -76,14 +81,15 @@ public class MaverickSshProvider extends AbstractProvider {
 			Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
 			Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.FORCE_KEY_EXCHANGE,
 			Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-			Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK };
+			Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK,
+			Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET };
 	private SshConnector con;
 	static {
 		// Warning for slow startup on Linux / Solaris
 		if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1
 				|| System.getProperty("os.name").toLowerCase().indexOf("solaris") != -1)
 				&& System.getProperty("java.security.egd") == null) {
-			SshConfiguration.getLogger().log(Level.WARN,
+			SshConfiguration.getLogger().warn(
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 	}
@@ -260,7 +266,7 @@ public class MaverickSshProvider extends AbstractProvider {
 			rnd = JCEProvider.getSecureRandom();
 			rnd.setSeed(seed);
 		} catch (NoSuchAlgorithmException e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to set seed.", e);
+			SshConfiguration.getLogger().error("Failed to set seed.", e);
 		}
 	}
 

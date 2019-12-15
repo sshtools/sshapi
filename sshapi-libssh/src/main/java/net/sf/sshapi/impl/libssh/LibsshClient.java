@@ -28,11 +28,8 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.net.SocketFactory;
-
 import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.sun.jna.Memory;
-import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
@@ -40,6 +37,7 @@ import com.sun.jna.ptr.PointerByReference;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshBannerHandler;
+import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -115,11 +113,6 @@ public class LibsshClient extends AbstractClient {
 		} catch (IOException ioe) {
 			throw new SshException(SshException.IO_ERROR, ioe);
 		}
-	}
-
-	@Override
-	public SocketFactory createTunneledSocketFactory() throws SshException {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -263,6 +256,11 @@ public class LibsshClient extends AbstractClient {
 	}
 
 	@Override
+	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+		return new LibsshForwardingChannel(library, this, getProvider(), getConfiguration(), hostname, port);
+	}
+
+	@Override
 	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws SshException {
 		return new LibsshSshCommand(getProvider(), getConfiguration(), libSshSession, library, command, termType, cols, rows);
@@ -295,7 +293,9 @@ public class LibsshClient extends AbstractClient {
 		if (!isConnected()) {
 			throw new SshException(SshException.NOT_OPEN, "Not connected.");
 		}
+		LOG.debug("Disconnecting libssh session");
 		library.ssh_disconnect(libSshSession);
+		LOG.debug("Disconnected libssh session");
 		connected = false;
 		authenticated = false;
 	}

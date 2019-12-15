@@ -253,7 +253,6 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 				h.position(filePointer);
 				while ((r = h.read(buf)) != -1) {
 					out.write(buf.array(), 0, r);
-					h.position(h.position() + r);
 					buf.rewind();
 				}
 			} catch (IOException e) {
@@ -340,6 +339,8 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 		}) {
 			put(path, fin, permissions);
 		}
+		if(provider.getCapabilities().contains(Capability.SET_LAST_MODIFIED))
+			setLastModified(path, source.lastModified());
 	}
 
 	//
@@ -364,16 +365,16 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	public final void put(String path, InputStream in, int permissions, long offset) throws SshException {
 		if (isUseRawSFTP(offset)) {
 			ByteBuffer buf = ByteBuffer.allocate(configuration.getStreamBufferSize());
-			try (SftpHandle h = file(path, OpenMode.SFTP_WRITE, OpenMode.SFTP_CREAT)) {
+			try (SftpHandle h = file(path, offset > 0 ? new OpenMode[] { OpenMode.SFTP_WRITE, OpenMode.SFTP_CREAT } : new OpenMode[] { OpenMode.SFTP_WRITE, OpenMode.SFTP_CREAT, OpenMode.SFTP_TRUNC })) {
 				in = new SftpInputStream(in, this, path, in.toString());
 				int r;
 				byte[] b = buf.array();
 				h.position(offset);
 				while ((r = in.read(b, 0, b.length)) != -1) {
-					buf.limit(r);
-					h.write(buf);
-					h.position(h.position() + r);
 					buf.clear();
+					buf.put(b, 0, r);
+					buf.flip();
+					h.write(buf);
 				}
 			} catch (IOException e) {
 				if (e instanceof SshException)
@@ -442,7 +443,11 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	}
 
 	@Override
-	public String readLink(String path) throws SshException {
+	public final String readLink(String path) throws SshException {
+		return Util.relativeTo(doReadLink(path), getDefaultPath());
+	}
+
+	protected String doReadLink(String path) throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -511,8 +516,8 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 					 * List corresponding remove directory and remove any paths
 					 * that do not exist locally
 					 */
-					Path rel = root.relativize(dir);
-					String remotepath = remotedir + "/" + rel.toString();
+					String rel = root.relativize(dir).toString();
+					String remotepath = rel.equals("") ? remotedir : remotedir + "/" + rel;
 					for (SftpFile file : list(remotepath)) {
 						Path local = dir.resolve(file.getName());
 						if (!Files.exists(local)) {

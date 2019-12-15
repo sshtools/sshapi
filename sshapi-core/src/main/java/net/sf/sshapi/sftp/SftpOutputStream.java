@@ -29,6 +29,13 @@ public class SftpOutputStream extends OutputStream {
 		this.path = path;
 		this.target = target;
 		this.length = length;
+		if (this.length == -1) {
+			try {
+				this.length = client.stat(path).getSize();
+			} catch (SshException se) {
+				throw new IllegalStateException("Failed to get size for transfer.", se);
+			}
+		}
 	}
 
 	@Override
@@ -74,6 +81,10 @@ public class SftpOutputStream extends OutputStream {
 		}
 	}
 
+	public long getLength() {
+		return length;
+	}
+
 	@Override
 	public String toString() {
 		return out.toString();
@@ -81,13 +92,6 @@ public class SftpOutputStream extends OutputStream {
 
 	protected void checkStarted() {
 		if (!started) {
-			if (length == -1) {
-				try {
-					length = client.stat(path).getSize();
-				} catch (SshException se) {
-					throw new IllegalStateException("Failed to get size for transfer.", se);
-				}
-			}
 			client.fireFileTransferStarted(path, target, length);
 			started = true;
 		}

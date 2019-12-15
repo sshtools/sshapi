@@ -37,7 +37,6 @@ import com.sshtools.publickey.SshKeyPairGenerator;
 import com.sshtools.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.publickey.SshPublicKeyFileFactory;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
@@ -177,11 +176,11 @@ public class MaverickIdentityManager implements SshIdentityManager {
 					pair = privateKeyFile.toKeyPair(null);
 				}
 			} catch (SshException e) {
-				SshConfiguration.getLogger().log(Level.WARN, "Failed to test if key is encrypted.");
+				SshConfiguration.getLogger().warn("Failed to test if key is encrypted.");
 			} catch (IOException e) {
-				SshConfiguration.getLogger().log(Level.ERROR, "Failed to load key.");
+				SshConfiguration.getLogger().error("Failed to load key.", e);
 			} catch (InvalidPassphraseException e) {
-				SshConfiguration.getLogger().log(Level.WARN, "Failed to decode supposedly unencrypted key.");
+				SshConfiguration.getLogger().warn("Failed to decode supposedly unencrypted key.");
 			}
 		}
 

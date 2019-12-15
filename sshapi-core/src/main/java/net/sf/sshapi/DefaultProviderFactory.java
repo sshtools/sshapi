@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.sf.sshapi.Logger.Level;
-
 /**
  * Default implementation of a {@link SshProviderFactory} that by default
  * searches for known implementations on the classpath. It can also be
@@ -46,6 +44,7 @@ import net.sf.sshapi.Logger.Level;
  * 
  */
 public class DefaultProviderFactory implements SshProviderFactory {
+	private static final Logger LOG = SshConfiguration.getLogger();
 	/**
 	 * System property name that may be set to use a specific provider
 	 */
@@ -63,10 +62,10 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	}
 
 	/**
-	 * Get a singleton instance of the client factory. The instance will be
-	 * created on the first call to this method. By default, an instance of this
-	 * class will be created, although this may be overridden by setting the
-	 * system property {@link #FACTORY_CLASS_NAME}.
+	 * Get a singleton instance of the client factory. The instance will be created
+	 * on the first call to this method. By default, an instance of this class will
+	 * be created, although this may be overridden by setting the system property
+	 * {@link #FACTORY_CLASS_NAME}.
 	 * 
 	 * @return instance
 	 */
@@ -88,12 +87,12 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				try {
 					addIfNotExist(providers, e);
 				} catch (UnsatisfiedLinkError ule) {
-					SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.",
-							ule);
-				} catch(NoClassDefFoundError ex) {
-					SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. Error suggests that an incorrect dependency library may be being used.", ex);
+					LOG.warn("Provider requires a native library but it could not be found.", ule);
+				} catch (NoClassDefFoundError ex) {
+					LOG.warn("Provider failed to load. Error suggests that an incorrect dependency library may be being used.",
+							ex);
 				} catch (Exception ex) {
-					SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+					LOG.warn("Provider failed to load. ", ex);
 				}
 			}
 		} catch (IOException ioe) {
@@ -132,8 +131,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	}
 
 	/**
-	 * Get all discovered ciphers. This is determine by examining all providers
-	 * for their ciphers and producing a unique list.
+	 * Get all discovered ciphers. This is determine by examining all providers for
+	 * their ciphers and producing a unique list.
 	 * 
 	 * @return all ciphers
 	 */
@@ -145,17 +144,17 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getSupportedCiphers(SshConfiguration.SSH1_OR_SSH2);
 				addList(ciphers, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load.", ex);
+				LOG.warn("Provider failed to load.", ex);
 			}
 		}
 		return ciphers.toArray(new String[0]);
 	}
 
 	/**
-	 * Get all discovered key exchange algorithms. This is determine by
-	 * examining all providers for their algorithms and producing a unique list.
+	 * Get all discovered key exchange algorithms. This is determine by examining
+	 * all providers for their algorithms and producing a unique list.
 	 * 
 	 * @return all key exchange algorithms
 	 */
@@ -167,17 +166,17 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getSupportedKeyExchange();
 				addList(kex, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+				LOG.warn("Provider failed to load. ", ex);
 			}
 		}
 		return kex.toArray(new String[0]);
 	}
 
 	/**
-	 * Get all discovered compression algorithms. This is determine by examining
-	 * all providers for their algorithms and producing a unique list.
+	 * Get all discovered compression algorithms. This is determine by examining all
+	 * providers for their algorithms and producing a unique list.
 	 * 
 	 * @return all compression algorithms
 	 */
@@ -189,18 +188,17 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getSupportedCompression();
 				addList(comp, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+				LOG.warn("Provider failed to load. ", ex);
 			}
 		}
 		return (String[]) comp.toArray(new String[0]);
 	}
 
 	/**
-	 * Get all discovered message authentication code algorithms. This is
-	 * determine by examining all providers for their algorithms and producing a
-	 * unique list.
+	 * Get all discovered message authentication code algorithms. This is determine
+	 * by examining all providers for their algorithms and producing a unique list.
 	 * 
 	 * @return all message authentication code algorithms
 	 */
@@ -212,9 +210,9 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getSupportedMAC();
 				addList(mac, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+				LOG.warn("Provider failed to load. ", ex);
 			}
 		}
 		return mac.toArray(new String[0]);
@@ -238,8 +236,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	}
 
 	/**
-	 * Get all discovered public key algorithms. This is determine by examining
-	 * all providers for their algorithms and producing a unique list.
+	 * Get all discovered public key algorithms. This is determine by examining all
+	 * providers for their algorithms and producing a unique list.
 	 * 
 	 * @return all public key algorithms
 	 */
@@ -251,17 +249,17 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getSupportedPublicKey();
 				addList(pk, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+				LOG.warn("Provider failed to load. ", ex);
 			}
 		}
 		return pk.toArray(new String[0]);
 	}
 
 	/**
-	 * Get all discovered fingerprint hashing algorithms. This is determine by examining
-	 * all providers for their algorithms and producing a unique list.
+	 * Get all discovered fingerprint hashing algorithms. This is determine by
+	 * examining all providers for their algorithms and producing a unique list.
 	 * 
 	 * @return all fingerprint hashing algorithms
 	 */
@@ -273,9 +271,9 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				List<String> c = providers[i].getFingerprintHashingAlgorithms();
 				addList(fps, c);
 			} catch (UnsatisfiedLinkError ule) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider requires a native library but it could not be found.", ule);
+				LOG.warn("Provider requires a native library but it could not be found.", ule);
 			} catch (Exception ex) {
-				SshConfiguration.getLogger().log(Level.WARN, "Provider failed to load. ", ex);
+				LOG.warn("Provider failed to load. ", ex);
 			}
 		}
 		return fps.toArray(new String[0]);
@@ -301,8 +299,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 
 	public SshProvider getProvider(SshConfiguration configuration) {
 		/*
-		 * First check if the provider system property is set. If it is, we use
-		 * that and only that
+		 * First check if the provider system property is set. If it is, we use that and
+		 * only that
 		 */
 		SshProvider provider = loadFromProperties(System.getProperties());
 		if (provider != null && !provider.supportsConfiguration(null)) {
@@ -315,15 +313,16 @@ public class DefaultProviderFactory implements SshProviderFactory {
 		if (provider == null) {
 			ClassLoader cl = getClassLoader();
 			try {
-				SshConfiguration.getLogger().log(Level.INFO, "Looking for sshapi-providers.properties resources.");
-				for (Enumeration<URL> e = cl.getResources("sshapi-providers.properties"); e.hasMoreElements() && provider == null;) {
+				LOG.info("Looking for sshapi-providers.properties resources.");
+				for (Enumeration<URL> e = cl.getResources("sshapi-providers.properties"); e.hasMoreElements()
+						&& provider == null;) {
 					SshProvider possibleProvider = loadFromProperties(e.nextElement());
 					if (possibleProvider != null) {
 						if (possibleProvider.supportsConfiguration(configuration)) {
-							SshConfiguration.getLogger().log(Level.INFO, "Provider supports configuration.");
+							LOG.info("Provider supports configuration.");
 							provider = possibleProvider;
 						} else {
-							SshConfiguration.getLogger().log(Level.INFO, "Provider DOES NOT support configuration.");
+							LOG.info("Provider DOES NOT support configuration.");
 						}
 					}
 				}
@@ -341,8 +340,8 @@ public class DefaultProviderFactory implements SshProviderFactory {
 
 	/**
 	 * Set the class loader to use to load providers. By default, this will be
-	 * current {@link Thread#getContextClassLoader()} if one is set, or the
-	 * class loader that loaded this class if not.
+	 * current {@link Thread#getContextClassLoader()} if one is set, or the class
+	 * loader that loaded this class if not.
 	 * 
 	 * @param classLoader class loader
 	 */
@@ -353,9 +352,9 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	protected static final SshProvider createProviderInstance(String className)
 			throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		try {
-			SshConfiguration.getLogger().log(Level.INFO, "Attempting to load provider " + className + ".");
+			LOG.info("Attempting to load provider {0}.", className);
 			SshProvider provider = (SshProvider) (Class.forName(className, true, getClassLoader()).newInstance());
-			SshConfiguration.getLogger().log(Level.INFO, "Provider " + className + " loaded.");
+			LOG.info("Provider {0} loaded", className);
 			return provider;
 		} catch (InstantiationException ie) {
 			if (ie.getCause() != null && ie.getCause() instanceof ClassNotFoundException) {
@@ -377,7 +376,7 @@ public class DefaultProviderFactory implements SshProviderFactory {
 	}
 
 	protected static final SshProvider loadFromProperties(URL resource) throws IOException {
-		SshConfiguration.getLogger().log(Level.INFO, "Loading " + resource + ".");
+		LOG.info("Loading {0}", resource);
 		return loadFromProperties(loadProperties(resource));
 	}
 
@@ -388,18 +387,17 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				return ((SshProvider) providerCache.get(requestedProviderClassName));
 			}
 			/*
-			 * The provider properties also specify a class name that the
-			 * provider depends on, i.e. one that exists in the provider
-			 * library, not the bridge
+			 * The provider properties also specify a class name that the provider depends
+			 * on, i.e. one that exists in the provider library, not the bridge
 			 */
 			String dependsOn = properties.getProperty(requestedProviderClassName + ".dependsOn", "");
 			if (!dependsOn.equals("")) {
 				try {
 					Class.forName(dependsOn, true, getClassLoader());
 				} catch (ClassNotFoundException cnfe) {
-					SshConfiguration.getLogger().log(Level.WARN,
-							"The provider " + requestedProviderClassName + " was found, but a class it depends on (" + dependsOn
-									+ ", does not exist. Probably caused by a missing dependency.");
+					LOG.warn(
+							"The provider {0} was found, but a class it depends on ({1}, does not exist. Probably caused by a missing dependency.",
+							requestedProviderClassName, dependsOn);
 					return null;
 				}
 			}
@@ -408,15 +406,10 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				providerCache.put(requestedProviderClassName, provider);
 				return provider;
 			} catch (NoClassDefFoundError ncdfe) {
-				SshConfiguration.getLogger().log(Level.WARN,
-						"Could not load provider " + requestedProviderClassName + ". Probably cause by a missing dependency.");
+				LOG.warn("Could not load provider {0}. Probably cause by a missing dependency.",
+						requestedProviderClassName);
 			} catch (Exception e) {
-				SshConfiguration.getLogger().log(Level.WARN,
-						"Could not load provider " + requestedProviderClassName + ". " + e.getLocalizedMessage());
-				// throw new IllegalStateException("Failed to load provider " +
-				// requestedProviderClassName
-				// + " as specifed by system property " + PROVIDER_CLASS_NAME +
-				// ".", e);
+				LOG.warn("Could not load provider {0}. {1}", requestedProviderClassName, e.getLocalizedMessage());
 			}
 		}
 		return null;

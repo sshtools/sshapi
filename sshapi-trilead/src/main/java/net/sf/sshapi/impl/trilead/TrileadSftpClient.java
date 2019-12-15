@@ -256,9 +256,9 @@ class TrileadSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String readLink(String path) throws SshException {
+	protected String doReadLink(String path) throws SshException {
 		try {
-			return client.readLink(path);
+			return Util.linkPath(client.readLink(path), path);
 		} catch (SFTPException sftpE) {
 			throw new SftpException(sftpE.getServerErrorCode(), sftpE.getLocalizedMessage());
 		} catch (IOException e) {

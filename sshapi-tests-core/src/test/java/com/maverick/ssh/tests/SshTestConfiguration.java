@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
 
@@ -106,20 +105,20 @@ public class SshTestConfiguration {
 				if(configuration == null || configuration.length() == 0) {
 					try {
 						Class.forName("com.maverick.ssh.tests.server.mavericksshd.MaverickSSHServerServiceImpl");
-						SshConfiguration.getLogger().log(Level.INFO, "Auto-detected Legacy Maverick SSHD server");
+						SshConfiguration.getLogger().info("Auto-detected Legacy Maverick SSHD server");
 					}
 					catch(Exception e) {
 						try {
 							Class.forName("com.maverick.ssh.tests.server.synergysshd.SynergySSHServerServiceImpl");
-							SshConfiguration.getLogger().log(Level.INFO, "Auto-detected Synergy SSHD server");
+							SshConfiguration.getLogger().info("Auto-detected Synergy SSHD server");
 						}
 						catch(Exception e2) {
 							try {
 								Class.forName("com.maverick.ssh.tests.server.openssh.LocalOpenSSHServerServiceImpl");
-								SshConfiguration.getLogger().log(Level.INFO, "Auto-detected OpenSSH server");
+								SshConfiguration.getLogger().info("Auto-detected OpenSSH server");
 							}
 							catch(Exception e3) {
-								SshConfiguration.getLogger().log(Level.WARN, String.format("Using default server configuration %s", DEFAULT_CONFIGURATION_NAME));
+								SshConfiguration.getLogger().warn("Using default server configuration {0}", DEFAULT_CONFIGURATION_NAME);
 								configuration = DEFAULT_CONFIGURATION_NAME;
 							}
 							configuration = DEFAULT_CONFIGURATION_NAME;
@@ -154,7 +153,7 @@ public class SshTestConfiguration {
 						in.close();
 					}
 				} else {
-					SshConfiguration.getLogger().log(Level.WARN, "No user.properties file found");
+					SshConfiguration.getLogger().warn("No user.properties file found");
 				}
 				instance = new SshTestConfiguration(name, properties);
 			} catch (IOException ioe) {

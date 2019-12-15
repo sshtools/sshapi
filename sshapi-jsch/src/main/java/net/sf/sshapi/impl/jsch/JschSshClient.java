@@ -26,10 +26,7 @@ package net.sf.sshapi.impl.jsch;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,11 +52,15 @@ import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
 import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.AbstractSocket;
+import net.sf.sshapi.AbstractForwardingChannel;
+import net.sf.sshapi.DefaultSCPClient;
 import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -75,6 +76,46 @@ import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.Util;
 
 class JschSshClient extends AbstractClient implements Logger {
+	protected final static class ForwardingChannel extends AbstractForwardingChannel<JschSshClient> {
+		private ChannelDirectTCPIP localForward;
+
+		protected ForwardingChannel(JschSshClient client, SshProvider provider, SshConfiguration configuration,
+				String hostname, int port) {
+			super(client, provider, configuration, hostname, port);
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringInputStream(localForward.getInputStream(), SshDataListener.RECEIVED);
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringOutputStream(localForward.getOutputStream());
+		}
+
+		@Override
+		protected void onOpen() throws net.sf.sshapi.SshException {
+			try {
+				localForward = (ChannelDirectTCPIP) client.session.openChannel("direct-tcpip");
+				localForward.setHost(hostname);
+				localForward.setPort(port);
+				localForward.connect();
+			} catch (JSchException e) {
+				throw new SshException("Failed to open direct-tcpip channel.", e);
+			}
+		}
+
+		@Override
+		protected void onCloseStream() throws net.sf.sshapi.SshException {
+			localForward.disconnect();
+		}
+	}
+
 	class HostKeyRepositoryBridge implements HostKeyRepository {
 		HostKeyRepository knownHosts;
 
@@ -167,116 +208,6 @@ class JschSshClient extends AbstractClient implements Logger {
 		}
 	}
 
-	class RemoteSocket extends AbstractSocket {
-		private ChannelDirectTCPIP channel;
-		private Session session;
-
-		RemoteSocket(Session session) {
-			super();
-			this.session = session;
-		}
-
-		RemoteSocket(Session session, InetAddress host, int port) throws UnknownHostException, IOException {
-			super();
-			this.session = session;
-			this.connect(new InetSocketAddress(host, port));
-		}
-
-		RemoteSocket(Session session, String host, int port) throws UnknownHostException, IOException {
-			super();
-			this.session = session;
-			this.connect(new InetSocketAddress(InetAddress.getByName(host), port));
-		}
-
-		@Override
-		public void bind(SocketAddress bindpoint) throws IOException {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public synchronized void doClose() throws IOException {
-			if (channel != null) {
-				try {
-					channel.disconnect();
-				} finally {
-					channel = null;
-				}
-			}
-		}
-
-		@Override
-		public InputStream getInputStream() throws IOException {
-			if (!isConnected()) {
-				throw new IOException("Not connected.");
-			}
-			return channel.getInputStream();
-		}
-
-		@Override
-		public OutputStream getOutputStream() throws IOException {
-			if (!isConnected()) {
-				throw new IOException("Not connected.");
-			}
-			return channel.getOutputStream();
-		}
-
-		@Override
-		public boolean isConnected() {
-			return channel != null && !isClosed();
-		}
-
-		@Override
-		public void onConnect(InetSocketAddress addr, int timeout) throws IOException {
-			if (session == null) {
-				throw new IOException("Not connected.");
-			}
-			try {
-				channel = (ChannelDirectTCPIP) session.openChannel("direct-tcpip");
-				channel.setHost(addr.getHostName());
-				channel.setPort(addr.getPort());
-				channel.connect();
-			} catch (JSchException e) {
-				IOException ioe = new IOException("Failed to open direct-tcpip channel.");
-				ioe.initCause(e);
-				throw ioe;
-			}
-		}
-	}
-
-	class RemoteSocketFactory extends SocketFactory {
-		private Session session;
-
-		RemoteSocketFactory(Session session) {
-			this.session = session;
-		}
-
-		@Override
-		public Socket createSocket() throws IOException {
-			return new RemoteSocket(session);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress host, int port) throws IOException {
-			return new RemoteSocket(session, host, port);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-			return new RemoteSocket(session, address, port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-			return new RemoteSocket(session, host, port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
-				throws IOException, UnknownHostException {
-			return new RemoteSocket(session, host, port);
-		}
-	}
-
 	class UserInfoAuthenticatorBridge implements UserInfo, UIKeyboardInteractive {
 		private final SshKeyboardInteractiveAuthenticator keyboardInteractiveAuthenticator;
 		private char[] passphrase;
@@ -320,7 +251,8 @@ class JschSshClient extends AbstractClient implements Logger {
 
 		@Override
 		public boolean promptPassword(String message) {
-			password = passwordAuthenticator == null ? null : passwordAuthenticator.promptForPassword(JschSshClient.this, message);
+			password = passwordAuthenticator == null ? null
+					: passwordAuthenticator.promptForPassword(JschSshClient.this, message);
 			return password != null;
 		}
 
@@ -407,7 +339,8 @@ class JschSshClient extends AbstractClient implements Logger {
 		SshPasswordAuthenticator paw = (SshPasswordAuthenticator) authenticatorMap.get("password");
 		SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticatorMap.get("publickey");
 		List<String> auths = new ArrayList<>();
-		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap.get("keyboard-interactive");
+		SshKeyboardInteractiveAuthenticator ki = (SshKeyboardInteractiveAuthenticator) authenticatorMap
+				.get("keyboard-interactive");
 		if (pk != null) {
 			try {
 				auths.add("publickey");
@@ -426,8 +359,8 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	public SocketFactory createTunneledSocketFactory() throws SshException {
-		return new RemoteSocketFactory(session);
+	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 
 	@Override
@@ -487,15 +420,15 @@ class JschSshClient extends AbstractClient implements Logger {
 		net.sf.sshapi.Logger logger = SshConfiguration.getLogger();
 		switch (level) {
 		case Logger.DEBUG:
-			return logger.isLevelEnabled(net.sf.sshapi.Logger.Level.DEBUG);
+			return logger.isDebug();
 		case Logger.ERROR:
-			return logger.isLevelEnabled(net.sf.sshapi.Logger.Level.ERROR);
+			return logger.isError();
 		case Logger.INFO:
-			return logger.isLevelEnabled(net.sf.sshapi.Logger.Level.INFO);
+			return logger.isInfo();
 		case Logger.WARN:
-			return logger.isLevelEnabled(net.sf.sshapi.Logger.Level.WARN);
+			return logger.isWarn();
 		default:
-			return logger.isLevelEnabled(net.sf.sshapi.Logger.Level.ERROR);
+			return logger.isError();
 		}
 	}
 
@@ -543,7 +476,8 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
 		try {
 			JSch.setLogger(this);
 			client.setHostKeyRepository(new HostKeyRepositoryBridge(client.getHostKeyRepository()));
@@ -572,10 +506,9 @@ class JschSshClient extends AbstractClient implements Logger {
 				};
 			}
 			/*
-			 * Because jSch doesnt separate the connect / authenticate phases,
-			 * we try to work around this by creating the socket now so we can
-			 * get an error. We then use this socket as the first one returned
-			 * in a custom socket factory.
+			 * Because jSch doesnt separate the connect / authenticate phases, we try to
+			 * work around this by creating the socket now so we can get an error. We then
+			 * use this socket as the first one returned in a custom socket factory.
 			 */
 			socket = null;
 			if (sfactory == null) {
@@ -673,16 +606,17 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	protected SshCommand doCreateCommand(String command, String termType, int colWidth, int rowHeight, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws SshException {
+	protected SshCommand doCreateCommand(String command, String termType, int colWidth, int rowHeight, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws SshException {
 		try {
 			ChannelExec channel = (ChannelExec) session.openChannel("exec");
 			if (termType != null) {
-				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
+				channel.setTerminalMode(
+						terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
 				channel.setPty(true);
 			}
-			channel.setCommand(command); 
+			channel.setCommand(command);
 			return new JschStreamChannel(getProvider(), getConfiguration(), channel) {
 				@Override
 				protected void onChannelClose() throws SshException {
@@ -700,8 +634,8 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
-			final int remotePort) throws SshException {
+	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort,
+			final String remoteHost, final int remotePort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
 			private int boundPort;
 
@@ -726,7 +660,8 @@ class JschSshClient extends AbstractClient implements Logger {
 			protected void onOpen() throws SshException {
 				try {
 					if (localPort == 0)
-						boundPort = session.setPortForwardingL(localAddress, Util.findRandomPort(), remoteHost, remotePort);
+						boundPort = session.setPortForwardingL(localAddress, Util.findRandomPort(), remoteHost,
+								remotePort);
 					else
 						boundPort = session.setPortForwardingL(localAddress, localPort, remoteHost, remotePort);
 					if (boundPort < 1 && localPort > 0)
@@ -741,10 +676,10 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
-			final int localPort) throws SshException {
+	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort,
+			final String localAddress, final int localPort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
-			
+
 			@Override
 			protected void onClose() throws SshException {
 				try {
@@ -770,7 +705,7 @@ class JschSshClient extends AbstractClient implements Logger {
 
 	@Override
 	protected SshSCPClient doCreateSCP() throws SshException {
-		return new JschSCPClient(this) {
+		return new DefaultSCPClient(this) {
 
 			@Override
 			protected void onClose() throws SshException {
@@ -814,11 +749,11 @@ class JschSshClient extends AbstractClient implements Logger {
 		try {
 			ChannelShell channel = (ChannelShell) session.openChannel("shell");
 			if (termType != null) {
-				channel.setTerminalMode(terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
+				channel.setTerminalMode(
+						terminalModes == null || terminalModes.length == 0 ? new byte[0] : terminalModes);
 				channel.setPtyType(termType, colWidth, rowHeight, pixWidth, pixHeight);
 				channel.setPty(true);
-			}
-			else
+			} else
 				channel.setPty(false);
 			return new JschSshShell(getProvider(), getConfiguration(), channel) {
 				@Override
@@ -861,8 +796,8 @@ class JschSshClient extends AbstractClient implements Logger {
 	private boolean attemptAuth() throws SshException {
 		SshConfiguration configuration = getConfiguration();
 		try {
-			session.connect(Integer
-					.parseInt(configuration.getProperties().getProperty(JschSshProvider.CFG_SESSION_CONNECT_TIMEOUT, "30000")));
+			session.connect(Integer.parseInt(
+					configuration.getProperties().getProperty(JschSshProvider.CFG_SESSION_CONNECT_TIMEOUT, "30000")));
 			authenticated = true;
 			return true;
 		} catch (NumberFormatException e) {

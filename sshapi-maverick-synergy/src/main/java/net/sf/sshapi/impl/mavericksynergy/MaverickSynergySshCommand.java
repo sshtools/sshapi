@@ -37,6 +37,7 @@ import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 
@@ -55,8 +56,9 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 	private byte[] terminalModes;
 	private String termType;
 
-	MaverickSynergySshCommand(SshProvider provider, SshConfiguration configuration, final Connection<SshClientContext> con, String command, String termType, int cols, int rows,
-			int pixWidth, int pixHeight, byte[] terminalModes) {
+	MaverickSynergySshCommand(SshProvider provider, SshConfiguration configuration,
+			final Connection<SshClientContext> con, String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) {
 		super(provider, configuration);
 		this.con = con;
 		this.command = command;
@@ -66,6 +68,7 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 		this.rows = rows;
 		this.pixWidth = pixWidth;
 		this.pixHeight = pixHeight;
+		setFiresOwnCloseEvents(true);
 	}
 
 	@Override
@@ -93,7 +96,24 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
-				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize());
+				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize()) {
+
+			@Override
+			protected void onChannelClosed() {
+				fireClosed();
+			}
+
+			@Override
+			protected void onChannelClosing() {
+				fireClosing();
+			}
+
+			@Override
+			protected void onRemoteEOF() {
+				fireEof();
+			}
+
+		};
 		con.openChannel(session);
 		if (termType != null) {
 			PseudoTerminalModes ptm = new PseudoTerminalModes();
@@ -118,13 +138,13 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException("Failed to execute command.", e);
 		}
-		inputStream = session.getInputStream();
-		extendedInputStream = session.getErrorStream();
-		outputStream = session.getOutputStream();
+		inputStream = new EventFiringInputStream(session.getInputStream(), SshDataListener.RECEIVED);
+		extendedInputStream = new EventFiringInputStream(session.getErrorStream(), SshDataListener.EXTENDED);
+		outputStream = new EventFiringOutputStream(session.getOutputStream());
 	}
 
 	@Override
-	protected void onClose() throws SshException {
+	protected void onCloseStream() throws SshException {
 		session.close();
 	}
 }

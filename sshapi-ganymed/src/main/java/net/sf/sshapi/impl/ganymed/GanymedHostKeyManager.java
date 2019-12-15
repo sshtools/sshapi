@@ -33,18 +33,18 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.hostkeys.AbstractHostKey;
-import net.sf.sshapi.hostkeys.SshHostKey;
-import net.sf.sshapi.hostkeys.SshHostKeyManager;
-import net.sf.sshapi.util.Util;
 import ch.ethz.ssh2.KnownHosts;
 import ch.ethz.ssh2.signature.DSAPublicKey;
 import ch.ethz.ssh2.signature.DSASHA1Verify;
 import ch.ethz.ssh2.signature.RSAPublicKey;
 import ch.ethz.ssh2.signature.RSASHA1Verify;
+import net.sf.sshapi.Logger;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.hostkeys.AbstractHostKey;
+import net.sf.sshapi.hostkeys.SshHostKey;
+import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.util.Util;
 
 /**
  * Ganymed host key management supports the OpenSSH known_hosts format. This
@@ -52,6 +52,7 @@ import ch.ethz.ssh2.signature.RSASHA1Verify;
  */
 class GanymedHostKeyManager implements SshHostKeyManager {
 
+	private static final Logger LOG = SshConfiguration.getLogger();
 	private KnownHosts knownHosts;
 	private File knownHostsFile;
 	private SshConfiguration configuration;
@@ -80,7 +81,7 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 			LinkedList<?> publickeys = (LinkedList<?>) field.get(knownHosts);
 			addKeys(keys, publickeys);
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to get host keys.", e);
+			LOG.error("Failed to get host keys.", e);
 		}
 
 		return (SshHostKey[]) keys.toArray(new SshHostKey[0]);
@@ -106,7 +107,7 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 				type = SshConfiguration.PUBLIC_KEY_SSHDSA;
 				keyBytes = DSASHA1Verify.encodeSSHDSAPublicKey((DSAPublicKey) key);
 			} else {
-				SshConfiguration.getLogger().log(Level.WARN, "Unsupported key format " + key);
+				LOG.warn("Unsupported key format {0}", key);
 				continue;
 			}
 			keys.add(new GanymedHostKey(type, keyBytes, patterns));
@@ -128,7 +129,7 @@ class GanymedHostKeyManager implements SshHostKeyManager {
 				}
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Error locating host keys.", e);
+			LOG.error("Error locating host keys.", e);
 		}
 		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
 	}

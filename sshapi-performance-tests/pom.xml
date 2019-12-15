@@ -42,7 +42,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
@@ -67,8 +67,7 @@
 			<artifactId>sshapi-trilead</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency> -->
-
+		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-synergy</artifactId>

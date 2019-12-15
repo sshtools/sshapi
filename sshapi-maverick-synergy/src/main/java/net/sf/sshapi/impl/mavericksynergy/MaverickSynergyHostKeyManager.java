@@ -41,7 +41,6 @@ import com.sshtools.common.util.Base64;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
@@ -245,7 +244,7 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 				load(getConfiguration());
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR,
+			SshConfiguration.getLogger().error(
 					"Failed to reload trusted host key store after an external modification.");
 		}
 	}

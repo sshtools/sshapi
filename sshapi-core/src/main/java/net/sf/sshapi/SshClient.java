@@ -692,6 +692,39 @@ public interface SshClient extends Closeable, AutoCloseable {
 	SftpClient sftp() throws SshException;
 
 	/**
+	 * Create a channel that is connected as a socket on the remote server
+	 * to target host and port using SSH port forwarding tunnels. The input
+	 * and output streams are available from the returned object. The returned
+	 * object must have {@link SshChannel#open()} called before it may be used. 
+	 * {@link Capability#FORWARDING_CHANNELS} must be present. The default client
+	 * implementation can simulate this by actually creating a local socket, however
+	 * it is recommended where possible, and  the provider supports it natively,
+	 * that native support is used.
+	 * 
+	 * @param hostname host to connect remote socket to
+	 * @param port port to connect remote socket to
+	 * @return channel from which I/O streams may be obtained, and listeners added.
+	 * @throws SshException on any error
+	 */
+	SshChannel createForwardingChannel(String hostname, int port) throws SshException;
+
+	/**
+	 * Create and open a channel that is connected as a socket on the remote server
+	 * to target host and port using SSH port forwarding tunnels. The input
+	 * and output streams are available from the returned object.  
+	 * {@link Capability#FORWARDING_CHANNELS} must be present. The default client
+	 * implementation can simulate this by actually creating a local socket, however
+	 * it is recommended where possible, and the provider supports it natively,
+	 * that native support is used.
+	 * 
+	 * @param hostname host to connect remote socket to
+	 * @param port port to connect remote socket to
+	 * @return opened channel from which I/O streams may be obtained, and listeners added.
+	 * @throws SshException on any error
+	 */
+	SshChannel forwardingChannel(String hostname, int port) throws SshException;
+
+	/**
 	 * Create an instance of a {@link SshPublicKeySubsystem}, if the provider
 	 * supports it.
 	 * <p>

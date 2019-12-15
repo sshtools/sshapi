@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,7 @@ import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpOperation;
+import net.sf.sshapi.util.Util;
 
 class J2SshSftpClient extends AbstractSftpClient {
 	private final SshClient client;
@@ -57,27 +58,30 @@ class J2SshSftpClient extends AbstractSftpClient {
 		this.client = client;
 	}
 
+	@Override
 	public void chgrp(String path, int permissions) throws SshException {
 		try {
 			sftpClient.chgrp(permissions, path);
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to change file group.");
 		}
 	}
 
+	@Override
 	public void chmod(String path, int permissions) throws SshException {
 		try {
 			sftpClient.chmod(permissions, path);
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to change mode.");
 		}
 	}
 
+	@Override
 	public void chown(String path, int permissions) throws SshException {
 		try {
 			sftpClient.chown(permissions, path);
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to change owner.");
 		}
 	}
 
@@ -85,17 +89,19 @@ class J2SshSftpClient extends AbstractSftpClient {
 	public SftpOperation download(String remotedir, File localdir, boolean recurse, boolean sync, boolean commit)
 			throws SshException {
 		try {
-			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync, commit,
-					createProgress(localdir.getPath())));
+			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync,
+					commit, createProgress(localdir.getPath())), false, localdir, remotedir);
 		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to create directory.");
 		}
 	}
 
+	@Override
 	public String getDefaultPath() {
 		return home;
 	}
 
+	@Override
 	public SftpFile[] ls(String path) throws SshException {
 		try {
 			@SuppressWarnings("unchecked")
@@ -106,25 +112,39 @@ class J2SshSftpClient extends AbstractSftpClient {
 			}
 			return files;
 		} catch (IOException e) {
-			throw new SshException("Failed to list directory.", e);
+			throw toException(e, "Failed to list directory.");
 		}
 	}
 
+	@Override
 	public void mkdir(String path, int permissions) throws SshException {
 		try {
-			sftpClient.mkdir(path);
+			try {
+				stat(path);
+				throw new SftpException(SftpException.SSH_FX_FILE_ALREADY_EXISTS);
+			} catch (SftpException se) {
+				if (se.getCode() == SftpException.SSH_FX_NO_SUCH_FILE) {
+					sftpClient.mkdir(path);
+				} else
+					throw se;
+			}
+		} catch (SshException sshe) {
+			throw sshe;
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to create directory.");
 		}
 	}
 
+	@Override
 	public void mkdirs(String path, int permissions) throws SshException {
 		sftpClient.mkdirs(path);
 	}
 
+	@Override
 	public void onClose() throws SshException {
 	}
 
+	@Override
 	public void onOpen() throws SshException {
 		try {
 			sftpClient = client.openSftpClient();
@@ -134,37 +154,40 @@ class J2SshSftpClient extends AbstractSftpClient {
 		}
 	}
 
+	@Override
 	public void rename(String path, String newPath) throws SshException {
 		try {
 			sftpClient.rename(path, newPath);
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to rename file.");
 		}
 	}
 
+	@Override
 	public void rm(String path) throws SshException {
 		try {
 			SftpFile file = stat(path);
 			if (file.isDirectory()) {
-				throw new SftpException(SftpException.SSH_FX_NO_SUCH_FILE);
+				throw new SftpException(SftpException.SSH_FX_FILE_IS_A_DIRECTORY);
 			}
 			sftpClient.rm(path);
 		} catch (SftpException e) {
 			throw e;
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw new SshException("Failed to remove file.", e);
 		}
 	}
+
+//	@Override
+//	public void rm(String path, boolean recurse) throws SftpException, SshException {
+//		try {
+//			sftpClient.rm(path, true, recurse);
+//		} catch (Exception e) {
+//			throw new SshException("Failed to remove file(s).", e);
+//		}
+//	}
 
 	@Override
-	public void rm(String path, boolean recurse) throws SftpException, SshException {
-		try {
-			sftpClient.rm(path, true, recurse);
-		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
-		}
-	}
-
 	public void rmdir(String path) throws SshException {
 		try {
 			SftpFile file = stat(path);
@@ -175,21 +198,38 @@ class J2SshSftpClient extends AbstractSftpClient {
 		} catch (SftpException e) {
 			throw e;
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to remove directory.");
 		}
 	}
 
+	@Override
 	public void setLastModified(String path, long modtime) throws SshException {
-		throw new UnsupportedOperationException();
+		try {
+			FileAttributes stat = sftpClient.stat(path);
+			UnsignedInteger32 a = stat.getAccessedTime();
+			stat.setTimes(a, new UnsignedInteger32(modtime / 1000));
+		} catch (SftpException e) {
+			throw e;
+		} catch (Exception e) {
+			throw toException(e, "Failed to create directory.");
+		}
 	}
 
+	@Override
 	public SftpFile stat(String path) throws SshException {
 		try {
 			FileAttributes entry = sftpClient.stat(path);
 			return entryToFile(path, entry);
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to create directory.");
 		}
+	}
+
+	private SshException toException(Exception e, String text) {
+		if ("No such file".equals(e.getMessage())) {
+			return new SftpException(SftpException.SSH_FX_NO_SUCH_FILE, e);
+		} else
+			return new SshException(text, e);
 	}
 
 	@Override
@@ -199,18 +239,35 @@ class J2SshSftpClient extends AbstractSftpClient {
 		} catch (SftpException e) {
 			throw e;
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to create symlink.");
 		}
 	}
+
+//	@Override
+//	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
+//			throws SshException {
+//		try {
+//			String fullRemote = Util.getAbsolutePath(remotedir, getDefaultPath());
+//			String target = Util.dirname(fullRemote);
+//			SftpOperation operation = toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), target,
+//					recurse, sync, commit, createProgress(localdir.getPath())));
+//			if (!Util.basename(fullRemote).equals(localdir.getName())) {
+//				sftpClient.rename(fullRemote, Util.concatenatePaths(target, localdir.getName()));
+//			}
+//			return operation;
+//		} catch (Exception e) {
+//			throw toException(e, "Failed to upload.");
+//		}
+//	}
 
 	@Override
 	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
 			throws SshException {
 		try {
-			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync, commit,
-					createProgress(localdir.getPath())));
+			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync,
+					commit, createProgress(localdir.getPath())), true, localdir, remotedir);
 		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to upload.");
 		}
 	}
 
@@ -219,7 +276,7 @@ class J2SshSftpClient extends AbstractSftpClient {
 		try {
 			sftpClient.get(path, out, createProgress(out.toString()));
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to download.");
 		}
 	}
 
@@ -228,7 +285,7 @@ class J2SshSftpClient extends AbstractSftpClient {
 		try {
 			sftpClient.put(in, path, createProgress(in.toString()));
 		} catch (IOException e) {
-			throw new SshException("Failed to create directory.", e);
+			throw toException(e, "Failed to upload.");
 		}
 	}
 
@@ -289,7 +346,8 @@ class J2SshSftpClient extends AbstractSftpClient {
 		};
 	}
 
-	private SftpFile entryToFile(String path, com.sshtools.j2ssh.sftp.SftpFile entry) throws com.sshtools.j2ssh.SshException {
+	private SftpFile entryToFile(String path, com.sshtools.j2ssh.sftp.SftpFile entry)
+			throws com.sshtools.j2ssh.SshException {
 		FileAttributes attr = entry.getAttributes();
 		SftpFile file = new SftpFile(convertType(attr), entry.getAbsolutePath(), attr.getSize().longValue(),
 				toLong(attr.getModifiedTime()), 0, toLong(attr.getAccessedTime()), (int) toLong(attr.getGID()),
@@ -303,26 +361,43 @@ class J2SshSftpClient extends AbstractSftpClient {
 				(int) toLong(entry.getPermissions()));
 	}
 
-	private SftpOperation toOperation(DirectoryOperation op) {
+	@SuppressWarnings("unchecked")
+	private SftpOperation toOperation(DirectoryOperation op, boolean up, File localDir, String remoteDir) {
 		List<String> updated = new ArrayList<String>();
-		for (Object f : op.getUpdatedFiles())
-			updated.add(f.toString());
+		for (Object f : op.getUpdatedFiles()) {
+			if (up)
+				updated.add(toOpPath(localDir, remoteDir, getDefaultPath(), f));
+			else
+				updated.add(f.toString());
+		}
 		List<String> unchanged = new ArrayList<String>();
-		for (Object f : op.getUnchangedFiles())
-			unchanged.add(f.toString());
+		for (Object f : op.getUnchangedFiles()) {
+			if (up)
+				unchanged.add(toOpPath(null, remoteDir, getDefaultPath(), f));
+			else
+				unchanged.add(f.toString());
+		}
 		List<String> deleted = new ArrayList<String>();
-		for (Object f : op.getDeletedFiles())
-			deleted.add(f.toString());
+		for (Object f : op.getDeletedFiles()) {
+			if (up)
+				deleted.add(toOpPath(null, remoteDir, getDefaultPath(), f));
+			else
+				deleted.add(f.toString());
+
+		}
 		List<String> created = new ArrayList<String>();
-		for (Object f : op.getNewFiles())
-			created.add(f.toString());
+		for (Object f : op.getNewFiles()) {
+			if (up)
+				created.add(toOpPath(localDir, remoteDir, getDefaultPath(), f));
+			else
+				created.add(f.toString());
+		}
 		Set<String> all = new LinkedHashSet<>();
 		all.addAll(updated);
 		all.addAll(unchanged);
 		all.addAll(deleted);
 		all.addAll(created);
-		Map<String, Exception> errors = new HashMap<String, Exception>();
-		List<String> allList = new ArrayList<>(all);
+		ArrayList<String> allList = new ArrayList<>(all);
 		return new SftpOperation() {
 			@Override
 			public List<String> all() {
@@ -341,7 +416,7 @@ class J2SshSftpClient extends AbstractSftpClient {
 
 			@Override
 			public Map<String, Exception> errors() {
-				return errors;
+				return Collections.emptyMap();
 			}
 
 			@Override
@@ -364,5 +439,17 @@ class J2SshSftpClient extends AbstractSftpClient {
 				return updated;
 			}
 		};
+	}
+
+	private String toOpPath(File localDir, String remotedir, String defaultPath, Object f) {
+		if (f instanceof File) {
+			if (localDir != null) {
+				return Util.concatenatePaths(remotedir,
+						Util.relativeTo(Util.fixSlashes(((File) f).getPath()), Util.fixSlashes(localDir.getPath())));
+			}
+			return ((File) f).getPath();
+		} else {
+			return Util.relativeTo(f.toString(), defaultPath);
+		}
 	}
 }

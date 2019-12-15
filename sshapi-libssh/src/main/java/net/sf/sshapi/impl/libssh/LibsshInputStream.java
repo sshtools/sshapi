@@ -4,13 +4,16 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.sun.jna.Memory;
+
+import net.sf.sshapi.Logger;
+import net.sf.sshapi.SshConfiguration;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 
-import com.sun.jna.Memory;
-
 public class LibsshInputStream extends InputStream {
 
+	private static final Logger LOG = SshConfiguration.getLogger();
 	private ssh_channel channel;
 	private SshLibrary library;
 	private boolean stderr;
@@ -28,7 +31,12 @@ public class LibsshInputStream extends InputStream {
 		if (i == -1) {
 			throw new EOFException();
 		}
-		return library.ssh_channel_poll(channel, stderr ? 1 : 0);
+		if (LOG.isDebug())
+			LOG.debug("Polling channel");
+		int av = library.ssh_channel_poll(channel, stderr ? 1 : 0);
+		if (LOG.isDebug())
+			LOG.debug("Got {0} bytes available", av);
+		return av;
 	}
 
 	@Override
@@ -38,16 +46,19 @@ public class LibsshInputStream extends InputStream {
 			return -1;
 		}
 		Memory m = new Memory(len);
+		if (LOG.isDebug())
+			LOG.debug("Reading {0} bytes", len);
 		int read = library.ssh_channel_read(channel, m, len, stderr ? 1 : 0);
 		if (read < 0) {
 			throw new IOException("I/O Error");
 		}
-		if(read == 0) {
+		if (read == 0) {
 			return -1;
 		}
 		byte[] buf = m.getByteArray(0, read);
 		System.arraycopy(buf, 0, b, off, read);
-		System.out.println("X: " + new String(buf, 0, read));
+		if (LOG.isDebug())
+			LOG.debug("Read {0} bytes.", read);
 		return read;
 	}
 
@@ -58,10 +69,14 @@ public class LibsshInputStream extends InputStream {
 			return -1;
 		}
 		Memory m = new Memory(1);
+		if (LOG.isDebug())
+			LOG.debug("Reading 1 bytes");
 		int read = library.ssh_channel_read(channel, m, 1, stderr ? 1 : 0);
 		if (read < 0) {
 			throw new IOException("I/O Error");
 		}
+		if (LOG.isDebug())
+			LOG.debug("Read 1 bytes.");
 		return m.getByte(0);
 	}
 
@@ -82,6 +97,8 @@ public class LibsshInputStream extends InputStream {
 	public void close() throws IOException {
 		super.close();
 		closed = true;
+		if (LOG.isDebug())
+			LOG.debug("Closed input stream");
 	}
 
 }

@@ -36,7 +36,6 @@ import com.sshtools.ssh2.Ssh2Context;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
@@ -74,7 +73,7 @@ public class MaverickSshProvider extends AbstractProvider {
 		if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1
 				|| System.getProperty("os.name").toLowerCase().indexOf("solaris") != -1)
 				&& System.getProperty("java.security.egd") == null) {
-			SshConfiguration.getLogger().log(Level.WARN,
+			SshConfiguration.getLogger().warn(
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 
@@ -140,18 +139,18 @@ public class MaverickSshProvider extends AbstractProvider {
 
 	@Override
 	public List<Capability> getCapabilities() {
-		return Arrays.asList(
-				new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2, Capability.HTTP_PROXY,
-						Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY, Capability.PASSWORD_AUTHENTICATION,
-						Capability.PUBLIC_KEY_AUTHENTICATION, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION,
-						Capability.GSSAPI_AUTHENTICATION, Capability.HOST_KEY_MANAGEMENT,
-						Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS, Capability.CHANNEL_DATA_EVENTS,
-						Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM, Capability.SOCKET_FACTORY,
-						Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_OVER_SCP,
-						Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
-						Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
-						Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-						Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET });
+		return Arrays.asList(new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
+				Capability.HTTP_PROXY, Capability.SOCKS4_PROXY, Capability.SOCKS5_PROXY,
+				Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
+				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.GSSAPI_AUTHENTICATION,
+				Capability.HOST_KEY_MANAGEMENT, Capability.IDENTITY_MANAGEMENT, Capability.PORT_FORWARD_EVENTS,
+				Capability.CHANNEL_DATA_EVENTS, Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM,
+				Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY,
+				Capability.SFTP_OVER_SCP, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
+				Capability.CHANNEL_HANDLERS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.SHELL, Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED,
+				Capability.LOCAL_PORT_FORWARD, Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET,
+				Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET });
 	}
 
 	@Override
@@ -216,6 +215,11 @@ public class MaverickSshProvider extends AbstractProvider {
 		try {
 			Ssh2Context ssh2Context = con.getContext();
 			pks.addAll(Arrays.asList(ssh2Context.supportedPublicKeys().list("").split(",")));
+
+			/* TODO: check with LDP. Doesn't seem to actually support elliptic curve? */
+			pks.remove(SshConfiguration.PUBLIC_KEY_ECDSA_521);
+			pks.remove(SshConfiguration.PUBLIC_KEY_ECDSA_256);
+			pks.remove(SshConfiguration.PUBLIC_KEY_ECDSA_384);
 		} catch (SshException e) {
 			throw new UnsupportedOperationException(e);
 		}
@@ -229,7 +233,7 @@ public class MaverickSshProvider extends AbstractProvider {
 			rnd = JCEProvider.getSecureRandom();
 			rnd.setSeed(seed);
 		} catch (NoSuchAlgorithmException e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to set seed.", e);
+			SshConfiguration.getLogger().error("Failed to set seed.", e);
 		}
 	}
 }

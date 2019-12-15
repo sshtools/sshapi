@@ -153,6 +153,11 @@ public class EchoClient {
 											+ future.isDone());
 							registerError();
 						} else {
+							System.out
+							.println("Connection failure to " + host + ":" + port + " cancelled="
+									+ future.isCancelled()
+									+ " done="
+									+ future.isDone());
 							connectionFailures++;
 						}
 						running--;
@@ -263,6 +268,11 @@ public class EchoClient {
 														+ future.isDone());
 										registerError();
 									} else {
+										System.out
+										.println("Connection failure to " + host + ":" + port + " cancelled="
+												+ future.isCancelled()
+												+ " done="
+												+ future.isDone());
 										connectionFailures++;
 									}
 									if (isGivenUp(giveUpTime)) {

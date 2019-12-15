@@ -33,6 +33,7 @@ import com.jcraft.jsch.Channel;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshInput;
@@ -100,16 +101,21 @@ abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C exte
 	}
 
 	@Override
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		channel.disconnect();
 	}
 
 	@Override
 	public void onOpen() throws SshException {
 		try {
-			in = new SshChannelInputStream(channel.getInputStream(), this);
-			out = channel.getOutputStream();
-			ext = new SshChannelInputStream(channel.getExtInputStream(), this);
+			in = new EventFiringInputStream(new SshChannelInputStream(channel.getInputStream(), this), SshDataListener.RECEIVED) {
+				@Override
+				protected void fireEof() {
+					AbstractJschStreamChannel.this.closeQuietly();
+				}
+			};
+			out = new EventFiringOutputStream(channel.getOutputStream());
+			ext =  new EventFiringInputStream(new SshChannelInputStream(channel.getExtInputStream(), this), SshDataListener.EXTENDED);
 			channel.connect(Integer.parseInt(
 					configuration.getProperties().getProperty(JschSshProvider.CFG_CHANNEL_CONNECT_TIMEOUT, "3000")));
 		} catch (Exception e) {

@@ -38,7 +38,6 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.SftpProgressMonitor;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshFileTransferListener;
@@ -107,7 +106,7 @@ class JschSftpClient extends AbstractSftpClient {
 	public SftpFile lstat(String path) throws SshException {
 		try {
 			SftpATTRS attrs = channel.lstat(path);
-			return new SftpFile(convertType(attrs), path, attrs.getSize(), attrs.getMTime() * 1000, 0, attrs.getATime() * 1000,
+			return new SftpFile(convertType(attrs), path, attrs.getSize(), convertIntDate(attrs.getMTime()), 0, convertIntDate(attrs.getATime()),
 					attrs.getGId(), attrs.getUId(), attrs.getPermissions());
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
@@ -115,9 +114,9 @@ class JschSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String readLink(String path) throws SshException {
+	protected String doReadLink(String path) throws SshException {
 		try {
-			return Util.relativeTo(channel.readlink(path), getDefaultPath());
+			return Util.linkPath(channel.readlink(path), path);
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
 		}
@@ -179,7 +178,7 @@ class JschSftpClient extends AbstractSftpClient {
 					m.invoke(channel, (int) configuration.getSftpWindowSizeMax());
 				}
 			} catch (Exception e) {
-				SshConfiguration.getLogger().log(Level.DEBUG, "Failed to set SFTP channel configuration via reflection.", e);
+				SshConfiguration.getLogger().warn("Failed to set SFTP channel configuration via reflection.", e);
 			}
 			channel.connect();
 			home = channel.pwd();
@@ -221,7 +220,7 @@ class JschSftpClient extends AbstractSftpClient {
 	public void setLastModified(String path, long modtime) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);
-			attrs.setACMODTIME(attrs.getMTime(), (int) modtime / 1000);
+			attrs.setACMODTIME(attrs.getATime(), (int)(modtime / 1000l));
 			channel.setStat(path, attrs);
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
@@ -232,7 +231,7 @@ class JschSftpClient extends AbstractSftpClient {
 	public SftpFile stat(String path) throws SshException {
 		try {
 			SftpATTRS attrs = channel.stat(path);
-			return new SftpFile(convertType(attrs), path, attrs.getSize(), attrs.getMTime() * 1000, 0, attrs.getATime() * 1000,
+			return new SftpFile(convertType(attrs), path, attrs.getSize(),convertIntDate(attrs.getMTime()), 0, convertIntDate(attrs.getATime()),
 					attrs.getGId(), attrs.getUId(), attrs.getPermissions());
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);

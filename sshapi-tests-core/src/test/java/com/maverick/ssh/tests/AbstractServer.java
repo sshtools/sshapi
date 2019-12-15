@@ -3,10 +3,11 @@ package com.maverick.ssh.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.Logger.Level;
 
 public abstract class AbstractServer implements ServerService {
+	private static final Logger LOG = SshConfiguration.getLogger();
 	protected List<AuthenticationMethod> methods = new ArrayList<AuthenticationMethod>();
 	private boolean started;
 
@@ -19,21 +20,21 @@ public abstract class AbstractServer implements ServerService {
 	}
 
 	public final void start() throws Exception {
-		SshConfiguration.getLogger().log(Level.INFO, "Starting " + getClass().getSimpleName());
+		LOG.info("Starting {0}", getClass().getSimpleName());
 		doStart();
 		started = true;
-		SshConfiguration.getLogger().log(Level.INFO, "Started " + getClass().getSimpleName());
+		LOG.info("Started {0}", getClass().getSimpleName());
 	}
 
 	protected abstract void doStart() throws Exception;
 
 	public final void stop() throws Exception {
-		SshConfiguration.getLogger().log(Level.INFO, "Stopping " + getClass().getSimpleName());
+		LOG.info("Stopping {0}", getClass().getSimpleName());
 		try {
 			doStop();
 		} finally {
 			started = false;
-			SshConfiguration.getLogger().log(Level.INFO, "Stopped " + getClass().getSimpleName());
+			LOG.info("Stopped {0}", getClass().getSimpleName());
 		}
 	}
 

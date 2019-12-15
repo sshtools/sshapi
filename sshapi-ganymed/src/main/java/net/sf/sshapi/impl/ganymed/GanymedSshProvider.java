@@ -32,7 +32,6 @@ import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -72,11 +71,11 @@ public class GanymedSshProvider extends AbstractProvider {
 		try {
 			Class.forName("ch.ethz.ssh2.Connection", false, getClass().getClassLoader());
 		} catch (ClassNotFoundException cnfe) {
-			SshConfiguration.getLogger().log(Level.INFO, "Could not find Ganymed class ch.ethz.ssh2.Connection.");
+			SshConfiguration.getLogger().debug("Could not find Ganymed class ch.ethz.ssh2.Connection.");
 			throw new UnsupportedOperationException("Ganymed is not on the CLASSPATH");
 		}
 		if (configuration != null && configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
-			SshConfiguration.getLogger().log(Level.INFO, "Ganymed does not support SSH1, not usable.");
+			SshConfiguration.getLogger().debug("Ganymed does not support SSH1, not usable.");
 			throw new UnsupportedOperationException("SSH1 is not supported.");
 		}
 	}
@@ -87,7 +86,7 @@ public class GanymedSshProvider extends AbstractProvider {
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
 				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK });
+				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

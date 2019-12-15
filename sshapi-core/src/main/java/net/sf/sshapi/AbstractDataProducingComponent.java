@@ -23,6 +23,11 @@
  */
 package net.sf.sshapi;
 
+import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +37,62 @@ import java.util.List;
  */
 public abstract class AbstractDataProducingComponent<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
 		extends AbstractLifecycleComponentWithEvents<L, C> implements SshDataProducingComponent<L, C> {
+	
+
+	protected class EventFiringOutputStream extends FilterOutputStream {
+
+		public EventFiringOutputStream(OutputStream out) {
+			super(out);
+		}
+
+		@Override
+		public void write(int b) throws IOException {
+			super.write(b);
+			fireData(SshDataListener.SENT, new byte[] { (byte)b }, 0, 1);
+		}
+
+		@Override
+		public void write(byte[] b, int off, int len) throws IOException {
+			out.write(b, off, len);
+			fireData(SshDataListener.SENT, b, off, len);
+		}
+		
+	}
+
+	protected class EventFiringInputStream extends FilterInputStream {
+
+		private int direction;
+
+		public EventFiringInputStream(InputStream in, int direction) {
+			super(in);
+			this.direction = direction;
+		}
+		
+		@Override
+		public int read() throws IOException {
+			int r = super.read();
+			if(r != -1) {
+				fireData(direction, new byte[] { (byte)r }, 0, 1);
+			}
+			else
+				fireEof();
+			return r;
+		}
+
+		@Override
+		public int read(byte[] b, int off, int len) throws IOException {
+			int r = super.read(b, off, len);
+			if(r != -1) {
+				fireData(direction, b, off, r);
+			}
+			else
+				fireEof();
+			return r;
+		}
+		
+		protected void fireEof() {
+		}
+	}
 
 	private List<SshDataListener<C>> dataListeners = new ArrayList<>();
 	

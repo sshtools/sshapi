@@ -24,6 +24,9 @@
 package net.sf.sshapi;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,12 +38,14 @@ import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
 
+import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.forwarding.SshPortForward;
 import net.sf.sshapi.forwarding.SshPortForwardListener;
 import net.sf.sshapi.forwarding.SshPortForwardTunnel;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.RemoteSocketFactory;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -49,6 +54,74 @@ import net.sf.sshapi.util.Util;
  * common services.
  */
 public abstract class AbstractClient implements SshClient {
+
+	protected final static class ForwardingChannel
+			extends AbstractSshStreamChannel<SshChannelListener<SshChannel>, SshChannel> implements SshChannel {
+		private SshPortForward localForward;
+		private Socket socket;
+		private String hostname;
+		private int port;
+		private AbstractClient client;
+
+		protected ForwardingChannel(AbstractClient client, SshProvider provider, SshConfiguration configuration,
+				String hostname, int port) {
+			super(provider, configuration);
+			this.client = client;
+			this.hostname = hostname;
+			this.port = port;
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			if (socket == null)
+				throw new IOException("Not open.");
+			return new EventFiringInputStream(socket.getInputStream(), SshDataListener.RECEIVED);
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			if (socket == null)
+				throw new IOException("Not open.");
+			return new EventFiringOutputStream(socket.getOutputStream());
+		}
+
+		@Override
+		protected void onOpen() throws SshException {
+			localForward = client.localForward("127.0.0.1", 0, hostname, port);
+			try {
+				socket = new Socket("127.0.0.1", localForward.getBoundPort());
+			} catch (IOException e) {
+				throw new SshException(SshException.IO_ERROR, "Failed to open local socket to local forward.", e);
+			}
+		}
+
+		@Override
+		protected void onCloseStream() throws SshException {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				throw new SshException(SshException.IO_ERROR, "Failed to open close socket for local forward.", e);
+			} finally {
+				localForward.close();
+			}
+		}
+
+		@Override
+		public String getName() {
+			return "local-tcpip";
+		}
+
+		@Override
+		public ChannelData getChannelData() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean sendRequest(String requesttype, boolean wantreply, byte[] requestdata) throws SshException {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	protected Set<SshLifecycleComponent<?, ?>> activeComponents = Collections.synchronizedSet(new LinkedHashSet<>());
 	private SshConfiguration configuration;
 	private String hostname;
@@ -76,10 +149,10 @@ public abstract class AbstractClient implements SshClient {
 	@Override
 	public <T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz) {
 		synchronized (activeComponents) {
-			Set<T> ts = new LinkedHashSet<>(); 
-			for(SshLifecycleComponent<?, ?> en : activeComponents) {
-				if(en.getClass().isAssignableFrom(clazz))
-					ts.add((T)en);
+			Set<T> ts = new LinkedHashSet<>();
+			for (SshLifecycleComponent<?, ?> en : activeComponents) {
+				if (en.getClass().isAssignableFrom(clazz))
+					ts.add((T) en);
 			}
 			return Collections.unmodifiableSet(ts);
 		}
@@ -92,7 +165,7 @@ public abstract class AbstractClient implements SshClient {
 
 	@Override
 	public void removeListener(SshClientListener listener) {
-		listeners.remove(listener);		
+		listeners.remove(listener);
 	}
 
 	@Override
@@ -120,7 +193,33 @@ public abstract class AbstractClient implements SshClient {
 	@Override
 	public void close() throws IOException {
 		try {
-			onClose();
+			Exception ex = null;
+			try {
+				synchronized (activeComponents) {
+					for (SshLifecycleComponent<?, ?> c : activeComponents) {
+						try {
+							SshConfiguration.getLogger().debug("Closing component {0}", c.hashCode());
+							c.close();
+						} catch (Exception e) {
+							SshConfiguration.getLogger().log(Level.DEBUG, "Component {0} failed to close.", e,
+									c.hashCode());
+							ex = e;
+						} finally {
+							SshConfiguration.getLogger().debug("Closed component {0}", c.hashCode());
+						}
+					}
+					if (ex != null) {
+						if (ex instanceof IOException)
+							throw (IOException) ex;
+						else if (ex instanceof RuntimeException)
+							throw (RuntimeException) ex;
+						else if (ex instanceof RuntimeException)
+							throw new SshException("Failed to close.", ex);
+					}
+				}
+			} finally {
+				onClose();
+			}
 		} catch (SshException e) {
 			throw new IOException("Failed to close.", e);
 		} finally {
@@ -153,7 +252,8 @@ public abstract class AbstractClient implements SshClient {
 
 	@Override
 	public final Future<Void> connectLater(String spec, SshAuthenticator... authenticators) {
-		return connectLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
+		return connectLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec),
+				authenticators);
 	}
 
 	@Override
@@ -161,7 +261,8 @@ public abstract class AbstractClient implements SshClient {
 		return new AbstractFuture<Void>() {
 			@Override
 			Void doFuture() throws Exception {
-				connect(username, hostname, port, authenticators);;
+				connect(username, hostname, port, authenticators);
+				;
 				return null;
 			}
 		};
@@ -173,7 +274,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final void connect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
+	public final void connect(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
 		if (isConnected()) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.ALREADY_OPEN, "Already connected.");
 		}
@@ -210,8 +312,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshCommand createCommand(String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws SshException {
+	public final SshCommand createCommand(String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshCommand client = doCreateCommand(command, termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		client.addListener(new SshChannelListener<SshCommand>() {
@@ -227,8 +329,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshPortForward createLocalForward(String localBindAddress, int localBindPort, String targetAddress, int targetPort)
-			throws SshException {
+	public final SshPortForward createLocalForward(String localBindAddress, int localBindPort, String targetAddress,
+			int targetPort) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshPortForward client = doCreateLocalForward(localBindAddress, localBindPort, targetAddress, targetPort);
 		client.addListener(new SshPortForwardListener() {
@@ -314,8 +416,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws SshException {
+	public final SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshShell client = doCreateShell(termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		client.addListener(new SshChannelListener<SshShell>() {
@@ -332,7 +434,29 @@ public abstract class AbstractClient implements SshClient {
 
 	@Override
 	public SocketFactory createTunneledSocketFactory() throws SshException {
-		throw new UnsupportedOperationException("Tunneled socket factory is not supported in this implementation.");
+		return new RemoteSocketFactory(this);
+	}
+
+	@Override
+	public final SshChannel createForwardingChannel(String hostname, int port) throws SshException {
+		SshChannel client = doCreateForwardingChannel(hostname, port);
+		client.addListener(new SshChannelListener<SshChannel>() {
+			@Override
+			public void closed(SshChannel channel) {
+				activeComponents.remove(channel);
+				fireComponentRemoved(channel);
+			}
+		});
+		activeComponents.add(client);
+		fireComponentCreated(client);
+		return client;
+	}
+
+	@Override
+	public final SshChannel forwardingChannel(String hostname, int port) throws SshException {
+		SshChannel channel = createForwardingChannel(hostname, port);
+		channel.open();
+		return channel;
 	}
 
 	@Override
@@ -391,8 +515,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public SshPortForward remoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress, int targetPort)
-			throws SshException {
+	public SshPortForward remoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress,
+			int targetPort) throws SshException {
 		SshPortForward fwd = createRemoteForward(remoteBindAddress, remoteBindPort, targetAddress, targetPort);
 		fwd.open();
 		return fwd;
@@ -446,7 +570,8 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public Future<SshShell> shellLater(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) {
+	public Future<SshShell> shellLater(String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) {
 		return new AbstractFuture<SshShell>() {
 			{
 				getProvider().getExecutor().execute(createRunnable());
@@ -481,8 +606,8 @@ public abstract class AbstractClient implements SshClient {
 		Map<String, SshAuthenticator> authenticatorMap = new HashMap<>();
 		for (int i = 0; i < authenticators.length; i++) {
 			if (authenticatorMap.containsKey(authenticators[i].getTypeName())) {
-				throw new IllegalArgumentException(
-						"Two authenticators using the name '" + authenticators[i].getTypeName() + "' have been provided.");
+				throw new IllegalArgumentException("Two authenticators using the name '"
+						+ authenticators[i].getTypeName() + "' have been provided.");
 			}
 			authenticatorMap.put(authenticators[i].getTypeName(), authenticators[i]);
 		}
@@ -492,13 +617,13 @@ public abstract class AbstractClient implements SshClient {
 	protected abstract void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
 			throws SshException;
 
-	protected SshCommand doCreateCommand(String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws SshException {
+	protected SshCommand doCreateCommand(String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws SshException {
 		throw new UnsupportedOperationException("Commands are not supported in this implementation.");
 	}
 
-	protected SshPortForward doCreateLocalForward(String localBindAddress, int localBindPort, String targetAddress, int targetPort)
-			throws SshException {
+	protected SshPortForward doCreateLocalForward(String localBindAddress, int localBindPort, String targetAddress,
+			int targetPort) throws SshException {
 		throw new UnsupportedOperationException("Local forwarding is not supported in this implementation.");
 	}
 
@@ -512,15 +637,15 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	protected SshSCPClient doCreateSCP() throws SshException {
-		throw new UnsupportedOperationException("SCP is is not supported in this implementation.");
+		return new DefaultSCPClient(this);
 	}
 
 	protected SftpClient doCreateSftp() throws SshException {
 		throw new UnsupportedOperationException("SFTP is is not supported in this implementation.");
 	}
 
-	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws SshException {
+	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws SshException {
 		throw new UnsupportedOperationException("Shell is is not supported in this implementation.");
 	}
 
@@ -549,5 +674,9 @@ public abstract class AbstractClient implements SshClient {
 	protected void postConnect() throws SshException {
 		if (getProvider().getCapabilities().contains(Capability.AGENT) && getConfiguration().getAgent() != null)
 			addChannelHandler(getConfiguration().getAgent());
+	}
+
+	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 }

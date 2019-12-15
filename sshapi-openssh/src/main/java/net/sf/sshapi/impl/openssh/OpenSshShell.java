@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -51,11 +50,11 @@ class OpenSshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShel
 	}
 
 	@Override
-	protected void onClose() throws SshException {
+	protected void onCloseStream() throws SshException {
 		try {
 			int result = process.waitFor();
 			if (result != 0)
-				SshConfiguration.getLogger().log(Level.WARN, String.format("Ssh client exited with non-zero code %d", result));
+				SshConfiguration.getLogger().warn("Ssh client exited with non-zero code {0}", result);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		} finally {

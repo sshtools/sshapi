@@ -179,6 +179,7 @@ public class Util {
 				compare(list1[i], list2[i], true);
 			}
 		} else {
+			assertEquals("Files must have same size", file1.length(), file2.length());
 			assertEquals("Files must have same checksum", FileUtils.checksumCRC32(file1), FileUtils.checksumCRC32(file2));
 		}
 	}

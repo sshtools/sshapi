@@ -32,11 +32,16 @@ import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.bouncycastle.openssl.EncryptionException;
 
 import com.sshtools.client.AbstractKeyboardInteractiveCallback;
 import com.sshtools.client.BannerDisplay;
@@ -56,9 +61,6 @@ import com.sshtools.common.nio.WriteOperationRequest;
 import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.permissions.UnauthorizedException;
 import com.sshtools.common.policy.FileSystemPolicy;
-import com.sshtools.common.publickey.InvalidPassphraseException;
-import com.sshtools.common.publickey.SshPrivateKeyFile;
-import com.sshtools.common.publickey.SshPrivateKeyFileFactory;
 import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.common.ssh.Channel;
 import com.sshtools.common.ssh.ChannelFactory;
@@ -73,15 +75,17 @@ import com.sshtools.common.ssh.Subsystem;
 import com.sshtools.common.ssh.UnsupportedChannelException;
 import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
+import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
+import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractSshStreamChannel;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.auth.SshAgentAuthenticator;
 import net.sf.sshapi.auth.SshAuthenticator;
@@ -99,14 +103,13 @@ import net.sf.sshapi.util.Util;
 class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<SshClientContext>
 // implements ForwardingClientListener
 {
-
 	protected final class MaverickSynergySshChannel extends ChannelNG<SshClientContext> {
 		private final ChannelData channelData;
 		private ChannelInputStream channelInputStream;
 		private ChannelOutputStream channelOutputStream;
 
-		protected MaverickSynergySshChannel(String channelType, SshConnection con, int maximumPacketSize, int initialWindowSize,
-				int maximumWindowSpace, int minimumWindowSpace, ChannelData channelData) {
+		protected MaverickSynergySshChannel(String channelType, SshConnection con, int maximumPacketSize,
+				int initialWindowSize, int maximumWindowSpace, int minimumWindowSpace, ChannelData channelData) {
 			super(channelType, con, maximumPacketSize, initialWindowSize, maximumWindowSpace, minimumWindowSpace);
 			this.channelData = channelData;
 		}
@@ -197,7 +200,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 						@Override
 						public String getFingerprint() {
 							try {
-								return stripAlgorithmFromFingerprint(SshKeyFingerprint.getFingerprint(getKey(), getMaverickFingerprintAlgo()));
+								return stripAlgorithmFromFingerprint(
+										SshKeyFingerprint.getFingerprint(getKey(), getMaverickFingerprintAlgo()));
 							} catch (SshException e) {
 								throw new RuntimeException(e);
 							}
@@ -224,7 +228,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					});
 					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
 				} catch (net.sf.sshapi.SshException e) {
-					SshConfiguration.getLogger().log(Level.ERROR, "Failed to verify host key.", e);
+					SshConfiguration.getLogger().error("Failed to verify host key.", e);
 				}
 			} else {
 				System.out.println("The authenticity of host '" + host + "' can't be established.");
@@ -246,6 +250,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			super(getProvider(), getConfiguration());
 			this.channelData = channelData;
 			this.name = name;
+			setFiresOwnCloseEvents(true);
 		}
 
 		@Override
@@ -255,7 +260,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return ssh2Channel.getChannelInputStream();
+			return new EventFiringInputStream(ssh2Channel.getChannelInputStream(), SshDataListener.RECEIVED);
 		}
 
 		@Override
@@ -265,11 +270,12 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 		@Override
 		public OutputStream getOutputStream() throws IOException {
-			return ssh2Channel.getChannelOutputStream();
+			return new EventFiringOutputStream(ssh2Channel.getChannelOutputStream());
 		}
 
 		@Override
-		public boolean sendRequest(String requesttype, boolean wantreply, byte[] requestdata) throws net.sf.sshapi.SshException {
+		public boolean sendRequest(String requesttype, boolean wantreply, byte[] requestdata)
+				throws net.sf.sshapi.SshException {
 			// try {
 			ssh2Channel.sendChannelRequest(requesttype, wantreply, requestdata);
 			// TODO success?
@@ -287,23 +293,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				public void onChannelClose(Channel channel) {
 					fireClosed();
 				}
-				// @Override
-				// public void extendedDataReceived(SshChannel arg0, byte[] buf,
-				// int off, int len, int arg4) {
-				// fireData(SshDataListener.EXTENDED, buf, off, len);
-				// }
-				//
-				// @Override
-				// public void dataSent(SshChannel arg0, byte[] buf, int off,
-				// int len) {
-				// fireData(SshDataListener.SENT, buf, off, len);
-				// }
-				//
-				// @Override
-				// public void dataReceived(SshChannel arg0, byte[] buf, int
-				// off, int len) {
-				// fireData(SshDataListener.RECEIVED, buf, off, len);
-				// }
 
 				@Override
 				public void onChannelClosing(Channel channel) {
@@ -312,7 +301,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 				@Override
 				public void onChannelDisconnect(Channel channel) {
-					// TODO Auto-generated method stub
 				}
 
 				@Override
@@ -331,27 +319,12 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			});
 		}
 
-		@Override
-		protected void fireData(int direction, byte[] buf, int off, int len) {
-			super.fireData(direction, buf, off, len);
-		}
-
-		/**
-		 * Inform all listeners the channel has reached EOF.
-		 */
-		protected void fireEof() {
-			if (getListeners() != null) {
-				for (int i = getListeners().size() - 1; i >= 0; i--)
-					getListeners().get(i).eof(this);
-			}
-		}
-
 		/**
 		 * Inform all listeners a request was received.
 		 * 
 		 * @param requestType request type
-		 * @param wantReply remote side wanted reply
-		 * @param data data
+		 * @param wantReply   remote side wanted reply
+		 * @param data        data
 		 * @return send error reply
 		 */
 		protected boolean fireRequest(String requestType, boolean wantReply, byte[] data) {
@@ -367,7 +340,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		}
 
 		@Override
-		protected void onClose() throws net.sf.sshapi.SshException {
+		protected void onCloseStream() throws net.sf.sshapi.SshException {
 			ssh2Channel.close();
 		}
 
@@ -451,8 +424,9 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				byte[] requestData = new byte[0];
 				ChannelData channelData = ch.createChannel(channeltype, requestData);
 				MaverickSshChannel msc = new MaverickSshChannel(channeltype, channelData);
-				MaverickSynergySshChannel ssh2Channel = new MaverickSynergySshChannel(channeltype, con, channelData.getWindowSize(),
-						channelData.getPacketSize(), channelData.getPacketSize(), channelData.getWindowSize() * 2, channelData);
+				MaverickSynergySshChannel ssh2Channel = new MaverickSynergySshChannel(channeltype, con,
+						channelData.getWindowSize(), channelData.getPacketSize(), channelData.getPacketSize(),
+						channelData.getWindowSize() * 2, channelData);
 				msc.setSourceChannel(ssh2Channel);
 				try {
 					ch.channelCreated(msc);
@@ -518,8 +492,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	public String getRemoteIdentification() {
 		if (!isConnected()) {
 			/*
-			 * BUG: Maverick NG does not have a separate connection /
-			 * authentication phase, so we can't do this
+			 * BUG: Maverick NG does not have a separate connection / authentication phase,
+			 * so we can't do this
 			 */
 			return "Unknown";
 		}
@@ -570,8 +544,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					if (timeout != -1)
 						sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
 					originalChannelFactory = sshContext.getChannelFactory();
-					// TODO not published yet
-					// sshContext.setChannelFactory(MaverickSynergySshClient.this);
+					sshContext.setChannelFactory(MaverickSynergySshClient.this);
 					sshContext.setHostKeyVerification(new HostKeyVerificationBridge());
 					SshConfiguration configuration = getConfiguration();
 					// Version
@@ -632,17 +605,17 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	@Override
-	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws net.sf.sshapi.SshException {
+	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws net.sf.sshapi.SshException {
 		synchronized (sshClient) {
-			return new MaverickSynergySshCommand(getProvider(), getConfiguration(), sshClient.getConnection(), command, termType, cols, rows, pixWidth, pixHeight,
-					terminalModes);
+			return new MaverickSynergySshCommand(getProvider(), getConfiguration(), sshClient.getConnection(), command,
+					termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		}
 	}
 
 	@Override
-	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
-			final int remotePort) throws net.sf.sshapi.SshException {
+	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort,
+			final String remoteHost, final int remotePort) throws net.sf.sshapi.SshException {
 		ConnectionProtocolClient client = (ConnectionProtocolClient) sshClient.getConnection().getConnectionProtocol();
 		final String fLocalAddress = localAddress == null ? "0.0.0.0" : localAddress;
 		return new AbstractPortForward(getProvider()) {
@@ -677,8 +650,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	@Override
-	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
-			final int localPort) throws net.sf.sshapi.SshException {
+	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort,
+			final String localAddress, final int localPort) throws net.sf.sshapi.SshException {
 		ConnectionProtocolClient client = (ConnectionProtocolClient) sshClient.getConnection().getConnectionProtocol();
 		final String fRemoteHost = remoteHost == null ? "0.0.0.0" : remoteHost;
 		return new AbstractPortForward(getProvider()) {
@@ -717,10 +690,11 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	// return authenticationMethods;
 	// }
 	@Override
-	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws net.sf.sshapi.SshException {
+	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		synchronized (sshClient) {
-			return new MaverickSynergySshShell(getProvider(), getConfiguration(), sshClient.getConnection(), termType, cols, rows, pixWidth, pixHeight, terminalModes);
+			return new MaverickSynergySshShell(getProvider(), getConfiguration(), sshClient.getConnection(), termType,
+					cols, rows, pixWidth, pixHeight, terminalModes);
 		}
 	}
 
@@ -744,16 +718,16 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	SshClient getNativeClient() {
 		return sshClient;
 	}
-	
+
 	static String stripAlgorithmFromFingerprint(String fingerprint) {
 		int idx = fingerprint.indexOf(':');
 		return idx == -1 ? fingerprint : fingerprint.substring(idx + 1);
 	}
 
 	String getMaverickFingerprintAlgo() {
-		if(SshConfiguration.FINGERPRINT_SHA1.equals(getConfiguration().getFingerprintHashingAlgorithm()))
+		if (SshConfiguration.FINGERPRINT_SHA1.equals(getConfiguration().getFingerprintHashingAlgorithm()))
 			return SshKeyFingerprint.SHA1_FINGERPRINT;
-		else if(SshConfiguration.FINGERPRINT_SHA256.equals(getConfiguration().getFingerprintHashingAlgorithm()))
+		else if (SshConfiguration.FINGERPRINT_SHA256.equals(getConfiguration().getFingerprintHashingAlgorithm()))
 			return SshKeyFingerprint.SHA256_FINGERPRINT;
 		else
 			return SshKeyFingerprint.MD5_FINGERPRINT;
@@ -769,8 +743,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			return new PasswordAuthenticator() {
 				@Override
 				public String getPassword() {
-					char[] answer = ((SshPasswordAuthenticator) authenticator).promptForPassword(MaverickSynergySshClient.this,
-							"Password");
+					char[] answer = ((SshPasswordAuthenticator) authenticator)
+							.promptForPassword(MaverickSynergySshClient.this, "Password");
 					return answer == null ? null : new String(answer);
 				}
 			};
@@ -785,25 +759,26 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				char[] keyPassphrase = pk.promptForKeyPassphrase(this, "Passphrase");
 				if (keyPassphrase == null)
 					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_CANCELLED);
-
-				throw new UnsupportedOperationException("X509 support is not yet complete.");
-				
-//				RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(pk.getAlias(), keyPassphrase);
-//				X509Certificate x509 = (X509Certificate) keystore.getCertificate(pk.getAlias());
-//				SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
-//				Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
-//				return new PublicKeyAuthenticator(SshKeyPair.getKeyPair(pubkey, privkey));
+				RSAPrivateKey prv = (RSAPrivateKey) keystore.getKey(pk.getAlias(), keyPassphrase);
+				X509Certificate x509 = (X509Certificate) keystore.getCertificate(pk.getAlias());
+				SshX509RsaSha1PublicKey pubkey = new SshX509RsaSha1PublicKey(x509);
+				Ssh2RsaPrivateKey privkey = new Ssh2RsaPrivateKey(prv);
+				SshKeyPair kp = new SshKeyPair();
+				kp.setPrivateKey(privkey);
+				kp.setPublicKey(pubkey);
+				return new PublicKeyAuthenticator(kp);
 			} catch (net.sf.sshapi.SshException sshe) {
 				throw sshe;
 			} catch (IOException ioe) {
 				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, ioe);
-			} catch (KeyStoreException | CertificateException | NoSuchAlgorithmException  kse) {
+			} catch (KeyStoreException | CertificateException | NoSuchAlgorithmException
+					| UnrecoverableKeyException kse) {
 				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.GENERAL, kse);
 			}
 		} else if (authenticator instanceof SshPublicKeyAuthenticator) {
 			SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticator;
 			try {
-				SshPrivateKeyFile pkf = SshPrivateKeyFileFactory.parse(pk.getPrivateKey());
+				com.sshtools.common.publickey.SshPrivateKeyFile pkf = com.sshtools.common.publickey.SshPrivateKeyFileFactory.parse(pk.getPrivateKey());
 				SshKeyPair pair = null;
 				for (int i = 2; i >= 0; i--) {
 					if (pkf.isPassphraseProtected()) {
@@ -813,22 +788,23 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 						}
 						try {
 							pair = pkf.toKeyPair(new String(pa));
-						} catch (InvalidPassphraseException ipe) {
+						} catch (EncryptionException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
 							if (i == 0) {
-								throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED);
+								throw new net.sf.sshapi.SshException(
+										net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED);
 							}
 						}
 					} else {
 						try {
 							pair = pkf.toKeyPair("");
-						} catch (InvalidPassphraseException ipe) {
+						} catch (EncryptionException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
 							throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_FAILED, ipe);
 						}
 					}
 				}
 				return new PublicKeyAuthenticator(pair);
-			} catch (net.sf.sshapi.SshException se) {
-				throw se;
+			} catch (net.sf.sshapi.SshException sshe) {
+				throw sshe;
 			} catch (IOException ioe) {
 				throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, ioe);
 			}

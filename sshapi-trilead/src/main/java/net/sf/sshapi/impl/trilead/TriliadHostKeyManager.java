@@ -80,7 +80,7 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 			LinkedList<?> publickeys = (LinkedList<?>) field.get(knownHosts);
 			addKeys(keys, publickeys);
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to get host keys.", e);
+			SshConfiguration.getLogger().error("Failed to get host keys.", e);
 		}
 
 		return (SshHostKey[]) keys.toArray(new SshHostKey[0]);
@@ -125,7 +125,7 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 				}
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Error locating host keys.", e);
+			SshConfiguration.getLogger().error("Error locating host keys.", e);
 		}
 		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
 	}

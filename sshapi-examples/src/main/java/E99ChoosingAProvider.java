@@ -43,7 +43,8 @@ public class E99ChoosingAProvider {
 					"E07RemoteForwarding", "E08Sftp", "E09SSH1Only", "E10PublicKeyAuthentication", "E11KeyboardInteractiveAuthentication",
 					"E12ChangeKeyPassphrase", "E13ExtendedHostKeyValidation", "E14HostKeyManagement",
 					"E15SCP", "E16PublicKeySubsystem", "E17TunneledSocketFactory", "E19ShellUsingGSSAPI",
-					"E20CustomChannel", "E21AgentAuthentication", "E22RawSFTP", "E23NonBlockingConsole", "E24NonBlockingConsoleTasks" };
+					"E20CustomChannel", "E21AgentAuthentication", "E22RawSFTP", "E23NonBlockingConsole", "E24NonBlockingConsoleTasks",
+					"E25ForwardingChannel" };
 		System.out.println();
 		for(int i = 0 ; i < tests.length ; i++)
 			System.out.println((i+ 1) + ". " + tests[i]);

@@ -47,6 +47,7 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 	AbstractMaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, com.maverick.ssh.SshSession session) {
 		super(provider, configuration);
 		this.session = session;
+		setFiresOwnCloseEvents(true);
 	}
 
 	@Override
@@ -83,7 +84,7 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 	}
 
 	@Override
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		session.close();
 	}
 
@@ -97,14 +98,17 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 
 	@Override
 	public void channelClosed(SshChannel channel) {
+		fireClosed();
 	}
 
 	@Override
 	public void channelClosing(SshChannel channel) {
+		fireClosing();
 	}
 
 	@Override
 	public void channelEOF(SshChannel channel) {
+		fireEof();
 	}
 
 	@Override

@@ -1,10 +1,10 @@
 package net.sf.sshapi.cli;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,8 +100,7 @@ public class scp implements SshFileTransferListener, Logger {
 			try {
 				provider = (SshProvider) Class.forName(providerClass).newInstance();
 			} catch (Exception e) {
-				log(Level.WARN,
-						"SSH provider " + providerClass + " not accessible: Falling back to first available provider.");
+				warn("SSH provider {0} not accessible: Falling back to first available provider.", providerClass);
 			}
 		}
 		if (provider == null) {
@@ -113,7 +112,7 @@ public class scp implements SshFileTransferListener, Logger {
 				configuration.setPreferredClientToServerCompression((String) provider.getSupportedCompression().get(0));
 				configuration.setPreferredServerToClientCompression((String) provider.getSupportedCompression().get(0));
 			} else {
-				log(Level.WARN, "SSH provider " + providerClass + " does not support compression, disabling.");
+				warn("SSH provider {0} does not support compression, disabling.", providerClass );
 			}
 		}
 
@@ -166,7 +165,7 @@ public class scp implements SshFileTransferListener, Logger {
 
 	void localToRemote() throws SshException, IOException {
 		String targetPath = getPath(target);
-		try(SshClient client = connect(getConnectionDetails(target))) {
+		try (SshClient client = connect(getConnectionDetails(target))) {
 			SshSCPClient scp = client.createSCP();
 			scp.addFileTransferListener(this);
 			scp.open();
@@ -175,7 +174,7 @@ public class scp implements SshFileTransferListener, Logger {
 			} finally {
 				scp.close();
 			}
-		} 
+		}
 	}
 
 	File checkPath(String path) throws FileNotFoundException {
@@ -501,19 +500,24 @@ public class scp implements SshFileTransferListener, Logger {
 		return sizeSoFar;
 	}
 
-	public void log(Level level, String message) {
+	@Override
+	public void log(Level level, String message, Object... args) {
 		if (isLevelEnabled(level)) {
-			System.err.println(level.name() + ": " + message);
+			System.err.println(level.name() + ": " + MessageFormat.format(message, args));
 		}
 	}
 
-	public void log(Level level, String message, Throwable exception) {
-		log(level, message);
-		if (traces) {
-			exception.printStackTrace();
+	@Override
+	public void log(Level level, String message, Throwable exception, Object... args) {
+		if (isLevelEnabled(level)) {
+			log(level, message);
+			if (traces) {
+				exception.printStackTrace();
+			}
 		}
 	}
 
+	@Override
 	public boolean isLevelEnabled(Level level) {
 		return this.level.compareTo(level) <= 0;
 	}

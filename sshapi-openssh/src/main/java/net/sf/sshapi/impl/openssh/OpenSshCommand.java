@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 
 class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCommand>, SshCommand> implements SshCommand {
@@ -52,7 +53,7 @@ class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCo
 	public InputStream getExtendedInputStream() throws IOException {
 		if (process == null)
 			throw new IllegalStateException("This command has either completed or has not been started.");
-		return process.getErrorStream();
+		return new EventFiringInputStream(process.getErrorStream(), SshDataListener.EXTENDED);
 	}
 
 	@Override
@@ -66,18 +67,18 @@ class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCo
 	public InputStream getInputStream() throws IOException {
 		if (process == null)
 			throw new IllegalStateException("This command has either completed or has not been started.");
-		return process.getInputStream();
+		return new EventFiringInputStream(process.getInputStream(), SshDataListener.RECEIVED);
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		if (process == null)
 			throw new IllegalStateException("This command has either completed or has not been started.");
-		return process.getOutputStream();
+		return new EventFiringOutputStream(process.getOutputStream());
 	}
 
 	@Override
-	protected void onClose() throws SshException {
+	protected void onCloseStream() throws SshException {
 		try {
 			if(process != null) {
 				process.destroy();

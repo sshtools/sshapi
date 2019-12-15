@@ -32,7 +32,10 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-import net.sf.sshapi.Logger.Level;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.KeyPair;
+
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
@@ -43,10 +46,6 @@ import net.sf.sshapi.identity.SshKeyPair;
 import net.sf.sshapi.identity.SshPrivateKeyFile;
 import net.sf.sshapi.identity.SshPublicKeyFile;
 import net.sf.sshapi.util.Util;
-
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.KeyPair;
 
 class JschIdentityManager implements SshIdentityManager {
 
@@ -72,7 +71,7 @@ class JschIdentityManager implements SshIdentityManager {
 	@Override
 	public SshPrivateKeyFile createPrivateKeyFromStream(InputStream in, char[] passphrase) throws SshException {
 		SshPrivateKeyFile kf = createPrivateKeyFromStream(in);
-		if(kf.isEncrypted())
+		if (kf.isEncrypted())
 			kf.decrypt(passphrase);
 		return kf;
 	}
@@ -85,18 +84,19 @@ class JschIdentityManager implements SshIdentityManager {
 	@Override
 	public List<Integer> getSupportedPublicKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
-			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
+				new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
 	@Override
 	public List<Integer> getSupportedPrivateKeyFileFormats() {
 		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT),
-			new Integer(SshPublicKeyFile.SECSH_FORMAT) });
+				new Integer(SshPublicKeyFile.SECSH_FORMAT) });
 	}
 
 	@Override
 	public List<Integer> getSupportedKeyLengths() {
-		return Arrays.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
+		return Arrays
+				.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
 	}
 
 	@Override
@@ -105,10 +105,11 @@ class JschIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public SshPrivateKeyFile create(SshKeyPair pair, int format, char[] passphrase, String comment) throws SshException {
+	public SshPrivateKeyFile create(SshKeyPair pair, int format, char[] passphrase, String comment)
+			throws SshException {
 		if (!Util.nullOrTrimmedBlank(comment)) {
-			SshConfiguration.getLogger().log(Level.WARN,
-				"JSch doesn't support comments in private key files, ignoring comment '" + comment + "'");
+			SshConfiguration.getLogger()
+					.warn("JSch doesn't support comments in private key files, ignoring comment '{0}'", comment);
 		}
 		if (format != SshPrivateKeyFile.VENDOR_OPENSSH) {
 			throw new SshException(SshException.UNSUPPORTED_FEATURE, "Private key file format not supported.");
@@ -121,7 +122,8 @@ class JschIdentityManager implements SshIdentityManager {
 				// Get the private key from the current key pair
 				KeyPair kpair = ((JschPrivateKey) pair.getPrivateKey()).kpair;
 				if (kpair.isEncrypted()) {
-					throw new SshException(SshException.ENCRYPTED, "Attempt to access a private key that is currently encrypted.");
+					throw new SshException(SshException.ENCRYPTED,
+							"Attempt to access a private key that is currently encrypted.");
 				}
 				kpair.writePrivateKey(tempFile.getAbsolutePath());
 
@@ -198,7 +200,7 @@ class JschIdentityManager implements SshIdentityManager {
 		public void changePassphrase(char[] newPassphrase) throws SshException {
 			if (kpair.isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
-					"Key is currently encrypyted. Please decrypt before changing passphrase.");
+						"Key is currently encrypyted. Please decrypt before changing passphrase.");
 			}
 			kpair.setPassphrase(new String(newPassphrase));
 		}
@@ -211,7 +213,8 @@ class JschIdentityManager implements SshIdentityManager {
 		@Override
 		public void decrypt(char[] passphrase) throws SshException {
 			if (!kpair.decrypt(new String(passphrase))) {
-				throw new SshException(SshException.INCORRECT_PASSPHRASE, "Incorrect passphrase, could not decrypt key.");
+				throw new SshException(SshException.INCORRECT_PASSPHRASE,
+						"Incorrect passphrase, could not decrypt key.");
 			}
 		}
 
@@ -240,7 +243,7 @@ class JschIdentityManager implements SshIdentityManager {
 		public SshKeyPair toKeyPair() throws SshException {
 			if (isEncrypted()) {
 				throw new SshException(SshException.PASSPHRASE_REQUIRED,
-					"Key is currently encrypyted. Please decrypt before changing passphrase.");
+						"Key is currently encrypyted. Please decrypt before changing passphrase.");
 			}
 			System.out.println("KEYBITS: " + kpair.getPublicKeyBlob().length);
 			return new SshKeyPair(new JschPublicKey(kpair, kpair.getPublicKeyBlob().length), new JschPrivateKey(kpair));
@@ -263,7 +266,7 @@ class JschIdentityManager implements SshIdentityManager {
 
 		@Override
 		public Algorithm getAlgorithm() {
-			switch(kpair.getKeyType()) {
+			switch (kpair.getKeyType()) {
 			case KeyPair.DSA:
 				return Algorithm.SSH_DSS;
 			case KeyPair.ECDSA:
@@ -291,15 +294,15 @@ class JschIdentityManager implements SshIdentityManager {
 
 		@Override
 		public Algorithm getAlgorithm() {
-			if(keyPair.getKeyType() == KeyPair.DSA)
+			if (keyPair.getKeyType() == KeyPair.DSA)
 				return Algorithm.SSH_DSS;
-			else if(keyPair.getKeyType() == KeyPair.RSA)
+			else if (keyPair.getKeyType() == KeyPair.RSA)
 				return Algorithm.SSH_RSA;
-			else if(keyPair.getKeyType() == KeyPair.ECDSA)
+			else if (keyPair.getKeyType() == KeyPair.ECDSA)
 				return Algorithm.ECDSA;
-			else 
+			else
 				throw new IllegalStateException("Unsupported public key algorithm.");
-				
+
 		}
 
 		@Override
@@ -320,7 +323,8 @@ class JschIdentityManager implements SshIdentityManager {
 	}
 
 	@Override
-	public SshPublicKeyFile create(final SshPublicKey key, final String options, final String comment, final int format) {
+	public SshPublicKeyFile create(final SshPublicKey key, final String options, final String comment,
+			final int format) {
 		final JschPublicKey jschKey = (JschPublicKey) key;
 		if (format != SshPublicKeyFile.SECSH_FORMAT && format != SshPublicKeyFile.OPENSSH_FORMAT) {
 			throw new UnsupportedOperationException("Unsupported public key file type.");

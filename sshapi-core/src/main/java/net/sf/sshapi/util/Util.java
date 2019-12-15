@@ -40,7 +40,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -61,25 +63,24 @@ import net.sf.sshapi.sftp.SftpFile;
  */
 public class Util {
 	/**
-	 * Permissions flag: Format mask constant can be used to mask off a file
-	 * type from the mode.
+	 * Permissions flag: Format mask constant can be used to mask off a file type
+	 * from the mode.
 	 */
 	public static final int S_IFMT = 0xF000;
 	/**
-	 * Permissions flag: Bit to determine whether a file is executed as the
-	 * owner
+	 * Permissions flag: Bit to determine whether a file is executed as the owner
 	 */
 	public final static int S_ISUID = 0x800;
 	/**
-	 * Permissions flag: Bit to determine whether a file is executed as the
-	 * group owner
+	 * Permissions flag: Bit to determine whether a file is executed as the group
+	 * owner
 	 */
 	public final static int S_ISGID = 0x400;
 
 	/**
 	 * Convert a string array into a delimited string.
 	 * 
-	 * @param arr array of strings
+	 * @param arr       array of strings
 	 * @param delimiter delimiter
 	 * @return delimited string
 	 */
@@ -141,7 +142,7 @@ public class Util {
 	public static String formatAsHexString(byte[] arr, String delimiter) {
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < arr.length; i++) {
-			if(i > 0 && delimiter != null && delimiter.length() > 0)
+			if (i > 0 && delimiter != null && delimiter.length() > 0)
 				buf.append(delimiter);
 			buf.append(toPaddedHexString(arr[i], 2));
 		}
@@ -163,10 +164,10 @@ public class Util {
 
 	/**
 	 * Display a prompt asking for an SSH user and host (and optional port) to
-	 * connect to. Useful to pass to various methods to open connections in
-	 * SSHAPI, such as
-	 * {@link SshClient#connect(String, net.sf.sshapi.auth.SshAuthenticator...)},
-	 * or {@link Ssh#open(String, net.sf.sshapi.auth.SshAuthenticator...)}.
+	 * connect to. Useful to pass to various methods to open connections in SSHAPI,
+	 * such as
+	 * {@link SshClient#connect(String, net.sf.sshapi.auth.SshAuthenticator...)}, or
+	 * {@link Ssh#open(String, net.sf.sshapi.auth.SshAuthenticator...)}.
 	 * 
 	 * @return connection spec
 	 */
@@ -177,7 +178,7 @@ public class Util {
 	/**
 	 * Display a prompt on the console and wait for an answer.
 	 * 
-	 * @param message message to display to use
+	 * @param message      message to display to use
 	 * @param defaultValue value to return if user just presses RETURN
 	 * @return user input
 	 */
@@ -209,15 +210,28 @@ public class Util {
 	/**
 	 * Concatenate two paths, removing any additional leading/trailing slashes.
 	 * 
-	 * @param path first path portion
+	 * @param path     first path portion
 	 * @param filename path to append
 	 * @return concatenated path
 	 */
 	public static String concatenatePaths(String path, String filename) {
+		if(filename.startsWith("./"))
+			filename = filename.substring(2);
 		while (path.endsWith("/")) {
 			path = path.substring(0, path.length() - 1);
 		}
 		return path + "/" + filename;
+	}
+	
+	public static String canonicalisePath(String path) {
+	    List<String> newParts = new ArrayList<>();
+	    for (String part : path.split("/")) {
+	        if (part.equals("..") && !newParts.isEmpty())
+	            newParts.remove(newParts.size() - 1);
+	        else if (!part.equals("."))
+	        	newParts.add(part);
+	    }
+	    return String.join("/", newParts);
 	}
 
 	/**
@@ -239,10 +253,10 @@ public class Util {
 	}
 
 	/**
-	 * Copy bytes read from an input stream to an output stream, until the end
-	 * of the input stream is reached.
+	 * Copy bytes read from an input stream to an output stream, until the end of
+	 * the input stream is reached.
 	 * 
-	 * @param in input stream
+	 * @param in  input stream
 	 * @param out output stream
 	 * @throws IOException
 	 */
@@ -267,12 +281,12 @@ public class Util {
 	}
 
 	/**
-	 * Get a value from a configuration object, returning a default value if it
-	 * does not exist. This method will also look for the same property in the
-	 * current system properties.
+	 * Get a value from a configuration object, returning a default value if it does
+	 * not exist. This method will also look for the same property in the current
+	 * system properties.
 	 * 
 	 * @param configuration configuration object
-	 * @param name name of configuration
+	 * @param name          name of configuration
 	 * @param defaultValue
 	 * @return value
 	 */
@@ -288,8 +302,7 @@ public class Util {
 	}
 
 	/**
-	 * Get the file to load known host keys from given an
-	 * {@link SshConfiguration}.
+	 * Get the file to load known host keys from given an {@link SshConfiguration}.
 	 * 
 	 * @param configuration
 	 * @return file to load known hosts from
@@ -336,7 +349,7 @@ public class Util {
 			});
 			return true;
 		} catch (IOException ioe) {
-			SshConfiguration.getLogger().log(Level.DEBUG, "Failed to delete.", ioe);
+			SshConfiguration.getLogger().warn("Failed to delete.", ioe);
 			return false;
 		}
 	}
@@ -345,8 +358,8 @@ public class Util {
 	 * Process a string, replacing a specified character with another string.
 	 * 
 	 * @param string string to replace
-	 * @param what character to replace
-	 * @param with string to replace character with
+	 * @param what   character to replace
+	 * @param with   string to replace character with
 	 * @return escaped string
 	 */
 	public static String escape(String string, char what, String with) {
@@ -371,7 +384,7 @@ public class Util {
 	 * @return directory portion of path.
 	 */
 	public static String dirname(String remotePath) {
-		if(remotePath.equals(""))
+		if (remotePath.equals(""))
 			return null;
 		String dir = ".";
 		int idx = remotePath.lastIndexOf("/");
@@ -382,15 +395,17 @@ public class Util {
 	}
 
 	/**
-	 * Get an absolute path from a relative path given a base. If the path provided is already
-	 * absolute (begins with '/'), it will be returned as is.
+	 * Get an absolute path from a relative path given a base. If the path provided
+	 * is already absolute (begins with '/'), it will be returned as is.
 	 * 
 	 * @param path path
 	 * @param base base
 	 * @return absolute path
 	 */
 	public static String getAbsolutePath(String path, String base) {
-		return path == null || path.startsWith("/") ? path : ( base.equals("/") ? base : base + "/" ) + path;
+		if(path.startsWith("./"))
+			path = path.substring(2);
+		return path == null || path.startsWith("/") ? path : (base.equals("/") ? base : base + "/") + path;
 	}
 
 	/**
@@ -447,10 +462,10 @@ public class Util {
 	}
 
 	/**
-	 * Get permissions value for a file. If {@link PosixFilePermission} can be
-	 * used, user, group and other permissions will be included. If not,
-	 * {@link File#canRead()} etc will be used to get just the permissions for
-	 * the current user.
+	 * Get permissions value for a file. If {@link PosixFilePermission} can be used,
+	 * user, group and other permissions will be included. If not,
+	 * {@link File#canRead()} etc will be used to get just the permissions for the
+	 * current user.
 	 * 
 	 * @param path path
 	 * @return permissions
@@ -618,8 +633,8 @@ public class Util {
 	}
 
 	/**
-	 * Check the <strong>Known Hosts File</strong> parent directory exists,
-	 * creating it if it does.
+	 * Check the <strong>Known Hosts File</strong> parent directory exists, creating
+	 * it if it does.
 	 * 
 	 * @param configuration
 	 * @throws SshException
@@ -671,13 +686,32 @@ public class Util {
 		return ByteBuffer.wrap(toBytes(data));
 	}
 
+	public static String linkPath(String targetLinkPath, String sourceFilePath) {
+		if (targetLinkPath.startsWith("/"))
+			return targetLinkPath;
+		else {
+			return canonicalisePath(concatenatePaths(dirname(sourceFilePath), targetLinkPath));
+		}
+	}
+	
 	/**
-	 * Return what another path would be if it were relative to the original
-	 * path. If the path cannot be relative to the orignial path, it will be
-	 * returned as is.
+	 * Convert all forward slashes to backslashes in a path string. Use this when converting
+	 * OS paths from {@link File} for example.
+	 * 
+	 * @param path
+	 * @return path
+	 */
+	public static String fixSlashes(String path) {
+		return path.replace('\\', '/');
+	}
+
+	/**
+	 * Return what another path would be if it were relative to the original path.
+	 * If the path cannot be relative to the orignial path, it will be returned as
+	 * is.
 	 * 
 	 * @param original original path
-	 * @param other other path
+	 * @param other    other path
 	 * @return other path relative to original path
 	 */
 	public static String relativeTo(String original, String other) {
@@ -724,44 +758,46 @@ public class Util {
 
 	public static String getArtifactVersion(String groupId, String artifactId) {
 		String version = "0.0.0";
-	    // try to load from maven properties first
-	    try {
-	        Properties p = new Properties();
-	        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/maven/com.hypersocket/" + artifactId + "/pom.properties");
-	        if(is == null) {
-		        is = Util.class.getResourceAsStream("/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties");
-	        }
-	        if (is != null) {
-	            p.load(is);
-	            version = p.getProperty("version", "");
-	        }
-	    } catch (Exception e) {
-	        // ignore
-	    }
+		// try to load from maven properties first
+		try {
+			Properties p = new Properties();
+			InputStream is = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream("META-INF/maven/com.hypersocket/" + artifactId + "/pom.properties");
+			if (is == null) {
+				is = Util.class
+						.getResourceAsStream("/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties");
+			}
+			if (is != null) {
+				p.load(is);
+				version = p.getProperty("version", "");
+			}
+		} catch (Exception e) {
+			// ignore
+		}
 
-	    // fallback to using Java API
-	    if (version == null) {
-	        Package aPackage = Util.class.getPackage();
-	        if (aPackage != null) {
-	            version = aPackage.getImplementationVersion();
-	            if (version == null) {
-	                version = aPackage.getSpecificationVersion();
-	            }
-	        }
-	    }
+		// fallback to using Java API
+		if (version == null) {
+			Package aPackage = Util.class.getPackage();
+			if (aPackage != null) {
+				version = aPackage.getImplementationVersion();
+				if (version == null) {
+					version = aPackage.getSpecificationVersion();
+				}
+			}
+		}
 
-	    if (version == null) {
-	    	try {
-	    		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-	            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-	            Document doc = docBuilder.parse (new File("pom.xml"));
-	            version = doc.getDocumentElement().getElementsByTagName("version").item(0).getTextContent();
-	    	} catch (Exception e) {
+		if (version == null) {
+			try {
+				DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+				Document doc = docBuilder.parse(new File("pom.xml"));
+				version = doc.getDocumentElement().getElementsByTagName("version").item(0).getTextContent();
+			} catch (Exception e) {
 				version = "0.0.0";
-			} 
-	        
-	    }
+			}
 
-	    return version;
+		}
+
+		return version;
 	}
 }

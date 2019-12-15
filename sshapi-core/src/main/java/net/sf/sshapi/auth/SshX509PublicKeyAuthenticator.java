@@ -25,7 +25,6 @@ package net.sf.sshapi.auth;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
-import net.sf.sshapi.SshConfiguration;
 
 /**
  * Extension of {@link SshPublicKeyAuthenticator} to be used for X509
@@ -40,11 +39,6 @@ public interface SshX509PublicKeyAuthenticator extends SshPublicKeyAuthenticator
 	 * @return alias
 	 */
 	String getAlias();
-
-	@Override
-	public default String getTypeName() {
-		return SshConfiguration.PUBLIC_KEY_X509V3_RSA_SHA1;
-	}
 	
 	/**
 	 * Invoked when the session requires the key passphrase (for a key). By

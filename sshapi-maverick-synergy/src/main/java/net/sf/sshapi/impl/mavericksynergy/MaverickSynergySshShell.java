@@ -36,10 +36,10 @@ import com.sshtools.common.ssh.Connection;
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
-import net.sf.sshapi.util.SshChannelInputStream;
 
 class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private SessionChannelNG session;
@@ -64,6 +64,7 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListe
 		this.pixWidth = pixWidth;
 		this.pixHeight = pixHeight;
 		this.con = con;
+		setFiresOwnCloseEvents(true);
 	}
 
 	@Override
@@ -103,7 +104,29 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListe
 		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
-				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize());
+				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize()){
+
+			@Override
+			protected void onChannelClosed() {
+				fireClosed();
+			}
+
+			@Override
+			protected void onChannelClosing() {
+				fireClosing();
+			}
+
+			@Override
+			protected void onRemoteEOF() {
+				fireEof();
+			}
+
+			@Override
+			protected void onLocalEOF() {
+				fireEof();
+			}
+
+		};
 		con.openChannel(session);
 		// // TODO configure?
 		if (!session.getOpenFuture().waitFor(30000).isSuccess()) {
@@ -125,13 +148,13 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshChannelListe
 		if (!session.startShell().waitFor(30000).isSuccess()) {
 			throw new IllegalStateException("Could not start shell.");
 		}
-		inputStream = new SshChannelInputStream(session.getInputStream(), this);
-		extendedInputStream = new SshChannelInputStream(session.getErrorStream(), this);
-		outputStream = session.getOutputStream();
+		inputStream = new EventFiringInputStream(session.getInputStream(), SshDataListener.RECEIVED);
+		extendedInputStream = new EventFiringInputStream(session.getErrorStream(), SshDataListener.EXTENDED);
+		outputStream = new EventFiringOutputStream(session.getOutputStream());
 	}
 
 	@Override
-	protected void onClose() throws SshException {
+	protected void onCloseStream() throws SshException {
 		session.close();
 	}
 }

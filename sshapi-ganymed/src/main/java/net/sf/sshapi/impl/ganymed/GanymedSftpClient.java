@@ -44,6 +44,7 @@ import net.sf.sshapi.util.Util;
 class GanymedSftpClient extends AbstractSftpClient {
 	private final Connection session;
 	private SFTPv3Client client;
+	private String home;
 
 	public GanymedSftpClient(GanymedSshClient client, Connection session) {
 		super(client.getProvider(), client.getConfiguration());
@@ -69,12 +70,23 @@ class GanymedSftpClient extends AbstractSftpClient {
 			private long position;
 			private byte[] writeBuffer;
 			private byte[] readBuffer;
+			private boolean closed;
+			private boolean errored;
 
 			@Override
 			public void close() throws IOException {
 				try {
-					client.closeFile(nativeHandle);
+					if(!closed) {
+						try {
+							client.closeFile(nativeHandle);
+						}
+						catch(IOException ioe) {
+							if(!errored)
+								throw ioe;
+						}
+					}
 				} finally {
+					closed = true;
 					writeBuffer = null;
 					readBuffer = null;
 				}
@@ -90,6 +102,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 				try {
 					client.write(nativeHandle, position, writeBuffer, 0, len);
 				} catch (IOException e) {
+					errored = true;
 					throw new SftpException(SftpException.IO_ERROR, e);
 				}
 				position += len;
@@ -110,8 +123,11 @@ class GanymedSftpClient extends AbstractSftpClient {
 						buffer.put(readBuffer, 0, read);
 						position += read;
 					}
+					else 
+						closed = true;
 					return read;
 				} catch (IOException e) {
+					errored = true;
 					throw new SftpException(SftpException.IO_ERROR, e);
 				}
 			}
@@ -191,6 +207,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 	public void onOpen() throws SshException {
 		try {
 			client = new SFTPv3Client(session);
+			home = client.canonicalPath("");
 		} catch (IOException e) {
 			throw new SshException("Failed to start SFTP client.", e);
 		}
@@ -198,8 +215,7 @@ class GanymedSftpClient extends AbstractSftpClient {
 
 	@Override
 	public String getDefaultPath() {
-		// TODO return the home dir?
-		return "/";
+		return home;
 	}
 
 	@Override
@@ -248,9 +264,9 @@ class GanymedSftpClient extends AbstractSftpClient {
 	}
 
 	@Override
-	public String readLink(String path) throws SshException {
+	protected String doReadLink(String path) throws SshException {
 		try {
-			return client.readLink(path);
+			return Util.linkPath(client.readLink(path), path);
 		} catch (SFTPException sftpE) {
 			throw new GanymedSftpException(sftpE, String.format("Could not find file. %s", path));
 		} catch (IOException e) {

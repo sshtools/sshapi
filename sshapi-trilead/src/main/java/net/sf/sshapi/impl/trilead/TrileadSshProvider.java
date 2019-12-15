@@ -33,7 +33,6 @@ import com.trilead.ssh2.transport.KexManager;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -73,11 +72,11 @@ public class TrileadSshProvider extends AbstractProvider {
 		try {
 			Class.forName("com.trilead.ssh2.Connection", false, getClass().getClassLoader());
 		} catch (ClassNotFoundException cnfe) {
-			SshConfiguration.getLogger().log(Level.INFO, "Could not find Trilead class com.trilead.ssh2.Connection.");
+			SshConfiguration.getLogger().debug("Could not find Trilead class com.trilead.ssh2.Connection.");
 			throw new UnsupportedOperationException("Trilead is not on the CLASSPATH");
 		}
 		if (configuration != null && configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
-			SshConfiguration.getLogger().log(Level.INFO, "Trilead does not support SSH1, not usable.");
+			SshConfiguration.getLogger().debug("Trilead does not support SSH1, not usable.");
 			throw new UnsupportedOperationException("SSH1 is not supported.");
 		}
 	}
@@ -88,7 +87,8 @@ public class TrileadSshProvider extends AbstractProvider {
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.HOST_KEY_VERIFICATION, Capability.SHELL,
 				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK });
+				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS, 
+				Capability.SFTP_LSTAT, Capability.SFTP_OFFSET, Capability.SFTP_RESUME });
 	}
 
 	public List<String> getSupportedCiphers(int protocolVersion) {

@@ -23,7 +23,9 @@
  */
 package net.sf.sshapi;
 
+import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpHandle;
+import net.sf.sshapi.util.RemoteSocketFactory;
 
 /**
  * Represents a feature that a provider implementation is capable of. Clients
@@ -209,6 +211,24 @@ public class Capability {
 	 * The provider supports reading a symbolic links target ({@link SftpClient#readLink(String)}).
 	 */
 	public final static Capability SFTP_READ_LINK = new Capability("sftpReadLink");
+	/**
+	 * The provider supports {@link SftpClient#lstat(String)} for reading file attributes without
+	 * following links
+	 */
+	public final static Capability SFTP_LSTAT = new Capability("sftpLstat");
+	/**
+	 * The provider supports an offset {@link SftpClient#get(String, java.io.OutputStream, long)},
+	 * {@link SftpClient#put(String, java.io.InputStream, int, long)} and related methods, allowing
+	 * specifying an offset using these methods. If this capability is present, that would usually
+	 * imply {@link Capability#SFTP_RESUME} too, as resume may be implemented using offsets.
+	 */
+	public final static Capability SFTP_OFFSET= new Capability("sftpOffset");
+	/**
+	 * The provider supports {@link SftpClient#resumeGet(String, java.io.File)
+	 * {@link SftpClient#resumePut(java.io.File, String)}, allowing
+	 * resuming of uploads and downloads.
+	 */
+	public final static Capability SFTP_RESUME = new Capability("sftpResume");
 
 	/**
 	 * The provider supports a agent for key authentication. One of the other
@@ -225,6 +245,11 @@ public class Capability {
 	 * The provider supports an SSH agent for key authentication.
 	 */
 	public final static Capability OPENSSH_AGENT = new Capability("openssh-agent");
+	/**
+	 * The provider supports forwarding channels. This capability implies {@link Capability#TUNNELED_SOCKET_FACTORY}
+	 * as {@link RemoteSocketFactory} may be used with any provided that supports forwarding channels.
+	 */
+	public final static Capability FORWARDING_CHANNELS = new Capability("forwarding-channels");
 
 	private String name;
 

@@ -23,9 +23,6 @@
  */
 package net.sf.sshapi.impl.maverick16;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.maverick.ssh.SshSession;
 
 import net.sf.sshapi.SshChannelListener;
@@ -38,11 +35,6 @@ class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshChannelListen
 	
 	MaverickSshShell(SshProvider provider, SshConfiguration configuration, SshSession session) {
 		super(provider, configuration, session);
-	}
-
-	@Override
-	public InputStream getExtendedInputStream() throws IOException {
-		return ((SshSession) getChannel()).getStderrInputStream();
 	}
 
 	@Override

@@ -157,7 +157,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			sftpClient.symlink(path, target);
+			sftpClient.getSubsystemChannel().createSymbolicLink(path, target);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -168,7 +168,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	public SftpHandle file(String path, OpenMode... modes) throws net.sf.sshapi.sftp.SftpException {
 		try {
-			return createHandle(sftpClient.openFile(path));
+			return createHandle(sftpClient.getSubsystemChannel().openFile(path, OpenMode.toFlags(modes)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (com.sshtools.ssh.SshException ioe) {
@@ -179,8 +179,8 @@ class MaverickSftpClient extends AbstractSftpClient {
 	private SftpHandle createHandle(com.sshtools.sftp.SftpFile nativeHandle) {
 		return new SftpHandle() {
 			private long position;
-			private byte[] writeBuffer;
 			private byte[] readBuffer;
+			private byte[] writeBuffer;
 
 			@Override
 			public void close() throws IOException {
@@ -199,36 +199,29 @@ class MaverickSftpClient extends AbstractSftpClient {
 			}
 
 			@Override
-			public SftpHandle write(ByteBuffer buffer) throws SftpException {
-				int len = buffer.limit() - buffer.position();
-				if (writeBuffer == null || writeBuffer.length != len) {
-					writeBuffer = new byte[len];
-				}
-				buffer.get(writeBuffer);
-				try {
-					nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position), writeBuffer,
-							0, len);
-				} catch (SftpStatusException sftpE) {
-					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-				} catch (com.sshtools.ssh.SshException ioe) {
-					throw new SftpException(SftpException.IO_ERROR, String.format("Failed to write to file."), ioe);
-				}
-				position += len;
+			public long position() {
+				return position;
+			}
+
+			@Override
+			public SftpHandle position(long position) {
+				this.position = position;
 				return this;
 			}
 
 			@Override
 			public int read(ByteBuffer buffer) throws SftpException {
 				int len = buffer.limit() - buffer.position();
-				if(len < 1)
-					throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE, "Run out of buffer space reading a file.");
+				if (len < 1)
+					throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE,
+							"Run out of buffer space reading a file.");
 				if (readBuffer == null || readBuffer.length != len) {
 					readBuffer = new byte[len];
 				}
 				try {
 					try {
-						int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
-								writeBuffer, 0, len);
+						int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(),
+								new UnsignedInteger64(position), readBuffer, 0, len);
 						if (read != -1) {
 							buffer.put(readBuffer, 0, read);
 							position += read;
@@ -245,13 +238,22 @@ class MaverickSftpClient extends AbstractSftpClient {
 			}
 
 			@Override
-			public long position() {
-				return position;
-			}
-
-			@Override
-			public SftpHandle position(long position) {
-				this.position = position;
+			public SftpHandle write(ByteBuffer buffer) throws SftpException {
+				int len = buffer.limit() - buffer.position();
+				if (writeBuffer == null || writeBuffer.length != len) {
+					writeBuffer = new byte[len];
+				}
+				buffer.get(writeBuffer);
+				try {
+					nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
+							writeBuffer, 0, len);
+				} catch (SftpStatusException sftpE) {
+					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+				} catch (com.sshtools.ssh.SshException ioe) {
+					throw new SftpException(SftpException.IO_ERROR,
+							String.format("Failed to write to file %s.", nativeHandle.getAbsolutePath()), ioe);
+				}
+				position += len;
 				return this;
 			}
 		};
@@ -428,16 +430,15 @@ class MaverickSftpClient extends AbstractSftpClient {
 
 	@Override
 	public void setLastModified(String path, long modtime) throws SshException {
-		// Not support in this version
-		// try {
-		// sftpClient.setLastModified(modtime, path);
-		// } catch (SftpStatusException sftpE) {
-		// throw new SftpException(sftpE.getStatus(),
-		// sftpE.getLocalizedMessage());
-		// } catch (Exception e) {
-		// throw new SshException("Failed to create directory.", e);
-		// }
-		throw new UnsupportedOperationException();
+		try {
+			SftpFileAttributes stat = sftpClient.stat(path);
+			UnsignedInteger64 a = stat.getAccessedTime();
+			stat.setTimes(a, new UnsignedInteger64(modtime));
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create directory.", e);
+		}
 	}
 
 	@Override
@@ -467,7 +468,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			throws SshException {
 		try {
 			return toOperation(sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync, commit,
-					createProgress(localdir.getPath())));
+					createProgress(localdir.getPath())), false, localdir, remotedir);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -480,7 +481,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 			throws SshException {
 		try {
 			return toOperation(sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync, commit,
-					createProgress(localdir.getPath())));
+					createProgress(localdir.getPath())), true, localdir, remotedir);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -541,19 +542,36 @@ class MaverickSftpClient extends AbstractSftpClient {
 	}
 
 	@SuppressWarnings("unchecked")
-	private SftpOperation toOperation(com.sshtools.sftp.DirectoryOperation op) {
+	private SftpOperation toOperation(com.sshtools.sftp.DirectoryOperation op, boolean up, File localDir, String remoteDir) {
 		List<String> updated = new ArrayList<String>();
-		for (Object f : op.getUpdatedFiles())
-			updated.add(f.toString());
+		for (Object f : op.getUpdatedFiles()) {
+			if(up)
+				updated.add(toOpPath(localDir, remoteDir, getDefaultPath(), f));
+			else
+				updated.add(f.toString());
+		}
 		List<String> unchanged = new ArrayList<String>();
-		for (Object f : op.getUnchangedFiles())
-			unchanged.add(f.toString());
+		for (Object f : op.getUnchangedFiles()) {
+			if(up)
+				unchanged.add(toOpPath(null, remoteDir, getDefaultPath(), f));
+			else
+				unchanged.add(f.toString());
+		}
 		List<String> deleted = new ArrayList<String>();
-		for (Object f : op.getDeletedFiles())
-			deleted.add(f.toString());
+		for (Object f : op.getDeletedFiles()) {
+			if(up)
+				deleted.add(toOpPath(null, remoteDir, getDefaultPath(), f));
+			else
+				deleted.add(f.toString());
+				
+		}
 		List<String> created = new ArrayList<String>();
-		for (Object f : op.getNewFiles())
-			created.add(f.toString());
+		for (Object f : op.getNewFiles()) {
+			if(up)
+				created.add(toOpPath(localDir, remoteDir, getDefaultPath(), f));
+			else
+				created.add(f.toString());
+		}
 		Set<String> all = new LinkedHashSet<>();
 		all.addAll(updated);
 		all.addAll(unchanged);
@@ -609,5 +627,16 @@ class MaverickSftpClient extends AbstractSftpClient {
 				return updated;
 			}
 		};
+	}
+
+	private String toOpPath(File localDir, String remotedir, String defaultPath, Object f) {
+		if (f instanceof File) {
+			if (localDir != null) {
+				return Util.concatenatePaths(remotedir, Util.relativeTo(Util.fixSlashes(((File) f).getPath()), Util.fixSlashes(localDir.getPath())));
+			}
+			return ((File) f).getPath();
+		} else {
+			return Util.relativeTo(f.toString(), defaultPath);
+		}
 	}
 }

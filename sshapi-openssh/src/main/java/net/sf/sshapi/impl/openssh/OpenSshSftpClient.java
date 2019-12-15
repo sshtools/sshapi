@@ -16,7 +16,6 @@ import java.util.concurrent.Semaphore;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
@@ -35,6 +34,7 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 
 	public enum Type {
 		BLOCK, CHARACTER, DIRECTORY, FILE, LINK, SPECIAL;
+
 		public static Type parse(char p) {
 			switch (p) {
 			case 'd':
@@ -381,9 +381,8 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 				try {
 					SftpFile existing = stat(path);
 					length = length - existing.getSize();
-				}
-				catch(SftpException se) {
-					if(se.getCode() != SftpException.SSH_FX_NO_SUCH_FILE)
+				} catch (SftpException se) {
+					if (se.getCode() != SftpException.SSH_FX_NO_SUCH_FILE)
 						throw se;
 				}
 				fireFileTransferStarted(source.getPath(), path, length);
@@ -408,7 +407,7 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 			try {
 				int result = process.waitFor();
 				if (result != 0)
-					SshConfiguration.getLogger().log(Level.WARN, String.format("Sftp client exited with non-zero code %d", result));
+					SshConfiguration.getLogger().warn("Sftp client exited with non-zero code {0}", result);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			} finally {
@@ -489,7 +488,8 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 	private void checkCommonErrors(String path, String[] results) throws SshException {
 		for (String r : results) {
 			if (r.endsWith(": No such file or directory") || r.endsWith("\" not found")) {
-				throw new SftpException(SftpException.SSH_FX_NO_SUCH_FILE.getServerCode(), "Could not find remote path " + path);
+				throw new SftpException(SftpException.SSH_FX_NO_SUCH_FILE.getServerCode(),
+						"Could not find remote path " + path);
 			}
 			if (r.endsWith(": Failure")) {
 				SftpFile f = null;
@@ -670,7 +670,8 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 				in.setCapture(true);
 				sftpPromptSem.acquire();
 			}
-			SshConfiguration.getLogger().log(Level.DEBUG, String.format("Run command '%s'", cmd));
+			if (SshConfiguration.getLogger().isDebug())
+				SshConfiguration.getLogger().debug("Run command '{0}'", cmd);
 			String cmdString = cmd + "\n";
 			out.write(cmdString.getBytes());
 			out.flush();
@@ -680,7 +681,8 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 				int sidx = cmdString.length() + 1;
 				int idx = Math.max(sidx, capturedString.length() - SFTP_PROMPT.length() - 2);
 				String result = capturedString.substring(sidx, idx);
-				SshConfiguration.getLogger().log(Level.DEBUG, String.format("Got %d bytes result for '%s'", result.length(), cmd));
+				if (SshConfiguration.getLogger().isDebug())
+					SshConfiguration.getLogger().debug("Got {0} bytes result for {1}", result.length(), cmd);
 				return result;
 			} else
 				return null;

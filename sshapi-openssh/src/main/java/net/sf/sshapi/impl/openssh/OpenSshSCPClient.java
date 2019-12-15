@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.sshapi.AbstractSCPClient;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 
@@ -108,7 +107,7 @@ class OpenSshSCPClient extends AbstractSCPClient implements AbstractOpenSshClien
 			try {
 				int result = process.waitFor();
 				if (result != 0)
-					SshConfiguration.getLogger().log(Level.WARN, String.format("Scp client exited with non-zero code %d", result));
+					SshConfiguration.getLogger().warn("Scp client exited with non-zero code {0}", result);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			} finally {

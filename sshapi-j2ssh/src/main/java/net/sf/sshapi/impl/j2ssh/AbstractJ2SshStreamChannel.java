@@ -104,7 +104,7 @@ abstract class AbstractJ2SshStreamChannel<L extends SshChannelListener<C>, C ext
 		onChannelOpen();
 	}
 
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		try {
 			channel.close();
 		} catch (IOException e) {

@@ -77,13 +77,13 @@ public abstract class AbstractClientMultipleConnecting extends AbstractSshTest {
 	}
 
 	protected void disconnect() throws SshException, IOException {
-		SshConfiguration.getLogger().log(Level.INFO, "Disconnecting all client");
+		LOG.info("Disconnecting all client");
 		if (clients != null) {
 			for (SshClient ssh : clients) {
 				if(ssh.isConnected()) {
-					SshConfiguration.getLogger().log(Level.INFO, String.format("Disconnecting from %s:%d.", config.getServer(), config.getPort()));
+					LOG.info("Disconnecting from {0}:{1}.", config.getServer(), config.getPort());
 					ssh.close();
-					SshConfiguration.getLogger().log(Level.INFO, String.format("Disconnected from %s:%d.", config.getServer(), config.getPort()));
+					LOG.info("Disconnected from {0}:{1}.", config.getServer(), config.getPort());
 				}
 			}
 			clients.clear();
@@ -98,14 +98,14 @@ public abstract class AbstractClientMultipleConnecting extends AbstractSshTest {
 	}
 
 	protected void connect() throws Exception {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("Connecting %d clients.", getConnectionCount()));
+		LOG.info("Connecting {0} clients.", getConnectionCount());
 		SshConfiguration con = new SshConfiguration();
 		con.setHostKeyValidator(new DumbHostKeyValidator());
 		if (clients == null) {
 			clients = new ArrayList<SshClient>();
 		}
 		for (int i = 0; i < getConnectionCount(); i++) {
-			SshConfiguration.getLogger().log(Level.INFO, String.format("Connecting %d to %s:%d.", i, config.getServer(), config.getPort()));
+			LOG.info("Connecting {0} to {1}:{2}.", i, config.getServer(), config.getPort());
 			clients.add(con.open(getUsername(), config.getServer(), config.getPort()));
 		}
 		onConnectingSetUp();

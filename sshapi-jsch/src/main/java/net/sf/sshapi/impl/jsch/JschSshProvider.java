@@ -133,7 +133,8 @@ public class JschSshProvider extends AbstractProvider {
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.SCP, Capability.FILE_TRANSFER_EVENTS,
 				Capability.DATA_TIMEOUTS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
 				Capability.SHELL, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
-				Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK });
+				Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK,
+				Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET });
 	}
 
 	@Override
@@ -148,7 +149,7 @@ public class JschSshProvider extends AbstractProvider {
 
 	private void checkFirstConnection() {
 		if (!firstConnection) {
-			SshConfiguration.getLogger().log(Level.WARN,
+			SshConfiguration.getLogger().warn(
 					"JSch does not fully support per connection configuration. This second client's configuration "
 							+ "may interfere with the first's.");
 			firstConnection = true;

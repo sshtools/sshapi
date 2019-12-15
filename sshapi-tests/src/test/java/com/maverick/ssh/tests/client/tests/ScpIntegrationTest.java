@@ -36,14 +36,18 @@ public class ScpIntegrationTest extends AbstractClientFiles {
 		timeout(() -> {
 			Assume.assumeTrue("Must support SCP.", ssh.getProvider().getCapabilities().contains(Capability.SCP));
 			for (File file : randomFiles.getTestFiles()) {
+				LOG.info("Copying {0} to {1} ({2} bytes)", file, resolveRemote(file.getName()), file.length());
 				scp.put(resolveRemote(file.getName()), "0644", file, false);
 				File localFile = new File(randomFiles.getLocalFilesDir(), file.getName());
+				LOG.info("Retrieving {0} from {1} ({2} bytes)", file, resolveRemote(file.getName()), file.length());
 				scp.get(resolveRemote(file.getName()), localFile, false);
 				assertEquals("Size of retrieved file must equal size of file sent", file.length(), localFile.length());
+				LOG.info("Comparing {0} and {1}", file, localFile);
 				compare(file, localFile);
+				break;
 			}
 			return null;
-		}, 120000);
+		}, 240000);
 	}
 
 	@Test
@@ -55,6 +59,6 @@ public class ScpIntegrationTest extends AbstractClientFiles {
 			scp.get(resolveRemote("/"), randomFiles.getLocalFilesDir(), true);
 			compare(randomFiles.getTestFilesDir(), randomFiles.getLocalFilesDir(), false);
 			return null;
-		}, 60000);
+		}, 120000);
 	}
 }

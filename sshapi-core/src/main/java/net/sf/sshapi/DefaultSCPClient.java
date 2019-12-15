@@ -1,4 +1,4 @@
-package net.sf.sshapi.impl.jsch;
+package net.sf.sshapi;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,31 +8,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import net.sf.sshapi.AbstractSCPClient;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshCommand;
-import net.sf.sshapi.SshStreamChannel;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
 
-class JschSCPClient extends AbstractSCPClient {
-	private final JschSshClient sshClient;
+public class DefaultSCPClient extends AbstractSCPClient {
+	private static final Logger LOG = SshConfiguration.getLogger();
+	private final SshClient sshClient;
 
-	/**
-	 * @param jschSshClient
-	 */
-	public JschSCPClient(JschSshClient jschSshClient) {
+	public DefaultSCPClient(SshClient jschSshClient) {
 		super(jschSshClient.getProvider());
 		sshClient = jschSshClient;
 	}
 
 	@Override
 	protected void onClose() throws SshException {
-		/*
-		 * Ganymed opens and closes sessions itself when file operations are
-		 * performed
-		 */
 	}
 
 	@Override
@@ -45,18 +33,14 @@ class JschSCPClient extends AbstractSCPClient {
 		try {
 			String command = "scp -p " + (localfile.isDirectory() ? "-d " : "") + "-t " + (recursive ? "-r " : "")
 					+ (verbose ? "-v " : "") + remotePath;
-			SshConfiguration.getLogger().log(Level.INFO, "Executing command '" + command + "'");
+			LOG.debug("Executing command '{0}'", command);
 			SshCommand cmd = sshClient.createCommand(command);
 			try {
 				cmd.open();
 				OutputStream out = cmd.getOutputStream();
 				InputStream in = cmd.getInputStream();
-				int ack = JschSshClient.checkAck(in);
-				if (ack != 0) {
-					throw new IOException("Incorrect Ack " + ack + " received");
-				}
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("Frist acknowledge SCP %s (mode %s) from %s", remotePath, mode, localfile));
+				checkAck(in);
+				LOG.debug("First acknowledge SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 				if (localfile.isDirectory()) {
 					File[] f = localfile.listFiles();
 					if (f == null) {
@@ -68,25 +52,21 @@ class JschSCPClient extends AbstractSCPClient {
 							doFile(remotePath, mode, f[i], out, in);
 						}
 					}
-					SshConfiguration.getLogger().log(Level.INFO,
-							String.format("Completed files SCP %s (mode %s) from %s", remotePath, mode, localfile));
+					LOG.debug("Completed files SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 					// Now, if recursive, do the directories
 					for (int i = 0; i < f.length; i++) {
 						if (f[i].isDirectory()) {
 							doPut(remotePath + "/" + f[i].getName(), mode, f[i], recursive);
 						}
 					}
-					SshConfiguration.getLogger().log(Level.INFO,
-							String.format("Completed folders SCP %s (mode %s) from %s", remotePath, mode, localfile));
+					LOG.debug("Completed folders SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 				} else {
 					doFile(remotePath, mode, localfile, out, in);
 				}
 			} finally {
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("Closing command for SCP %s (mode %s) from %s", remotePath, mode, localfile));
+				LOG.debug("Closing command for SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 				cmd.close();
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("Closed command for SCP %s (mode %s) from %s", remotePath, mode, localfile));
+				LOG.debug("Closed command for SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 			}
 		} catch (IOException ioe) {
 			throw new SshException(SshException.IO_ERROR, ioe);
@@ -94,18 +74,13 @@ class JschSCPClient extends AbstractSCPClient {
 	}
 
 	private void doFile(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in) throws IOException {
-		int ack;
-		SshConfiguration.getLogger().log(Level.INFO,
-				String.format("Transferring file %s (mode %s) from %s", remotePath, mode, sourceFile));
+		LOG.debug("Transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
 		String basename = Util.basename(remotePath);
 		String command = "C" + (mode == null ? "0644" : mode) + " " + sourceFile.length() + " " + basename;
 		command += "\n";
 		out.write(command.getBytes());
 		out.flush();
-		ack = JschSshClient.checkAck(in);
-		if (ack != 0) {
-			throw new IOException("Incorrect Ack " + ack + " received");
-		}
+		checkAck(in);
 		byte[] buf = new byte[sshClient.getConfiguration().getStreamBufferSize() == 0 ? 32768 :(int)sshClient.getConfiguration().getStreamBufferSize()];
 		try (InputStream content = new FileInputStream(sourceFile)) {
 			fireFileTransferStarted(sourceFile.getPath(), remotePath, sourceFile.length());
@@ -119,14 +94,9 @@ class JschSCPClient extends AbstractSCPClient {
 			buf[0] = 0;
 			out.write(buf, 0, 1);
 			out.flush();
-			SshConfiguration.getLogger().log(Level.INFO,
-					String.format("Finishgd transferring file %s (mode %s) from %s", remotePath, mode, sourceFile));
-			ack = JschSshClient.checkAck(in);
-			if (ack != 0) {
-				throw new IOException("Incorrect Ack " + ack + " received");
-			}
-			SshConfiguration.getLogger().log(Level.INFO,
-					String.format("Acknowledge transferring file %s (mode %s) from %s", remotePath, mode, sourceFile));
+			LOG.debug("Finished transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
+			checkAck(in);
+			LOG.debug("Acknowledge transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
 		} finally {
 			fireFileTransferFinished(sourceFile.getPath(), remotePath);
 		}
@@ -134,7 +104,7 @@ class JschSCPClient extends AbstractSCPClient {
 
 	@Override
 	public void get(final String remoteFilePath, File targetFile, boolean recursive) throws SshException {
-		SshConfiguration.getLogger().log(Level.INFO, String.format("SCPd for file %s (mode %s)", remoteFilePath, targetFile));
+		LOG.debug("SCPd for file {0} (mode {1})", remoteFilePath, targetFile);
 		SshStreamChannel<?, ?> cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
 		cmd.open();
 		// get I/O streams for remote scp
@@ -159,16 +129,14 @@ class JschSCPClient extends AbstractSCPClient {
 
 	private boolean doGet(final String remoteFilePath, File targetFile, SshStreamChannel<?, ?> cmd, OutputStream out, InputStream in,
 			byte[] buf) throws IOException, SshException, FileNotFoundException {
-		SshConfiguration.getLogger().log(Level.INFO,
-				String.format("Send first ACK for file %s (mode %s)", remoteFilePath, targetFile));
+		LOG.debug("Send first ACK for file {0} (mode {1})", remoteFilePath, targetFile);
 		buf[0] = 0;
 		out.write(buf, 0, 1);
 		out.flush();
 		boolean run = true;
 		while (run) {
-			int c = JschSshClient.checkAck(in);
-			SshConfiguration.getLogger().log(Level.INFO,
-					String.format("Ack %d (%s) for file %s (mode %s)", c, Character.valueOf((char) c), remoteFilePath, targetFile));
+			int c = readAck(in);
+			LOG.debug("Ack {0} ({1}) for file {2} (mode {3})", c, Character.valueOf((char) c), remoteFilePath, targetFile);
 			switch (c) {
 			case 'T':
 				continue;
@@ -202,40 +170,34 @@ class JschSCPClient extends AbstractSCPClient {
 					out.write(buf, 0, 1);
 					out.flush();	
 					fireFileTransferStarted(remoteFilePath, target.getPath(), filesize);
-					SshConfiguration.getLogger().log(Level.INFO,
-							String.format("File %s is %d bytes", remoteFilePath, filesize));
+					LOG.debug("File {0} is {1} bytes", remoteFilePath, filesize);
 					while (left > 0) {
 						int len = in.read(buf, 0, (int)Math.min(buf.length, left));
 						if (len <= 0)
 							break;
 						left -= len;
-						SshConfiguration.getLogger().log(Level.INFO,
-								String.format("Read block of %d from file %s, %d left", len, filesize, left));
+						if(LOG.isTrace())
+							LOG.trace("Read block of {0} from file {1}, {2} left", len, filesize, left);
 						fos.write(buf, 0, len); 
 						fos.flush();
 						fireFileTransferProgressed(remoteFilePath, target.getPath(), filesize - left);
 					}
-					SshConfiguration.getLogger().log(Level.INFO,
-							String.format("Completed File %s is %d bytes", remoteFilePath, filesize));
+					LOG.debug("Completed File {0} is {1} bytes", remoteFilePath, filesize);
 				}
 				
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("Completed for file %s (mode %s)", remoteFilePath, target));
+				LOG.debug("Completed for file {0} (mode {1})", remoteFilePath, target);
 				fireFileTransferFinished(remoteFilePath, target.getPath());
 				
-				if (JschSshClient.checkAck(in) != 0) {
-					throw new IOException("Incorrect Ack received");
-				}
+				checkAck(in);
+
 				// send '\0'
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("Send ACK for file %s (mode %s)", remoteFilePath, target));
+				LOG.debug("Send ACK for file {0} (mode {1})", remoteFilePath, target);
 				buf[0] = 0;
 				out.write(buf, 0, 1);
 				out.flush();
 				break;
 			case 'E':
-				SshConfiguration.getLogger().log(Level.INFO,
-						String.format("End, sending ACK for file %s", remoteFilePath));
+				LOG.debug("End, sending ACK for file {0}", remoteFilePath);
 				buf[0] = 0;
 				out.write(buf, 0, 1);
 				out.flush();
@@ -248,6 +210,40 @@ class JschSCPClient extends AbstractSCPClient {
 			}
 		}
 		return true;
+	}
+	
+	static void checkAck(InputStream in) throws IOException {
+		int ack = readAck(in);
+		if(ack != 0) {
+			throw new IOException(String.format("Unexpected acknowledgement %d", ack));
+		}
+	}
+	
+	static int readAck(InputStream in) throws IOException {
+		int b = in.read();
+		// b may be 0 for success,
+		// 1 for error,
+		// 2 for fatal error,
+		// -1
+		if (b == 0)
+			return b;
+		if (b == -1)
+			return b;
+		if (b == 1 || b == 2) {
+			StringBuffer sb = new StringBuffer();
+			int c;
+			do {
+				c = in.read();
+				sb.append((char) c);
+			} while (c != '\n');
+			if (b == 1) { // error
+				throw new IOException(String.format("Error. ", sb.toString()));
+			}
+			if (b == 2) { // fatal error
+				throw new IOException(String.format("Fatal Error. ", sb.toString()));
+			}
+		}
+		return b;
 	}
 
 	private String[] parseCommand(String cmd) throws IOException {

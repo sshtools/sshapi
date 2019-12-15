@@ -263,7 +263,13 @@ public class SftpException extends SshException {
 	 * @return native error code
 	 */
 	public final static Code getCodeForServerCode(int serverCode) {
-		return (Code) codes.get(new Integer(serverCode));
+		Code code = (Code) codes.get(new Integer(serverCode));
+		if(code == null) {
+			/* Vendor code */
+			return new SftpCode("vendor-" + serverCode, serverCode);
+		} 
+		else
+			return code;
 	}
 
 	/**

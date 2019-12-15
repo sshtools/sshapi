@@ -9,11 +9,9 @@ import java.io.File;
 import org.junit.After;
 import org.junit.Before;
 
-import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshException.Code;
 import net.sf.sshapi.SshFileTransferListener;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
@@ -56,8 +54,7 @@ public abstract class AbstractClientSftp extends AbstractClientFiles {
 			
 			@Override
 			public void startedTransfer(String sourcePath, String targetPath, long length) {
-				SshConfiguration.getLogger().log(Level.INFO, "Starting transfer of " + sourcePath + " to " + targetPath + " ("
-						+ length + ")");
+				LOG.info("Starting transfer of {0} to {1} ({2})", sourcePath, targetPath, length);
 			}
 
 			@Override
@@ -67,7 +64,7 @@ public abstract class AbstractClientSftp extends AbstractClientFiles {
 
 			@Override
 			public void finishedTransfer(String sourcePath, String targetPath) {
-				SshConfiguration.getLogger().log(Level.INFO, "Completed transfer of " + sourcePath + " to " + targetPath + ", " + total + "bytes");
+				LOG.info("Completed transfer of {0} to {1}, {2} bytes", sourcePath, targetPath, total);
 			}
 
 		};

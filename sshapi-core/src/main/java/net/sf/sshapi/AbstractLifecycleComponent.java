@@ -33,9 +33,13 @@ import java.util.concurrent.Future;
  */
 public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> implements SshLifecycleComponent<L, C> {
 
-	private List<L> listeners;
+	protected List<L> listeners;
 
 	protected final SshProvider provider;
+
+	protected boolean closeFired;
+
+	private boolean closingFired;
 	
 	protected AbstractLifecycleComponent(SshProvider provider) {
 		this.provider = provider;
@@ -68,7 +72,7 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 	}
 
 	@Override
-	public void closeQuietly() {
+	public final void closeQuietly() {
 		try {
 			close();
 		} catch (Exception e) {
@@ -102,7 +106,8 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 	 */
 	@SuppressWarnings("unchecked")
 	protected void fireClosed() {
-		if (listeners != null) {
+		if (listeners != null && !closeFired) {
+			closeFired = true;
 			for (int i = listeners.size() - 1; i >= 0; i--)
 				listeners.get(i).closed((C) this);
 		}
@@ -113,7 +118,8 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 	 */
 	@SuppressWarnings("unchecked")
 	protected void fireClosing() {
-		if (listeners != null) {
+		if (listeners != null && !closingFired) {
+			closingFired = true;
 			for (int i = listeners.size() - 1; i >= 0; i--)
 				listeners.get(i).closing((C) this);
 		}

@@ -27,19 +27,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.SocketFactory;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.HTTPProxyData;
@@ -58,11 +51,13 @@ import ch.ethz.ssh2.crypto.cipher.BlockCipherFactory;
 import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
 import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.AbstractSocket;
-import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.AbstractForwardingChannel;
+import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
@@ -78,98 +73,46 @@ import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.Util;
 
 class GanymedSshClient extends AbstractClient {
-	class RemoteSocket extends AbstractSocket {
-		private Connection connection;
-		private LocalStreamForwarder streamForwarder;
 
-		RemoteSocket(Connection connection) {
-			super();
-			this.connection = connection;
-		}
+	protected final static class ForwardingChannel
+			extends AbstractForwardingChannel<GanymedSshClient> {
+		private LocalStreamForwarder localForward;
 
-		RemoteSocket(Connection connection, InetAddress host, int port) throws UnknownHostException, IOException {
-			super();
-			this.connection = connection;
-			this.connect(new InetSocketAddress(host, port));
-		}
-
-		RemoteSocket(Connection connection, String host, int port) throws UnknownHostException, IOException {
-			super();
-			this.connection = connection;
-			this.connect(new InetSocketAddress(InetAddress.getByName(host), port));
-		}
-
-		@Override
-		public void bind(SocketAddress bindpoint) throws IOException {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public synchronized void doClose() throws IOException {
-			if (streamForwarder != null) {
-				try {
-					streamForwarder.close();
-				} finally {
-					streamForwarder = null;
-				}
-			}
+		protected ForwardingChannel(GanymedSshClient client, SshProvider provider, SshConfiguration configuration,
+				String hostname, int port) {
+			super(client, provider, configuration, hostname, port);
 		}
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			if (!isConnected()) {
-				throw new IOException("Not connected.");
-			}
-			return streamForwarder.getInputStream();
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringInputStream(localForward.getInputStream(), SshDataListener.RECEIVED);
 		}
 
 		@Override
 		public OutputStream getOutputStream() throws IOException {
-			if (!isConnected()) {
-				throw new IOException("Not connected.");
+			if (localForward == null)
+				throw new IOException("Not open.");
+			return new EventFiringOutputStream(localForward.getOutputStream());
+		}
+
+		@Override
+		protected void onOpen() throws SshException {
+			try {
+				localForward = client.connection.createLocalStreamForwarder(hostname, port);
+			} catch (IOException e) {
+				throw new SshException(SshException.IO_ERROR, "Faild to open close socket for local forward.", e);
 			}
-			return streamForwarder.getOutputStream();
 		}
 
 		@Override
-		public boolean isConnected() {
-			return streamForwarder != null && !isClosed();
-		}
-
-		@Override
-		public void onConnect(InetSocketAddress addr, int timeout) throws IOException {
-			if (connection == null) {
-				throw new IOException("Not connected.");
+		protected void onCloseStream() throws SshException {
+			try {
+				localForward.close();
+			} catch (IOException e) {
+				throw new SshException(SshException.IO_ERROR, "Failed to close local forward.", e);
 			}
-			streamForwarder = connection.createLocalStreamForwarder(addr.getHostName(), addr.getPort());
-		}
-	}
-
-	class RemoteSocketFactory extends SocketFactory {
-		@Override
-		public Socket createSocket() throws IOException {
-			return new RemoteSocket(connection);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress host, int port) throws IOException {
-			return new RemoteSocket(connection, host, port);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-			return new RemoteSocket(connection, address, port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-			return new RemoteSocket(connection, host, port);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
-				throws IOException, UnknownHostException {
-			return new RemoteSocket(connection, host, port);
 		}
 	}
 
@@ -256,10 +199,11 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort, final String remoteHost,
-			final int remotePort) throws SshException {
+	protected SshPortForward doCreateLocalForward(final String localAddress, final int localPort,
+			final String remoteHost, final int remotePort) throws SshException {
 		if (localAddress != null && !localAddress.equals("0.0.0.0")) {
-			throw new IllegalArgumentException("Ganymed does not supporting binding a local port forward to a particular address.");
+			throw new IllegalArgumentException(
+					"Ganymed does not supporting binding a local port forward to a particular address.");
 		}
 		return new AbstractPortForward(getProvider()) {
 			private LocalPortForwarder localPortForwarder;
@@ -290,8 +234,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort, final String localAddress,
-			final int localPort) throws SshException {
+	protected SshPortForward doCreateRemoteForward(final String remoteHost, final int remotePort,
+			final String localAddress, final int localPort) throws SshException {
 		return new AbstractPortForward(getProvider()) {
 
 			@Override
@@ -315,8 +259,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
-			throws SshException {
+	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
+			byte[] terminalModes) throws SshException {
 		try {
 			Session sess = connection.openSession();
 			checkTerminalModes(terminalModes);
@@ -330,8 +274,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	public SocketFactory createTunneledSocketFactory() throws SshException {
-		return new RemoteSocketFactory();
+	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 
 	@Override
@@ -377,7 +321,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
+	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
 		SshConfiguration configuration = getConfiguration();
 		if (configuration.getProtocolVersion() == SshConfiguration.SSH1_ONLY) {
 			throw new SshException(SshException.UNSUPPORTED_PROTOCOL_VERSION,
@@ -385,8 +330,8 @@ class GanymedSshClient extends AbstractClient {
 		}
 		SshProxyServerDetails proxyServer = configuration.getProxyServer();
 		if (proxyServer != null) {
-			connection = new Connection(hostname, port, new HTTPProxyData(proxyServer.getHostname(), proxyServer.getPort(),
-					proxyServer.getUsername(), new String(proxyServer.getPassword())));
+			connection = new Connection(hostname, port, new HTTPProxyData(proxyServer.getHostname(),
+					proxyServer.getPort(), proxyServer.getUsername(), new String(proxyServer.getPassword())));
 		} else {
 			connection = new Connection(hostname, port);
 		}
@@ -401,8 +346,8 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
-			byte[] terminalModes) throws SshException {
+	protected SshCommand doCreateCommand(final String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws SshException {
 		try {
 			final Session sess = connection.openSession();
 			checkTerminalModes(terminalModes);
@@ -466,7 +411,7 @@ class GanymedSshClient extends AbstractClient {
 				getConfiguration().getBannerHandler().banner(banner);
 			}
 		} catch (Exception e) {
-			SshConfiguration.getLogger().log(Level.ERROR, "Failed to access banner", e);
+			SshConfiguration.getLogger().error("Failed to access banner", e);
 		}
 	}
 
@@ -513,7 +458,7 @@ class GanymedSshClient extends AbstractClient {
 				l.add(0, preferredKeyExchange);
 				cwl.kexAlgorithms = l.toArray(new String[l.size()]);
 			} catch (Exception e) {
-				SshConfiguration.getLogger().log(Level.ERROR, "Could not set key exchange.", e);
+				SshConfiguration.getLogger().error("Could not set key exchange.", e);
 			}
 		}
 		String preferredPublicKey = configuration.getPreferredPublicKey();
@@ -582,8 +527,8 @@ class GanymedSshClient extends AbstractClient {
 						final SshKeyboardInteractiveAuthenticator kbi = (SshKeyboardInteractiveAuthenticator) authenticator;
 						if (connection.authenticateWithKeyboardInteractive(getUsername(), new InteractiveCallback() {
 							@Override
-							public String[] replyToChallenge(String name, String instruction, int numPrompts, String[] prompt,
-									boolean[] echo) throws Exception {
+							public String[] replyToChallenge(String name, String instruction, int numPrompts,
+									String[] prompt, boolean[] echo) throws Exception {
 								return kbi.challenge(name, instruction, prompt, echo);
 							}
 						})) {

@@ -3,7 +3,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 
 class Util {
@@ -12,8 +11,7 @@ class Util {
 	protected static void createTempFile() throws FileNotFoundException, IOException {
 		long requiredFileSize = Long.parseLong(AbstractConnectionTest.PROPERTIES.getProperty("fileSize", "65536"));
 		if (requiredFileSize != TEST_FILE.length()) {
-			SshConfiguration.getLogger().log(Level.INFO,
-				"Generating test file " + TEST_FILE + " of  " + requiredFileSize + " bytes");
+			SshConfiguration.getLogger().info("Generating test file {0} of {1} bytes", TEST_FILE, requiredFileSize);
 			FileOutputStream fos = new FileOutputStream(TEST_FILE);
 			try {
 				for (int i = 0; i < requiredFileSize; i++) {
@@ -23,7 +21,7 @@ class Util {
 				fos.close();
 			}
 
-			SshConfiguration.getLogger().log(Level.INFO, "Generated test file " + TEST_FILE);
+			SshConfiguration.getLogger().info("Generated test file {0}", TEST_FILE);
 		}
 	}
 

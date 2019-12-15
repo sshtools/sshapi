@@ -1,5 +1,7 @@
 package com.maverick.ssh.tests.client;
 
+import java.util.UUID;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -10,7 +12,7 @@ import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpException;
 
 public abstract class AbstractClientFiles extends AbstractClientConnected {
-	public static final String TEST_DIRECTORY_NAME = "testdirectory";
+	private static final String TEST_DIRECTORY_NAME = "testdirectory";
 	public static final int TEST_DIRECTORY_PERMISSIONS = 0644;
 	public static final int TEST_FILE_PERMISSIONS = 0644;
 	protected static RandomFilesGenerator randomFiles;
@@ -35,23 +37,35 @@ public abstract class AbstractClientFiles extends AbstractClientConnected {
 	@Before
 	public void onFilesSetUp() throws Exception {
 		randomFiles.resetLocal();
-		cwd = TEST_DIRECTORY_NAME;
 		lwd = randomFiles.getLocalFilesDir().getAbsolutePath();
-		// We do all our work in a single directory to make initial clean up
-		// easier
-		timeout(() -> {
-			try (SftpClient sftp = ssh.sftp()) {
-				try {
-					sftp.rm(TEST_DIRECTORY_NAME, true);
-				} catch (SftpException sftpe) {
-					if (sftpe.getCode() != SftpException.SSH_FX_NO_SUCH_FILE) {
-						throw sftpe;
+		String name = ssh.getProvider().getClass().getName();
+		if (name.equals("net.sf.sshapi.impl.j2ssh.J2SshProvider")) {
+			/*
+			 * J2SSH has a bug that means it fails to delete broken symlinks. This cannot be
+			 * worked around in the provider, so we use a different test directory name each
+			 * time.
+			 * 
+			 * There will need to be an external clean up procedure before tests are run
+			 */
+			cwd = TEST_DIRECTORY_NAME + "-" + UUID.randomUUID().toString();
+		} else {
+			cwd = TEST_DIRECTORY_NAME;
+			// We do all our work in a single directory to make initial clean up
+			// easier
+			timeout(() -> {
+				try (SftpClient sftp = ssh.sftp()) {
+					try {
+						sftp.rm(cwd, true);
+					} catch (SftpException sftpe) {
+						if (sftpe.getCode() != SftpException.SSH_FX_NO_SUCH_FILE) {
+							throw sftpe;
+						}
 					}
+					sftp.mkdir(cwd);
 				}
-				sftp.mkdir(TEST_DIRECTORY_NAME);
-			}
-			return null;
-		}, 10000);
+				return null;
+			}, 10000);
+		}
 	}
 
 	@After

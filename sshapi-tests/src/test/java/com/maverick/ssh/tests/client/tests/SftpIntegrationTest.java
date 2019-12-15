@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,7 @@ import com.maverick.ssh.tests.client.AbstractClientSftp;
 import com.maverick.ssh.tests.client.CountingFileTransferProgress;
 
 import net.sf.sshapi.Capability;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshFileTransferListener;
 import net.sf.sshapi.sftp.SftpClient.EOLPolicy;
@@ -57,7 +59,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	public void testMkdir() throws Exception {
 		timeout(() -> {
 			sftp.mkdir(resolveRemote("dir1"));
-			assertTrue("Newly created directory should exist and be a directory", sftp.stat(resolveRemote("dir1")).isDirectory());
+			assertTrue("Newly created directory should exist and be a directory",
+					sftp.stat(resolveRemote("dir1")).isDirectory());
 			return null;
 		}, TimeUnit.SECONDS.toMillis(20));
 	}
@@ -117,7 +120,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			createFile("testLastModFile");
 			long lastMod = sftp.stat(resolveRemote("testLastModFile")).getLastModified();
 			assertNotEquals("Initial last modified times should not be zero", lastMod, 0);
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 			OutputStream out = sftp.put(resolveRemote("testLastModFile"), TEST_FILE_PERMISSIONS);
 			try {
 				out.write("Stuff\n".getBytes());
@@ -127,8 +130,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			}
 			long newLastMod = sftp.stat(resolveRemote("testLastModFile")).getLastModified();
 			assertNotEquals("Last modified times should be different", lastMod, newLastMod);
-			assertTrue(String.format("Last modified should differ by only a few seconds. Difference of %d", newLastMod - lastMod),
-					Math.abs(newLastMod - lastMod) < 3000);
+			assertTrue(String.format("Last modified should differ by only a few seconds. Difference of %d",
+					newLastMod - lastMod), Math.abs(newLastMod - lastMod) < 6000);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(20));
 	}
@@ -172,11 +175,12 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	public void testCopyToRemoteRecursively() throws Exception {
 		timeout(() -> {
 			File testFilesDir = randomMultilevelFiles.getTestFilesDir();
-			runAndWatchProgress(() -> sftp.upload(testFilesDir, resolveRemote(testFilesDir.getName()), true, false, true),
+			runAndWatchProgress(
+					() -> sftp.upload(testFilesDir, resolveRemote(testFilesDir.getName()), true, false, true),
 					createProgress());
 			compareDirs(testFilesDir, testFilesDir.getName());
 			return null;
-		}, TimeUnit.MINUTES.toMillis(3));
+		}, TimeUnit.MINUTES.toMillis(5));
 	}
 
 	@Test
@@ -188,31 +192,42 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			try {
 				FileUtils.copyDirectory(testFilesDir, newTestDir);
 				List<String> allPaths = new ArrayList<>();
-				for (Iterator<File> fit = FileUtils.iterateFiles(newTestDir, TrueFileFilter.TRUE, TrueFileFilter.TRUE); fit.hasNext(); ) {
+				for (Iterator<File> fit = FileUtils.iterateFiles(newTestDir, TrueFileFilter.TRUE,
+						TrueFileFilter.TRUE); fit.hasNext();) {
 					File file = fit.next();
-					if(file.isFile())
+					if (file.isFile())
 						allPaths.add(file.getPath());
 				}
 				SftpOperation op = runAndWatchProgress(
-						() -> sftp.upload(newTestDir, resolveRemote(newTestDir.getName()), true, false, true), createProgress());
-				
-				// Alter one of the local files
+						() -> sftp.upload(newTestDir, resolveRemote(newTestDir.getName()), true, false, true),
+						createProgress());
+
+				// All: 72, Updated: 0, Created: 72, Unchanged: 0, Deleted: 0, Errors: 0
+				// Check the results
 				System.out.println(op);
+				assertEquals("Should be 0 test file that was deleted.", 0, op.deleted().size());
+				assertEquals("Should be 72 test file that was created.", 72, op.created().size());
+				assertEquals("Should be 0 test file that was updated.", 0, op.updated().size());
+				assertEquals("Should be 72 total files.", 72, op.all().size());
+				assertEquals("Should be 0 errors.", 0, op.errors().size());
+
+				// Alter one of the local files
 				File changedTestFile = new File(newTestDir, "testfile1");
 				randomFiles.genFile(600, changedTestFile);
-				
+
 				// Create a new file
 				File createdTestFile = new File(newTestDir, "testfile999");
 				randomFiles.genFile(999, createdTestFile);
 				allPaths.add(createdTestFile.getPath());
-				
+
 				// Delete a file
 				File deletedFile = new File(newTestDir, "testfile2");
 				deletedFile.delete();
 				// Wait
 				Thread.sleep(10000);
 				// Do the sync
-				op = runAndWatchProgress(() -> sftp.upload(newTestDir, resolveRemote(newTestDir.getName()), true, true, true),
+				op = runAndWatchProgress(
+						() -> sftp.upload(newTestDir, resolveRemote(newTestDir.getName()), true, true, true),
 						createProgress());
 				// Check the results
 				System.out.println(op);
@@ -220,27 +235,29 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 				assertEquals("File deleted should be correct",
 						resolveRemote(newTestDir.getName()) + "/" + deletedFile.getName(), op.deleted().get(0));
 				assertEquals("Should be 1 test file that was created.", 1, op.created().size());
-				assertEquals("File created should be correct", createdTestFile.getPath(), op.created().get(0));
+				assertEquals("File created should be correct",
+						resolveRemote(newTestDir.getName()) + "/" + createdTestFile.getName(), op.created().get(0));
 				assertEquals("Should be 1 test file that was updated.", 1, op.updated().size());
-				assertEquals("File updated should correct", changedTestFile.getPath(), op.updated().get(0));
-				
+				assertEquals("File updated should correct",
+						resolveRemote(newTestDir.getName()) + "/" + changedTestFile.getName(), op.updated().get(0));
+
 				List<String> all = new ArrayList<>(op.all());
 				Collections.sort(allPaths);
 				Collections.sort(all);
-				for(int i = 0 ; i < Math.max(allPaths.size(), all.size()); i++) {
+				for (int i = 0; i < Math.max(allPaths.size(), all.size()); i++) {
 					String l = i < allPaths.size() ? allPaths.get(i) : "";
 					String r = i < all.size() ? all.get(i) : "";
 					System.out.println(String.format("%2d : %s %-80s > %s", i, l.equals(r) ? "*" : " ", l, r));
 				}
-				
-				assertEquals("All files should be synched.",  allPaths.size(), op.all().size());
+
+				assertEquals("All files should be synched.", allPaths.size(), op.all().size());
 				// Compare
 				compareDirs(newTestDir, newTestDir.getName());
 			} finally {
 				FileUtils.deleteDirectory(newTestDir);
 			}
 			return null;
-		}, TimeUnit.MINUTES.toMillis(3));
+		}, TimeUnit.MINUTES.toMillis(5));
 	}
 
 	@Test
@@ -248,7 +265,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			// Copy our test files to the remote server first
 			File testFilesDir = randomMultilevelFiles.getTestFilesDir();
-			runAndWatchProgress(() -> sftp.upload(testFilesDir, resolveRemote(randomMultilevelFiles.getName()), true, false, true),
+			runAndWatchProgress(
+					() -> sftp.upload(testFilesDir, resolveRemote(randomMultilevelFiles.getName()), true, false, true),
 					createProgress());
 			// Do stuff to the remote files
 			sftp.rm(resolveRemote(randomMultilevelFiles.getName()) + "/testfile1");
@@ -261,9 +279,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			// Take a copy of the local files to synchronize against
 			FileUtils.copyDirectory(testFilesDir, new File(newTestDir, randomMultilevelFiles.getName()));
 			try {
-				runAndWatchProgress(
-						() -> sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir, true, true, true),
-						createProgress());
+				runAndWatchProgress(() -> sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir,
+						true, true, true), createProgress());
 				// Compare local and remote
 				compareDirs(newTestDir, testFilesDir.getName());
 				// Check the changes on remote are local too
@@ -283,13 +300,13 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			// Copy our test files first
 			File testFilesDir = randomMultilevelFiles.getTestFilesDir();
-			runAndWatchProgress(() -> sftp.upload(testFilesDir, resolveRemote(randomMultilevelFiles.getName()), true, false, true),
+			runAndWatchProgress(
+					() -> sftp.upload(testFilesDir, resolveRemote(randomMultilevelFiles.getName()), true, false, true),
 					createProgress());
 			File newTestDir = new File(testFilesDir.getParent(), testFilesDir.getName() + ".back");
 			try {
-				runAndWatchProgress(
-						() -> sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir, true, false, true),
-						createProgress());
+				runAndWatchProgress(() -> sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir,
+						true, false, true), createProgress());
 				// Compare local and remote
 				compareDirs(newTestDir, testFilesDir.getName());
 			} finally {
@@ -307,10 +324,16 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			// Put something to test
 			for (File f : randomFiles.getTestFiles()) {
+				SshConfiguration.getLogger().info("Uploading {0}", f);
 				sftp.put(f, resolveRemote(f.getName()), TEST_FILE_PERMISSIONS);
+
 				// Retrieve the file and test it
 				File destination = new File(randomFiles.getLocalFilesDir(), f.getName());
+				SshConfiguration.getLogger().info("Downloading {0}", f.getName());
 				sftp.get(resolveRemote(f.getName()), destination);
+				
+				// Compare
+				SshConfiguration.getLogger().info("Comparing {0}", f.getName());
 				compare(f, destination);
 			}
 			return null;
@@ -320,6 +343,9 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	@Test
 	public void testGetResume() throws Exception {
 		timeout(() -> {
+			Assume.assumeTrue("Must support resume.",
+					ssh.getProvider().getCapabilities().contains(Capability.SFTP_RESUME));
+			
 			// We can reuse the same file. Truncate it to simulate a broken a
 			// file
 			testGet();
@@ -363,7 +389,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	public void testVisit() throws Exception {
 		timeout(() -> {
 			// Copy our test files first
-			runAndWatchProgress(() -> sftp.upload(randomFiles.getTestFilesDir(), "sftp-integration-tests", true, false, true),
+			runAndWatchProgress(
+					() -> sftp.upload(randomFiles.getTestFilesDir(), "sftp-integration-tests", true, false, true),
 					createProgress());
 			sftp.addFileTransferListener(createProgress());
 			AtomicInteger counter = new AtomicInteger();
@@ -377,7 +404,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			});
 			assertEquals(randomFiles.getSize() / 2, counter.get());
 			return null;
-		}, TimeUnit.MINUTES.toMillis(1));
+		}, TimeUnit.MINUTES.toMillis(3));
 	}
 
 	@Test
@@ -442,7 +469,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			}
 			SftpFile[] files = sftp.ls(resolveRemote("/"));
 			assertEquals("Must have correct number of files and directories (plus . and ..)",
-					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0), files.length);
+					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0),
+					files.length);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30));
 	}
@@ -460,7 +488,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			SftpFile f : sftp.list(resolveRemote("/")))
 				files++;
 			assertEquals("Must have correct number of files and directories (plus . and ..)",
-					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0), files);
+					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0),
+					files);
 			return null;
 		}, TimeUnit.MINUTES.toMillis(1));
 	}
@@ -473,6 +502,9 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	@Test
 	public void testPutResume() throws Exception {
 		timeout(() -> {
+			Assume.assumeTrue("Must support resume.",
+					ssh.getProvider().getCapabilities().contains(Capability.SFTP_RESUME));
+			
 			// Put something to test
 			for (File f : randomFiles.getTestFiles()) {
 				File newFile = new File(randomFiles.getLocalFilesDir(), f.getName() + ".new");
@@ -492,25 +524,28 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 				}
 				// First put half the file
 				String remotePath = resolveRemote(f.getName());
+				SshConfiguration.getLogger().info("Uploading {0} (half length of {1} bytes)", newFile, newFile.length());
 				sftp.put(newFile, remotePath);
 				assertEquals("File must have correct remote length", halfLength, sftp.stat(remotePath).getSize());
 				// Now resume
 				CountingFileTransferProgress progress = new CountingFileTransferProgress();
 				sftp.addFileTransferListener(progress);
 				try {
+					SshConfiguration.getLogger().info("Resuming {0} to {1}", f, remotePath);
 					sftp.resumePut(f, remotePath);
 				} catch (SftpException ex) {
 					if (expectedLength > 0) {
 						throw ex;
 					} else {
-						// TODO fix
-						assertEquals(SftpException.GENERAL, ex.getCode());
+						assertTrue("General error code or vendor specific code should be returned.",
+								SftpException.GENERAL == ex.getCode() || ex.getCode().toString().startsWith("vendor-"));
 					}
 				} finally {
 					sftp.removeFileTransferListener(progress);
 				}
 				assertEquals("File must have correct remote length", expectedLength, sftp.stat(remotePath).getSize());
-				assertEquals("Must only have transferred the remainder of the file", halfLength, progress.getTransferred());
+				assertEquals("Must only have transferred the remainder of the file", halfLength,
+						progress.getTransferred());
 			}
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30));
@@ -524,15 +559,23 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			// Put something to test
 			for (File f : randomFiles.getTestFiles()) {
+				SshConfiguration.getLogger().info("Uploading {0} ({1} bytes)", f, f.length());
 				sftp.put(f, resolveRemote(f.getName()), TEST_FILE_PERMISSIONS);
-				sftp.rename(resolveRemote(f.getName()), resolveRemote(f.getName() + ".renamed"));
+				String renamed = resolveRemote(f.getName() + ".renamed");
+				try {
+					sftp.rm(renamed);
+				}
+				catch(SshException sshe) {
+				}
+				SshConfiguration.getLogger().info("Renaming {0} to {1}", resolveRemote(f.getName()), renamed);
+				sftp.rename(resolveRemote(f.getName()), renamed);
 				try {
 					sftp.stat(resolveRemote(f.getName()));
 					assertTrue(f.getName() + " should no longer exist", false);
 				} catch (SftpException s) {
 				}
 				assertEquals("Renamed file should exist and have correct length", f.length(),
-						sftp.stat(resolveRemote(f.getName() + ".renamed")).getSize());
+						sftp.stat(renamed).getSize());
 			}
 			return null;
 		}, TimeUnit.SECONDS.toMillis(20));
@@ -578,7 +621,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 	public void testRemoveDirectoryRecursive() throws Exception {
 		timeout(() -> {
 			sftp.mkdir(resolveRemote("testDir"));
-			runAndWatchProgress(() -> sftp.upload(randomFiles.getTestFilesDir(), resolveRemote("testDir"), true, false, true),
+			runAndWatchProgress(
+					() -> sftp.upload(randomFiles.getTestFilesDir(), resolveRemote("testDir"), true, false, true),
 					createProgress());
 			sftp.rm(resolveRemote("testDir"), true);
 			try {
@@ -602,7 +646,11 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			sftp.put(randomTestFile, resolveRemote(randomTestFile.getName()));
 			String link = resolveRemote(randomTestFile.getName() + ".link");
 			sftp.symlink(link, randomTestFile.getName());
-			sftp.lstat(link);
+			checkCapabilities(ServerCapability.SYMLINKS);
+			if(ssh.getProvider().getCapabilities().contains(Capability.SFTP_LSTAT))
+				sftp.lstat(link);
+			else
+				SshConfiguration.getLogger().warn("While the creation of a symlink of {0} did not throw any errors, we cannot tell if the link worked, as LSTAT is not implemented.", link);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30));
 	}
@@ -617,9 +665,10 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			String link = resolveRemote(randomTestFile.getName() + ".link");
 			sftp.symlink(link, randomTestFile.getName());
 			String originalPath = sftp.readLink(link);
-			assertEquals("Link target must point to original file", resolveRemote(randomTestFile.getName()), originalPath);
+			assertEquals("Link target must point to original file", resolveRemote(randomTestFile.getName()),
+					originalPath);
 			return null;
-		}, TimeUnit.SECONDS.toMillis(30));
+		}, TimeUnit.SECONDS.toMillis(30000));
 	}
 
 	@Test
@@ -660,7 +709,8 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			String CRLFText = "line1\r\nline2\r\nline3\r\n";
 			String LFText = "line1\nline2\nline3\n";
 			String CRText = "line1\rline2\rline3\r";
-			String remoteText = "line1" + sftp.getRemoteEOL() + "line2" + sftp.getRemoteEOL() + "line3" + sftp.getRemoteEOL();
+			String remoteText = "line1" + sftp.getRemoteEOL() + "line2" + sftp.getRemoteEOL() + "line3"
+					+ sftp.getRemoteEOL();
 			doPutTextFile(LFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, sftp.getRemoteEOL());
 			doPutTextFile(CRLFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, sftp.getRemoteEOL());
 			doPutTextFile(CRText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, sftp.getRemoteEOL());

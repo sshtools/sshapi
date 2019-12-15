@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
@@ -16,9 +17,9 @@ import ssh.SshLibrary.ssh_session;
 // Crazy name :)SshLifecycleListener<SshShell>, SshShell
 
 public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
-	private LibsshInputStream in;
-	private LibsshInputStream ext;
-	private LibsshOutputStream out;
+	private InputStream in;
+	private InputStream ext;
+	private OutputStream out;
 	private ssh_channel channel;
 	private SshLibrary library;
 	private String termType;
@@ -78,11 +79,11 @@ public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<S
 				if (ret != SshLibrary.SSH_OK) {
 					throw new SshException(SshException.FAILED_TO_OPEN_SHELL);
 				}
-				in = new LibsshInputStream(library, channel, false);
+				in = new EventFiringInputStream(new LibsshInputStream(library, channel, false), SshDataListener.RECEIVED);
 				if (useExtendedStream) {
-					ext = new LibsshInputStream(library, channel, true);
+					ext = new EventFiringInputStream(new LibsshInputStream(library, channel, true), SshDataListener.EXTENDED);
 				}
-				out = new LibsshOutputStream(library, channel);
+				out = new EventFiringOutputStream(new LibsshOutputStream(library, channel));
 			} catch (SshException sshe) {
 				library.ssh_channel_close(channel);
 				throw sshe;
@@ -94,7 +95,7 @@ public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<S
 	}
 
 	@Override
-	public void onClose() throws SshException {
+	public void onCloseStream() throws SshException {
 		library.ssh_channel_send_eof(channel);
 		try {
 			in.close();
