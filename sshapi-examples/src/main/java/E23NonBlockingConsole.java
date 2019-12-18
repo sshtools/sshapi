@@ -61,8 +61,8 @@ public class E23NonBlockingConsole {
 		SshShell shell = client.createShell("dumb", 80, 24, 0,0 ,null);
 		
 		/* Set the handlers that are invoked when data arrives on shell in or shell err **/
-		shell.setInput((buffer) -> System.out.write(buffer.array(), 0, buffer.limit()));
-		shell.setErrInput((buffer) -> System.err.write(buffer.array(), 0, buffer.limit()));
+		shell.setInput((buffer) -> Util.write(buffer, System.out));
+		shell.setErrInput((buffer) -> Util.write(buffer, System.err));
 		
 		/* Now open the shell to actually start it and get the streams moving */
 		Future<Void> shellFuture = shell.openLater();

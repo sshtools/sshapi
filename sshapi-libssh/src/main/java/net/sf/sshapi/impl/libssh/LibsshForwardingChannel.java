@@ -36,7 +36,7 @@ public class LibsshForwardingChannel extends AbstractForwardingChannel<LibsshCli
 	}
 
 	@Override
-	protected void onOpen() throws SshException {
+	protected final void onOpenStream() throws SshException {
 		channel = library.ssh_channel_new(client.libSshSession);
 		if (channel == null) {
 			throw new SshException(SshException.GENERAL, "Failed to create channel for local port forward.");

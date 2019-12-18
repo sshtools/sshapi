@@ -345,7 +345,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		}
 
 		@Override
-		protected void onOpen() throws net.sf.sshapi.SshException {
+		protected void onOpenStream() throws net.sf.sshapi.SshException {
 		}
 	}
 

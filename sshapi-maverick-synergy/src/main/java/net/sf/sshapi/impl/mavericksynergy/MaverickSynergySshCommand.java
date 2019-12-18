@@ -92,7 +92,7 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 	}
 
 	@Override
-	protected void onOpen() throws SshException {
+	protected final void onOpenStream() throws SshException {
 		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),

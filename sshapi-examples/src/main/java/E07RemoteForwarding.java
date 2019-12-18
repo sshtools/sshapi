@@ -30,9 +30,9 @@ public class E07RemoteForwarding {
 		// Create the client using that configuration and connect and authenticate
 		try (SshClient client = config.open(user, host, port, new ConsolePasswordAuthenticator())) {
 
-			try (SshPortForward remote = client.remoteForward(host, 8900, "sshtools.com", 80)) {
-				System.out.println("Point your browser to http://" + host + ":8900, you should "
-						+ "see the home page for JavaSSH. This connection will close in 2 minutes.");
+			try (SshPortForward remote = client.remoteForward(host, 8443, "tools.ietf.org", 443)) {
+				System.out.println("Point your browser to https://" + host + ":8443, you should "
+						+ "see the home page for IETF. This connection will close in 2 minutes.");
 				// Wait for two minutes
 				Thread.sleep(120000);
 			}

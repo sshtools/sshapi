@@ -44,10 +44,10 @@ public class E06LocalForwarding {
 				});
 			}
 
-			try (SshPortForward local = client.localForward(null, 8080, "localhost", 80)) {
+			try (SshPortForward local = client.localForward(null, 0, "tools.ietf.org", 443)) {
 				// Wait for two minute
-				System.out.println("Point your browser to https://localhost:8443, you should "
-						+ "see the home page for Google. This connection will close in 2 minutes.");
+				System.out.println("Point your browser to https://localhost:" + local.getBoundPort() + ", you should "
+						+ "see the home page for IETF. This connection will close in 2 minutes.");
 				Thread.sleep(120000);
 			}
 		}

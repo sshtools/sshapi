@@ -45,13 +45,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.Ssh;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
@@ -215,23 +216,23 @@ public class Util {
 	 * @return concatenated path
 	 */
 	public static String concatenatePaths(String path, String filename) {
-		if(filename.startsWith("./"))
+		if (filename.startsWith("./"))
 			filename = filename.substring(2);
 		while (path.endsWith("/")) {
 			path = path.substring(0, path.length() - 1);
 		}
 		return path + "/" + filename;
 	}
-	
+
 	public static String canonicalisePath(String path) {
-	    List<String> newParts = new ArrayList<>();
-	    for (String part : path.split("/")) {
-	        if (part.equals("..") && !newParts.isEmpty())
-	            newParts.remove(newParts.size() - 1);
-	        else if (!part.equals("."))
-	        	newParts.add(part);
-	    }
-	    return String.join("/", newParts);
+		List<String> newParts = new ArrayList<>();
+		for (String part : path.split("/")) {
+			if (part.equals("..") && !newParts.isEmpty())
+				newParts.remove(newParts.size() - 1);
+			else if (!part.equals("."))
+				newParts.add(part);
+		}
+		return String.join("/", newParts);
 	}
 
 	/**
@@ -403,7 +404,7 @@ public class Util {
 	 * @return absolute path
 	 */
 	public static String getAbsolutePath(String path, String base) {
-		if(path.startsWith("./"))
+		if (path.startsWith("./"))
 			path = path.substring(2);
 		return path == null || path.startsWith("/") ? path : (base.equals("/") ? base : base + "/") + path;
 	}
@@ -693,10 +694,10 @@ public class Util {
 			return canonicalisePath(concatenatePaths(dirname(sourceFilePath), targetLinkPath));
 		}
 	}
-	
+
 	/**
-	 * Convert all forward slashes to backslashes in a path string. Use this when converting
-	 * OS paths from {@link File} for example.
+	 * Convert all forward slashes to backslashes in a path string. Use this when
+	 * converting OS paths from {@link File} for example.
 	 * 
 	 * @param path
 	 * @return path
@@ -718,42 +719,43 @@ public class Util {
 		String[] otherDirectories = other.equals("/") ? new String[] { "" } : other.split("/");
 		String[] originalDirectories = original.equals("/") ? new String[] { "" } : original.split("/");
 
-        //Get the shortest of the two paths
-        int length = otherDirectories.length < originalDirectories.length ? otherDirectories.length : originalDirectories.length;
+		// Get the shortest of the two paths
+		int length = otherDirectories.length < originalDirectories.length ? otherDirectories.length
+				: originalDirectories.length;
 
-        //Use to determine where in the loop we exited
-        int lastCommonRoot = -1;
-        int index;
+		// Use to determine where in the loop we exited
+		int lastCommonRoot = -1;
+		int index;
 
-        //Find common root
-        for (index = 0; index < length; index++)
-            if (otherDirectories[index].equals(originalDirectories[index]))
-                lastCommonRoot = index;
-            else
-                break;
+		// Find common root
+		for (index = 0; index < length; index++)
+			if (otherDirectories[index].equals(originalDirectories[index]))
+				lastCommonRoot = index;
+			else
+				break;
 
-        //If we didn't find a common prefix then throw
-        if (lastCommonRoot == -1) {
-        	if(original.startsWith("/"))
-        		throw new IllegalArgumentException("Paths do not have a common base");
-        	else
-        		return original;
-        }
+		// If we didn't find a common prefix then throw
+		if (lastCommonRoot == -1) {
+			if (original.startsWith("/"))
+				throw new IllegalArgumentException("Paths do not have a common base");
+			else
+				return original;
+		}
 
-        //Build up the relative path
-        StringBuilder relativePath = new StringBuilder();
+		// Build up the relative path
+		StringBuilder relativePath = new StringBuilder();
 
-        //Add on the ..
-        for (index = lastCommonRoot + 1; index < otherDirectories.length; index++)
-            if (otherDirectories[index].length() > 0)
-                relativePath.append("../");
+		// Add on the ..
+		for (index = lastCommonRoot + 1; index < otherDirectories.length; index++)
+			if (otherDirectories[index].length() > 0)
+				relativePath.append("../");
 
-        //Add on the folders
-        for (index = lastCommonRoot + 1; index < originalDirectories.length - 1; index++)
-            relativePath.append(originalDirectories[index] + "/");
-        relativePath.append(originalDirectories[originalDirectories.length - 1]);
+		// Add on the folders
+		for (index = lastCommonRoot + 1; index < originalDirectories.length - 1; index++)
+			relativePath.append(originalDirectories[index] + "/");
+		relativePath.append(originalDirectories[originalDirectories.length - 1]);
 
-        return relativePath.toString();
+		return relativePath.toString();
 	}
 
 	public static String getArtifactVersion(String groupId, String artifactId) {
@@ -787,15 +789,105 @@ public class Util {
 		}
 
 		if (version == null) {
-			try {
-				DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-				Document doc = docBuilder.parse(new File("pom.xml"));
-				version = doc.getDocumentElement().getElementsByTagName("version").item(0).getTextContent();
-			} catch (Exception e) {
-				version = "0.0.0";
-			}
+			version = getPOMVersion();
+		}
 
+		return version;
+	}
+
+	/**
+	 * Get the version from the pom.xml in the current directory. Only useful for
+	 * tests in development environment.
+	 * 
+	 * @return POM version
+	 */
+	public static String getPOMVersion() {
+		String version;
+		try {
+			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+			Document doc = docBuilder.parse(new File("pom.xml"));
+			version = doc.getDocumentElement().getElementsByTagName("version").item(0).getTextContent();
+		} catch (Exception e) {
+			version = "0.0.0";
+		}
+		return version;
+	}
+
+	/**
+	 * Write the contents of a buffer (0 to limit) to a byte array in the fastest
+	 * way possible.
+	 * 
+	 * @param buffer buffer to read
+	 * @throws IOException I/O error
+	 */
+	public static byte[] read(ByteBuffer buffer) {
+		if (buffer.hasArray() && buffer.remaining() == buffer.capacity()) {
+			return buffer.array();
+		} else {
+			byte[] b = new byte[buffer.remaining()];
+			buffer.get(b);
+			return b;
+		}
+	}
+
+	/**
+	 * Write the entire contents of a buffer (0 to limit) to an output stream and
+	 * flush.
+	 * 
+	 * @param buffer buffer to write
+	 * @param out    output stream to write to
+	 * @param flush  flush
+	 */
+	public static void write(ByteBuffer buffer, OutputStream out) {
+		write(buffer, out, true);
+	}
+
+	/**
+	 * Write the entire contents of a buffer (0 to limit) to an output stream.
+	 * 
+	 * @param buffer buffer to write
+	 * @param out    output stream to write to
+	 * @param flush  flush
+	 */
+	public static void write(ByteBuffer buffer, OutputStream out, boolean flush) {
+		try {
+			if (buffer.hasArray()) {
+				out.write(buffer.array(), buffer.position(), buffer.remaining());
+			} else {
+				byte[] b = new byte[buffer.remaining()];
+				buffer.get(b);
+				out.write(b);
+			}
+			if (flush)
+				out.flush();
+		} catch (IOException ioe) {
+			throw new IllegalStateException("Failed to write.", ioe);
+		}
+	}
+
+	/**
+	 * Get the version from a manifest key, falling back to current POM.
+	 * 
+	 * @param clazz class of the class inside the same jar as the manifest to use.
+	 * @param key   key in manifest
+	 * @return manifest value or POM
+	 */
+	public static String getManifestVersion(Class<?> clazz, String key) {
+		InputStream in = clazz.getResourceAsStream("/META-INF/MANIFEST.MF");
+		String version = null;
+		if (in != null) {
+			try (InputStream iin = in) {
+				Manifest mf = new Manifest(iin);
+				Attributes attr = mf.getMainAttributes();
+				if (attr != null)
+					version = attr.getValue(key);
+			} catch (IOException e) {
+			}
+		}
+
+		if (version == null) {
+			version = getPOMVersion();
 		}
 
 		return version;

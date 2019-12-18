@@ -56,7 +56,7 @@ class LibsshSshCommand extends AbstractSshExtendedChannel<SshChannelListener<Ssh
 	}
 
 	@Override
-	public void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		if(LOG.isDebug())
 			LOG.debug("Opening channel {0}", hashCode());
 		channel = library.ssh_channel_new(libSshSession);

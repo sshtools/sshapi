@@ -25,6 +25,7 @@ package net.sf.sshapi.util;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import net.sf.sshapi.Logger;
@@ -47,8 +48,14 @@ public class ConsoleLogger implements Logger {
 	@Override	
 	public void log(Level level, String message, Object... args) {
 		if (level.compareTo(this.level) >= 0) {
-			System.out.println("SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
-					+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + MessageFormat.format(message, args));
+			try {
+				System.out.println("SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
+						+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + MessageFormat.format(message, args));
+			}
+			catch(NumberFormatException nfe) {
+				System.out.println("*SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
+						+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + message + " [" + Arrays.asList(args) + "]");
+			}
 		}
 	}
 
@@ -56,12 +63,24 @@ public class ConsoleLogger implements Logger {
 	public void log(Level level, String message, Throwable exception, Object... args) {
 		if (level.compareTo(this.level) >= 0) {
 			log(level, message, args);
-			exception.printStackTrace(System.out);
+			if(exception != null)
+				exception.printStackTrace(System.out);
 		}
 	}
 
 	@Override
 	public boolean isLevelEnabled(Level level) {
 		return level.compareTo(this.level) >= 0;
+	}
+
+	@Override
+	public void raw(Level level, String message) {
+		if (level.compareTo(this.level) >= 0)
+			System.out.println(message);
+	}
+
+	@Override
+	public void newline() {
+		System.out.println();
 	}
 }

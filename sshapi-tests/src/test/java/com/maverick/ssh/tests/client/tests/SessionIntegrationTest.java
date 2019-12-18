@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.maverick.ssh.tests.client.AbstractClientConnected;
@@ -134,7 +133,6 @@ public class SessionIntegrationTest extends AbstractClientConnected {
 
 	@Test
 	public void testCommandInputOutputEvents() throws Exception {
-		Assume.assumeFalse("Must not be Maverick Synergy, currently hangs entirely",ssh.getProvider().getName().equals("Maverick Synergy"));
 		timeout(() -> {
 			SshCommand cmd = ssh.createCommand(config.getCommandWithInput());
 			DataEventCapture<SshCommand> cap = new DataEventCapture<SshCommand>();
@@ -203,7 +201,7 @@ public class SessionIntegrationTest extends AbstractClientConnected {
 
 	@Test
 	public void testExecuteWithInput() throws Exception {
-		Assume.assumeFalse("Must not be Maverick Synergy, currently hangs entirely",ssh.getProvider().getName().equals("Maverick Synergy"));
+//		Assume.assumeFalse("Must not be Maverick Synergy, currently hangs entirely",ssh.getProvider().getName().equals("Maverick Synergy"));
 		timeout(() -> {
 			try (SshCommand command = ssh.command(config.getCommandWithInput())) {
 				// Send. Note, must close the stream to receive the input

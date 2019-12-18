@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.BadPaddingException;
 import javax.net.SocketFactory;
 
 import org.bouncycastle.openssl.EncryptionException;
@@ -146,7 +145,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 
 		@Override
-		protected void onOpen() throws net.sf.sshapi.SshException {
+		protected final void onOpenStream() throws net.sf.sshapi.SshException {
 			if (client == null || !client.isConnected()) {
 				throw new  net.sf.sshapi.SshException("Not connected.");
 			}
@@ -418,7 +417,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 
 		@Override
-		protected void onOpen() throws net.sf.sshapi.SshException {
+		protected void onOpenStream() throws net.sf.sshapi.SshException {
 		}
 	}
 

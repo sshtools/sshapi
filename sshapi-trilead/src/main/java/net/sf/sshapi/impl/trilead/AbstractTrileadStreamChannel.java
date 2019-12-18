@@ -96,7 +96,7 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 		session.close();
 	}
 
-	public final void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
 			boolean singleConnection = Boolean
 					.parseBoolean(configuration.getProperties().getProperty(TrileadSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));

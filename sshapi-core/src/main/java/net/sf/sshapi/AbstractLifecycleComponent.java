@@ -46,7 +46,7 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 	}
 
 	@Override
-	public Future<Void> openLater() throws SshException {
+	public Future<Void> openLater() {
 		AbstractFuture<Void> openFuture = new AbstractFuture<Void>() {
 			@Override
 			Void doFuture() throws Exception {

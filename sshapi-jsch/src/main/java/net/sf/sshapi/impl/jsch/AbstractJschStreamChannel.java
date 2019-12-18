@@ -106,7 +106,7 @@ abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C exte
 	}
 
 	@Override
-	public void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		try {
 			in = new EventFiringInputStream(new SshChannelInputStream(channel.getInputStream(), this), SshDataListener.RECEIVED) {
 				@Override

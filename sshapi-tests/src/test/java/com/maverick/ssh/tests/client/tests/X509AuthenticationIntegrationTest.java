@@ -9,7 +9,6 @@ import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.client.AbstractClientConnecting;
 
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.auth.SshX509PublicKeyAuthenticator;
 import net.sf.sshapi.util.DefaultX509PublicKeyAuthenticator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;

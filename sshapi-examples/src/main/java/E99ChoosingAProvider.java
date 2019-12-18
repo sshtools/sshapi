@@ -1,9 +1,6 @@
 
 import net.sf.sshapi.DefaultProviderFactory;
-import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.util.ConsoleLogger;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -11,9 +8,6 @@ import net.sf.sshapi.util.Util;
  * provider and list and choose the SSH implementation to use.
  */
 public class E99ChoosingAProvider {
-	static {
-		((ConsoleLogger)SshConfiguration.getLogger()).setDefaultLevel(Level.INFO);
-	}
 	
 	/**
 	 * Entry point.

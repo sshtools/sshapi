@@ -66,7 +66,7 @@ public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C exte
 	 * @see {@link #close()}
 	 * @see {@link #closeLater()}
 	 */
-	Future<Void> openLater() throws SshException;
+	Future<Void> openLater();
 
 	/**
 	 * Get if this component is currently open.

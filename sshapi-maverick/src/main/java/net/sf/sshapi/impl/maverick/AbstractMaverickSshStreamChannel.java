@@ -82,7 +82,7 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 	}
 
 	@Override
-	protected final void onOpen() throws SshException {
+	protected final void onOpenStream() throws SshException {
 		onChannelOpen();
 		session.addChannelEventListener((ChannelEventListener) this);
 	}

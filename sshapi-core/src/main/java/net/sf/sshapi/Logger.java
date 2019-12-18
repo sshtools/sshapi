@@ -94,6 +94,24 @@ public interface Logger {
 	boolean isLevelEnabled(Level required);
 
 	/**
+	 * Log a raw (pre-formatted message) at the Supplied level.
+	 * 
+	 * @param level level
+	 * @param message
+	 *            message
+	 */
+	default void raw(Level level, String message) {
+		log(Level.TRACE, message);
+	}
+
+	/**
+	 * Output a newline.
+	 */
+	default void newline() {
+		log(Level.TRACE, "");
+	}
+
+	/**
 	 * Log a message at the {@link Level#TRACE} level.
 	 * 
 	 * @param message

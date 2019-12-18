@@ -90,7 +90,7 @@ abstract class AbstractJ2SshStreamChannel<L extends SshChannelListener<C>, C ext
 		return channel;
 	}
 
-	public final void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		if (configuration.getX11Cookie() != null) {
 			byte[] x11Cookie = configuration.getX11Cookie();
 			String hexCookie = Util.formatAsHexString(x11Cookie);

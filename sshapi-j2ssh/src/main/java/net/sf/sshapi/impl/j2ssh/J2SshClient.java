@@ -102,7 +102,7 @@ class J2SshClient extends AbstractClient {
 		}
 
 		@Override
-		protected void onOpen() throws net.sf.sshapi.SshException {
+		protected final void onOpenStream() throws net.sf.sshapi.SshException {
 			if (!client.con.isConnected()) {
 				throw new net.sf.sshapi.SshException("SSH client is not connected");
 			}

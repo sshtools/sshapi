@@ -58,7 +58,7 @@ public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<S
 	}
 
 	@Override
-	public void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		channel = library.ssh_channel_new(libSshSession);
 		if (channel == null) {
 			throw new SshException(SshException.FAILED_TO_OPEN_SHELL, "Failed to open channel for shell.");

@@ -101,7 +101,7 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 	}
 	
 	@Override
-	public final void onOpen() throws SshException {
+	public final void onOpenStream() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
 			boolean singleConnection = Boolean.parseBoolean(
 					configuration.getProperties().getProperty(GanymedSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));

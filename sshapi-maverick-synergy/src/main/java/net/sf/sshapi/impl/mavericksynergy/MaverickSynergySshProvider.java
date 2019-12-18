@@ -34,6 +34,9 @@ import java.util.List;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.client.components.Rsa1024Sha1;
 import com.sshtools.client.components.Rsa2048Sha256;
+import com.sshtools.common.logger.Log;
+import com.sshtools.common.logger.Log.Level;
+import com.sshtools.common.logger.RootLoggerContext;
 import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.ssh.SshContext;
 import com.sshtools.common.ssh.SshException;
@@ -51,6 +54,7 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
+import net.sf.sshapi.util.ConsoleLogger;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -62,9 +66,9 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT, Capability.SFTP,
 			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
 			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL,
-			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, /*Capability.LOCAL_PORT_FORWARD,
-			Capability.REMOTE_PORT_FORWARD,*/ Capability.SFTP_READ_LINK, /*Capability.FORWARDING_CHANNELS,
-			Capability.TUNNELED_SOCKET_FACTORY, */Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
+			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
+			Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS,
+			Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
 			Capability.SCP, Capability.RECURSIVE_SCP_GET };
 	
 	private SshEngine engine;
@@ -78,47 +82,58 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 		ComponentManager.enableCBCCiphers();
-//		Log.setDefaultContext(new LoggerContext() {
-//			@Override
-//			public void raw(com.sshtools.common.logger.Log.Level level, String msg) {
-//				SshConfiguration.getLogger().log(toLevel(level), msg);
-//			}
-//			
-//			@Override
-//			public void newline() {
-//				SshConfiguration.getLogger().log(Level.INFO, "");
-//			}
-//			
-//			@Override
-//			public void log(com.sshtools.common.logger.Log.Level level, String msg, Throwable e, Object... args) {
-//				SshConfiguration.getLogger().log(toLevel(level), msg, e);
-//			}
-//			
-//			private Level toLevel(com.sshtools.common.logger.Log.Level level) {
-//				switch(level) {
-//				case DEBUG:
-//					return Level.DEBUG;
-//				case INFO:
-//					return Level.INFO;
-//				case WARN:
-//					return Level.WARN;
-//				case ERROR:
-//					return Level.ERROR;
-//				default:
-//					return Level.TRACE;
-//				}
-//			}
-//
-//			@Override
-//			public boolean isLogging(com.sshtools.common.logger.Log.Level level) {
-//				return SshConfiguration.getLogger().isLevelEnabled(toLevel(level));
-//			}
-//			
-//			@Override
-//			public void close() {
-//				
-//			}
-//		});
+		Log.setDefaultContext(new RootLoggerContext() {
+			@Override
+			public void raw(com.sshtools.common.logger.Log.Level level, String msg) {
+				SshConfiguration.getLogger().raw(toLevel(level), msg);
+			}
+			
+			@Override
+			public void newline() {
+				SshConfiguration.getLogger().newline();
+			}
+			
+			@Override
+			public void log(com.sshtools.common.logger.Log.Level level, String msg, Throwable e, Object... args) {
+				SshConfiguration.getLogger().log(toLevel(level), String.format(msg, args), e);
+			}
+			
+			private net.sf.sshapi.Logger.Level toLevel(com.sshtools.common.logger.Log.Level level) {
+				switch(level) {
+				case DEBUG:
+					return net.sf.sshapi.Logger.Level.DEBUG;
+				case INFO:
+					return net.sf.sshapi.Logger.Level.INFO;
+				case WARN:
+					return net.sf.sshapi.Logger.Level.WARN;
+				case ERROR:
+					return net.sf.sshapi.Logger.Level.ERROR;
+				default:
+					return net.sf.sshapi.Logger.Level.TRACE;
+				}
+			}
+
+			@Override
+			public boolean isLogging(com.sshtools.common.logger.Log.Level level) {
+				return SshConfiguration.getLogger().isLevelEnabled(toLevel(level));
+			}
+			
+			@Override
+			public void close() {
+				
+			}
+
+			@Override
+			public void enableConsole(Level level) {
+				if(SshConfiguration.getLogger() instanceof ConsoleLogger)
+					((ConsoleLogger)SshConfiguration.getLogger()).setDefaultLevel(toLevel(level));
+			}
+
+			@Override
+			public String getProperty(String key, String defaultValue) {
+				return defaultValue;
+			}
+		});
 	}
 
 	private synchronized void checkEngine() {

@@ -92,7 +92,7 @@ class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCo
 	}
 
 	@Override
-	protected void onOpen() throws SshException {
+	protected void onOpenStream() throws SshException {
 		try {
 			if (termType != null && termType.length() > 0) {
 				pb.command().add(0, "unbuffer");

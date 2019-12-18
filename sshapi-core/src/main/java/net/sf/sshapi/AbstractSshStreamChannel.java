@@ -30,13 +30,28 @@ public abstract class AbstractSshStreamChannel<L extends SshChannelListener<C>, 
 	protected void onCloseStream() throws SshException {
 	}
 
+	protected void onOpenStream() throws SshException {
+	}
+
+	@Override
+	protected final void onOpen() throws SshException {
+		onOpenStream();
+		if (input != null) {
+			try {
+				inputThread = pump(input, getInputStream());
+			} catch (IOException e) {
+				throw new IllegalStateException("Could not get input stream.", e);
+			}
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	protected void fireEof() {
 		if (!eofFired) {
 			try {
 				if (listeners != null)
 					for (int i = listeners.size() - 1; i >= 0; i--)
-						((L) listeners.get(i)).eof((C) this);
+						listeners.get(i).eof((C) this);
 			} finally {
 				eofFired = true;
 			}
@@ -49,12 +64,6 @@ public abstract class AbstractSshStreamChannel<L extends SshChannelListener<C>, 
 			this.input = input;
 			if (input == null) {
 				inputThread.interrupt();
-			} else {
-				try {
-					inputThread = pump(input, getInputStream());
-				} catch (IOException e) {
-					throw new IllegalStateException("Could not get input stream.", e);
-				}
 			}
 		}
 	}

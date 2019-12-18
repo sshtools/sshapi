@@ -59,7 +59,7 @@ public class TrileadSshProvider extends AbstractProvider {
 
 	@Override
 	public String getVersion() {
-		return Util.getArtifactVersion("com.trilead", "trilead-ssh2");
+		return Util.getManifestVersion(TrileadSshProvider.class, "Build-Version");
 	}
 
 	protected SshClient doCreateClient(SshConfiguration configuration) {

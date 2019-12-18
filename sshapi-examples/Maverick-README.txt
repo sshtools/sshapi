@@ -6,7 +6,7 @@ drop your license in this directory
 as a file named maverick-license.txt.
 
 Alternatively, place it in the directory you will run your application from as a file
-name .maverick-license.txt (notice the preceeding '.'). 
+name .maverick-license.txt (notice the preceding '.'). 
 
 
 Building From Source (Maven)
@@ -27,7 +27,7 @@ As Maverick is a commercial library, for it to work you require a license file. 
 a number of ways you can install the license.
 
 1. In you Java code. Just use the usual method Maverick employs. This will however mean
-   you appplication will be dependant on Maverick, and it is up to you to cope with
+   you application will be dependent on Maverick, and it is up to you to cope with
    this gracefully.
    
 2. Place the license in a file called maverick-license.txt and place it at the root of

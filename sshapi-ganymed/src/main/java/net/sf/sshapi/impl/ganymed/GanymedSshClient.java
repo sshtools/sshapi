@@ -98,7 +98,7 @@ class GanymedSshClient extends AbstractClient {
 		}
 
 		@Override
-		protected void onOpen() throws SshException {
+		protected final void onOpenStream() throws SshException {
 			try {
 				localForward = client.connection.createLocalStreamForwarder(hostname, port);
 			} catch (IOException e) {

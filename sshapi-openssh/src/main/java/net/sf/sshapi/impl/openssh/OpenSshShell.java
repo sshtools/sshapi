@@ -63,7 +63,7 @@ class OpenSshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShel
 	}
 
 	@Override
-	protected void onOpen() throws SshException {
+	protected final void onOpenStream() throws SshException {
 		try {
 			if(termType != null && termType.length() > 0) {
 				pb.environment().put("TERM", termType);

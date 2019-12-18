@@ -42,8 +42,8 @@ public class E24NonBlockingConsoleTasks {
 				 * Set the handlers that are invoked when data arrives on shell
 				 * in or shell err
 				 **/
-				shell.setInput((buffer) -> System.out.write(buffer.array(), 0, buffer.limit()));
-				shell.setErrInput((buffer) -> System.err.write(buffer.array(), 0, buffer.limit()));
+				shell.setInput((buffer) -> Util.write(buffer, System.out));
+				shell.setErrInput((buffer) -> Util.write(buffer, System.err));
 				Ssh.then(shell.openLater(), (v) -> {
 					/*
 					 * Read from console and write to shell out. We have to

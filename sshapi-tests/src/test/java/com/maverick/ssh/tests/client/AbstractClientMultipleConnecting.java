@@ -15,7 +15,6 @@ import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import net.sf.sshapi.util.DumbHostKeyValidator;

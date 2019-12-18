@@ -81,10 +81,11 @@ public class TunnelIntegrationTest extends AbstractClientConnected {
 			} finally {
 				fwd.close();
 			}
-			
-			// TODO maverick can fire data events after closing. Wait for a bit for them to all complete
+
+			// TODO maverick can fire data events after closing. Wait for a bit for them to
+			// all complete
 			Thread.sleep(10000);
-			
+
 			cap.assertEvents(1, 1, 1, 10, 10, ec.getBytesTransfered(), ec.getBytesTransfered(), 0);
 			return null;
 		}, 120000);

@@ -39,7 +39,7 @@ public class E99ProviderFeatureMatrix {
 		for (int i = 0; i < caps.length; i++) {
 			width = Math.max(width, caps[i].getName().length());
 		}
-		String[][] strArrs = new String[][] { ciphers, key, mac, comp, pk };
+		String[][] strArrs = new String[][] { ciphers, key, mac, comp, pk, fp };
 		for (int j = 0; j < strArrs.length; j++) {
 			for (int i = 0; i < strArrs[j].length; i++) {
 				width = Math.max(width, strArrs[j][i].length());

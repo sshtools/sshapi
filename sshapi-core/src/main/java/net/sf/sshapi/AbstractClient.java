@@ -86,7 +86,7 @@ public abstract class AbstractClient implements SshClient {
 		}
 
 		@Override
-		protected void onOpen() throws SshException {
+		protected final void onOpenStream() throws SshException {
 			localForward = client.localForward("127.0.0.1", 0, hostname, port);
 			try {
 				socket = new Socket("127.0.0.1", localForward.getBoundPort());

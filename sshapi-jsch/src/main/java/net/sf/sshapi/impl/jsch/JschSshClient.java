@@ -99,7 +99,7 @@ class JschSshClient extends AbstractClient implements Logger {
 		}
 
 		@Override
-		protected void onOpen() throws net.sf.sshapi.SshException {
+		protected final void onOpenStream() throws net.sf.sshapi.SshException {
 			try {
 				localForward = (ChannelDirectTCPIP) client.session.openChannel("direct-tcpip");
 				localForward.setHost(hostname);

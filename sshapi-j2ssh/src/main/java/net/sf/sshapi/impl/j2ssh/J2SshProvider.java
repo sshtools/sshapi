@@ -62,7 +62,7 @@ public class J2SshProvider extends AbstractProvider {
 
 	@Override
 	public String getVersion() {
-		return Util.getArtifactVersion("sshtools", "j2ssh-core");
+		return Util.getManifestVersion(J2SshProvider.class, "Product-Version");
 	}
 
 	public SshClient doCreateClient(SshConfiguration configuration) {
