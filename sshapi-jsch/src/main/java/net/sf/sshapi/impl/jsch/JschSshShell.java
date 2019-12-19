@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 
 import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 
 import net.sf.sshapi.SshChannelListener;
@@ -36,7 +35,6 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.util.Util;
 
 abstract class JschSshShell extends AbstractJschStreamChannel<SshChannelListener<SshShell>, SshShell>

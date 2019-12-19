@@ -45,7 +45,6 @@ public class GanymedSshProvider extends AbstractProvider {
 	/**
 	 * Single X11 connection
 	 */
-	public final static String CFG_SINGLE_X11_CONNECTION = "sshapi.ganymed.x11.singleConnection";
 	private SecureRandom rng;
 
 	/**
@@ -84,7 +83,7 @@ public class GanymedSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 				Capability.HTTP_PROXY, Capability.HOST_KEY_MANAGEMENT, Capability.SCP, Capability.SFTP,
-				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.TUNNELED_SOCKET_FACTORY, Capability.X11_FORWARDING, Capability.X11_FORWARDING_TCP, Capability.HOST_KEY_VERIFICATION,
 				Capability.RAW_SFTP, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 				Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS });
 	}

@@ -54,6 +54,11 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 	}
 
 	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public boolean isOpen() {
 		return super.isOpen() && session.getState() == Channel.STATE_OPEN;
 	}
@@ -103,11 +108,9 @@ abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C e
 	@Override
 	public final void onOpenStream() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
-			boolean singleConnection = Boolean.parseBoolean(
-					configuration.getProperties().getProperty(GanymedSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));
 			try {
-				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Port(),
-						configuration.getX11Cookie(), singleConnection);
+				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Screen() + 6000,
+						configuration.getX11Cookie(), configuration.isX11SingleConnection());
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			}

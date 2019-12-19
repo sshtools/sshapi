@@ -12,6 +12,11 @@ import java.io.InputStream;
 public interface SshExtendedChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
 		extends SshStreamChannel<L, C> {
 	
+
+	public enum Signal {
+		ABRT, ALRM, FPE, HUP, ILL, INT, KILL, PIPE, QUIT, SEGV, TERM, USR1, USR2
+	}
+	
 	/**
 	 * Set the callback that will be invoked when bytes are available on the error stream of this
 	 * channel. This is the non-blocking variant of using {@link #getErrorStream()}.
@@ -35,4 +40,11 @@ public interface SshExtendedChannel<L extends SshLifecycleListener<C>, C extends
 	 * @throws IOException
 	 */
 	int exitCode() throws IOException;
+	
+	/**
+	 * Send a signal, if supported ({@link Capability#SIGNALS} must be present).
+	 * 
+	 * @param signal signal
+	 */
+	void sendSignal(Signal signal) throws SshException;
 }

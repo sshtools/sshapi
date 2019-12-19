@@ -79,10 +79,11 @@ public class MaverickSshProvider extends AbstractProvider {
 			Capability.SCP, Capability.SFTP, Capability.PUBLIC_KEY_SUBSYSTEM, Capability.SOCKET_FACTORY,
 			Capability.WINDOW_CHANGE, Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_OVER_SCP,
 			Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS, Capability.CHANNEL_HANDLERS,
-			Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.FORCE_KEY_EXCHANGE,
+			Capability.X11_FORWARDING, Capability.X11_FORWARDING_TCP, Capability.HOST_KEY_VERIFICATION, Capability.SHELL, Capability.FORCE_KEY_EXCHANGE,
 			Capability.RAW_SFTP, Capability.X509_PUBLIC_KEY, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 			Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK,
-			Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET };
+			Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
+			Capability.SIGNALS };
 	private SshConnector con;
 	static {
 		// Warning for slow startup on Linux / Solaris

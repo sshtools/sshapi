@@ -69,7 +69,8 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 			Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS,
 			Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
-			Capability.SCP, Capability.RECURSIVE_SCP_GET };
+			Capability.SCP, Capability.RECURSIVE_SCP_GET, Capability.CHANNEL_DATA_EVENTS, Capability.PORT_FORWARD_EVENTS,
+			Capability.X11_FORWARDING, Capability.X11_FORWARDING_UNIX_SOCKET };
 	
 	private SshEngine engine;
 	private ComponentManager componentManager;

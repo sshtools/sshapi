@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import com.sshtools.ssh.ChannelEventListener;
 import com.sshtools.ssh.SshChannel;
 import com.sshtools.ssh.SshSession;
+import com.sshtools.ssh2.Ssh2Session;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
@@ -46,6 +47,19 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>,
 	AbstractMaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, SshSession session) {
 		super(provider, configuration);
 		this.session = session;
+	}
+
+	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		if(session instanceof Ssh2Session) {
+			try {
+				((Ssh2Session)session).signal(signal.name());
+			} catch (com.sshtools.ssh.SshException e) {
+				throw new SshException(SshException.GENERAL, e);
+			}
+		}
+		else
+			super.sendSignal(signal);
 	}
 
 	@Override

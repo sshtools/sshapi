@@ -573,8 +573,8 @@ class JschSshClient extends AbstractClient implements Logger {
 			if (configuration.getX11Host() != null) {
 				session.setX11Host(configuration.getX11Host());
 			}
-			if (configuration.getX11Port() > -1) {
-				session.setX11Port(configuration.getX11Port());
+			if (configuration.getX11Screen() > -1) {
+				session.setX11Port(configuration.getX11Screen() + 6000);
 			}
 			if (configuration.getX11Cookie() != null) {
 				String hexString = Util.formatAsHexString(configuration.getX11Cookie());

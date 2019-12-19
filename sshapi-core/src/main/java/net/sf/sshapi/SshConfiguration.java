@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -145,8 +146,10 @@ public class SshConfiguration {
 	private final Properties properties;
 	private SshHostKeyValidator hostKeyValidator;
 	private String x11Host;
-	private int x11Port;
+	private int x11Screen;
 	private byte[] x11Cookie;
+	private File x11UnixSocketFile;
+	private boolean x11SingleConnection;
 	private SshBannerHandler bannerHandler;
 	private String preferredServerToClientCipher;
 	private String preferredClientToServerCipher;
@@ -558,7 +561,30 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the host to use for X11 forwarding.
+	 * Get the unix socket file to use for X11 forwarding. This file is a local Unix Socket, that provides access to the local X11 server.
+	 * The provider must support {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * 
+	 * @return X11 unix socket file.
+	 */
+	public File getX11UnixSocketFile() {
+		return x11UnixSocketFile;
+	}
+
+	/**
+	 * Set the host to use for X11 forwarding. This file is a local Unix Socket, that provides access to the local X11 server.
+	 * The provider must support {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * 
+	 * @param x11Host X11 host
+	 * @return this for chaining
+	 */
+	public SshConfiguration setX11UnixSocketFile(File x11UnixSocketFile) {
+		this.x11UnixSocketFile = x11UnixSocketFile;
+		return this;
+	}
+
+	/**
+	 * Get the host to use for X11 forwarding. This would usually be 'localhost' or the local hostname, and
+	 * provides network access to the local X11 server. The provider must support {@link Capability#X11_FORWARDING_TCP}.
 	 * 
 	 * @return X11 host
 	 */
@@ -567,7 +593,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the host to use for X11 forwarding.
+	 * Set the host to use for X11 forwarding. This would usually be 'localhost' or the local hostname, and
+	 * provides network access to the local X11 server. The provider must support {@link Capability#X11_FORWARDING} and {@link Capability#X11_FORWARDING_TCP}.
 	 * 
 	 * @param x11Host X11 host
 	 * @return this for chaining
@@ -578,28 +605,55 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the port to use for X11 forwarding.
+	 * Get the screen number to use for X11 forwarding. This will be used to determining the port the local  X11 server is listening on
+	 * if TCP/IP X11 forwarding is in use, or the name of the unix socket file if unix socket X11 is in use. 
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return port to use for X11 forwarding
 	 */
-	public int getX11Port() {
-		return x11Port;
+	public int getX11Screen() {
+		return x11Screen;
 	}
 
 	/**
-	 * Set the port to use for X11 forwarding.
+	 * Set the port to use for X11 forwarding. This will be used to determining the port the local  X11 server is listening on
+	 * if TCP/IP X11 forwarding is in use, or the name of the unix socket file if unix socket X11 is in use. 
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11Port port to use for X11 forwarding
 	 * @return this for chaining
 	 */
-	public SshConfiguration setX11Port(int x11Port) {
-		this.x11Port = x11Port;
+	public SshConfiguration setX11Screen(int x11Screen) {
+		this.x11Screen = x11Screen;
+		return this;
+	}
+
+	/**
+	 * Get whether or not X11 forwarding should only allow a single application to be forwarded.
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * 
+	 * @return single X11 connection
+	 */
+	public boolean isX11SingleConnection() {
+		return x11SingleConnection;
+	}
+
+	/**
+	 * Set whether or not X11 forwarding should only allow a single application to be forwarded.
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * 
+	 * @param x11SingleConnection single X11 connection
+	 * @return this for chaining
+	 */
+	public SshConfiguration setX11SingleConnection(boolean x11SingleConnection) {
+		this.x11SingleConnection = x11SingleConnection;
 		return this;
 	}
 
 	/**
 	 * Get the cookie to use for X11 forwarding. You may want to consider using
 	 * the @{link {@link XDetails} helper instead of setting this directly.
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return X11 cookie
 	 */
@@ -610,6 +664,7 @@ public class SshConfiguration {
 	/**
 	 * Set the cookie to use for X11 forwarding. You may want to consider using
 	 * the @{link {@link XDetails} helper instead of setting this directly.
+	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11Cookie X11 cookie
 	 * @return this for chaining

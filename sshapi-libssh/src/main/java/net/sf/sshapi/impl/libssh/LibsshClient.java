@@ -51,8 +51,10 @@ import net.sf.sshapi.forwarding.SshPortForward;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_auth_callback;
+import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_key;
 import ssh.SshLibrary.ssh_session;
 
@@ -108,6 +110,17 @@ public class LibsshClient extends AbstractClient {
 					bannerHandler.banner(ret.getString(0));
 				}
 			}
+			
+			if(getConfiguration().getX11Screen() != -1) {
+				ssh_channel x11chan = library.ssh_channel_new(libSshSession);
+				if(x11chan == null) {
+					throw new SshException(SshException.GENERAL,
+							"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " retrieving public key");
+				}
+				library.ssh_channel_open_session(x11chan);
+				library.ssh_channel_request_x11(x11chan, 0, null, Util.formatAsHexString(getConfiguration().getX11Cookie()), getConfiguration().getX11Screen());
+			}
+			
 			authenticated = true;
 			return true;
 		} catch (IOException ioe) {

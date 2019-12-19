@@ -27,4 +27,9 @@ public abstract class AbstractSshExtendedChannel<L extends SshChannelListener<C>
 			}
 		}
 	}
+
+	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		throw new UnsupportedOperationException();
+	}
 }

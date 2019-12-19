@@ -23,6 +23,7 @@
  */
 package net.sf.sshapi.impl.mavericksynergy;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +38,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +70,10 @@ import com.sshtools.common.ssh.ChannelFactory;
 import com.sshtools.common.ssh.ChannelNG;
 import com.sshtools.common.ssh.ChannelOpenException;
 import com.sshtools.common.ssh.ChannelOutputStream;
+import com.sshtools.common.ssh.ForwardingFactory;
 import com.sshtools.common.ssh.SessionChannel;
+import com.sshtools.common.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager;
+import com.sshtools.common.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager.TunnelListener;
 import com.sshtools.common.ssh.SshConnection;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.SshKeyFingerprint;
@@ -79,6 +85,7 @@ import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
 import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 
 import net.sf.sshapi.AbstractClient;
+import net.sf.sshapi.AbstractDataProducingComponent;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
@@ -86,6 +93,7 @@ import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
+import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.auth.SshAgentAuthenticator;
 import net.sf.sshapi.auth.SshAuthenticator;
@@ -95,6 +103,7 @@ import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.auth.SshX509PublicKeyAuthenticator;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
+import net.sf.sshapi.forwarding.SshPortForwardTunnel;
 import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
@@ -239,6 +248,79 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		}
 	}
 
+	class TunnelChannel
+			extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
+			implements SshPortForwardTunnel {
+		private com.sshtools.common.ssh.ForwardingChannel<SshClientContext> tunnel;
+
+		public TunnelChannel(int type, com.sshtools.common.ssh.ForwardingChannel<SshClientContext> tunnel) {
+			super(getProvider());
+			this.tunnel = tunnel;
+			tunnel.addEventListener(new com.sshtools.common.ssh.ChannelEventListener() {
+
+				@Override
+				public void onChannelClosing(Channel channel) {
+					TunnelChannel tunnelChannel = null;
+					synchronized(tunnels) {
+						tunnelChannel = tunnels.remove(channel);
+					}
+					if(tunnelChannel != null)
+						firePortForwardChannelClosed(type, tunnelChannel);
+				}
+
+				@Override
+				public void onChannelDataIn(Channel channel, ByteBuffer buffer) {
+					fireData(SshDataListener.RECEIVED, Util.peek(buffer), buffer.position(), buffer.remaining());
+				}
+
+				@Override
+				public void onChannelExtendedData(Channel channel, ByteBuffer buffer, int type) {
+					fireData(SshDataListener.EXTENDED, Util.peek(buffer), buffer.position(), buffer.remaining());
+				}
+
+				@Override
+				public void onChannelDataOut(Channel channel, ByteBuffer buffer) {
+					fireData(SshDataListener.SENT, Util.peek(buffer), buffer.position(), buffer.remaining());
+				}
+			});
+		}
+
+		@Override
+		public String getBindAddress() {
+			return tunnel.getHost();
+		}
+
+		@Override
+		public int getBindPort() {
+			return tunnel.getPort();
+		}
+
+		@Override
+		public String getOriginatingAddress() {
+			return tunnel.getOriginatingHost();
+		}
+
+		@Override
+		public int getOriginatingPort() {
+			return tunnel.getOriginatingPort();
+		}
+
+		@Override
+		public String toString() {
+			return "TunnelChannel [getBindAddress()=" + getBindAddress() + ", getBindPort()=" + getBindPort()
+					+ ", getOriginatingAddress()=" + getOriginatingAddress() + ", getOriginatingPort()="
+					+ getOriginatingPort() + "]";
+		}
+
+		@Override
+		protected void onClose() throws net.sf.sshapi.SshException {
+		}
+
+		@Override
+		protected void onOpen() throws net.sf.sshapi.SshException {
+		}
+	}
+
 	class MaverickSshChannel
 			extends AbstractSshStreamChannel<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
 			implements net.sf.sshapi.SshChannel {
@@ -300,10 +382,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				}
 
 				@Override
-				public void onChannelDisconnect(Channel channel) {
-				}
-
-				@Override
 				public void onChannelEOF(Channel channel) {
 					fireEof();
 				}
@@ -311,10 +389,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				@Override
 				public void onChannelOpen(Channel channel) {
 					fireOpened();
-				}
-
-				@Override
-				public void onWindowAdjust(Channel channel, long currentWindowSpace) {
 				}
 			});
 		}
@@ -357,6 +431,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	private SshClient sshClient;
 	private int timeout = -1;
 	private String username;
+	
+	private Map<com.sshtools.common.ssh.ForwardingChannel<SshClientContext>, TunnelChannel> tunnels = Collections.synchronizedMap(new HashMap<>());
 
 	MaverickSynergySshClient(SshConfiguration configuration) throws SshException, IOException {
 		super(configuration);
@@ -375,6 +451,20 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					break;
 				}
 			}
+			
+			SshConfiguration configuration = getConfiguration();
+			if (configuration.getX11UnixSocketFile() != null) {
+				try {
+					sshClient.startX11Forwarding(configuration.getX11UnixSocketFile().getAbsolutePath(), 
+							configuration.getX11Screen(), configuration.getX11Cookie(), configuration.isX11SingleConnection(), null);
+				} catch (SshException | UnauthorizedException e) {
+					throw new net.sf.sshapi.SshException("Failed to configure X11 forwarding.", e);
+				}
+			}
+			else if (configuration.getX11Host() != null) {
+				throw new UnsupportedOperationException();
+			}
+			
 		} catch (net.sf.sshapi.SshException sshe) {
 			if (sshe.getCode() == net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED)
 				return false;
@@ -474,11 +564,11 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	// }
 	// return sshapiType;
 	// }
-	public void forwardingStarted(int type, String key, String host, int port) {
-	}
-
-	public void forwardingStopped(int type, String key, String host, int port) {
-	}
+//	public void forwardingStarted(int type, String key, String host, int port) {
+//	}
+//
+//	public void forwardingStopped(int type, String key, String host, int port) {
+//	}
 
 	@Override
 	public int getChannelCount() {
@@ -629,7 +719,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			@Override
 			protected void onClose() throws net.sf.sshapi.SshException {
 				try {
-					client.stopLocalForwarding(fLocalAddress + ":" + localPort);
+					client.stopLocalForwarding(fLocalAddress + ":" + boundPort);
 				} finally {
 					boundPort = 0;
 				}
@@ -639,6 +729,27 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
 					boundPort = client.startLocalForwarding(fLocalAddress, localPort, remoteHost, remotePort);
+					ForwardingFactory<SshClientContext> factory = client.getContext().getForwardingManager()
+							.getFactory(fLocalAddress, boundPort);
+					ActiveTunnelManager<SshClientContext> mgr = factory.getActiveTunnelManager();
+					mgr.addListener(new TunnelListener<SshClientContext>() {
+
+						@SuppressWarnings("resource")
+						@Override
+						public void tunnelOpened(com.sshtools.common.ssh.ForwardingChannel<SshClientContext> channel) {
+							TunnelChannel tunnelChannel = new TunnelChannel(SshPortForward.LOCAL_FORWARDING, channel);
+							// The channel is actually already open, but this will set its state
+							// correctly in the wrapper
+							try {
+								tunnelChannel.open();
+								tunnels.put(channel, tunnelChannel);
+							} catch (net.sf.sshapi.SshException e) {
+								throw new RuntimeException(e);
+							}
+							firePortForwardChannelOpened(SshPortForward.LOCAL_FORWARDING, tunnelChannel);
+
+						}
+					});
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to start local forward.", e);
 				} catch (UnauthorizedException e) {
@@ -668,7 +779,30 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			@Override
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
-					client.startRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
+					int boundPort = client.startRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
+					
+					ForwardingFactory<SshClientContext> factory = client.getContext().getForwardingManager()
+							.getFactory(fRemoteHost, boundPort);
+					ActiveTunnelManager<SshClientContext> mgr = factory.getActiveTunnelManager();
+					mgr.addListener(new TunnelListener<SshClientContext>() {
+
+						@SuppressWarnings("resource")
+						@Override
+						public void tunnelOpened(com.sshtools.common.ssh.ForwardingChannel<SshClientContext> channel) {
+							TunnelChannel tunnelChannel = new TunnelChannel(SshPortForward.REMOTE_FORWARDING, channel);
+							// The channel is actually already open, but this will set its state
+							// correctly in the wrapper
+							try {
+								tunnelChannel.open();
+								tunnels.put(channel, tunnelChannel);
+							} catch (net.sf.sshapi.SshException e) {
+								throw new RuntimeException(e);
+							}
+							firePortForwardChannelOpened(SshPortForward.REMOTE_FORWARDING, tunnelChannel);
+
+						}
+					});
+					
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to start remote forward.", e);
 				}
@@ -684,11 +818,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		return new MaverickSynergySftpClient(this);
 	}
 
-	// private String[] getAuthenticationMethods() throws SshException {
-	// String[] authenticationMethods =
-	// client.getAuthenticationMethods(client.getUsername());
-	// return authenticationMethods;
-	// }
 	@Override
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws net.sf.sshapi.SshException {
@@ -700,12 +829,11 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 	@Override
 	protected void onClose() throws net.sf.sshapi.SshException {
-		if (!isConnected()) {
-			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.NOT_OPEN, "Not connected.");
-		}
 		try {
-			sshClient.close();
-			sshClient.getConnection().getDisconnectFuture().waitForever();
+			if (isConnected()) {
+				sshClient.close();
+				sshClient.getConnection().getDisconnectFuture().waitForever();
+			}
 		} catch (IOException sshe) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
 		} finally {
@@ -778,7 +906,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		} else if (authenticator instanceof SshPublicKeyAuthenticator) {
 			SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticator;
 			try {
-				com.sshtools.common.publickey.SshPrivateKeyFile pkf = com.sshtools.common.publickey.SshPrivateKeyFileFactory.parse(pk.getPrivateKey());
+				com.sshtools.common.publickey.SshPrivateKeyFile pkf = com.sshtools.common.publickey.SshPrivateKeyFileFactory
+						.parse(pk.getPrivateKey());
 				SshKeyPair pair = null;
 				for (int i = 2; i >= 0; i--) {
 					if (pkf.isPassphraseProtected()) {

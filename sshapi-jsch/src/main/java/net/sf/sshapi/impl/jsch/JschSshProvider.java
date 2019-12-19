@@ -32,7 +32,6 @@ import com.jcraft.jsch.JSch;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -131,10 +130,11 @@ public class JschSshProvider extends AbstractProvider {
 				Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT,
 				Capability.HOST_KEY_MANAGEMENT, Capability.SFTP, Capability.SOCKET_FACTORY, Capability.WINDOW_CHANGE,
 				Capability.TUNNELED_SOCKET_FACTORY, Capability.SCP, Capability.FILE_TRANSFER_EVENTS,
-				Capability.DATA_TIMEOUTS, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
+				Capability.DATA_TIMEOUTS, Capability.X11_FORWARDING_TCP, Capability.X11_FORWARDING, Capability.HOST_KEY_VERIFICATION,
 				Capability.SHELL, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 				Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK,
-				Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET });
+				Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
+				Capability.SIGNALS });
 	}
 
 	@Override

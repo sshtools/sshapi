@@ -680,7 +680,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			SshConfiguration configuration = getConfiguration();
 			if (configuration.getX11Host() != null) {
 				try {
-					forwarding.allowX11Forwarding(configuration.getX11Host() + ":" + (configuration.getX11Port() - 6000),
+					forwarding.allowX11Forwarding(configuration.getX11Host() + ":" + (configuration.getX11Screen()),
 							Util.formatAsHexString(configuration.getX11Cookie()));
 				} catch (SshException e) {
 					throw new net.sf.sshapi.SshException("Failed to configure X11 forwarding.", e);

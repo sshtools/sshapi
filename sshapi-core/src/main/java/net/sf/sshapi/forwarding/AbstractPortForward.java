@@ -41,14 +41,12 @@ public abstract class AbstractPortForward extends AbstractLifecycleComponent<Ssh
 	}
 
 	public void close() throws SshException {
-		if (!open) {
-			throw new SshException(SshException.NOT_OPEN, "The port forward is not open");
+		if (open) {
+			fireClosing();
+			onClose();
+			open = false;
+			fireClosed();
 		}
-		fireClosing();
-		onClose();
-		open = false;
-		fireClosed();
-
 	}
 
 	public void setTimeout(int timeout) {

@@ -823,10 +823,30 @@ public class Util {
 	 */
 	public static byte[] read(ByteBuffer buffer) {
 		if (buffer.hasArray() && buffer.remaining() == buffer.capacity()) {
+			buffer.position(buffer.position() + buffer.remaining());
 			return buffer.array();
 		} else {
 			byte[] b = new byte[buffer.remaining()];
 			buffer.get(b);
+			return b;
+		}
+	}
+
+	/**
+	 * Write the contents of a buffer (0 to limit) to a byte array in the fastest
+	 * way possible, without changing the position in the buffer.
+	 * 
+	 * @param buffer buffer to read
+	 * @throws IOException I/O error
+	 */
+	public static byte[] peek(ByteBuffer buffer) {
+		if (buffer.hasArray() && buffer.remaining() == buffer.capacity()) {
+			return buffer.array();
+		} else {
+			byte[] b = new byte[buffer.remaining()];
+			buffer.mark();
+			buffer.get(b);
+			buffer.reset();
 			return b;
 		}
 	}

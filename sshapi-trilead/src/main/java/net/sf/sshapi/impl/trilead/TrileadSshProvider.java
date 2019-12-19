@@ -46,7 +46,6 @@ public class TrileadSshProvider extends AbstractProvider {
 	/**
 	 * Single X11 connection
 	 */
-	public final static String CFG_SINGLE_X11_CONNECTION = "sshapi.trilead.x11.singleConnection";
 	private SecureRandom rng;
 
 	/**

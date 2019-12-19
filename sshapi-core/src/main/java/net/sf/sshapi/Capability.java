@@ -175,9 +175,22 @@ public class Capability {
 	 */
 	public final static Capability CHANNEL_HANDLERS = new Capability("channelHandlers");
 	/**
-	 * The provider supports X11 forwarding.
+	 * The provider supports X11 forwarding. This capability will be accompanied by either
+	 * a {@link #X11_FORWARDING_UNIX_SOCKET} or {@link #X11_FORWARDING_TCP}, or both.
 	 */
 	public final static Capability X11_FORWARDING = new Capability("x11Forwarding");
+	/**
+	 * The provider supports X11 forwarding (TCP)
+	 */
+	public final static Capability X11_FORWARDING_TCP = new Capability("x11ForwardingTcp");
+	/**
+	 * The provider supports X11 forwarding (Unix Socket)
+	 */
+	public final static Capability X11_FORWARDING_UNIX_SOCKET = new Capability("x11ForwardingUnixSocket");
+	/**
+	 * The provider supports sending signals on session channels
+	 */
+	public final static Capability SIGNALS = new Capability("signals");
 	/**
 	 * The provider supports a shell.
 	 */

@@ -54,6 +54,11 @@ abstract class AbstractJ2SshStreamChannel<L extends SshChannelListener<C>, C ext
 	}
 
 	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void setErrInput(SshInput errInput) {
 		if (!Objects.equals(errInput, this.errInput)) {
 			this.errInput = errInput;
@@ -94,9 +99,9 @@ abstract class AbstractJ2SshStreamChannel<L extends SshChannelListener<C>, C ext
 		if (configuration.getX11Cookie() != null) {
 			byte[] x11Cookie = configuration.getX11Cookie();
 			String hexCookie = Util.formatAsHexString(x11Cookie);
-			int x11Port = configuration.getX11Port();
+			int x11Port = configuration.getX11Screen();
 			try {
-				channel.requestX11Forwarding(x11Port - 6000, hexCookie);
+				channel.requestX11Forwarding(x11Port, hexCookie);
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			}

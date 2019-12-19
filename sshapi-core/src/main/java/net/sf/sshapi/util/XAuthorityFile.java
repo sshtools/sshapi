@@ -31,6 +31,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import net.sf.sshapi.Logger.Level;
+import net.sf.sshapi.SshConfiguration;
+
 /**
  * Parses a standard X Authority File
  * 
@@ -47,7 +50,18 @@ public class XAuthorityFile {
 	 * Constructor.
 	 * 
 	 * @param file file to read
-	 * @param hostname hostnam
+	 * @param screen screen
+	 * @throws IOException
+	 */
+	public XAuthorityFile(File file, int screen) throws IOException {
+		this(file, null, screen);
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param file file to read
+	 * @param hostname hostname
 	 * @param screen screen
 	 * @throws IOException
 	 */
@@ -78,8 +92,10 @@ public class XAuthorityFile {
 
 					String n = new String(number);
 					int d = Integer.parseInt(n);
+					
 
 					String protocol = new String(name);
+					SshConfiguration.getLogger().log(Level.DEBUG, "X Cookie Protocol: {0} Family: {1} Number: {2}", protocol, family, d);
 					if (protocol.equals(COOKIE_TYPE_NAME)) {
 						if (family == 0) {
 							// We cannot use InetAddress.getByAddress since it
@@ -89,9 +105,12 @@ public class XAuthorityFile {
 							// which works just as well!
 							String ip = (address[0] & 0xFF) + "." + (address[1] & 0xFF) + "." + (address[2] & 0xFF) + "."
 								+ (address[3] & 0xFF);
+
+							SshConfiguration.getLogger().log(Level.DEBUG, "   --> IP: {0}", ip);
 							InetAddress addr = java.net.InetAddress.getByName(ip);
 							if (addr.getHostAddress().equals(hostname) || addr.getHostName().equals(hostname)) {
 								if (screen == d) {
+									SshConfiguration.getLogger().log(Level.DEBUG, "   --> Screen: {0} Host {1} Data: {2}", d, ip, Util.formatAsHexString(data));
 									this.data = data;
 									break;
 								}
@@ -100,6 +119,7 @@ public class XAuthorityFile {
 							String h = new String(address);
 							if (h.equals(hostname)) {
 								if (screen == d) {
+									SshConfiguration.getLogger().log(Level.DEBUG, "   --> Screen: {0} Host {1} Data: {2}", d, h, Util.formatAsHexString(data));
 									this.data = data;
 									break;
 								}

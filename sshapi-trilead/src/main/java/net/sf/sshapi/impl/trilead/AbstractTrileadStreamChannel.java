@@ -98,11 +98,9 @@ abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C e
 
 	public final void onOpenStream() throws SshException {
 		if (!Util.nullOrTrimmedBlank(configuration.getX11Host())) {
-			boolean singleConnection = Boolean
-					.parseBoolean(configuration.getProperties().getProperty(TrileadSshProvider.CFG_SINGLE_X11_CONNECTION, "false"));
 			try {
-				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Port(), configuration.getX11Cookie(),
-						singleConnection);
+				session.requestX11Forwarding(configuration.getX11Host(), configuration.getX11Screen() + 6000, configuration.getX11Cookie(),
+						configuration.isX11SingleConnection());
 			} catch (IOException e) {
 				throw new SshException(SshException.IO_ERROR, e);
 			}

@@ -35,9 +35,10 @@ import net.sf.sshapi.SshConfiguration;
  */
 public class XDetails {
 
-	private int x11Port;
+	private int x11Screen;
 	private String x11Host;
 	private byte[] x11Cookie;
+	private File x11UnixSocketFile;
 
 	/**
 	 * Constructor. Uses default X authority file and DISPLAY
@@ -73,8 +74,15 @@ public class XDetails {
 			}
 
 		}
-		x11Port = displayNumber + 6000;
+		x11Screen = displayNumber;
 		x11Cookie = null;
+		
+		//
+		File socketDir = new File(System.getProperty("sshapi.x11SocketDirectory", System.getProperty("java.io.tmpdir") + File.separator + ".X11-unix"));
+		File socketFile = new File(socketDir, String.format("X%d", x11Screen));
+		if(socketFile.exists()) {
+			x11UnixSocketFile = socketFile;
+		}
 
 		// Try and get the magic cookie
 		if (xAuthorityFile.exists()) {
@@ -95,18 +103,20 @@ public class XDetails {
 	 * @param configuration configuration
 	 */
 	public void configure(SshConfiguration configuration) {
+		SshConfiguration.getLogger().debug("Configuring for X11 tunnel. Host {0}, Screen {1}, Cookie {2}, File {3}", x11Host, x11Screen, Util.formatAsHexString(x11Cookie), x11UnixSocketFile);
 		configuration.setX11Host(x11Host);
-		configuration.setX11Port(x11Port);
+		configuration.setX11Screen(x11Screen);
 		configuration.setX11Cookie(x11Cookie);
+		configuration.setX11UnixSocketFile(x11UnixSocketFile);
 	}
 
 	/**
-	 * Get the port.
+	 * Get the screen number.
 	 * 
-	 * @return port
+	 * @return screen number
 	 */
-	public int getX11Port() {
-		return x11Port;
+	public int getX11Screen() {
+		return x11Screen;
 	}
 
 	/**
@@ -116,6 +126,15 @@ public class XDetails {
 	 */
 	public String getX11Host() {
 		return x11Host;
+	}
+
+	/**
+	 * Get the unix socket file.
+	 * 
+	 * @return unix socket file
+	 */
+	public File getX11UnixSocketFile() {
+		return x11UnixSocketFile;
 	}
 
 	/**
@@ -131,9 +150,10 @@ public class XDetails {
 	 * Set the cookie.
 	 * 
 	 * @param x11Cookie cookie
+	 * @return this for chaining
 	 */
-	public void setX11Cookie(byte[] x11Cookie) {
+	public XDetails setX11Cookie(byte[] x11Cookie) {
 		this.x11Cookie = x11Cookie;
-
+		return this;
 	}
 }

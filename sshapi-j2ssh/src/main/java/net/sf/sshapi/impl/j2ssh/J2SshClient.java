@@ -342,7 +342,7 @@ class J2SshClient extends AbstractClient {
 		if (con.isAuthenticated()) {
 			forwarding = con.getForwardingClient();
 			if (getConfiguration().getX11Host() != null) {
-				XDisplay xd = new XDisplay(getConfiguration().getX11Host(), getConfiguration().getX11Port() - 6000);
+				XDisplay xd = new XDisplay(getConfiguration().getX11Host(), getConfiguration().getX11Screen());
 				forwarding.enableX11Forwarding(xd);
 			}
 			return true;

@@ -23,8 +23,6 @@
  */
 package net.sf.sshapi;
 
-import net.sf.sshapi.Logger.Level;
-
 /**
  * Abstract implementation of an {@link AbstractLifecycleComponent} that fires
  * events when the lifecycle methods are called. Most SSHAPI lifecycle

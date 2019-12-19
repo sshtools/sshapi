@@ -77,6 +77,15 @@ abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C exte
 	}
 
 	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		try {
+			channel.sendSignal(signal.name());
+		} catch (Exception e) {
+			throw new SshException(SshException.GENERAL, e);
+		}
+	}
+
+	@Override
 	public int exitCode() throws IOException {
 		return channel.getExitStatus();
 	}
