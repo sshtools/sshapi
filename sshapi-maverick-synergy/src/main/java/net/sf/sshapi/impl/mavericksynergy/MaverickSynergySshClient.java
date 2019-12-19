@@ -454,12 +454,12 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			
 			SshConfiguration configuration = getConfiguration();
 			if (configuration.getX11UnixSocketFile() != null) {
-				try {
-					sshClient.startX11Forwarding(configuration.getX11UnixSocketFile().getAbsolutePath(), 
-							configuration.getX11Screen(), configuration.getX11Cookie(), configuration.isX11SingleConnection(), null);
-				} catch (SshException | UnauthorizedException e) {
-					throw new net.sf.sshapi.SshException("Failed to configure X11 forwarding.", e);
-				}
+//				try {
+//					sshClient.startX11Forwarding(configuration.getX11UnixSocketFile().getAbsolutePath(), 
+//							configuration.getX11Screen(), configuration.getX11Cookie(), configuration.isX11SingleConnection(), null);
+//				} catch (SshException | UnauthorizedException e) {
+//					throw new net.sf.sshapi.SshException("Failed to configure X11 forwarding.", e);
+//				}
 			}
 			else if (configuration.getX11Host() != null) {
 				throw new UnsupportedOperationException();
