@@ -23,6 +23,8 @@
  */
 package net.sf.sshapi;
 
+import java.net.Socket;
+
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.RemoteSocketFactory;
@@ -167,9 +169,11 @@ public class Capability {
 	public final static Capability SFTP_OVER_SCP = new Capability("sftpOverScp");
 
 	/**
-	 * Allows setting of timeouts on the connection.
+	 * Allows setting of I/O timeouts (in millisecond) on the connection. These are set by {@link SshClient#setTimeout(int)}
+	 * and usually apply to the socket, i.e. are delegated to {@link Socket#setSoTimeout(int)}. 
 	 */
-	public final static Capability DATA_TIMEOUTS = new Capability("dataTimeouts");
+	public final static Capability IO_TIMEOUTS = new Capability("ioTimeouts");
+
 	/**
 	 * The provider supports channel handlers. See {@link SshChannelHandler}.
 	 */

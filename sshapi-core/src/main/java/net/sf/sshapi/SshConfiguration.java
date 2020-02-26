@@ -24,11 +24,13 @@
 package net.sf.sshapi;
 
 import java.io.File;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
 
@@ -58,7 +60,7 @@ public class SshConfiguration {
 	public static final int SFTP_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
 	public static final int TUNNEL_MAXIMUM_PACKET_SIZE = 32 * 1024;
 	public static final int TUNNEL_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
-	
+
 	/** The 3DES CBC cipher **/
 	public static final String CIPHER_TRIPLEDES_CBC = "3des-cbc";
 	/** The Blowfish CBC cipher */
@@ -102,7 +104,7 @@ public class SshConfiguration {
 	public static final String PUBLIC_KEY_SSHRSA1 = "rsa1";
 	/** X509 RSA Public Key **/
 	public static final String PUBLIC_KEY_X509V3_RSA_SHA1 = "x509v3-sign-rsa-sha1";
-	
+
 	/** SSH1 Cipher **/
 	public static final String CIPHER_DES = "des";
 	/** SSH1 Cipher **/
@@ -125,7 +127,7 @@ public class SshConfiguration {
 	 * @see #getProtocolVersion()
 	 */
 	public final static int SSH1_OR_SSH2 = 3;
-	
+
 	/***
 	 * MD5 fingerprint hashes
 	 */
@@ -138,7 +140,7 @@ public class SshConfiguration {
 	 * SHA1 fingerprint hashes
 	 */
 	public final static String FINGERPRINT_SHA1 = "sha1";
-	
+
 	// Private statics
 	private static Logger logger = new ConsoleLogger();
 	// Private instance variables
@@ -178,6 +180,8 @@ public class SshConfiguration {
 	private long tunnelPacketSize = TUNNEL_MAXIMUM_PACKET_SIZE;
 	private int streamBufferSize = SFTP_MAXIMUM_PACKET_SIZE;
 	private static SshHostKeyValidator defaultHostKeyValidator = new DumbWithWarningHostKeyValidator();
+	private int ioTimeout = (int)TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty("sshapi.defaultIoTimeout", "60")));
+
 	/**
 	 * Do reverse DNS lookups for hosts in the known_hosts (
 	 * {@link JschHostKeyManager}).
@@ -255,12 +259,36 @@ public class SshConfiguration {
 	/**
 	 * Constructor
 	 * 
-	 * @param properties properties
+	 * @param properties       properties
 	 * @param hostKeyValidator host key validator
 	 */
 	public SshConfiguration(Properties properties, SshHostKeyValidator hostKeyValidator) {
 		this.properties = properties;
 		this.hostKeyValidator = hostKeyValidator;
+	}
+
+	/**
+	 * Get the default I/O timeout in milliseconds. This is generally passed to
+	 * {@link Socket#setSoTimeout(int)}. A value of zero means never timeout. The provider must support
+	 * {@link Capability#IO_TIMEOUTS}. This may be override per connection with
+	 * {@link SshClient#setTimeout(int)}.
+	 * 
+	 * @return IO timeout in milliseconds
+	 */
+	public int getIoTimeout() {
+		return ioTimeout;
+	}
+
+	/**
+	 * Set the default idle timeout in milliseconds. This is generally passed to
+	 * {@link Socket#setSoTimeout(int)}. A value of zero means never timeout. The provider must support
+	 * {@link Capability#IO_TIMEOUTS}. This may be override per connection with
+	 * {@link SshClient#setTimeout(int)}.
+	 * 
+	 * @param ioTimeout IO timeout in milliseconds
+	 */
+	public void setIoTimeout(int ioTimeout) {
+		this.ioTimeout = ioTimeout;
 	}
 
 	/**
@@ -286,8 +314,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for
-	 * no hint.
+	 * Get the max window size <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
 	 * 
 	 * @return tunnel max window size
 	 */
@@ -296,8 +324,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for
-	 * no hint.
+	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for no
+	 * hint.
 	 * 
 	 * @param tunnelWindowSize Tunnel window size max
 	 * @return this for chaining
@@ -308,8 +336,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the window size <strong>hint</strong> for tunnels. Use zero for no
-	 * hint.
+	 * Get the window size <strong>hint</strong> for tunnels. Use zero for no hint.
 	 * 
 	 * @return tunnel window size
 	 */
@@ -329,8 +356,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the packet size <strong>hint</strong> for tunnels. Use zero for no
-	 * hint.
+	 * Get the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
 	 * 
 	 * @return tunnel packet size
 	 */
@@ -339,8 +365,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the packet size <strong>hint</strong> for tunnels. Use zero for no
-	 * hint.
+	 * Set the packet size <strong>hint</strong> for tunnels. Use zero for no hint.
 	 * 
 	 * @param tunnelPacketSize tunnel packet size
 	 * @return this for chaining
@@ -351,8 +376,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the max window size <strong>hint</strong> for SFTP. Use zero for no
-	 * hint.
+	 * Get the max window size <strong>hint</strong> for SFTP. Use zero for no hint.
 	 * 
 	 * @return SFTP max window size
 	 */
@@ -361,8 +385,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the window size max <strong>hint</strong> for SFTP. Use zero for no
-	 * hint.
+	 * Set the window size max <strong>hint</strong> for SFTP. Use zero for no hint.
 	 * 
 	 * @param sftpWindowSize SFTP window size max
 	 * @return this for chaining
@@ -435,8 +458,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the window size <strong>hint</strong> for shell. Use zero for no
-	 * hint.
+	 * Get the window size <strong>hint</strong> for shell. Use zero for no hint.
 	 * 
 	 * @return shell window size
 	 */
@@ -456,8 +478,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the packet size <strong>hint</strong> for shell. Use zero for no
-	 * hint.
+	 * Get the packet size <strong>hint</strong> for shell. Use zero for no hint.
 	 * 
 	 * @return Shell packet size
 	 */
@@ -466,8 +487,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the packet size <strong>hint</strong> for shells. Use zero for no
-	 * hint.
+	 * Set the packet size <strong>hint</strong> for shells. Use zero for no hint.
 	 * 
 	 * @param shellPacketSize shell packet size
 	 * @return this for chaining
@@ -479,8 +499,8 @@ public class SshConfiguration {
 
 	/**
 	 * Get the maximum number of authentication attempts when using the
-	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)}
-	 * method with one or more authenticators. This does not impact
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
+	 * with one or more authenticators. This does not impact
 	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
 	 * wish to perform authentication separately.
 	 * 
@@ -492,8 +512,8 @@ public class SshConfiguration {
 
 	/**
 	 * Set the maximum number of authentication attempts when using the
-	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)}
-	 * method with one or more authenticators. This does not impact
+	 * {@link SshClient#connect(String, String, int, SshAuthenticator...)} method
+	 * with one or more authenticators. This does not impact
 	 * {@link SshClient#authenticate(SshAuthenticator...)} which is there is you
 	 * wish to perform authentication separately.
 	 * 
@@ -549,10 +569,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the properties for this configuration. The property names supported
-	 * will depend on the provider implementation they are passed to. See the
-	 * documentation for the provider for details on what properties are
-	 * supported.
+	 * Get the properties for this configuration. The property names supported will
+	 * depend on the provider implementation they are passed to. See the
+	 * documentation for the provider for details on what properties are supported.
 	 * 
 	 * @return properties
 	 */
@@ -561,8 +580,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the unix socket file to use for X11 forwarding. This file is a local Unix Socket, that provides access to the local X11 server.
-	 * The provider must support {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Get the unix socket file to use for X11 forwarding. This file is a local Unix
+	 * Socket, that provides access to the local X11 server. The provider must
+	 * support {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return X11 unix socket file.
 	 */
@@ -571,8 +591,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the host to use for X11 forwarding. This file is a local Unix Socket, that provides access to the local X11 server.
-	 * The provider must support {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Set the host to use for X11 forwarding. This file is a local Unix Socket,
+	 * that provides access to the local X11 server. The provider must support
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11Host X11 host
 	 * @return this for chaining
@@ -583,8 +604,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the host to use for X11 forwarding. This would usually be 'localhost' or the local hostname, and
-	 * provides network access to the local X11 server. The provider must support {@link Capability#X11_FORWARDING_TCP}.
+	 * Get the host to use for X11 forwarding. This would usually be 'localhost' or
+	 * the local hostname, and provides network access to the local X11 server. The
+	 * provider must support {@link Capability#X11_FORWARDING_TCP}.
 	 * 
 	 * @return X11 host
 	 */
@@ -593,8 +615,10 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the host to use for X11 forwarding. This would usually be 'localhost' or the local hostname, and
-	 * provides network access to the local X11 server. The provider must support {@link Capability#X11_FORWARDING} and {@link Capability#X11_FORWARDING_TCP}.
+	 * Set the host to use for X11 forwarding. This would usually be 'localhost' or
+	 * the local hostname, and provides network access to the local X11 server. The
+	 * provider must support {@link Capability#X11_FORWARDING} and
+	 * {@link Capability#X11_FORWARDING_TCP}.
 	 * 
 	 * @param x11Host X11 host
 	 * @return this for chaining
@@ -605,9 +629,12 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the screen number to use for X11 forwarding. This will be used to determining the port the local  X11 server is listening on
-	 * if TCP/IP X11 forwarding is in use, or the name of the unix socket file if unix socket X11 is in use. 
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Get the screen number to use for X11 forwarding. This will be used to
+	 * determining the port the local X11 server is listening on if TCP/IP X11
+	 * forwarding is in use, or the name of the unix socket file if unix socket X11
+	 * is in use. The provider must support {@link Capability#X11_FORWARDING} and
+	 * either {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return port to use for X11 forwarding
 	 */
@@ -616,9 +643,12 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the port to use for X11 forwarding. This will be used to determining the port the local  X11 server is listening on
-	 * if TCP/IP X11 forwarding is in use, or the name of the unix socket file if unix socket X11 is in use. 
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Set the port to use for X11 forwarding. This will be used to determining the
+	 * port the local X11 server is listening on if TCP/IP X11 forwarding is in use,
+	 * or the name of the unix socket file if unix socket X11 is in use. The
+	 * provider must support {@link Capability#X11_FORWARDING} and either
+	 * {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11Port port to use for X11 forwarding
 	 * @return this for chaining
@@ -629,8 +659,10 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get whether or not X11 forwarding should only allow a single application to be forwarded.
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Get whether or not X11 forwarding should only allow a single application to
+	 * be forwarded. The provider must support {@link Capability#X11_FORWARDING} and
+	 * either {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return single X11 connection
 	 */
@@ -639,8 +671,10 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set whether or not X11 forwarding should only allow a single application to be forwarded.
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * Set whether or not X11 forwarding should only allow a single application to
+	 * be forwarded. The provider must support {@link Capability#X11_FORWARDING} and
+	 * either {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11SingleConnection single X11 connection
 	 * @return this for chaining
@@ -652,8 +686,10 @@ public class SshConfiguration {
 
 	/**
 	 * Get the cookie to use for X11 forwarding. You may want to consider using
-	 * the @{link {@link XDetails} helper instead of setting this directly.
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * the @{link {@link XDetails} helper instead of setting this directly. The
+	 * provider must support {@link Capability#X11_FORWARDING} and either
+	 * {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @return X11 cookie
 	 */
@@ -663,8 +699,10 @@ public class SshConfiguration {
 
 	/**
 	 * Set the cookie to use for X11 forwarding. You may want to consider using
-	 * the @{link {@link XDetails} helper instead of setting this directly.
-	 * The provider must support {@link Capability#X11_FORWARDING} and either {@link Capability#X11_FORWARDING_TCP} or {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
+	 * the @{link {@link XDetails} helper instead of setting this directly. The
+	 * provider must support {@link Capability#X11_FORWARDING} and either
+	 * {@link Capability#X11_FORWARDING_TCP} or
+	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
 	 * @param x11Cookie X11 cookie
 	 * @return this for chaining
@@ -796,7 +834,7 @@ public class SshConfiguration {
 	 * Set the preferred server to client compression.
 	 * 
 	 * @param preferredServerToClientCompression preferred server to client
-	 *            compression.
+	 *                                           compression.
 	 * @return this for chaining
 	 * @see SshProvider#getSupportedCompression()
 	 */
@@ -819,7 +857,7 @@ public class SshConfiguration {
 	 * Set the preferred client to server compression.
 	 * 
 	 * @param preferredClientToServerCompression preferred client to server
-	 *            compression.
+	 *                                           compression.
 	 * @return this for chaining
 	 * @see SshProvider#getSupportedCompression()
 	 */
@@ -830,8 +868,8 @@ public class SshConfiguration {
 
 	/**
 	 * Set the preferred protocol version. Use one of
-	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2}
-	 * or {@link SshConfiguration#SSH2_ONLY}.
+	 * {@link SshConfiguration#SSH1_ONLY}, {@link SshConfiguration#SSH1_OR_SSH2} or
+	 * {@link SshConfiguration#SSH2_ONLY}.
 	 * 
 	 * @param protocolVersion protocol version
 	 * @return this for chaining
@@ -886,7 +924,7 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the fingerprint hashing algorithm to use. 
+	 * Get the fingerprint hashing algorithm to use.
 	 * 
 	 * @return fingerprint hashing algorithm
 	 */
@@ -927,9 +965,8 @@ public class SshConfiguration {
 
 	/**
 	 * Set the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or
-	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
-	 * by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
+	 * as these are the only two supported by SSH1.
 	 * 
 	 * @param preferredSSH1Cipher preferred SSH1 cipher
 	 * @return this for chaining
@@ -941,9 +978,8 @@ public class SshConfiguration {
 
 	/**
 	 * Get the preferred SSH1 cipher. Will be only of
-	 * {@link SshConfiguration.CIPHER_3DES} or
-	 * {@link SshConfiguration#CIPHER_DES} as these are the only two supported
-	 * by SSH1.
+	 * {@link SshConfiguration.CIPHER_3DES} or {@link SshConfiguration#CIPHER_DES}
+	 * as these are the only two supported by SSH1.
 	 * 
 	 * @return preferred SSH1 cipger
 	 */
@@ -972,12 +1008,11 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Test if a provider has all the capbilities required by this
-	 * configuration.
+	 * Test if a provider has all the capbilities required by this configuration.
 	 * 
 	 * @param provider provider
 	 * @throws UnsupportedOperationException if a provider does not have all the
-	 *             required capabilities
+	 *                                       required capabilities
 	 */
 	public void providerHasCapabilities(SshProvider provider) throws UnsupportedOperationException {
 		for (Iterator<Capability> i = requiredCapabilities.iterator(); i.hasNext();) {
@@ -990,9 +1025,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Get the socket factory to use to make outgoing connections to SSH
-	 * servers. Will be set to <code>null</code> when the default Java socket
-	 * factory is to be used.
+	 * Get the socket factory to use to make outgoing connections to SSH servers.
+	 * Will be set to <code>null</code> when the default Java socket factory is to
+	 * be used.
 	 * 
 	 * @return socket factory
 	 */
@@ -1001,8 +1036,8 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Set the socket factory to use to make outgoing connections to SSH
-	 * servers. Set to <code>null</code> to use the default Java socket factory.
+	 * Set the socket factory to use to make outgoing connections to SSH servers.
+	 * Set to <code>null</code> to use the default Java socket factory.
 	 * 
 	 * @param socketFactory socket factory
 	 * @return this for chaining
@@ -1035,9 +1070,9 @@ public class SshConfiguration {
 	}
 
 	/**
-	 * Utility to create a client that may be used with this configuration. It
-	 * uses the DefaultProviderFactory, so if you want to custom how providers
-	 * are selected, do not use this method.
+	 * Utility to create a client that may be used with this configuration. It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
 	 * 
 	 * @return client
 	 */
@@ -1049,12 +1084,12 @@ public class SshConfiguration {
 
 	/**
 	 * Utility to create a client that may be used with this configuration and
-	 * connect to a host as a particular user, optionally authenticating. It
-	 * uses the DefaultProviderFactory, so if you want to custom how providers
-	 * are selected, do not use this method.
+	 * connect to a host as a particular user, optionally authenticating. It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
 	 * 
-	 * @param spec connection spec in the format
-	 *            username[:password]@hostname[:port]
+	 * @param spec           connection spec in the format
+	 *                       username[:password]@hostname[:port]
 	 * @param authenticators authenticators
 	 * @return client client
 	 * @throws SshException on error
@@ -1066,51 +1101,55 @@ public class SshConfiguration {
 
 	/**
 	 * Utility to create a client that may be used with this configuration and
-	 * connect to a host as a particular user, optionally authenticating, but do
-	 * not block. Instead a future is returned allowing monitoring of state. .
-	 * It uses the DefaultProviderFactory, so if you want to custom how
-	 * providers are selected, do not use this method.
+	 * connect to a host as a particular user, optionally authenticating, but do not
+	 * block. Instead a future is returned allowing monitoring of state. . It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
 	 * 
-	 * @param spec connection spec in the format
-	 *            username[:password]@hostname[:port]
+	 * @param spec           connection spec in the format
+	 *                       username[:password]@hostname[:port]
 	 * @param authenticators authenticators
 	 * @return future
 	 */
 	public Future<SshClient> openLater(String spec, SshAuthenticator... authenticators) {
-		return openLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
+		return openLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec),
+				authenticators);
 	}
 
 	/**
 	 * Utility to create a client that may be used with this configuration and
-	 * connect to a host as a particular user, optionally authenticating. It
-	 * uses the DefaultProviderFactory, so if you want to custom how providers
-	 * are selected, do not use this method.
+	 * connect to a host as a particular user, optionally authenticating. It uses
+	 * the DefaultProviderFactory, so if you want to custom how providers are
+	 * selected, do not use this method.
 	 * 
-	 * @param username user name
-	 * @param hostname hostname
-	 * @param port port
+	 * @param username       user name
+	 * @param hostname       hostname
+	 * @param port           port
 	 * @param authenticators authenticators
 	 * @return client client
 	 * @throws SshException on error
 	 */
-	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
-		return DefaultProviderFactory.getInstance().getProvider(this).open(this, username, hostname, port, authenticators);
+	public SshClient open(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
+		return DefaultProviderFactory.getInstance().getProvider(this).open(this, username, hostname, port,
+				authenticators);
 	}
 
 	/**
 	 * Utility to create a client that may be used with this configuration and
-	 * connect to a host as a particular user, optionally authenticating, but do
-	 * not block. Instead a future is returned allowing monitoring of state. It
-	 * uses the DefaultProviderFactory, so if you want to custom how providers
-	 * are selected, do not use this method.
+	 * connect to a host as a particular user, optionally authenticating, but do not
+	 * block. Instead a future is returned allowing monitoring of state. It uses the
+	 * DefaultProviderFactory, so if you want to custom how providers are selected,
+	 * do not use this method.
 	 * 
-	 * @param username user name
-	 * @param hostname hostname
-	 * @param port port
+	 * @param username       user name
+	 * @param hostname       hostname
+	 * @param port           port
 	 * @param authenticators authenticators
 	 * @return future
 	 */
 	public Future<SshClient> openLater(String username, String hostname, int port, SshAuthenticator... authenticators) {
-		return DefaultProviderFactory.getInstance().getProvider(this).openLater(this, username, hostname, port, authenticators);
+		return DefaultProviderFactory.getInstance().getProvider(this).openLater(this, username, hostname, port,
+				authenticators);
 	}
 }

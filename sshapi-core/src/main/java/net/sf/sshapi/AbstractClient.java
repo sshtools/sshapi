@@ -34,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import javax.net.SocketFactory;
@@ -123,6 +124,7 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	protected Set<SshLifecycleComponent<?, ?>> activeComponents = Collections.synchronizedSet(new LinkedHashSet<>());
+	protected List<Thread> interruptable = Collections.synchronizedList(new ArrayList<>());
 	private SshConfiguration configuration;
 	private String hostname;
 	private int port;
@@ -497,6 +499,13 @@ public abstract class AbstractClient implements SshClient {
 	@Override
 	public final void init(SshProvider provider) {
 		this.provider = provider;
+		if(provider.getCapabilities().contains(Capability.IO_TIMEOUTS)) {
+			try {
+				setTimeout(getConfiguration().getIoTimeout());
+			} catch (IOException e) {
+				SshConfiguration.getLogger().debug("Failed to set initial timeout.", e);
+			}
+		}
 	}
 
 	@Override
@@ -678,5 +687,44 @@ public abstract class AbstractClient implements SshClient {
 
 	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
+	}
+	
+	protected void interrupt() {
+		synchronized(interruptable) {
+			for(Thread t : interruptable)
+				t.interrupt();
+		}
+	}
+
+	protected void uninterruptable() {
+		interruptable.remove(Thread.currentThread());
+	}
+
+	protected void interruptable() {
+		interruptable(0);		
+	}
+	
+	protected void interruptable(long timeout) {
+		interruptable.add(Thread.currentThread());		
+	}
+
+	protected void runInterruptable(Runnable callable) {
+		interruptable();
+		try {
+			callable.run();
+		}
+		finally {
+			uninterruptable();
+		}
+	}
+	
+	protected <T> T callInterruptable(Callable<T> callable) throws Exception {
+		interruptable();
+		try {
+			return callable.call();
+		}
+		finally {
+			uninterruptable();
+		}
 	}
 }

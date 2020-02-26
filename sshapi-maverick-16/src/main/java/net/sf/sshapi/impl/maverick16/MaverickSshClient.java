@@ -974,9 +974,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			if (transport == null) {
 				transport = new SocketTransport(hostname, port);
 			}
-			if (timeout > 0) {
-				setTimeout(timeout);
-			}
+			setTimeout(timeout);
 			connectingTransport = transport;
 			try {
 				client = con.connect(transport, username, "true".equals(getConfiguration().getProperties()

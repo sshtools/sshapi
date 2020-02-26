@@ -326,7 +326,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	private boolean pseudoConnected;
 	private Session session;
 	private Socket socket;
-	private int timeout = -1;
+	private int timeout = 0;
 
 	public JschSshClient(SshConfiguration configuration) {
 		super(configuration);
@@ -511,90 +511,97 @@ class JschSshClient extends AbstractClient implements Logger {
 			 * use this socket as the first one returned in a custom socket factory.
 			 */
 			socket = null;
-			if (sfactory == null) {
-				socket = new Socket(hostname, port);
-				Socket fsocket = socket;
-				session.setSocketFactory(new com.jcraft.jsch.SocketFactory() {
-					Socket ssocket = fsocket;
+			interruptable();
+			try {
+				if (sfactory == null) {
+					socket = new Socket(hostname, port);
+					if(timeout > -1)
+						socket.setSoTimeout(timeout);
+					Socket fsocket = socket;
+					session.setSocketFactory(new com.jcraft.jsch.SocketFactory() {
+						Socket ssocket = fsocket;
 
-					@Override
-					public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-						if (ssocket != null) {
-							try {
-								return ssocket;
-							} finally {
-								ssocket = null;
-							}
-						} else
-							return new Socket(host, port);
-					}
+						@Override
+						public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+							if (ssocket != null) {
+								try {
+									return ssocket;
+								} finally {
+									ssocket = null;
+								}
+							} else
+								return new Socket(host, port);
+						}
 
-					@Override
-					public InputStream getInputStream(Socket socket) throws IOException {
-						return socket.getInputStream();
-					}
+						@Override
+						public InputStream getInputStream(Socket socket) throws IOException {
+							return socket.getInputStream();
+						}
 
-					@Override
-					public OutputStream getOutputStream(Socket socket) throws IOException {
-						return socket.getOutputStream();
-					}
-				});
-			} else {
-				socket = sfactory.createSocket(hostname, port);
-				Socket fsocket = socket;
-				com.jcraft.jsch.SocketFactory ffactory = sfactory;
-				session.setSocketFactory(new com.jcraft.jsch.SocketFactory() {
-					Socket ssocket = fsocket;
+						@Override
+						public OutputStream getOutputStream(Socket socket) throws IOException {
+							return socket.getOutputStream();
+						}
+					});
+				} else {
+					socket = sfactory.createSocket(hostname, port);
+					Socket fsocket = socket;
+					com.jcraft.jsch.SocketFactory ffactory = sfactory;
+					session.setSocketFactory(new com.jcraft.jsch.SocketFactory() {
+						Socket ssocket = fsocket;
 
-					@Override
-					public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-						if (ssocket != null) {
-							try {
-								return ssocket;
-							} finally {
-								ssocket = null;
-							}
-						} else
-							return ffactory.createSocket(host, port);
-					}
+						@Override
+						public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+							if (ssocket != null) {
+								try {
+									return ssocket;
+								} finally {
+									ssocket = null;
+								}
+							} else
+								return ffactory.createSocket(host, port);
+						}
 
-					@Override
-					public InputStream getInputStream(Socket socket) throws IOException {
-						return socket.getInputStream();
-					}
+						@Override
+						public InputStream getInputStream(Socket socket) throws IOException {
+							return socket.getInputStream();
+						}
 
-					@Override
-					public OutputStream getOutputStream(Socket socket) throws IOException {
-						return socket.getOutputStream();
-					}
-				});
-			}
-			SshConfiguration configuration = getConfiguration();
-			if (configuration.getX11Host() != null) {
-				session.setX11Host(configuration.getX11Host());
-			}
-			if (configuration.getX11Screen() > -1) {
-				session.setX11Port(configuration.getX11Screen() + 6000);
-			}
-			if (configuration.getX11Cookie() != null) {
-				String hexString = Util.formatAsHexString(configuration.getX11Cookie());
-				session.setX11Cookie(hexString);
-			}
-			SshProxyServerDetails proxyServer = configuration.getProxyServer();
-			if (proxyServer != null) {
-				if (proxyServer.getType().equals(SshProxyServerDetails.Type.HTTP)) {
-					ProxyHTTP proxy = new ProxyHTTP(proxyServer.getHostname(), proxyServer.getPort());
-					proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
-					session.setProxy(proxy);
-				} else if (proxyServer.getType().equals(SshProxyServerDetails.Type.SOCKS4)) {
-					ProxySOCKS4 proxy = new ProxySOCKS4(proxyServer.getHostname(), proxyServer.getPort());
-					proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
-					session.setProxy(proxy);
-				} else if (proxyServer.getType().equals(SshProxyServerDetails.Type.SOCKS5)) {
-					ProxySOCKS5 proxy = new ProxySOCKS5(proxyServer.getHostname(), proxyServer.getPort());
-					proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
-					session.setProxy(proxy);
+						@Override
+						public OutputStream getOutputStream(Socket socket) throws IOException {
+							return socket.getOutputStream();
+						}
+					});
 				}
+				SshConfiguration configuration = getConfiguration();
+				if (configuration.getX11Host() != null) {
+					session.setX11Host(configuration.getX11Host());
+				}
+				if (configuration.getX11Screen() > -1) {
+					session.setX11Port(configuration.getX11Screen() + 6000);
+				}
+				if (configuration.getX11Cookie() != null) {
+					String hexString = Util.formatAsHexString(configuration.getX11Cookie());
+					session.setX11Cookie(hexString);
+				}
+				SshProxyServerDetails proxyServer = configuration.getProxyServer();
+				if (proxyServer != null) {
+					if (proxyServer.getType().equals(SshProxyServerDetails.Type.HTTP)) {
+						ProxyHTTP proxy = new ProxyHTTP(proxyServer.getHostname(), proxyServer.getPort());
+						proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
+						session.setProxy(proxy);
+					} else if (proxyServer.getType().equals(SshProxyServerDetails.Type.SOCKS4)) {
+						ProxySOCKS4 proxy = new ProxySOCKS4(proxyServer.getHostname(), proxyServer.getPort());
+						proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
+						session.setProxy(proxy);
+					} else if (proxyServer.getType().equals(SshProxyServerDetails.Type.SOCKS5)) {
+						ProxySOCKS5 proxy = new ProxySOCKS5(proxyServer.getHostname(), proxyServer.getPort());
+						proxy.setUserPasswd(proxyServer.getUsername(), new String(proxyServer.getPassword()));
+						session.setProxy(proxy);
+					}
+				}
+			} finally {
+				uninterruptable();
 			}
 		} catch (JSchException e) {
 			throw new SshException(SshException.GENERAL, e);
@@ -796,6 +803,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	private boolean attemptAuth() throws SshException {
 		SshConfiguration configuration = getConfiguration();
 		try {
+			interruptable();
 			session.connect(Integer.parseInt(
 					configuration.getProperties().getProperty(JschSshProvider.CFG_SESSION_CONNECT_TIMEOUT, "30000")));
 			authenticated = true;
@@ -811,6 +819,8 @@ class JschSshClient extends AbstractClient implements Logger {
 				return false;
 			} else
 				throw new SshException("Failed to authenticate.", e);
+		} finally {
+			uninterruptable();
 		}
 	}
 }

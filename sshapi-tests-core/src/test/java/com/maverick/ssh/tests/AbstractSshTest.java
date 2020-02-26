@@ -1,5 +1,7 @@
 package com.maverick.ssh.tests;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -14,6 +16,7 @@ import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.Logger;
+import net.sf.sshapi.Ssh;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
 
@@ -23,7 +26,7 @@ public class AbstractSshTest {
 	
 	static {
 		PropertyConfigurator.configure(AbstractSshTest.class.getResource("/log4j.properties"));
-		System.setProperty("sshapi.logLevel", "WARN");
+		System.setProperty("sshapi.logLevel", "DEBUG");
 		LOG = SshConfiguration.getLogger();
 		System.setProperty("sshapi.extendTimeouts", "false");
 	}
@@ -31,6 +34,7 @@ public class AbstractSshTest {
 	protected static SshTestConfiguration config;
 	protected static ServerService server;
 	protected ThreadLocal<Boolean> debug = new ThreadLocal<Boolean>();
+	protected Map<Thread, Boolean> timedOut = Collections.synchronizedMap(new HashMap<>());
 
 	public AbstractSshTest() {
 		debug.set(false);
@@ -38,6 +42,10 @@ public class AbstractSshTest {
 
 	protected void debug(boolean debug) {
 		this.debug.set(debug);
+	}
+	
+	protected boolean isTimedOut() {
+		return Boolean.TRUE.equals(timedOut.get(Thread.currentThread()));
 	}
 
 	/**
@@ -51,6 +59,7 @@ public class AbstractSshTest {
 	 */
 	protected void timeout(Callable<Void> runnable, long timeout) throws Exception {
 		Thread tthread = Thread.currentThread();
+		timedOut.put(tthread, false);
 		AtomicBoolean ex = new AtomicBoolean();
 		AtomicBoolean dn = new AtomicBoolean();
 		Thread tothread = new Thread("TimeoutThread") {
@@ -63,6 +72,7 @@ public class AbstractSshTest {
 						Thread.sleep(timeout);
 					SshConfiguration.getLogger().error("Task timed out.");
 					ex.set(true);
+					timedOut.put(tthread, true);
 					timedOut(runnable, timeout, tthread, dn);
 				} catch (InterruptedException ie) {
 					if (!dn.get())
@@ -76,6 +86,7 @@ public class AbstractSshTest {
 		try {
 			runnable.call();
 		} finally {
+			timedOut.remove(tthread);
 			dn.set(true);
 			tothread.interrupt();
 		}
@@ -109,6 +120,7 @@ public class AbstractSshTest {
 			}
 			long timestamp = System.currentTimeMillis();
 			SshProvider prov = DefaultProviderFactory.getInstance().getProvider(new SshConfiguration());
+			LOG.info("SSHAPI: " + Ssh.version());
 			LOG.info("Provider");
 			LOG.info("    Name: " + prov.getName());
 			LOG.info("    Version: " + prov.getVersion());

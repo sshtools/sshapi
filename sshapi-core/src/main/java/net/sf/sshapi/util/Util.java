@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -41,6 +42,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
@@ -894,22 +896,22 @@ public class Util {
 	 * @return manifest value or POM
 	 */
 	public static String getManifestVersion(Class<?> clazz, String key) {
-		InputStream in = clazz.getResourceAsStream("/META-INF/MANIFEST.MF");
-		String version = null;
-		if (in != null) {
-			try (InputStream iin = in) {
-				Manifest mf = new Manifest(iin);
-				Attributes attr = mf.getMainAttributes();
-				if (attr != null)
-					version = attr.getValue(key);
-			} catch (IOException e) {
+		try {
+			for (Enumeration<URL> en = clazz.getClassLoader().getResources("META-INF/MANIFEST.MF"); en
+					.hasMoreElements();) {
+				try (InputStream iin = en.nextElement().openStream()) {
+					Manifest mf = new Manifest(iin);
+					Attributes attr = mf.getMainAttributes();
+					if (attr != null) {
+						String version = attr.getValue(key);
+						if (version != null)
+							return version;
+					}
+				}
 			}
+		} catch (IOException e) {
 		}
 
-		if (version == null) {
-			version = getPOMVersion();
-		}
-
-		return version;
+		return getPOMVersion();
 	}
 }

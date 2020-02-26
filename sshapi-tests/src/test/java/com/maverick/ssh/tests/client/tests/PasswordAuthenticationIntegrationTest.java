@@ -3,10 +3,15 @@ package com.maverick.ssh.tests.client.tests;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.maverick.ssh.tests.client.AbstractClientConnecting;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
@@ -33,6 +38,31 @@ public class PasswordAuthenticationIntegrationTest extends AbstractClientConnect
 			});
 			return null;
 		}, 10000);
+	}
+	
+	@Test(expected = SshException.class)
+	public void testAuthenticateTimeout() throws Exception {
+		Assume.assumeTrue("Must support data timeouts",ssh.getProvider().getCapabilities().contains(Capability.IO_TIMEOUTS));
+		AtomicBoolean flag = new AtomicBoolean();
+		timeout(() -> {
+			ssh.authenticate(new SshPasswordAuthenticator() {
+				@Override
+				public char[] promptForPassword(SshClient session, String message) {
+					try {
+						LOG.info("Waiting for 3 minutes (should be enough for server to timeout");
+						Thread.sleep(180000);
+						LOG.info("Waited for 3 minutes");
+						flag.set(true);
+					} catch (InterruptedException e) {
+						LOG.info("Interrupted!");
+					}
+					return null;
+				}
+			});
+			return null;
+		}, 300000);
+		Assert.assertFalse("Mustn't have finished sleep while prompting.", flag.get());
+		LOG.info("Done");
 	}
 
 	@Test

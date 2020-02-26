@@ -12,6 +12,7 @@ import org.junit.Before;
 import com.maverick.ssh.tests.AbstractSshTest;
 import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -93,6 +94,8 @@ public abstract class AbstractClientConnecting extends AbstractSshTest {
 		LOG.info("Connecting to {0}:{1} as {2}",config.getServer(), config.getPort(), getUsername());
 		ssh = sshconfig.createClient();
 		long startedConnecting = System.currentTimeMillis();
+		if(ssh.getProvider().getCapabilities().contains(Capability.IO_TIMEOUTS))
+			ssh.setTimeout(60000);
 		ssh.connect(getUsername(), config.getServer(), config.getPort());
 		LOG.info("Connected to {0}:{1}. Took {2}",config.getServer(), config.getPort(), System.currentTimeMillis() - startedConnecting);
 	}

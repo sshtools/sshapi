@@ -1,5 +1,9 @@
 package net.sf.sshapi.impl.mavericksynergy;
 
+import java.security.Key;
+
+import com.sshtools.common.ssh.SecurityLevel;
+
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
 
@@ -59,6 +63,21 @@ public class MaverickSynergySshPublicKey implements com.sshtools.common.ssh.comp
 
 	@Override
 	public String getEncodingAlgorithm() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public SecurityLevel getSecurityLevel() {
+		return SecurityLevel.NONE;
+	}
+
+	@Override
+	public int getPriority() {
+		return 0;
+	}
+
+	@Override
+	public Key getJCEPublicKey() {
 		throw new UnsupportedOperationException();
 	}
 }

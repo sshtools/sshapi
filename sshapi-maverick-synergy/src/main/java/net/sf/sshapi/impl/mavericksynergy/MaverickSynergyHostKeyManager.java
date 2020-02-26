@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.Set;
 
 import com.sshtools.common.knownhosts.KnownHostsKeyVerification;
 import com.sshtools.common.knownhosts.KnownHostsKeyVerification.KeyEntry;
+import com.sshtools.common.ssh.SecurityLevel;
 import com.sshtools.common.ssh.components.ComponentManager;
 import com.sshtools.common.ssh.components.SshHmac;
 import com.sshtools.common.ssh.components.SshPublicKey;
@@ -137,6 +139,21 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 
 				@Override
 				public String getEncodingAlgorithm() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public SecurityLevel getSecurityLevel() {
+					return SecurityLevel.NONE;
+				}
+
+				@Override
+				public int getPriority() {
+					return 0;
+				}
+
+				@Override
+				public Key getJCEPublicKey() {
 					throw new UnsupportedOperationException();
 				}
 			}, hostKey.getComments(), hostKey.getHost());

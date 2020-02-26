@@ -845,19 +845,21 @@ public interface SshClient extends Closeable, AutoCloseable {
 	void removePortForwardListener(SshPortForwardListener listener);
 
 	/**
-	 * Set the timeout on the underlying transport (usually a Socket, if
-	 * supported). A timeout of zero indicates infinite timeout
+	 * Set the timeout (in milliseconds) on the underlying transport (usually a Socket, if
+	 * supported). A timeout of zero indicates infinite timeout. Provider
+	 * must support {@link Capability#IO_TIMEOUTS}.
 	 * 
-	 * @param timeout timeout
+	 * @param timeout timeout in seconds
 	 * @throws IOException on I/O error
 	 */
 	void setTimeout(int timeout) throws IOException;
 
 	/**
-	 * Get the timeout on the underlying transport (usually a Socket, if
-	 * supported). A timeout of zero indicates infinite timeout
+	 * Get the timeout (in milliseconds) on the underlying transport (usually a Socket, if
+	 * supported). A timeout of zero indicates infinite timeout. Provider
+	 * must support {@link Capability#IO_TIMEOUTS}.
 	 * 
-	 * @return timeout
+	 * @return timeout in seconds
 	 * @throws IOException on I/O error
 	 */
 	int getTimeout() throws IOException;

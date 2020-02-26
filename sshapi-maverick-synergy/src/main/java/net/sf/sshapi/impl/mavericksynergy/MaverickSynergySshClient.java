@@ -618,8 +618,10 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	@Override
 	public void setTimeout(int timeout) throws IOException {
 		this.timeout = timeout;
-		if (sshContext != null)
+		if (sshContext != null) {
 			sshContext.setIdleConnectionTimeoutSeconds(timeout);
+			sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
+		}
 	}
 
 	@Override
@@ -680,6 +682,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					if (configuration.getSftpWindowSize() > 0)
 						fsPolicy.setSftpMinWindowSize((int) configuration.getSftpWindowSize());
 					sshContext.setPolicy(FileSystemPolicy.class, fsPolicy);
+					sshContext.setIdleConnectionTimeoutSeconds(timeout);
+					sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
 					sshContext.setBannerDisplay(new BannerDisplayBridge());
 					ForwardingPolicy forwardingPolicy = new ForwardingPolicy();
 					forwardingPolicy.allowForwarding();

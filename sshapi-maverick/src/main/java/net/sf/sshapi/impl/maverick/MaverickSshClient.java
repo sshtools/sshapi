@@ -756,9 +756,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 			if (transport == null) {
 				transport = new SocketTransport(hostname, port);
 			}
-			if (timeout > 0) {
-				setTimeout(timeout);
-			}
+			setTimeout(timeout);
 			client = con.connect(transport, username, true, null);
 		} catch (IOException e) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, e);

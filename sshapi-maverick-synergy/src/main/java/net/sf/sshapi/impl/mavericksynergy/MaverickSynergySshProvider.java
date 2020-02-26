@@ -38,6 +38,7 @@ import com.sshtools.common.logger.Log;
 import com.sshtools.common.logger.Log.Level;
 import com.sshtools.common.logger.RootLoggerContext;
 import com.sshtools.common.nio.SshEngine;
+import com.sshtools.common.ssh.SecurityLevel;
 import com.sshtools.common.ssh.SshContext;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.ComponentFactory;
@@ -64,7 +65,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	private final static Capability[] DEFAULT_CAPS = new Capability[] { Capability.PER_CONNECTION_CONFIGURATION, Capability.SSH2,
 			Capability.PASSWORD_AUTHENTICATION, Capability.PUBLIC_KEY_AUTHENTICATION,
 			Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.IDENTITY_MANAGEMENT, Capability.SFTP,
-			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.DATA_TIMEOUTS,
+			Capability.WINDOW_CHANGE, Capability.FILE_TRANSFER_EVENTS, Capability.IO_TIMEOUTS,
 			Capability.HOST_KEY_VERIFICATION, Capability.HOST_KEY_MANAGEMENT, Capability.SHELL,
 			Capability.RAW_SFTP, Capability.SFTP_TRANSFER_MODE, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 			Capability.REMOTE_PORT_FORWARD, Capability.SFTP_READ_LINK, Capability.FORWARDING_CHANNELS,
@@ -262,9 +263,9 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	public List<String> getSupportedKeyExchange() {
 		checkEngine();
 		try {
-			SshClientContext ctx = new SshClientContext(engine, componentManager);
+			SshClientContext ctx = new SshClientContext(engine, componentManager, SecurityLevel.NONE);
 			return Arrays.asList(ctx.supportedKeyExchanges().list("").split(","));
-		} catch (IOException e) {
+		} catch (IOException | SshException e) {
 			return Arrays.asList("diffie-hellman-group-exchange-sha256",
 					"diffie-hellman-group14-sha256", 
 					"diffie-hellman-group15-sha512", 

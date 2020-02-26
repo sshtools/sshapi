@@ -4,7 +4,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -34,7 +36,8 @@ public class HostKeyVerificationIntegrationTest extends AbstractSshTest {
 			String actual = hostKey.getFingerprint();
 			for (String fp : fingerprints) {
 				System.out.println("Comparing " + fp + " against " + actual);
-				System.out.println(" for " + hostKey.getKey().length + " bytes: " + Util.formatAsHexString(hostKey.getKey(), ":"));
+				System.out.println(
+						" for " + hostKey.getKey().length + " bytes: " + Util.formatAsHexString(hostKey.getKey(), ":"));
 				if (actual.equals(fp))
 					return STATUS_HOST_KEY_VALID;
 			}
@@ -87,5 +90,32 @@ public class HostKeyVerificationIntegrationTest extends AbstractSshTest {
 			ssh.close();
 			return null;
 		}, 10000);
+	}
+
+	@Test(expected = SshException.class)
+	public void testTimeoutFingerprint() throws Exception {
+		timeout(() -> {
+			SshConfiguration con = new SshConfiguration();
+			AtomicBoolean flag = new AtomicBoolean();
+			con.setHostKeyValidator((key) -> {
+				try {
+					Thread.sleep(180000);
+					flag.set(true);
+				} catch (InterruptedException e) {
+				}
+				return SshHostKeyValidator.STATUS_HOST_KEY_UNKNOWN;
+			});
+			SshProvider prov = DefaultProviderFactory.getInstance().getProvider(con);
+			Assume.assumeTrue("Must support data timeouts",prov.getCapabilities().contains(Capability.IO_TIMEOUTS));
+			Assume.assumeTrue("Must support host key verification",
+					prov.getCapabilities().contains(Capability.HOST_KEY_VERIFICATION));
+			SshClient ssh = prov.createClient(con);
+			ssh.setTimeout(30000);
+			ssh.connect(config.getUsername(), config.getServer(), config.getPort(), new SimplePasswordAuthenticator(config.getPassword()));
+			ssh.close();
+			Assert.assertFalse("Mustn't have finished sleep while prompting.", flag.get());
+			Assert.assertFalse("Mustn't have terminated because of test interrupt.", isTimedOut());
+			return null;
+		}, 300000);
 	}
 }

@@ -29,6 +29,7 @@ import java.util.concurrent.Future;
 
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;
+import net.sf.sshapi.util.Util;
 
 /**
  * Utilities for basic access to SSH operations. For simple use, this will
@@ -144,5 +145,14 @@ public class Ssh {
 	 */
 	public static Future<SshClient> openLater(String spec, SshAuthenticator... authenticators) {
 		return new SshConfiguration().openLater(spec, authenticators);
+	}
+
+	/**
+	 * Get the version of SSHAPI.
+	 * 
+	 * @return SSHAPI version
+	 */
+	public static String version() {
+		return Util.getArtifactVersion("com.sshtools", "sshapi-core");
 	}
 }

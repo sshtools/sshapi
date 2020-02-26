@@ -101,7 +101,7 @@ public interface Logger {
 	 *            message
 	 */
 	default void raw(Level level, String message) {
-		log(Level.TRACE, message);
+		log(level, message);
 	}
 
 	/**
@@ -141,7 +141,7 @@ public interface Logger {
 	 * @param args formatting arguments
 	 */
 	default void info(String message, Object... args) {
-		log(Level.DEBUG, message, args);
+		log(Level.INFO, message, args);
 	}
 
 	/**

@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import com.sshtools.j2ssh.ScpClient;
+import com.sshtools.j2ssh.SshEventAdapter;
 import com.sshtools.j2ssh.SshException;
 import com.sshtools.j2ssh.authentication.AuthenticationProtocolException;
 import com.sshtools.j2ssh.authentication.AuthenticationProtocolState;
@@ -50,6 +51,7 @@ import com.sshtools.j2ssh.forwarding.XDisplay;
 import com.sshtools.j2ssh.io.ByteArrayWriter;
 import com.sshtools.j2ssh.session.SessionChannelClient;
 import com.sshtools.j2ssh.transport.HostKeyVerification;
+import com.sshtools.j2ssh.transport.TransportProtocol;
 import com.sshtools.j2ssh.transport.publickey.InvalidSshKeyException;
 import com.sshtools.j2ssh.transport.publickey.SshPrivateKeyFile;
 import com.sshtools.j2ssh.transport.publickey.SshPublicKey;
@@ -282,7 +284,7 @@ class J2SshClient extends AbstractClient {
 	private static int fwdName = 0;
 	private final com.sshtools.j2ssh.SshClient con;
 	private ForwardingClient forwarding;
-	private int timeout;
+	private int timeout = 0;
 	private String username;
 
 	public J2SshClient(SshConfiguration configuration) throws SshException {
@@ -302,7 +304,13 @@ class J2SshClient extends AbstractClient {
 				// can get the banner
 				SshAuthenticator authenticator = authenticatorMap.get(methods[i]);
 				if (authenticator != null) {
-					int result = con.authenticate(createAuthentication(authenticator, methods[i]));
+					int result;
+					try {
+						interruptable();
+						result = con.authenticate(createAuthentication(authenticator, methods[i]));
+					} finally {
+						uninterruptable();
+					}
 					switch (result) {
 					case AuthenticationProtocolState.COMPLETE:
 						if (i == 0) {
@@ -499,6 +507,7 @@ class J2SshClient extends AbstractClient {
 			properties.setHost(hostname);
 			properties.setPort(port);
 			properties.setForwardingAutoStartMode(true);
+			con.setSocketTimeout(timeout);
 			SshConfiguration configuration = getConfiguration();
 			configureAlgorithms(properties, configuration);
 			SshProxyServerDetails proxyServer = configuration.getProxyServer();
@@ -509,7 +518,29 @@ class J2SshClient extends AbstractClient {
 				properties.setProxyUsername(proxyServer.getUsername());
 				properties.setProxyPassword(new String(proxyServer.getPassword()));
 			}
-			con.connect(hostname, port, new HostKeyVerificationBridge());
+			con.addEventHandler(new SshEventAdapter() {
+
+				@Override
+				public void onDisconnect(TransportProtocol transport) {
+					SshConfiguration.getLogger().info("Disconnect for {0}", transport.getConnectionId());
+					if(!isAuthenticated())
+						interrupt();
+				}
+
+				@Override
+				public void onSocketTimeout(TransportProtocol transport) {
+					SshConfiguration.getLogger().info("Socket timeout for {0}", transport.getConnectionId());
+					if(!isAuthenticated())
+						interrupt();
+				}
+				
+			});
+			try {
+				interruptable();
+				con.connect(hostname, port, new HostKeyVerificationBridge());
+			} finally {
+				uninterruptable();
+			}
 			this.username = username;
 		} catch (IOException e) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, e);
