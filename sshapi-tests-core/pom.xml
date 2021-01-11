@@ -34,6 +34,7 @@
 					<execution>
 						<goals>
 							<goal>test-jar</goal>
+							
 						</goals>
 					</execution>
 				</executions>

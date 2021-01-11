@@ -24,7 +24,6 @@
 package net.sf.sshapi.impl.mavericksynergy;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,9 +36,7 @@ import com.sshtools.client.components.Rsa2048Sha256;
 import com.sshtools.common.logger.Log;
 import com.sshtools.common.logger.Log.Level;
 import com.sshtools.common.logger.RootLoggerContext;
-import com.sshtools.common.nio.SshEngine;
 import com.sshtools.common.ssh.SecurityLevel;
-import com.sshtools.common.ssh.SshContext;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.ComponentFactory;
 import com.sshtools.common.ssh.components.ComponentManager;
@@ -47,6 +44,8 @@ import com.sshtools.common.ssh.components.jce.JCEComponentManager;
 import com.sshtools.common.ssh.components.jce.JCEProvider;
 import com.sshtools.common.ssh.compression.NoneCompression;
 import com.sshtools.common.ssh.compression.SshCompression;
+import com.sshtools.synergy.nio.SshEngine;
+import com.sshtools.synergy.ssh.SshContext;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
@@ -97,7 +96,19 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			
 			@Override
 			public void log(com.sshtools.common.logger.Log.Level level, String msg, Throwable e, Object... args) {
-				SshConfiguration.getLogger().log(toLevel(level), String.format(msg, args), e);
+				try {
+					int p = 0;
+					while(true) {
+						int idx = msg.indexOf("{}");
+						if(idx == -1)
+							break;
+						msg = msg.replaceFirst("\\{\\}", "{" + (p++) + "}");
+					}
+					SshConfiguration.getLogger().log(toLevel(level), msg, e, args);
+				}
+				catch(Exception ex) {
+					SshConfiguration.getLogger().log(toLevel(level), msg + " " + Arrays.asList(args), e);
+				}
 			}
 			
 			private net.sf.sshapi.Logger.Level toLevel(com.sshtools.common.logger.Log.Level level) {
@@ -122,7 +133,6 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			
 			@Override
 			public void close() {
-				
 			}
 
 			@Override
@@ -134,6 +144,10 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			@Override
 			public String getProperty(String key, String defaultValue) {
 				return defaultValue;
+			}
+
+			@Override
+			public void shutdown() {
 			}
 		});
 	}
@@ -292,13 +306,8 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	}
 
 	public void seed(long seed) {
-		SecureRandom rnd;
-		try {
-			rnd = JCEProvider.getSecureRandom();
-			rnd.setSeed(seed);
-		} catch (NoSuchAlgorithmException e) {
-			SshConfiguration.getLogger().error("Failed to set seed.", e);
-		}
+		SecureRandom rnd = JCEProvider.getSecureRandom();
+		rnd.setSeed(seed);
 	}
 
 	@Override

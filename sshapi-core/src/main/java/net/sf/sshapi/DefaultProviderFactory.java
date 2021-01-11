@@ -409,7 +409,7 @@ public class DefaultProviderFactory implements SshProviderFactory {
 				LOG.warn("Could not load provider {0}. Probably cause by a missing dependency.",
 						requestedProviderClassName);
 			} catch (Exception e) {
-				LOG.warn("Could not load provider {0}. {1}", requestedProviderClassName, e.getLocalizedMessage());
+				LOG.warn("Could not load provider {0}. {1}", e, requestedProviderClassName, e.getLocalizedMessage());
 			}
 		}
 		return null;

@@ -25,6 +25,12 @@ package net.sf.sshapi;
 
 import java.net.Socket;
 
+import javax.net.SocketFactory;
+
+import net.sf.sshapi.auth.SshGSSAPIAuthenticator;
+import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
+import net.sf.sshapi.auth.SshPasswordAuthenticator;
+import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.RemoteSocketFactory;

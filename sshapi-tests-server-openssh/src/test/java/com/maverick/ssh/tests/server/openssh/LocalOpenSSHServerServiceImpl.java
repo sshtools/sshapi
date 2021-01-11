@@ -159,8 +159,8 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 			download();
 			applyPatches();
 		}
-		File configFile = new File(sourceDir, "config.log");
-		if (!configFile.exists()) {
+		File makefile = new File(sourceDir, "Makefile");
+		if (!makefile.exists()) {
 			runConfigure();
 		}
 		runAutoreconf();

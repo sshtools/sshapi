@@ -27,7 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.Key;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -153,7 +153,7 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 				}
 
 				@Override
-				public Key getJCEPublicKey() {
+				public PublicKey getJCEPublicKey() {
 					throw new UnsupportedOperationException();
 				}
 			}, hostKey.getComments(), hostKey.getHost());

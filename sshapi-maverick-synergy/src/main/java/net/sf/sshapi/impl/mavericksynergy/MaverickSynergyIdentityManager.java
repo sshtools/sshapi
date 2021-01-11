@@ -107,15 +107,15 @@ public class MaverickSynergyIdentityManager implements SshIdentityManager {
 
 	public List<Integer> getSupportedKeyLengths() {
 		return Arrays
-				.asList(new Integer[] { new Integer(2048), new Integer(1024), new Integer(768), new Integer(512) });
+				.asList(new Integer[] { Integer.valueOf(2048), Integer.valueOf(1024), Integer.valueOf(768), Integer.valueOf(512) });
 	}
 
 	public List<Integer> getSupportedPublicKeyFileFormats() {
-		return Arrays.asList(new Integer[] { new Integer(SshPublicKeyFile.OPENSSH_FORMAT) });
+		return Arrays.asList(new Integer[] { Integer.valueOf(SshPublicKeyFile.OPENSSH_FORMAT) });
 	}
 
 	public List<Integer> getSupportedPrivateKeyFileFormats() {
-		return Arrays.asList(new Integer[] { new Integer(SshPrivateKeyFile.VENDOR_OPENSSH) });
+		return Arrays.asList(new Integer[] { Integer.valueOf(SshPrivateKeyFile.VENDOR_OPENSSH) });
 	}
 
 	public List<String> getSupportedKeyTypes() {

@@ -1,0 +1,13 @@
+[
+{
+  "name":"SCPPutTest",
+  "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
+  "name":"java.lang.ClassLoader",
+  "methods":[{"name":"loadClass","parameterTypes":["java.lang.String"] }]
+},
+{
+  "name":"java.lang.ClassNotFoundException"
+}
+]

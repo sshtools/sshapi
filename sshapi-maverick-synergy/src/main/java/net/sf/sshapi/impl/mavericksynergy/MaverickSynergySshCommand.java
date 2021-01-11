@@ -31,7 +31,7 @@ import com.sshtools.client.PseudoTerminalModes;
 import com.sshtools.client.SessionChannelNG;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.common.shell.ShellPolicy;
-import com.sshtools.common.ssh.Connection;
+import com.sshtools.synergy.ssh.Connection;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshChannelListener;
@@ -93,7 +93,7 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 
 	@Override
 	protected final void onOpenStream() throws SshException {
-		session = new SessionChannelNG(con, con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
+		session = new SessionChannelNG(con.getContext().getPolicy(ShellPolicy.class).getSessionMaxPacketSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMaxWindowSize(),
 				con.getContext().getPolicy(ShellPolicy.class).getSessionMinWindowSize()) {
@@ -139,7 +139,7 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 			throw new SshException("Failed to execute command.", e);
 		}
 		inputStream = new EventFiringInputStream(session.getInputStream(), SshDataListener.RECEIVED);
-		extendedInputStream = new EventFiringInputStream(session.getErrorStream(), SshDataListener.EXTENDED);
+		extendedInputStream = new EventFiringInputStream(session.getStderrStream(), SshDataListener.EXTENDED);
 		outputStream = new EventFiringOutputStream(session.getOutputStream());
 	}
 

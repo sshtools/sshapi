@@ -1,5 +1,7 @@
 package net.sf.sshapi;
 
+import java.io.IOException;
+
 /**
  * Interface for custom channels created by {@link SshChannelHandler}
  * implementations.

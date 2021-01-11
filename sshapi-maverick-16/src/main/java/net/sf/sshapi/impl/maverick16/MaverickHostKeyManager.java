@@ -28,11 +28,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.maverick.ssh.SecurityLevel;
 import com.maverick.ssh.components.ComponentManager;
 import com.maverick.ssh.components.SshHmac;
 import com.maverick.ssh.components.SshPublicKey;
@@ -138,6 +140,21 @@ public class MaverickHostKeyManager extends AbstractHostKeyManager {
 
 				@Override
 				public String getEncodingAlgorithm() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public SecurityLevel getSecurityLevel() {
+					return SecurityLevel.NONE;
+				}
+
+				@Override
+				public int getPriority() {
+					return 0;
+				}
+
+				@Override
+				public PublicKey getJCEPublicKey() {
 					throw new UnsupportedOperationException();
 				}
 			}, hostKey.getComments(), hostKey.getHost());

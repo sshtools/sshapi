@@ -29,6 +29,7 @@ import java.util.concurrent.Future;
 
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.identity.SshIdentityManager;
 

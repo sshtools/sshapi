@@ -1,0 +1,164 @@
+[
+{
+  "name":"ch.ethz.ssh2.Connection",
+  "fields":[
+    {"name":"am"}, 
+    {"name":"cryptoWishList"}
+  ]
+},
+{
+  "name":"ch.ethz.ssh2.auth.AuthenticationManager",
+  "fields":[{"name":"banner"}]
+},
+{
+  "name":"ch.ethz.ssh2.crypto.cipher.AES",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.DHEC256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.DHEC384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.DHEC521",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.DHG14",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.JSch"
+},
+{
+  "name":"com.jcraft.jsch.UserAuthNone",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.UserAuthPassword",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES128CBC",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES128CTR",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES192CBC",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES192CTR",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES256CBC",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.AES256CTR",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.DH",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.ECDHN",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.HMACSHA1",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.MD5",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SHA1",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SHA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SHA512",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SignatureECDSA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SignatureECDSA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SignatureECDSA521",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.SignatureRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.jcraft.jsch.jce.TripleDESCTR",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.trilead.ssh2.Connection",
+  "fields":[
+    {"name":"am"}, 
+    {"name":"cryptoWishList"}
+  ]
+},
+{
+  "name":"com.trilead.ssh2.auth.AuthenticationManager",
+  "fields":[{"name":"banner"}]
+},
+{
+  "name":"com.trilead.ssh2.crypto.cipher.AES",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.lang.Thread",
+  "methods":[{"name":"getContextClassLoader","parameterTypes":[] }]
+},
+{
+  "name":"net.sf.sshapi.impl.ganymed.GanymedSshProvider",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sf.sshapi.impl.jsch.JschRandom",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sf.sshapi.impl.jsch.JschSshProvider",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sf.sshapi.impl.trilead.TrileadSshProvider",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.apache.log4j.Category"
+},
+{
+  "name":"org.apache.log4j.Logger"
+},
+{
+  "name":"org.apache.log4j.helpers.Loader"
+}
+]

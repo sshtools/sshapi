@@ -24,7 +24,6 @@
 package net.sf.sshapi.impl.maverick16;
 
 import java.lang.reflect.Method;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -262,13 +261,8 @@ public class MaverickSshProvider extends AbstractProvider {
 
 	@Override
 	public void seed(long seed) {
-		SecureRandom rnd;
-		try {
-			rnd = JCEProvider.getSecureRandom();
-			rnd.setSeed(seed);
-		} catch (NoSuchAlgorithmException e) {
-			SshConfiguration.getLogger().error("Failed to set seed.", e);
-		}
+		SecureRandom rnd = JCEProvider.getSecureRandom();
+		rnd.setSeed(seed);
 	}
 
 	@Override

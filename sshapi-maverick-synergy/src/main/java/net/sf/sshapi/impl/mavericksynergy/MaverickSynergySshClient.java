@@ -50,6 +50,7 @@ import com.sshtools.client.AbstractKeyboardInteractiveCallback;
 import com.sshtools.client.BannerDisplay;
 import com.sshtools.client.ClientAuthenticator;
 import com.sshtools.client.ConnectionProtocolClient;
+import com.sshtools.client.ExternalKeyAuthenticator;
 import com.sshtools.client.KeyboardInteractiveAuthenticator;
 import com.sshtools.client.KeyboardInteractivePrompt;
 import com.sshtools.client.KeyboardInteractivePromptCompletor;
@@ -66,14 +67,8 @@ import com.sshtools.common.permissions.UnauthorizedException;
 import com.sshtools.common.policy.FileSystemPolicy;
 import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.common.ssh.Channel;
-import com.sshtools.common.ssh.ChannelFactory;
-import com.sshtools.common.ssh.ChannelNG;
 import com.sshtools.common.ssh.ChannelOpenException;
-import com.sshtools.common.ssh.ChannelOutputStream;
-import com.sshtools.common.ssh.ForwardingFactory;
 import com.sshtools.common.ssh.SessionChannel;
-import com.sshtools.common.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager;
-import com.sshtools.common.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager.TunnelListener;
 import com.sshtools.common.ssh.SshConnection;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.SshKeyFingerprint;
@@ -81,8 +76,14 @@ import com.sshtools.common.ssh.Subsystem;
 import com.sshtools.common.ssh.UnsupportedChannelException;
 import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
-import com.sshtools.common.ssh.components.SshX509RsaSha1PublicKey;
 import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
+import com.sshtools.common.ssh.x509.SshX509RsaSha1PublicKey;
+import com.sshtools.synergy.ssh.ChannelFactory;
+import com.sshtools.synergy.ssh.ChannelNG;
+import com.sshtools.synergy.ssh.ChannelOutputStream;
+import com.sshtools.synergy.ssh.ForwardingFactory;
+import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager;
+import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager.TunnelListener;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
@@ -117,9 +118,9 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		private ChannelInputStream channelInputStream;
 		private ChannelOutputStream channelOutputStream;
 
-		protected MaverickSynergySshChannel(String channelType, SshConnection con, int maximumPacketSize,
+		protected MaverickSynergySshChannel(String channelType, int maximumPacketSize,
 				int initialWindowSize, int maximumWindowSpace, int minimumWindowSpace, ChannelData channelData) {
-			super(channelType, con, maximumPacketSize, initialWindowSize, maximumWindowSpace, minimumWindowSpace);
+			super(channelType, maximumPacketSize, initialWindowSize, maximumWindowSpace, minimumWindowSpace);
 			this.channelData = channelData;
 		}
 
@@ -251,9 +252,9 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	class TunnelChannel
 			extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
 			implements SshPortForwardTunnel {
-		private com.sshtools.common.ssh.ForwardingChannel<SshClientContext> tunnel;
+		private com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext> tunnel;
 
-		public TunnelChannel(int type, com.sshtools.common.ssh.ForwardingChannel<SshClientContext> tunnel) {
+		public TunnelChannel(int type, com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext> tunnel) {
 			super(getProvider());
 			this.tunnel = tunnel;
 			tunnel.addEventListener(new com.sshtools.common.ssh.ChannelEventListener() {
@@ -432,7 +433,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	private int timeout = -1;
 	private String username;
 	
-	private Map<com.sshtools.common.ssh.ForwardingChannel<SshClientContext>, TunnelChannel> tunnels = Collections.synchronizedMap(new HashMap<>());
+	private Map<com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext>, TunnelChannel> tunnels = Collections.synchronizedMap(new HashMap<>());
 
 	MaverickSynergySshClient(SshConfiguration configuration) throws SshException, IOException {
 		super(configuration);
@@ -506,7 +507,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 	@Override
 	public ChannelNG<SshClientContext> createChannel(String channeltype, SshConnection con)
-			throws UnsupportedChannelException, PermissionDeniedException {
+			throws UnsupportedChannelException, PermissionDeniedException, ChannelOpenException {
 		for (SshChannelHandler ch : channelFactories) {
 			if (Arrays.asList(ch.getSupportChannelNames()).contains(channeltype)) {
 				// TODO requestData used to come through in ch.createChannel(),
@@ -514,7 +515,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				byte[] requestData = new byte[0];
 				ChannelData channelData = ch.createChannel(channeltype, requestData);
 				MaverickSshChannel msc = new MaverickSshChannel(channeltype, channelData);
-				MaverickSynergySshChannel ssh2Channel = new MaverickSynergySshChannel(channeltype, con,
+				MaverickSynergySshChannel ssh2Channel = new MaverickSynergySshChannel(channeltype, 
 						channelData.getWindowSize(), channelData.getPacketSize(), channelData.getPacketSize(),
 						channelData.getWindowSize() * 2, channelData);
 				msc.setSourceChannel(ssh2Channel);
@@ -740,7 +741,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 						@SuppressWarnings("resource")
 						@Override
-						public void tunnelOpened(com.sshtools.common.ssh.ForwardingChannel<SshClientContext> channel) {
+						public void tunnelOpened(com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext> channel) {
 							TunnelChannel tunnelChannel = new TunnelChannel(SshPortForward.LOCAL_FORWARDING, channel);
 							// The channel is actually already open, but this will set its state
 							// correctly in the wrapper
@@ -792,7 +793,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 						@SuppressWarnings("resource")
 						@Override
-						public void tunnelOpened(com.sshtools.common.ssh.ForwardingChannel<SshClientContext> channel) {
+						public void tunnelOpened(com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext> channel) {
 							TunnelChannel tunnelChannel = new TunnelChannel(SshPortForward.REMOTE_FORWARDING, channel);
 							// The channel is actually already open, but this will set its state
 							// correctly in the wrapper
@@ -870,7 +871,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		// PrivateKeyFileAuthenticator pfa;
 		if (authenticator instanceof SshAgentAuthenticator) {
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
-			return new PublicKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent(getConfiguration())).getAgent());
+			return new ExternalKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent(getConfiguration())).getAgent());
 		} else if (authenticator instanceof SshPasswordAuthenticator) {
 			return new PasswordAuthenticator() {
 				@Override

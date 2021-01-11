@@ -1,5 +1,9 @@
 package net.sf.sshapi.impl.maverick16;
 
+import java.security.PublicKey;
+
+import com.maverick.ssh.SecurityLevel;
+
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
 
@@ -59,6 +63,21 @@ public class MaverickSshPublicKey implements com.maverick.ssh.components.SshPubl
 
 	@Override
 	public String getEncodingAlgorithm() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public SecurityLevel getSecurityLevel() {
+		return null;
+	}
+
+	@Override
+	public int getPriority() {
+		return 0;
+	}
+
+	@Override
+	public PublicKey getJCEPublicKey() {
 		throw new UnsupportedOperationException();
 	}
 }

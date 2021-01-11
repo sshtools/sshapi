@@ -81,7 +81,7 @@ This library is the provider bridge for SSHAPI.</description>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-ed25519</artifactId>
-			<version>3.0.0-SNAPSHOT</version>
+			<version>3.0.0-RC1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
@@ -91,7 +91,7 @@ This library is the provider bridge for SSHAPI.</description>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-x509</artifactId>
-			<version>3.0.0-SNAPSHOT</version>
+			<version>3.0.0-RC1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>

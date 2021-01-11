@@ -41,6 +41,7 @@ import com.sshtools.client.SshClient;
 import com.sshtools.client.sftp.DirectoryOperation;
 import com.sshtools.client.sftp.SftpClient;
 import com.sshtools.client.tasks.FileTransferProgress;
+import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.sftp.SftpFileAttributes;
 import com.sshtools.common.sftp.SftpStatusException;
 import com.sshtools.common.util.EOLProcessor;
@@ -107,7 +108,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 	public SftpOperation download(String remotedir, File localdir, boolean recurse, boolean sync, boolean commit)
 			throws SshException {
 		try {
-			return toDownOperation(localdir, remotedir, sftpClient.copyRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync,
+			return toDownOperation(localdir, remotedir, sftpClient.getRemoteDirectory(remotedir, localdir.getAbsolutePath(), recurse, sync,
 					commit, createProgress(localdir.toString(), 0, -1)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
@@ -191,12 +192,14 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 				if (transferMode != null)
 					onTransferModeChange(transferMode);
 			}
-		} catch (com.sshtools.common.ssh.SshException e) {
+			home = sftpClient.pwd();
+		} catch (com.sshtools.common.ssh.SshException | IOException e) {
 			throw new SshException(SshException.GENERAL, "Failed to start SFTP.", e);
+		} catch (PermissionDeniedException e) {
+			throw new SshException(SshException.PERMISSION_DENIED, "Failed to open SFTP client.", e);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		}
-		home = sftpClient.pwd();
 	}
 
 	@Override
@@ -322,7 +325,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
 			throws SshException {
 		try {
-			return toUpOperation(localdir, remotedir, sftpClient.copyLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync,
+			return toUpOperation(localdir, remotedir, sftpClient.putLocalDirectory(localdir.getAbsolutePath(), remotedir, recurse, sync,
 					commit, createProgress(localdir.getPath(), 0, -1)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
@@ -735,7 +738,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		public long size() {
 			try {
 				return op.getTransferSize();
-			} catch (SftpStatusException | com.sshtools.common.ssh.SshException e) {
+			} catch (SftpStatusException | com.sshtools.common.ssh.SshException | IOException | PermissionDeniedException e) {
 				return 0;
 			}
 		}

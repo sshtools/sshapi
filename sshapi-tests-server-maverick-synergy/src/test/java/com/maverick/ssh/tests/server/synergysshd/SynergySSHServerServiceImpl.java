@@ -19,7 +19,7 @@ import com.sshtools.common.auth.AuthorizedKeysPublicKeyAuthenticationProvider;
 import com.sshtools.common.files.vfs.VFSFileFactory;
 import com.sshtools.common.files.vfs.VirtualFileFactory;
 import com.sshtools.common.files.vfs.VirtualMountTemplate;
-import com.sshtools.common.nio.SshEngineContext;
+import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.publickey.SshKeyUtils;
 import com.sshtools.server.InMemoryPasswordAuthenticator;
 import com.sshtools.server.SshServer;
@@ -28,6 +28,7 @@ import com.sshtools.server.vsession.CommandFactory;
 import com.sshtools.server.vsession.ShellCommand;
 import com.sshtools.server.vsession.ShellCommandFactory;
 import com.sshtools.server.vsession.VirtualChannelFactory;
+import com.sshtools.synergy.nio.SshEngineContext;
 
 public class SynergySSHServerServiceImpl extends AbstractServer {
 	private SshTestConfiguration configuration;
@@ -71,7 +72,8 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 				sshContext.setSocketOptionKeepAlive(true);
 				sshContext.setSocketOptionTcpNoDelay(true);
 				sshContext.setSocketOptionReuseAddress(true);
-				sshContext.setAllowDeniedKEX(true);
+				// TODO no idea
+//				sshContext.setAllowDeniedKEX(true); 
 				sshContext.setIdleConnectionTimeoutSeconds(60);
 				CommandFactory<ShellCommand> testCmds = new CommandFactory<ShellCommand>() {
 				};
@@ -113,8 +115,16 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 		sshd.addAuthenticator(new InMemoryPasswordAuthenticator().addUser("root", configuration.getPassword())
 				.addUser("testuser", configuration.getPassword()).addUser("testuser2", configuration.getPassword()));
 		homeRoot = new File(new File(System.getProperty("java.io.tmpdir"), "synergy-sshd-homes"), "home");
-		sshd.setFileFactory(
-				new VirtualFileFactory(new VirtualMountTemplate("/", homeRoot.getAbsolutePath(), new VFSFileFactory())));
+		sshd.setFileFactory((con) -> {
+			try {
+				return new VirtualFileFactory(new VirtualMountTemplate("/", homeRoot.getAbsolutePath(), new VFSFileFactory(), true));
+			} catch (IOException | PermissionDeniedException e) {
+				if(e instanceof IOException)
+					throw (IOException)e;
+				else
+					throw new IOException("Failed to create virtual file factory.", e);
+			}
+		});
 		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_rsa_key"), null));
 		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_dsa_key"), null));
 		sshd.addAuthenticator(new SynergyKeyboardInteractiveProvider());

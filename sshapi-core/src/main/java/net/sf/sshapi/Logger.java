@@ -101,7 +101,7 @@ public interface Logger {
 	 *            message
 	 */
 	default void raw(Level level, String message) {
-		log(level, message);
+		log(level, "{0}", message);
 	}
 
 	/**

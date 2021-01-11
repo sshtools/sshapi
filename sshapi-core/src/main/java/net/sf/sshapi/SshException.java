@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import net.sf.sshapi.forwarding.SshPortForward;
 
-/**
+/** 
  * Exception thrown during various SSH operations.
  */
 public class SshException extends IOException {
@@ -131,6 +131,10 @@ public class SshException extends IOException {
 	 * A task was interrupted.
 	 */
 	public final static Code INTERRUPTED = new Code("interrupted");
+	/**
+	 * Permission was denied to a resource, such as a file system
+	 */
+	public final static Code PERMISSION_DENIED = new Code("permissionDenied");
 	
 	private static final long serialVersionUID = 1L;
 	// Private instance variables

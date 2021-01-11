@@ -52,9 +52,9 @@ public class ConsoleLogger implements Logger {
 				System.out.println("SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
 						+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + MessageFormat.format(message, args));
 			}
-			catch(NumberFormatException nfe) {
+			catch(Exception nfe) {
 				System.out.println("*SSHAPI [" + Thread.currentThread().getName() + "/" + Thread.currentThread().getId() + ":" + level + "@"
-						+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + message + " [" + Arrays.asList(args) + "]");
+						+ new SimpleDateFormat("HH:mm:ss").format(new Date()) + "]: " + message + " " + Arrays.asList(args));	
 			}
 		}
 	}
