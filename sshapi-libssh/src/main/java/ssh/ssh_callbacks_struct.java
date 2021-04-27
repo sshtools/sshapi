@@ -1,10 +1,33 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package ssh;
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
+import java.util.Arrays;
+import java.util.List;
+
 import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
-import java.util.Arrays;
-import java.util.List;
+
+import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_auth_callback;
 import ssh.SshLibrary.ssh_channel_open_request_auth_agent_callback;
 import ssh.SshLibrary.ssh_channel_open_request_x11_callback;
@@ -18,7 +41,7 @@ import ssh.SshLibrary.ssh_log_callback;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public class ssh_callbacks_struct extends Structure {
-	public NativeSize size;
+	public SizeT size;
 	/** C type : void* */
 	public Pointer userdata;
 	/** C type : ssh_auth_callback */
@@ -53,7 +76,7 @@ public class ssh_callbacks_struct extends Structure {
 	 * @param channel_open_request_x11_function C type : ssh_channel_open_request_x11_callback<br>
 	 * @param channel_open_request_auth_agent_function C type : ssh_channel_open_request_auth_agent_callback
 	 */
-	public ssh_callbacks_struct(NativeSize size, Pointer userdata, ssh_auth_callback auth_function, ssh_log_callback log_function, ssh_callbacks_struct.connect_status_function_callback connect_status_function, ssh_global_request_callback global_request_function, ssh_channel_open_request_x11_callback channel_open_request_x11_function, ssh_channel_open_request_auth_agent_callback channel_open_request_auth_agent_function) {
+	public ssh_callbacks_struct(SizeT size, Pointer userdata, ssh_auth_callback auth_function, ssh_log_callback log_function, ssh_callbacks_struct.connect_status_function_callback connect_status_function, ssh_global_request_callback global_request_function, ssh_channel_open_request_x11_callback channel_open_request_x11_function, ssh_channel_open_request_auth_agent_callback channel_open_request_auth_agent_function) {
 		super();
 		this.size = size;
 		this.userdata = userdata;

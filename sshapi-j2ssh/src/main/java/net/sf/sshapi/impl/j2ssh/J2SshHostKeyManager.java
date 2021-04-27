@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.impl.j2ssh;
 
@@ -35,6 +33,7 @@ import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.hostkeys.SshManagedHostKey;
 import net.sf.sshapi.util.Util;
 
 import com.sshtools.j2ssh.transport.AbstractKnownHostsKeyVerification;
@@ -65,7 +64,7 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
-	public void add(final SshHostKey hostKey, boolean persist) throws SshException {
+	public void add(final SshManagedHostKey hostKey, boolean persist) throws SshException {
 		try {
 			knownHosts.allowHost(hostKey.getHost(), new SshPublicKey() {
 
@@ -82,7 +81,7 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 				}
 
 				public int getBitLength() {
-					return 0;
+					return hostKey.getBits();
 				}
 
 				public String getAlgorithmName() {
@@ -94,7 +93,7 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 		}
 	}
 
-	public SshHostKey[] getKeys() {
+	public SshManagedHostKey[] getKeys() {
 		List<SshHostKey> hostKeys = new ArrayList<>();
 		Map<?,?> hosts = knownHosts.allowedHosts();
 		for (Iterator<?> e = hosts.keySet().iterator(); e.hasNext();) {
@@ -122,20 +121,21 @@ class J2SshHostKeyManager extends AbstractHostKeyManager {
 					}
 
 					@Override
-					public String getComments() {
-						return null;
+					public int getBits() {
+						return key.getBitLength();
 					}
 				});
 			}
 		}
-		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
+		return (SshManagedHostKey[]) hostKeys.toArray(new SshManagedHostKey[0]);
 	}
 
 	public boolean isWriteable() {
 		return knownHosts.isHostFileWriteable();
 	}
 
-	public void remove(SshHostKey hostKey) {
+	@Override
+	public void remove(SshManagedHostKey hostKey) {
 		// TODO maverick doesn't allow more specific removal of host keys
 		knownHosts.removeAllowedHost(hostKey.getHost());
 	}

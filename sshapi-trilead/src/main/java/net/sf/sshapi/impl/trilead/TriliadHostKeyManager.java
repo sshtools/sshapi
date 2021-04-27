@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.impl.trilead;
 
@@ -45,6 +43,7 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.hostkeys.SshManagedHostKey;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -62,7 +61,7 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 		reload();
 	}
 
-	public void add(SshHostKey hostKey, boolean persist) throws SshException {
+	public void add(SshManagedHostKey hostKey, boolean persist) throws SshException {
 		try {
 			KnownHosts.addHostkeyToFile(knownHostsFile, new String[] { hostKey.getHost() }, hostKey.getType(), hostKey.getKey());
 		} catch (IOException e) {
@@ -71,8 +70,8 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 		reload();
 	}
 
-	public SshHostKey[] getKeys() {
-		List<SshHostKey> keys = new ArrayList<>();
+	public SshManagedHostKey[] getKeys() {
+		List<SshManagedHostKey> keys = new ArrayList<>();
 		// Ewwwww :(
 		try {
 			Field field = knownHosts.getClass().getDeclaredField("publicKeys");
@@ -83,10 +82,10 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 			SshConfiguration.getLogger().error("Failed to get host keys.", e);
 		}
 
-		return (SshHostKey[]) keys.toArray(new SshHostKey[0]);
+		return (SshManagedHostKey[]) keys.toArray(new SshManagedHostKey[0]);
 	}
 
-	private void addKeys(List<SshHostKey> keys, Collection<?> publickeys) throws NoSuchFieldException, IllegalAccessException, IOException {
+	private void addKeys(List<SshManagedHostKey> keys, Collection<?> publickeys) throws NoSuchFieldException, IllegalAccessException, IOException {
 		Field field;
 		for (Iterator<?> e = publickeys.iterator(); e.hasNext();) {
 			Object knownHostEntry = e.next();
@@ -112,7 +111,7 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 		}
 	}
 
-	public SshHostKey[] getKeysForHost(String host, String type) {
+	public SshManagedHostKey[] getKeysForHost(String host, String type) {
 		SshHostKey[] keys = getKeys();
 		List<SshHostKey> hostKeys = new ArrayList<>();
 		try {
@@ -127,14 +126,14 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 		} catch (Exception e) {
 			SshConfiguration.getLogger().error("Error locating host keys.", e);
 		}
-		return (SshHostKey[]) hostKeys.toArray(new SshHostKey[0]);
+		return (SshManagedHostKey[]) hostKeys.toArray(new SshManagedHostKey[0]);
 	}
 
 	public boolean isWriteable() {
 		return knownHostsFile.canWrite();
 	}
 
-	public void remove(SshHostKey hostKey) {
+	public void remove(SshManagedHostKey hostKey) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -147,7 +146,7 @@ class TriliadHostKeyManager implements SshHostKeyManager {
 		}
 	}
 
-	private final class GanymedHostKey extends AbstractHostKey {
+	private final class GanymedHostKey extends AbstractHostKey implements SshManagedHostKey {
 		private final String type;
 		private byte[] key;
 		private String[] hosts;

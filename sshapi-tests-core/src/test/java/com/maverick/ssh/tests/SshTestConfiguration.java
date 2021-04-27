@@ -1,3 +1,24 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package com.maverick.ssh.tests;
 
 import java.io.File;
@@ -106,24 +127,36 @@ public class SshTestConfiguration {
 					try {
 						Class.forName("com.maverick.ssh.tests.server.mavericksshd.MaverickSSHServerServiceImpl");
 						SshConfiguration.getLogger().info("Auto-detected Legacy Maverick SSHD server");
+						configuration = SSHAPI_MAVERICK_CONFIGURATION_NAME;
 					}
 					catch(Exception e) {
 						try {
 							Class.forName("com.maverick.ssh.tests.server.synergysshd.SynergySSHServerServiceImpl");
 							SshConfiguration.getLogger().info("Auto-detected Synergy SSHD server");
+							configuration = SSHAPI_SYNERGY_CONFIGURATION_NAME;
 						}
 						catch(Exception e2) {
 							try {
 								Class.forName("com.maverick.ssh.tests.server.openssh.LocalOpenSSHServerServiceImpl");
-								SshConfiguration.getLogger().info("Auto-detected OpenSSH server");
+								SshConfiguration.getLogger().info("Auto-detected local OpenSSH server");
+								configuration = SSHAPI_OPENSSH_LOCAL_CONFIGURATION_NAME;
 							}
 							catch(Exception e3) {
-								SshConfiguration.getLogger().warn("Using default server configuration {0}", DEFAULT_CONFIGURATION_NAME);
-								configuration = DEFAULT_CONFIGURATION_NAME;
+								try {
+									Class.forName("com.maverick.ssh.tests.server.openssh.RemoteOpenSSHServerServiceImpl");
+									SshConfiguration.getLogger().info("Auto-detected remote OpenSSH server");
+									configuration = SSHAPI_OPENSSH_CONFIGURATION_NAME;
+								}
+								catch(Exception e4) {
+									SshConfiguration.getLogger().warn("Using default server configuration {0}", DEFAULT_CONFIGURATION_NAME);
+									configuration = DEFAULT_CONFIGURATION_NAME;
+								}
 							}
-							configuration = DEFAULT_CONFIGURATION_NAME;
 						}
 					}
+				}
+				if(configuration == null) {
+					throw new IOException("Could not determine ");
 				}
 				resource = SshTestConfiguration.class.getResource(configuration);
 				if (resource == null) {

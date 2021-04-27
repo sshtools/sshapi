@@ -1,3 +1,24 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package net.sf.sshapi.impl.libssh;
 
 import java.io.File;
@@ -5,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.sun.jna.Memory;
 
 import net.sf.sshapi.AbstractSCPClient;
@@ -17,6 +37,7 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
+import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_scp;
 import ssh.SshLibrary.ssh_session;
 
@@ -102,7 +123,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 					if (size > 0) {
 						long t = 0;
 						while (t < size) {
-							int read = library.ssh_scp_read(scp, m, new NativeSize(m.size()));
+							int read = library.ssh_scp_read(scp, m, new SizeT(m.size()));
 							if (read == SshLibrary.SSH_ERROR) {
 								throw new IOException("I/O Error");
 							}
@@ -150,7 +171,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 		int ret = 0;
 		if (sourceFile.isFile()) {
 			long sourceLength = sourceFile.length();
-			ret = library.ssh_scp_push_file(scp, sourceFile.getName(), new NativeSize(sourceLength), LibsshClient.S_IRWXU);
+			ret = library.ssh_scp_push_file(scp, sourceFile.getName(), new SizeT(sourceLength), LibsshClient.S_IRWXU);
 			if (ret != SshLibrary.SSH_OK) {
 				throw new IOException("Failed to push file " + sourceFile.getName() + ". Error code " + ret);
 			}
@@ -167,7 +188,7 @@ public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 					off += r;
 				}
 				// Hrrmmm, it seems we must write the entire file in one go?
-				library.ssh_scp_write(scp, outBuf, new NativeSize(sourceLength));
+				library.ssh_scp_write(scp, outBuf, new SizeT(sourceLength));
 			} finally {
 				fin.close();
 				fireFileTransferFinished(sourceFile.getPath(), remotePath);

@@ -1,10 +1,33 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package ssh;
 
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
 import java.util.Arrays;
 import java.util.List;
+
+import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
+
+import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_bind_incoming_connection_callback;
 
 /**
@@ -24,7 +47,7 @@ import ssh.SshLibrary.ssh_bind_incoming_connection_callback;
  *        <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public class ssh_bind_callbacks_struct extends Structure {
-	public NativeSize size;
+	public SizeT size;
 	/** C type : ssh_bind_incoming_connection_callback */
 	public ssh_bind_incoming_connection_callback incoming_connection;
 
@@ -40,7 +63,7 @@ public class ssh_bind_callbacks_struct extends Structure {
 	/**
 	 * @param incoming_connection C type : ssh_bind_incoming_connection_callback
 	 */
-	public ssh_bind_callbacks_struct(NativeSize size, ssh_bind_incoming_connection_callback incoming_connection) {
+	public ssh_bind_callbacks_struct(SizeT size, ssh_bind_incoming_connection_callback incoming_connection) {
 		super();
 		this.size = size;
 		this.incoming_connection = incoming_connection;

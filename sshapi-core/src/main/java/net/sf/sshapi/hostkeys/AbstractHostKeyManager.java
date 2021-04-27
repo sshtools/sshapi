@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.hostkeys;
 
@@ -54,9 +52,9 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 		return configuration;
 	}
 
-	public final SshHostKey[] getKeysForHost(String host, String type) {
+	public final SshManagedHostKey[] getKeysForHost(String host, String type) {
 		// Look up first using the plain text hostname
-		SshHostKey[] hk = doGetKeysForHost(host, type);
+		SshManagedHostKey[] hk = doGetKeysForHost(host, type);
 		if (hk == null) {
 			// Now try a reverse look up
 			if ("true".equals(configuration.getProperties().getProperty(SshConfiguration.CFG_KNOWN_HOSTS_REVERSE_DNS, "true"))) {
@@ -73,7 +71,7 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 				}
 			}
 		}
-		return hk == null ? new SshHostKey[0] : hk;
+		return hk == null ? new SshManagedHostKey[0] : hk;
 	}
 
 	/**
@@ -85,7 +83,7 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 	 * @param type type
 	 * @return host keys
 	 */
-	protected SshHostKey[] doGetKeysForHost(String host, String type) {
+	protected SshManagedHostKey[] doGetKeysForHost(String host, String type) {
 		SshHostKey[] keys = getKeys();
 		List<SshHostKey> hostKeys = new ArrayList<>();
 		for (SshHostKey k : keys) {
@@ -93,7 +91,7 @@ public abstract class AbstractHostKeyManager implements SshHostKeyManager {
 				hostKeys.add(k);
 			}
 		}
-		return hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshManagedHostKey[0]);
 	}
 
 	protected boolean checkHost(String storedHostName, String hostToCheck) {

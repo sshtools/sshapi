@@ -1,3 +1,26 @@
+<!--
+
+    Copyright (c) 2020 The JavaSSH Project
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+     of this software and associated documentation files (the "Software"), to deal
+     in the Software without restriction, including without limitation the rights
+     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     copies of the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be included in
+     all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -16,13 +39,20 @@
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick Legacy bridge (New public 1.6+) -->
-		<maverickVersion>1.7.34</maverickVersion>
+		<maverickVersion>1.7.36</maverickVersion>
 		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
-		<maverickSynergyVersion>3.0.0-RC1</maverickSynergyVersion>
+		<maverickSynergyVersion>3.0.0-RC5</maverickSynergyVersion>
 		<common.version>2.0.4</common.version>
+
+		<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
+			module and any provider dependencies when an MRJAR is in use. See the use 
+			of Maven plugins in this POM that collect the classpath into a property to 
+			support this, and the child modules that use the variable to adjust the module 
+			path for MRJAR compilation -->
+		<mrJarClasspathFile>${project.basedir}/target/classpath</mrJarClasspathFile>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
@@ -34,7 +64,7 @@
 	<licenses>
 		<license>
 			<name>MIT</name>
-			<url>../sshapi-assembly/LICENSE.txt</url>
+			<url>LICENSE.txt</url>
 			<comments>a permissive license, meaning that it permits reuse within proprietary software on the condition that the license is distributed with that software. The license is also GPL-compatible, meaning that the GPL permits combination and redistribution with software that uses the MIT License.</comments>
 		</license>
 	</licenses>
@@ -81,85 +111,113 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
+				<plugin>
 					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.1.1</version>
-					<executions>
-						<execution>
-							<id>javadoc-jar</id>
-							<phase>package</phase>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-							<configuration>
-								<!-- switch on dependency-driven aggregation -->
-								<includeDependencySources>false</includeDependencySources>
-								<dependencySourceIncludes>
-									<!-- include ONLY dependencies I control -->
-									<dependencySourceInclude>com.sshtools:*</dependencySourceInclude>
-								</dependencySourceIncludes>
-								<doclint>none</doclint>
-							</configuration>
-						</execution>
-					</executions>
+					<version>3.2.0</version>
+					<configuration>
+						<encoding>UTF-8</encoding>
+						<excludePackageNames>**.impl.*</excludePackageNames>
+						<!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+						<detectJavaApiLink>false</detectJavaApiLink>
+						<source>8</source>
+						<additionalparam>-Xdoclint:none</additionalparam>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-gpg-plugin</artifactId>
 					<version>1.6</version>
-					<executions>
-						<execution>
-							<id>sign-artifacts</id>
-							<phase>verify</phase>
-							<goals>
-								<goal>sign</goal>
-							</goals>
-						</execution>
-					</executions>
 				</plugin>
 				<plugin>
 					<groupId>com.mycila</groupId>
 					<artifactId>license-maven-plugin</artifactId>
 					<version>3.0</version>
-					<configuration>
-						<header>templates/Apache-2.txt</header>
-						<properties>
-							<owner>SSHTOOLS Limited</owner>
-							<email>support@sshtools.com</email>
-						</properties>
-						<excludes>
-							<exclude>**/README</exclude>
-							<exclude>src/test/resources/**</exclude>
-							<exclude>src/main/resources/**</exclude>
-						</excludes>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>check</goal>
-								<goal>format</goal>
-								<goal>remove</goal>
-							</goals>
-						</execution>
-					</executions>
 				</plugin>
 				<plugin>
 					<groupId>org.sonatype.plugins</groupId>
 					<artifactId>nexus-staging-maven-plugin</artifactId>
 					<version>1.6.8</version>
-					<extensions>true</extensions>
-					<configuration>
-						<serverId>ossrh-sshtools</serverId>
-						<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-						<autoReleaseAfterClose>true</autoReleaseAfterClose>
-					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.1.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.8.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5.3</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-ant-plugin</artifactId>
+					<version>2.3</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
+
+			<plugin>
+				<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
+					module and any provider dependencies when an MRJAR is in use. See child modules 
+					that use the variable to adjust the module path for MRJAR compilation -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.2</version>
+				<executions>
+					<execution>
+						<id>build-classpath</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>build-classpath</goal>
+						</goals>
+						<configuration>
+							<outputFile>${mrJarClasspathFile}</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
+					module and any provider dependencies when an MRJAR is in use. See child modules 
+					that use the variable to adjust the module path for MRJAR compilation -->
+				<groupId>org.codehaus.gmaven</groupId>
+				<artifactId>gmaven-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+						<configuration>
+							<source>
+								def file = new
+								File(project.properties.mrJarClasspathFile)
+								project.properties.mrJarClasspath = file.getText()
+							</source>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.8.2</version>
 				<dependencies>
 					<dependency>
 						<groupId>com.sshtools</groupId>
@@ -176,29 +234,34 @@
 				</dependencies>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5.3</version>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<extensions>true</extensions>
 				<configuration>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<serverId>ossrh-sshtools</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-ant-plugin</artifactId>
-				<version>2.3</version>
+				<artifactId>maven-gpg-plugin</artifactId>
 				<executions>
 					<execution>
-						<configuration>
-							<overwrite>true</overwrite>
-						</configuration>
-						<id>do-ant-files</id>
-						<phase>package</phase>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
 						<goals>
-							<goal>ant</goal>
+							<goal>sign</goal>
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -215,7 +278,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
 				<configuration>
 					<source>${sourceRelease}</source>
 					<target>${targetRelease}</target>
@@ -224,7 +286,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.2</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -239,7 +300,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -259,10 +319,42 @@
 							<goal>aggregate-jar</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>javadoc-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
 				</executions>
 				<configuration>
 					<failOnError>false</failOnError>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.mycila</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<configuration>
+					<header>LICENSE.txt</header>
+					<properties>
+						<owner>SSHTOOLS Limited</owner>
+						<email>support@sshtools.com</email>
+					</properties>
+					<excludes>
+						<exclude>**/README</exclude>
+						<exclude>src/test/resources/**</exclude>
+						<exclude>src/main/resources/**</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+							<goal>format</goal>
+							<goal>remove</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -297,11 +389,8 @@
 				<artifactId>maven-clover-plugin</artifactId>
 				<version>2.4</version>
 			</plugin>
-			<!-- <plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.7</version>
-			</plugin> -->
+			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>cobertura-maven-plugin</artifactId> 
+				<version>2.7</version> </plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
@@ -348,21 +437,45 @@
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>
 		<module>sshapi-j2ssh</module>
-		<module>sshapi-trilead</module>
 		<module>sshapi-openssh</module>
+		<module>sshapi-trilead</module>
+		<module>sshapi-sshj</module>
 		<module>sshapi-commons-vfs</module>
-		<module>sshapi-performance-tests</module>
 		<module>sshapi-cli</module>
+		<module>sshapi-performance-tests</module>
 		<module>sshapi-site</module>
 		<module>wagon-sshapi</module>
 		<module>sshapi-tests-core</module>
 		<module>sshapi-tests-server-maverick-synergy</module>
 		<module>sshapi-tests-server-maverick-sshd</module>
 		<module>sshapi-tests-server-openssh</module>
+		<module>sshapi-tests-server-openssh-local</module>
+		<module>sshapi-tests-server-openssh-remote</module>
 		<module>sshapi-tests</module>
-		<!-- <module>../sshapi-assembly</module> <module>../sshapi-site</module> -->
+		<!-- <module>../sshapi-site</module> -->
 	</modules>
 	<profiles>
+	
+		<profile>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-javadoc-plugin</artifactId>
+							<configuration>
+								<!-- TODO: Why is this STILL broken! -->
+								<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+		
 		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>

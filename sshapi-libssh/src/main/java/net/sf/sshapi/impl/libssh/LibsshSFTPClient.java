@@ -1,3 +1,24 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package net.sf.sshapi.impl.libssh;
 
 import java.io.IOException;
@@ -5,8 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -17,6 +36,7 @@ import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
+import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_session;
 import ssh.sftp_attributes_struct;
 import ssh.sftp_dir_struct;
@@ -236,7 +256,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 					if (library.ssh_is_connected(libSshSession) == 0 || free)
 						throw new SftpException(SftpException.IO_ERROR, "Disconnected.");
 					int len = buffer.limit() - buffer.position();
-					int w = (int) library.sftp_write(file, buffer, new NativeSize(len));
+					int w = (int) library.sftp_write(file, buffer, new SizeT(len));
 					if (w != len) {
 						throw new LibsshSFTPException("Failed to write to target.");
 					}
@@ -248,7 +268,7 @@ class LibsshSFTPClient extends AbstractSftpClient {
 				public int read(ByteBuffer buffer) throws SftpException {
 					if (library.ssh_is_connected(libSshSession) == 0 || free)
 						return -1;
-					int r = (int) library.sftp_read(file, buffer, new NativeSize(buffer.limit()));
+					int r = (int) library.sftp_read(file, buffer, new SizeT(buffer.limit()));
 					if (r != -1)
 						position += r;
 					return r;

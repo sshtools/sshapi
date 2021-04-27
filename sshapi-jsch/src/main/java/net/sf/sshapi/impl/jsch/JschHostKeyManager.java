@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.impl.jsch;
 
@@ -40,6 +38,7 @@ import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.hostkeys.SshManagedHostKey;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -50,7 +49,7 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 
 	private HostKeyRepository hkr;
 	private JSch jsch;
-	private List<SshHostKey> temporaryKeys = new ArrayList<>();
+	private List<SshManagedHostKey> temporaryKeys = new ArrayList<>();
 	private File file;
 
 	public JschHostKeyManager(SshConfiguration configuration) throws SshException {
@@ -72,14 +71,14 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	@Override
-	public void add(SshHostKey hostKey, boolean persist) throws SshException {
+	public void add(SshManagedHostKey hostKey, boolean persist) throws SshException {
 		if (!persist) {
 			temporaryKeys.add(hostKey);
 		} else {
 			try {
 				hkr.add(new HostKey(hostKey.getHost(),
 					hostKey.getType().equals(SshConfiguration.PUBLIC_KEY_SSHDSA) ? HostKey.SSHDSS : HostKey.SSHRSA, hostKey
-						.getKey()), new UserInfo() {
+						.getKey(), hostKey.getComments()), new UserInfo() {
 
 					@Override
 					public void showMessage(String message) {
@@ -122,24 +121,24 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	@Override
-	public void remove(SshHostKey hostKey) {
+	public void remove(SshManagedHostKey hostKey) {
 		hkr.remove(hostKey.getHost(), hostKey.getType());
 	}
 
 	@Override
-	public SshHostKey[] getKeys() {
-		List<SshHostKey> hostKeys = new ArrayList<>();
+	public SshManagedHostKey[] getKeys() {
+		List<SshManagedHostKey> hostKeys = new ArrayList<>();
 		HostKey[] keys = hkr.getHostKey();
 		if (keys != null) {
 			for (int i = 0; i < keys.length; i++) {
 				hostKeys.add(new JschHostKey(keys[i]));
 			}
 		}
-		return hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshManagedHostKey[0]);
 	}
 
 	@Override
-	protected SshHostKey[] doGetKeysForHost(String host, String type) {
+	protected SshManagedHostKey[] doGetKeysForHost(String host, String type) {
 		List<SshHostKey> keys = new ArrayList<>();
 
 		// Stored
@@ -157,10 +156,10 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 			}
 		}
 
-		return keys.size() == 0 ? null : keys.toArray(new SshHostKey[0]);
+		return keys.size() == 0 ? null : keys.toArray(new SshManagedHostKey[0]);
 	}
 
-	class JschHostKey extends AbstractHostKey {
+	class JschHostKey extends AbstractHostKey implements SshManagedHostKey {
 		private HostKey key;
 
 		public JschHostKey(HostKey key) {
@@ -188,8 +187,8 @@ class JschHostKeyManager extends AbstractHostKeyManager {
 				Method m = Class.forName("com.jcraft.jsch.Util").getDeclaredMethod("fromBase64",
 					new Class[] { byte[].class, int.class, int.class });
 				m.setAccessible(true);
-				return (byte[]) m.invoke(null, new Object[] { key.getKey().getBytes(), new Integer(0),
-					new Integer(key.getKey().length()) });
+				return (byte[]) m.invoke(null, new Object[] { key.getKey().getBytes(), Integer.valueOf(0),
+						Integer.valueOf(key.getKey().length()) });
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.impl.mavericksynergy;
 
@@ -47,6 +45,7 @@ import net.sf.sshapi.hostkeys.AbstractHostKey;
 import net.sf.sshapi.hostkeys.AbstractHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
+import net.sf.sshapi.hostkeys.SshManagedHostKey;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -54,6 +53,52 @@ import net.sf.sshapi.util.Util;
  * class adapts that to the SSHAPI {@link SshHostKeyManager} interface.
  */
 public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
+
+	protected final class MaverickSynergyManagedKey extends AbstractHostKey implements SshManagedHostKey {
+		private final KeyEntry ke;
+
+		protected MaverickSynergyManagedKey(KeyEntry ke) {
+			this.ke = ke;
+		}
+
+		@Override
+		public String getType() {
+			return ke.getKey().getAlgorithm();
+		}
+
+		@Override
+		public byte[] getKey() {
+			try {
+				return ke.getKey().getEncoded();
+			} catch (com.sshtools.common.ssh.SshException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public String getHost() {
+			return ke.getNames();
+		}
+
+		@Override
+		public String getFingerprint() {
+			try {
+				return ke.getKey().getFingerprint();
+			} catch (com.sshtools.common.ssh.SshException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public int getBits() {
+			return ke.getKey().getBitLength();
+		}
+
+		@Override
+		public String getComments() {
+			return ke.getComment();
+		}
+	}
 
 	private KnownHostsKeyVerification knownHosts;
 	private File file;
@@ -92,7 +137,7 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	@Override
-	public void add(final SshHostKey hostKey, boolean persist) throws SshException {
+	public void add(final SshManagedHostKey hostKey, boolean persist) throws SshException {
 		try {
 			checkForChanges();
 			knownHosts.addEntry(new SshPublicKey() {
@@ -171,47 +216,14 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	@Override
-	public SshHostKey[] getKeys() {
+	public SshManagedHostKey[] getKeys() {
 		checkForChanges();
 		List<SshHostKey> hostKeys = new ArrayList<>();
 		Set<KeyEntry> hosts = knownHosts.getKeyEntries();
 		for (KeyEntry ke : hosts) {
-			hostKeys.add(new AbstractHostKey() {
-				@Override
-				public String getType() {
-					return ke.getKey().getAlgorithm();
-				}
-
-				@Override
-				public byte[] getKey() {
-					try {
-						return ke.getKey().getEncoded();
-					} catch (com.sshtools.common.ssh.SshException e) {
-						throw new RuntimeException(e);
-					}
-				}
-
-				@Override
-				public String getHost() {
-					return ke.getNames();
-				}
-
-				@Override
-				public String getFingerprint() {
-					try {
-						return ke.getKey().getFingerprint();
-					} catch (com.sshtools.common.ssh.SshException e) {
-						throw new RuntimeException(e);
-					}
-				}
-
-				@Override
-				public String getComments() {
-					return ke.getComment();
-				}
-			});
+			hostKeys.add(new MaverickSynergyManagedKey(ke));
 		}
-		return hostKeys.toArray(new SshHostKey[0]);
+		return hostKeys.toArray(new SshManagedHostKey[0]);
 	}
 
 	@Override
@@ -220,7 +232,7 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 	}
 
 	@Override
-	public void remove(SshHostKey hostKey) throws SshException {
+	public void remove(SshManagedHostKey hostKey) throws SshException {
 		try {
 			checkForChanges();
 			knownHosts.removeEntries(hostKey.getHost());

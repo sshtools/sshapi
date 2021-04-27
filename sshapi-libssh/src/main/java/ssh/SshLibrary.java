@@ -1,15 +1,39 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package ssh;
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
-import com.ochafik.lang.jnaerator.runtime.NativeSizeByReference;
 import com.sun.jna.Callback;
+import com.sun.jna.IntegerType;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
+import com.sun.jna.ptr.ByReference;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
+
+import ssh.SshLibrary.SizeT.SizeTByReference;
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 /**
@@ -19,9 +43,46 @@ import java.nio.IntBuffer;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public interface SshLibrary extends Library {
+	
 	public static final String JNA_LIBRARY_NAME = "ssh";
 	public static final NativeLibrary JNA_NATIVE_LIB = NativeLibrary.getInstance(SshLibrary.JNA_LIBRARY_NAME);
 	public static final SshLibrary INSTANCE = Native.loadLibrary(SshLibrary.JNA_LIBRARY_NAME, SshLibrary.class);
+	
+	public static class SizeT extends IntegerType {
+		public SizeT() {
+			this(0);
+		}
+
+		public SizeT(long value) {
+			super(Native.SIZE_T_SIZE, value);
+		}
+
+		public class SizeTByReference extends ByReference {
+			public SizeTByReference() {
+				this(new SizeT());
+			}
+
+			public SizeTByReference(SizeT value) {
+				super(Native.SIZE_T_SIZE);
+				setValue(value);
+			}
+
+			public void setValue(SizeT value) {
+				Pointer p = getPointer();
+				if (Native.SIZE_T_SIZE == 8) {
+					p.setLong(0, value.longValue());
+				} else {
+					p.setInt(0, value.intValue());
+				}
+			}
+
+			public SizeT getValue() {
+				Pointer p = getPointer();
+				return new SizeT(Native.SIZE_T_SIZE == 8 ? p.getLong(0) : p.getInt(0));
+			}
+		}
+	}
+	
 	/**
 	 * the offsets of methods<br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:33</i><br>
@@ -777,7 +838,7 @@ public interface SshLibrary extends Library {
 	public static final int SSH2_EXTENDED_DATA_STDERR = 1;
 	/** <i>native declaration : /usr/include/libssh/libssh.h:400</i> */
 	public interface ssh_auth_callback extends Callback {
-		int apply(Pointer prompt, Pointer buf, NativeSize len, int echo, int verify, Pointer userdata);
+		int apply(Pointer prompt, Pointer buf, SizeT len, int echo, int verify, Pointer userdata);
 	};
 	/** <i>native declaration : /usr/include/libssh/libssh.h:572</i> */
 	public interface ssh_event_callback extends Callback {
@@ -789,7 +850,7 @@ public interface SshLibrary extends Library {
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:17</i> */
 	public interface ssh_callback_data extends Callback {
-		int apply(Pointer data, NativeSize len, Pointer user);
+		int apply(Pointer data, SizeT len, Pointer user);
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:18</i> */
 	public interface ssh_callback_int_int extends Callback {
@@ -805,7 +866,7 @@ public interface SshLibrary extends Library {
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:21</i> */
 	public interface ssh_channel_callback_data extends Callback {
-		int apply(Pointer channel, int code, Pointer data, NativeSize len, Pointer user);
+		int apply(Pointer channel, int code, Pointer data, SizeT len, Pointer user);
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:29</i> */
 	public interface ssh_log_callback extends Callback {
@@ -876,7 +937,7 @@ public interface SshLibrary extends Library {
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:191</i> */
 	public interface ssh_gssapi_verify_mic_callback extends Callback {
-		int apply(Pointer session, SshLibrary.ssh_string mic, Pointer mic_buffer, NativeSize mic_buffer_size, Pointer userdata);
+		int apply(Pointer session, SshLibrary.ssh_string mic, Pointer mic_buffer, SizeT mic_buffer_size, Pointer userdata);
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:247</i> */
 	public interface ssh_packet_callback extends Callback {
@@ -940,7 +1001,7 @@ public interface SshLibrary extends Library {
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:420</i> */
 	public interface ssh_channel_write_wontblock_callback extends Callback {
-		int apply(Pointer session, Pointer channel, NativeSize bytes, Pointer userdata);
+		int apply(Pointer session, Pointer channel, SizeT bytes, Pointer userdata);
 	};
 	/** <i>native declaration : /usr/include/libssh/callbacks.h:488</i> */
 	public interface ssh_thread_callback extends Callback {
@@ -1626,17 +1687,17 @@ public interface SshLibrary extends Library {
 	 */
 	SshLibrary.socket_t ssh_get_fd(SshLibrary.ssh_session session);
 	/**
-	 * Original signature : <code>char* ssh_get_hexa(const unsigned char*, size_t)</code><br>
+	 * Original signature : <code>char* ssh_get_hexa(const unsigned char*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:293</i><br>
-	 * @deprecated use the safer methods {@link #ssh_get_hexa(byte[], com.ochafik.lang.jnaerator.runtime.NativeSize)} and {@link #ssh_get_hexa(com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} instead
+	 * @deprecated use the safer methods {@link #ssh_get_hexa(byte[], com.ochafik.lang.jnaerator.runtime.SizeT)} and {@link #ssh_get_hexa(com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} instead
 	 */
 	@Deprecated 
-	Pointer ssh_get_hexa(Pointer what, NativeSize len);
+	Pointer ssh_get_hexa(Pointer what, SizeT len);
 	/**
-	 * Original signature : <code>char* ssh_get_hexa(const unsigned char*, size_t)</code><br>
+	 * Original signature : <code>char* ssh_get_hexa(const unsigned char*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:293</i>
 	 */
-	Pointer ssh_get_hexa(byte what[], NativeSize len);
+	Pointer ssh_get_hexa(byte what[], SizeT len);
 	/**
 	 * Original signature : <code>char* ssh_get_issue_banner(ssh_session)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:295</i><br>
@@ -1679,17 +1740,17 @@ public interface SshLibrary extends Library {
 	 */
 	int ssh_get_server_publickey(Pointer session, PointerByReference key);
 	/**
-	 * Original signature : <code>int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char**, size_t*)</code><br>
+	 * Original signature : <code>int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char**, SizeT*)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:305</i><br>
-	 * @deprecated use the safer methods {@link #ssh_get_publickey_hash(ssh.SshLibrary.ssh_key, int, com.sun.jna.ptr.PointerByReference, com.ochafik.lang.jnaerator.runtime.NativeSizeByReference)} and {@link #ssh_get_publickey_hash(com.sun.jna.Pointer, int, com.sun.jna.ptr.PointerByReference, com.ochafik.lang.jnaerator.runtime.NativeSizeByReference)} instead
+	 * @deprecated use the safer methods {@link #ssh_get_publickey_hash(ssh.SshLibrary.ssh_key, int, com.sun.jna.ptr.PointerByReference, com.ochafik.lang.jnaerator.runtime.size_tByReference)} and {@link #ssh_get_publickey_hash(com.sun.jna.Pointer, int, com.sun.jna.ptr.PointerByReference, com.ochafik.lang.jnaerator.runtime.size_tByReference)} instead
 	 */
 	@Deprecated 
-	int ssh_get_publickey_hash(Pointer key, int type, PointerByReference hash, NativeSizeByReference hlen);
+	int ssh_get_publickey_hash(Pointer key, int type, PointerByReference hash, SizeTByReference hlen);
 	/**
-	 * Original signature : <code>int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char**, size_t*)</code><br>
+	 * Original signature : <code>int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char**, SizeT*)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:305</i>
 	 */
-	int ssh_get_publickey_hash(SshLibrary.ssh_key key, int type, PointerByReference hash, NativeSizeByReference hlen);
+	int ssh_get_publickey_hash(SshLibrary.ssh_key key, int type, PointerByReference hash, SizeTByReference hlen);
 	/**
 	 * DEPRECATED FUNCTIONS<br>
 	 * Original signature : <code>int ssh_get_pubkey_hash(ssh_session, unsigned char**)</code><br>
@@ -2367,17 +2428,17 @@ public interface SshLibrary extends Library {
 	 */
 	String ssh_pki_key_ecdsa_name(SshLibrary.ssh_key key);
 	/**
-	 * Original signature : <code>void ssh_print_hexa(const char*, const unsigned char*, size_t)</code><br>
+	 * Original signature : <code>void ssh_print_hexa(const char*, const unsigned char*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:444</i><br>
-	 * @deprecated use the safer methods {@link #ssh_print_hexa(java.lang.String, byte[], com.ochafik.lang.jnaerator.runtime.NativeSize)} and {@link #ssh_print_hexa(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} instead
+	 * @deprecated use the safer methods {@link #ssh_print_hexa(java.lang.String, byte[], com.ochafik.lang.jnaerator.runtime.SizeT)} and {@link #ssh_print_hexa(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} instead
 	 */
 	@Deprecated 
-	void ssh_print_hexa(Pointer descr, Pointer what, NativeSize len);
+	void ssh_print_hexa(Pointer descr, Pointer what, SizeT len);
 	/**
-	 * Original signature : <code>void ssh_print_hexa(const char*, const unsigned char*, size_t)</code><br>
+	 * Original signature : <code>void ssh_print_hexa(const char*, const unsigned char*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:444</i>
 	 */
-	void ssh_print_hexa(String descr, byte what[], NativeSize len);
+	void ssh_print_hexa(String descr, byte what[], SizeT len);
 	/**
 	 * Original signature : <code>int ssh_send_ignore(ssh_session, const char*)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:446</i><br>
@@ -2523,17 +2584,17 @@ public interface SshLibrary extends Library {
 	 */
 	int ssh_scp_push_directory(SshLibrary.ssh_scp scp, String dirname, int mode);
 	/**
-	 * Original signature : <code>int ssh_scp_push_file(ssh_scp, const char*, size_t, int)</code><br>
+	 * Original signature : <code>int ssh_scp_push_file(ssh_scp, const char*, SizeT, int)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:470</i><br>
-	 * @deprecated use the safer methods {@link #ssh_scp_push_file(ssh.SshLibrary.ssh_scp, java.lang.String, com.ochafik.lang.jnaerator.runtime.NativeSize, int)} and {@link #ssh_scp_push_file(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize, int)} instead
+	 * @deprecated use the safer methods {@link #ssh_scp_push_file(ssh.SshLibrary.ssh_scp, java.lang.String, com.ochafik.lang.jnaerator.runtime.SizeT, int)} and {@link #ssh_scp_push_file(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT, int)} instead
 	 */
 	@Deprecated 
-	int ssh_scp_push_file(Pointer scp, Pointer filename, NativeSize size, int perms);
+	int ssh_scp_push_file(Pointer scp, Pointer filename, SizeT size, int perms);
 	/**
-	 * Original signature : <code>int ssh_scp_push_file(ssh_scp, const char*, size_t, int)</code><br>
+	 * Original signature : <code>int ssh_scp_push_file(ssh_scp, const char*, SizeT, int)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:470</i>
 	 */
-	int ssh_scp_push_file(SshLibrary.ssh_scp scp, String filename, NativeSize size, int perms);
+	int ssh_scp_push_file(SshLibrary.ssh_scp scp, String filename, SizeT size, int perms);
 	/**
 	 * Original signature : <code>int ssh_scp_push_file64(ssh_scp, const char*, uint64_t, int)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:472</i><br>
@@ -2547,17 +2608,17 @@ public interface SshLibrary extends Library {
 	 */
 	int ssh_scp_push_file64(SshLibrary.ssh_scp scp, String filename, long size, int perms);
 	/**
-	 * Original signature : <code>int ssh_scp_read(ssh_scp, void*, size_t)</code><br>
+	 * Original signature : <code>int ssh_scp_read(ssh_scp, void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:474</i><br>
-	 * @deprecated use the safer methods {@link #ssh_scp_read(ssh.SshLibrary.ssh_scp, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} and {@link #ssh_scp_read(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} instead
+	 * @deprecated use the safer methods {@link #ssh_scp_read(ssh.SshLibrary.ssh_scp, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} and {@link #ssh_scp_read(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} instead
 	 */
 	@Deprecated 
-	int ssh_scp_read(Pointer scp, Pointer buffer, NativeSize size);
+	int ssh_scp_read(Pointer scp, Pointer buffer, SizeT size);
 	/**
-	 * Original signature : <code>int ssh_scp_read(ssh_scp, void*, size_t)</code><br>
+	 * Original signature : <code>int ssh_scp_read(ssh_scp, void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:474</i>
 	 */
-	int ssh_scp_read(SshLibrary.ssh_scp scp, Pointer buffer, NativeSize size);
+	int ssh_scp_read(SshLibrary.ssh_scp scp, Pointer buffer, SizeT size);
 	/**
 	 * Original signature : <code>char* ssh_scp_request_get_filename(ssh_scp)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:476</i><br>
@@ -2583,17 +2644,17 @@ public interface SshLibrary extends Library {
 	 */
 	int ssh_scp_request_get_permissions(SshLibrary.ssh_scp scp);
 	/**
-	 * Original signature : <code>size_t ssh_scp_request_get_size(ssh_scp)</code><br>
+	 * Original signature : <code>SizeT ssh_scp_request_get_size(ssh_scp)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:480</i><br>
 	 * @deprecated use the safer methods {@link #ssh_scp_request_get_size(ssh.SshLibrary.ssh_scp)} and {@link #ssh_scp_request_get_size(com.sun.jna.Pointer)} instead
 	 */
 	@Deprecated 
-	NativeSize ssh_scp_request_get_size(Pointer scp);
+	SizeT ssh_scp_request_get_size(Pointer scp);
 	/**
-	 * Original signature : <code>size_t ssh_scp_request_get_size(ssh_scp)</code><br>
+	 * Original signature : <code>SizeT ssh_scp_request_get_size(ssh_scp)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:480</i>
 	 */
-	NativeSize ssh_scp_request_get_size(SshLibrary.ssh_scp scp);
+	SizeT ssh_scp_request_get_size(SshLibrary.ssh_scp scp);
 	/**
 	 * Original signature : <code>uint64_t ssh_scp_request_get_size64(ssh_scp)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:482</i><br>
@@ -2619,17 +2680,17 @@ public interface SshLibrary extends Library {
 	 */
 	String ssh_scp_request_get_warning(SshLibrary.ssh_scp scp);
 	/**
-	 * Original signature : <code>int ssh_scp_write(ssh_scp, const void*, size_t)</code><br>
+	 * Original signature : <code>int ssh_scp_write(ssh_scp, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:486</i><br>
-	 * @deprecated use the safer methods {@link #ssh_scp_write(ssh.SshLibrary.ssh_scp, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} and {@link #ssh_scp_write(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize)} instead
+	 * @deprecated use the safer methods {@link #ssh_scp_write(ssh.SshLibrary.ssh_scp, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} and {@link #ssh_scp_write(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT)} instead
 	 */
 	@Deprecated 
-	int ssh_scp_write(Pointer scp, Pointer buffer, NativeSize len);
+	int ssh_scp_write(Pointer scp, Pointer buffer, SizeT len);
 	/**
-	 * Original signature : <code>int ssh_scp_write(ssh_scp, const void*, size_t)</code><br>
+	 * Original signature : <code>int ssh_scp_write(ssh_scp, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:486</i>
 	 */
-	int ssh_scp_write(SshLibrary.ssh_scp scp, Pointer buffer, NativeSize len);
+	int ssh_scp_write(SshLibrary.ssh_scp scp, Pointer buffer, SizeT len);
 	/**
 	 * Original signature : <code>int ssh_select(ssh_channel*, ssh_channel*, socket_t, fd_set*, timeval*)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:488</i><br>
@@ -2994,10 +3055,10 @@ public interface SshLibrary extends Library {
 	 */
 	Pointer ssh_string_data(SshLibrary.ssh_string str);
 	/**
-	 * Original signature : <code>int ssh_string_fill(ssh_string, const void*, size_t)</code><br>
+	 * Original signature : <code>int ssh_string_fill(ssh_string, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:555</i>
 	 */
-	int ssh_string_fill(SshLibrary.ssh_string str, Pointer data, NativeSize len);
+	int ssh_string_fill(SshLibrary.ssh_string str, Pointer data, SizeT len);
 	/**
 	 * Original signature : <code>void ssh_string_free(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:557</i>
@@ -3016,15 +3077,15 @@ public interface SshLibrary extends Library {
 	 */
 	SshLibrary.ssh_string ssh_string_from_char(String what);
 	/**
-	 * Original signature : <code>size_t ssh_string_len(ssh_string)</code><br>
+	 * Original signature : <code>SizeT ssh_string_len(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:561</i>
 	 */
-	NativeSize ssh_string_len(SshLibrary.ssh_string str);
+	SizeT ssh_string_len(SshLibrary.ssh_string str);
 	/**
-	 * Original signature : <code>ssh_string ssh_string_new(size_t)</code><br>
+	 * Original signature : <code>ssh_string ssh_string_new(SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:563</i>
 	 */
-	SshLibrary.ssh_string ssh_string_new(NativeSize size);
+	SshLibrary.ssh_string ssh_string_new(SizeT size);
 	/**
 	 * Original signature : <code>char* ssh_string_get_char(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:565</i>
@@ -3048,17 +3109,17 @@ public interface SshLibrary extends Library {
 	 */
 	void ssh_string_free_char(ByteBuffer s);
 	/**
-	 * Original signature : <code>int ssh_getpass(const char*, char*, size_t, int, int)</code><br>
+	 * Original signature : <code>int ssh_getpass(const char*, char*, SizeT, int, int)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:571</i><br>
-	 * @deprecated use the safer methods {@link #ssh_getpass(java.lang.String, java.nio.ByteBuffer, com.ochafik.lang.jnaerator.runtime.NativeSize, int, int)} and {@link #ssh_getpass(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.NativeSize, int, int)} instead
+	 * @deprecated use the safer methods {@link #ssh_getpass(java.lang.String, java.nio.ByteBuffer, com.ochafik.lang.jnaerator.runtime.SizeT, int, int)} and {@link #ssh_getpass(com.sun.jna.Pointer, com.sun.jna.Pointer, com.ochafik.lang.jnaerator.runtime.SizeT, int, int)} instead
 	 */
 	@Deprecated 
-	int ssh_getpass(Pointer prompt, Pointer buf, NativeSize len, int echo, int verify);
+	int ssh_getpass(Pointer prompt, Pointer buf, SizeT len, int echo, int verify);
 	/**
-	 * Original signature : <code>int ssh_getpass(const char*, char*, size_t, int, int)</code><br>
+	 * Original signature : <code>int ssh_getpass(const char*, char*, SizeT, int, int)</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:571</i>
 	 */
-	int ssh_getpass(String prompt, ByteBuffer buf, NativeSize len, int echo, int verify);
+	int ssh_getpass(String prompt, ByteBuffer buf, SizeT len, int echo, int verify);
 	/**
 	 * Original signature : <code>ssh_event ssh_event_new()</code><br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:574</i>
@@ -3966,10 +4027,10 @@ public interface SshLibrary extends Library {
 	 */
 	Pointer string_data(SshLibrary.ssh_string str);
 	/**
-	 * Original signature : <code>int string_fill(ssh_string, const void*, size_t)</code><br>
+	 * Original signature : <code>int string_fill(ssh_string, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/legacy.h:122</i>
 	 */
-	int string_fill(SshLibrary.ssh_string str, Pointer data, NativeSize len);
+	int string_fill(SshLibrary.ssh_string str, Pointer data, SizeT len);
 	/**
 	 * Original signature : <code>void string_free(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/legacy.h:124</i>
@@ -3988,15 +4049,15 @@ public interface SshLibrary extends Library {
 	 */
 	SshLibrary.ssh_string string_from_char(String what);
 	/**
-	 * Original signature : <code>size_t string_len(ssh_string)</code><br>
+	 * Original signature : <code>SizeT string_len(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/legacy.h:128</i>
 	 */
-	NativeSize string_len(SshLibrary.ssh_string str);
+	SizeT string_len(SshLibrary.ssh_string str);
 	/**
-	 * Original signature : <code>ssh_string string_new(size_t)</code><br>
+	 * Original signature : <code>ssh_string string_new(SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/legacy.h:130</i>
 	 */
-	SshLibrary.ssh_string string_new(NativeSize size);
+	SshLibrary.ssh_string string_new(SizeT size);
 	/**
 	 * Original signature : <code>char* string_to_char(ssh_string)</code><br>
 	 * <i>native declaration : /usr/include/libssh/legacy.h:132</i>
@@ -4341,10 +4402,10 @@ public interface SshLibrary extends Library {
 	 * @return              Number of bytes written, < 0 on error with ssh and sftp<br>
 	 *                      error set.<br>
 	 * @see sftp_get_error()<br>
-	 * Original signature : <code>ssize_t sftp_read(sftp_file, void*, size_t)</code><br>
+	 * Original signature : <code>ssize_t sftp_read(sftp_file, void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/sftp.h:332</i>
 	 */
-	long sftp_read(sftp_file_struct file, Pointer buf, NativeSize count);
+	long sftp_read(sftp_file_struct file, Pointer buf, SizeT count);
 	/**
 	 * @brief Read from a file using an opened sftp file handle.<br>
 	 * @param file          The opened sftp file handle to be read from.<br>
@@ -4353,10 +4414,10 @@ public interface SshLibrary extends Library {
 	 * @return              Number of bytes written, < 0 on error with ssh and sftp<br>
 	 *                      error set.<br>
 	 * @see sftp_get_error()<br>
-	 * Original signature : <code>ssize_t sftp_read(sftp_file, void*, size_t)</code><br>
+	 * Original signature : <code>ssize_t sftp_read(sftp_file, void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/sftp.h:332</i>
 	 */
-	long sftp_read(sftp_file_struct file, ByteBuffer buf, NativeSize count);
+	long sftp_read(sftp_file_struct file, ByteBuffer buf, SizeT count);
 	/**
 	 * @brief Start an asynchronous read from a file using an opened sftp file handle.<br>
 	 * Its goal is to avoid the slowdowns related to the request/response pattern<br>
@@ -4411,10 +4472,10 @@ public interface SshLibrary extends Library {
 	 * @see                 sftp_open()<br>
 	 * @see                 sftp_read()<br>
 	 * @see                 sftp_close()<br>
-	 * Original signature : <code>ssize_t sftp_write(sftp_file, const void*, size_t)</code><br>
+	 * Original signature : <code>ssize_t sftp_write(sftp_file, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/sftp.h:387</i>
 	 */
-	long sftp_write(sftp_file_struct file, Pointer buf, NativeSize count);
+	long sftp_write(sftp_file_struct file, Pointer buf, SizeT count);
 	/**
 	 * @brief Write to a file using an opened sftp file handle.<br>
 	 * @param file          Open sftp file handle to write to.<br>
@@ -4425,10 +4486,10 @@ public interface SshLibrary extends Library {
 	 * @see                 sftp_open()<br>
 	 * @see                 sftp_read()<br>
 	 * @see                 sftp_close()<br>
-	 * Original signature : <code>ssize_t sftp_write(sftp_file, const void*, size_t)</code><br>
+	 * Original signature : <code>ssize_t sftp_write(sftp_file, const void*, SizeT)</code><br>
 	 * <i>native declaration : /usr/include/libssh/sftp.h:387</i>
 	 */
-	long sftp_write(sftp_file_struct file, ByteBuffer buf, NativeSize count);
+	long sftp_write(sftp_file_struct file, ByteBuffer buf, SizeT count);
 	/**
 	 * @brief Seek to a specific location in a file.<br>
 	 * @param file         Open sftp file handle to seek in.<br>

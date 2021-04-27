@@ -1,3 +1,24 @@
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package com.maverick.ssh.tests.client.tests;
 
 import static com.maverick.ssh.tests.Size.size;
@@ -118,7 +139,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 					ssh.getProvider().getCapabilities().contains(Capability.SET_LAST_MODIFIED));
 			createFile("testLastModFile");
 			long lastMod = sftp.stat(resolveRemote("testLastModFile")).getLastModified();
-			assertNotEquals("Initial last modified times should not be zero", lastMod, 0);
+			assertNotEquals("Initial last modified times should not be zero", 0, lastMod);
 			Thread.sleep(2000);
 			OutputStream out = sftp.put(resolveRemote("testLastModFile"), TEST_FILE_PERMISSIONS);
 			try {
@@ -468,7 +489,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			}
 			SftpFile[] files = sftp.ls(resolveRemote("/"));
 			assertEquals("Must have correct number of files and directories (plus . and ..)",
-					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0),
+					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS)  && !ssh.getProvider().getCapabilities().contains(Capability.FILTERS_SFTP_DOT_DIRECTORIES) ? 2 : 0),
 					files.length);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30));
@@ -487,7 +508,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			SftpFile f : sftp.list(resolveRemote("/")))
 				files++;
 			assertEquals("Must have correct number of files and directories (plus . and ..)",
-					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) ? 2 : 0),
+					15 + (config.getServerCapabilities().contains(ServerCapability.SFTP_LS_RETURNS_DOTS) && !ssh.getProvider().getCapabilities().contains(Capability.FILTERS_SFTP_DOT_DIRECTORIES) ? 2 : 0),
 					files);
 			return null;
 		}, TimeUnit.MINUTES.toMillis(1));

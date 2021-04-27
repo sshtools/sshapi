@@ -1,3 +1,26 @@
+<!--
+
+    Copyright (c) 2020 The JavaSSH Project
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+     of this software and associated documentation files (the "Software"), to deal
+     in the Software without restriction, including without limitation the rights
+     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     copies of the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be included in
+     all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -38,7 +61,7 @@
 	<!-- Each of the test combinations is a profile that should be manually
 	     activated.
 	     
-	     There are 9 providers, and 4 servers giving a total of 36 possible combinations
+	     There are 10 providers, and 4 servers giving a total of 40 possible combinations
 	     of API. However, some Maverick server APIs will not work with some versions of
 	     Maverick client APIs in the same runtime.
 	     
@@ -60,6 +83,7 @@
 	     		client-libssh
 	     		client-openssh
 	     		client-trilead
+	     		client-sshj
 	     		 
 	     
 	-->
@@ -83,6 +107,13 @@
 				</plugins>
 			</build>
 			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-openssh-local</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
 				<dependency>
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-tests-server-openssh</artifactId>
@@ -111,6 +142,13 @@
 				</plugins>
 			</build>
 			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-tests-server-openssh-remote</artifactId>
+					<version>${project.version}</version>
+					<type>test-jar</type>
+					<scope>test</scope>
+				</dependency>
 				<dependency>
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-tests-server-openssh</artifactId>
@@ -226,6 +264,20 @@
 				<dependency>
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-ganymed</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- SSHJ  -->
+		<profile>
+			<id>client-sshj</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-sshj</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>

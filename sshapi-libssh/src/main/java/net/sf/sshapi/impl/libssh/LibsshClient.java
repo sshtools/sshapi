@@ -1,25 +1,23 @@
-/* 
- * Copyright (c) 2010 The JavaSSH Project
- * All rights reserved.
- * 
- * Permission is hereby granted, free  of charge, to any person obtaining
- * a  copy  of this  software  and  associated  documentation files  (the
- * "Software"), to  deal in  the Software without  restriction, including
- * without limitation  the rights to  use, copy, modify,  merge, publish,
- * distribute,  sublicense, and/or sell  copies of  the Software,  and to
- * permit persons to whom the Software  is furnished to do so, subject to
- * the following conditions:
- * 
- * The  above  copyright  notice  and  this permission  notice  shall  be
- * included in all copies or substantial portions of the Software.
- * 
- * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Copyright (c) 2020 The JavaSSH Project
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
  */
 package net.sf.sshapi.impl.libssh;
 
@@ -28,7 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.ochafik.lang.jnaerator.runtime.NativeSize;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -53,6 +50,7 @@ import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.Util;
 import ssh.SshLibrary;
+import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_auth_callback;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_key;
@@ -229,15 +227,10 @@ public class LibsshClient extends AbstractClient {
 				int bytes = library.ssh_get_pubkey_hash(libSshSession, ref);
 				Pointer mem = ref.getValue();
 				final byte[] hash = mem.getByteArray(0, bytes);
-				Pointer f = library.ssh_get_hexa(hash, new NativeSize(bytes));
+				Pointer f = library.ssh_get_hexa(hash, new SizeT(bytes));
 				final String fingerPrint = f.getString(0);
 				
 				SshHostKey hostKey = new SshHostKey() {
-					@Override
-					public String getComments() {
-						return null;
-					}
-
 					@Override
 					public String getFingerprint() {
 						return fingerPrint;
@@ -332,7 +325,7 @@ public class LibsshClient extends AbstractClient {
 			AtomicBoolean askedFor = new AtomicBoolean();
 			ssh_auth_callback cb = new ssh_auth_callback() {
 				@Override
-				public int apply(Pointer prompt, Pointer buf, NativeSize len, int echo, int verify, Pointer userdata) {
+				public int apply(Pointer prompt, Pointer buf, SizeT len, int echo, int verify, Pointer userdata) {
 					askedFor.set(true);
 					char[] pw = pk.promptForPassphrase(LibsshClient.this, prompt.getString(0));
 					if(pw == null)
