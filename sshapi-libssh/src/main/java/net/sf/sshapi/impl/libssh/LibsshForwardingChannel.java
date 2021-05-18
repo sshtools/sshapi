@@ -33,6 +33,9 @@ import net.sf.sshapi.SshProvider;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 
+/**
+ * libssh forwarding channel.
+ */
 public class LibsshForwardingChannel extends AbstractForwardingChannel<LibsshClient> {
 
 	private SshLibrary library;
@@ -40,6 +43,16 @@ public class LibsshForwardingChannel extends AbstractForwardingChannel<LibsshCli
 	private InputStream in;
 	private OutputStream out;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param library library
+	 * @param client client
+	 * @param provider provider
+	 * @param configuration configuration
+	 * @param hostname hostname
+	 * @param port port
+	 */
 	public LibsshForwardingChannel(SshLibrary library, LibsshClient client, SshProvider provider,
 			SshConfiguration configuration, String hostname, int port) {
 		super(client, provider, configuration, hostname, port);

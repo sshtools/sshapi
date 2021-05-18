@@ -31,10 +31,18 @@ import net.schmizz.sshj.xfer.scp.SCPUploadClient;
 import net.sf.sshapi.AbstractSCPClient;
 import net.sf.sshapi.SshException;
 
+/**
+ * SSHJ SCP implementation.
+ */
 public class SSHJSCPClient extends AbstractSCPClient {
 
 	private SCPFileTransfer scp;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param client client
+	 */
 	public SSHJSCPClient(SSHJSshClient client) {
 		super(client.getProvider());
 		scp = client.getSsh().newSCPFileTransfer();

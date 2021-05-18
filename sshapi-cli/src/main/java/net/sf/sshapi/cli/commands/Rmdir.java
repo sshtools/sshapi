@@ -28,14 +28,14 @@ import net.sf.sshapi.sftp.SftpClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Remove directory command.
+ */
 @Command(name = "rmdir", mixinStandardHelpOptions = true, description = "Remove directory.")
 public class Rmdir extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "1", description = "Directory to remove.")
 	private String directory;
-
-	public Rmdir() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

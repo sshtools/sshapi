@@ -245,7 +245,7 @@ public class Capability {
 	 */
 	public final static Capability SFTP_OFFSET= new Capability("sftpOffset");
 	/**
-	 * The provider supports {@link SftpClient#resumeGet(String, java.io.File)
+	 * The provider supports {@link SftpClient#resumeGet(String, java.io.File)}
 	 * {@link SftpClient#resumePut(java.io.File, String)}, allowing
 	 * resuming of uploads and downloads.
 	 */

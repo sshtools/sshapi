@@ -30,29 +30,69 @@ import java.util.Map;
  * by the SftpClient's copyRemoteDirectory/copyLocalDirectory methods.
  * </p>
  * <p>
- * The objects returned could either be
- * {@link SftpFile} or
+ * The objects returned could either be {@link SftpFile} or
  * <em>java.io.File</em> depending upon the commit state and whether
- * synchronization is required. Any code using the values returned should be able
- * to handle both types of file object.
+ * synchronization is required. Any code using the values returned should be
+ * able to handle both types of file object.
  * </p>
  * 
  * 
  */
 public interface SftpOperation {
+	/**
+	 * All files.
+	 * 
+	 * @return all files
+	 */
 	List<String> all();
 
+	/**
+	 * Deleted files.
+	 * 
+	 * @return deleted files
+	 */
 	List<String> deleted();
 
+	/**
+	 * Unchanged files.
+	 * 
+	 * @return unchanged files
+	 */
 	List<String> unchanged();
 
+	/**
+	 * Updated files.
+	 * 
+	 * @return updated files
+	 */
 	List<String> updated();
 
+	/**
+	 * Created files.
+	 * 
+	 * @return created files.
+	 */
 	List<String> created();
 
+	/**
+	 * Errors.
+	 * 
+	 * @return errors
+	 */
 	Map<String, Exception> errors();
 
+	/**
+	 * 
+	 * Total size of all files.
+	 * 
+	 * @return total size
+	 */
 	long size();
 
+	/**
+	 * Total number of all files.
+	 * 
+	 * @return total files
+	 */
 	long files();
 }

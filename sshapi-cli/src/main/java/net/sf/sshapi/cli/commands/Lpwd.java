@@ -25,12 +25,11 @@ import java.util.concurrent.Callable;
 
 import picocli.CommandLine.Command;
 
+/**
+ * Print local working directory.
+ */
 @Command(name = "lpwd", mixinStandardHelpOptions = true, description = "Print current local directory.")
 public class Lpwd extends SftpCommand implements Callable<Integer> {
-
-	public Lpwd() {
-	}
-
 	@Override
 	public Integer call() throws Exception {
 		getContainer().getTerminal().writer().println(getContainer().getLcwd());

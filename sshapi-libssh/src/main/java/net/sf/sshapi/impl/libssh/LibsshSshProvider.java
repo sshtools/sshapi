@@ -32,11 +32,17 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import ssh.SshLibrary;
 
+/**
+ * libssh provider implementation.
+ */
 public class LibsshSshProvider extends AbstractProvider {
 	static {
 		SshLibrary.INSTANCE.ssh_init();
 	}
 
+	/**
+	 * Constructor.
+	 */
 	public LibsshSshProvider() {
 		super("libssh", "https://www.libssh.org");
 		String ver = SshLibrary.INSTANCE.ssh_version(0);

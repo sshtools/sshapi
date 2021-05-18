@@ -50,12 +50,39 @@ import net.sf.sshapi.util.CaptureInputStream.MatchResult;
 import net.sf.sshapi.util.CaptureInputStream.Matcher;
 import net.sf.sshapi.util.Util;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class OpenSshSftpClient.
+ */
 public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpenSshClient {
+
+	/** The Constant SFTP_PROMPT. */
 	private static final String SFTP_PROMPT = "sftp> ";
 
+	/**
+	 * The Enum Type.
+	 */
 	public enum Type {
-		BLOCK, CHARACTER, DIRECTORY, FILE, LINK, SPECIAL;
 
+		/** The block. */
+		BLOCK,
+		/** The character. */
+		CHARACTER,
+		/** The directory. */
+		DIRECTORY,
+		/** The file. */
+		FILE,
+		/** The link. */
+		LINK,
+		/** The special. */
+		SPECIAL;
+
+		/**
+		 * Parses the.
+		 *
+		 * @param p the p
+		 * @return the type
+		 */
 		public static Type parse(char p) {
 			switch (p) {
 			case 'd':
@@ -71,6 +98,11 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 			}
 		}
 
+		/**
+		 * To SSHAPI type.
+		 *
+		 * @return the int
+		 */
 		public int toSSHAPIType() {
 			switch (this) {
 			case DIRECTORY:
@@ -87,6 +119,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Parses the permissions.
+	 *
+	 * @param perm the perm
+	 * @return the long
+	 */
 	private static long parsePermissions(String perm) {
 		int len = perm.length();
 		long cp = 0;
@@ -120,6 +158,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		return cp;
 	}
 
+	/**
+	 * Quote arg.
+	 *
+	 * @param arg the arg
+	 * @return the string
+	 */
 	private static String quoteArg(String arg) {
 		// Wildcards go outside of quotes
 		if (arg.indexOf(" ") != -1) {
@@ -150,21 +194,47 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/** The default path. */
 	// private CaptureOutputStream capture;
 	private String defaultPath;
+
+	/** The lock. */
 	private Object lock = new Object();
+
+	/** The out. */
 	private OutputStream out;
+
+	/** The pb. */
 	private ProcessBuilder pb;
+
+	/** The process. */
 	private Process process;
+
+	/** The client. */
 	private OpenSshClient client;
+
+	/** The in. */
 	private CaptureInputStream in;
 
+	/**
+	 * Instantiates a new open ssh sftp client.
+	 *
+	 * @param client the client
+	 * @param pb     the pb
+	 */
 	public OpenSshSftpClient(OpenSshClient client, ProcessBuilder pb) {
 		super(client.getProvider(), client.getConfiguration());
 		this.client = client;
 		this.pb = pb;
 	}
 
+	/**
+	 * Chgrp.
+	 *
+	 * @param path the path
+	 * @param gid  the gid
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void chgrp(String path, int gid) throws SshException {
 		synchronized (lock) {
@@ -173,6 +243,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Chmod.
+	 *
+	 * @param path        the path
+	 * @param permissions the permissions
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void chmod(String path, int permissions) throws SshException {
 		synchronized (lock) {
@@ -184,6 +261,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Chown.
+	 *
+	 * @param path the path
+	 * @param uid  the uid
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void chown(String path, int uid) throws SshException {
 		synchronized (lock) {
@@ -192,6 +276,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Gets the.
+	 *
+	 * @param path        the path
+	 * @param destination the destination
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void get(String path, File destination) throws SshException {
 		synchronized (lock) {
@@ -205,6 +296,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Do download.
+	 *
+	 * @param path the path
+	 * @return the input stream
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected InputStream doDownload(String path) throws SshException {
 		try {
@@ -227,6 +325,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Do download.
+	 *
+	 * @param path the path
+	 * @param out  the out
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void doDownload(String path, OutputStream out) throws SshException {
 		synchronized (lock) {
@@ -248,11 +353,23 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Gets the default path.
+	 *
+	 * @return the default path
+	 */
 	@Override
 	public String getDefaultPath() {
 		return defaultPath;
 	}
 
+	/**
+	 * Ls.
+	 *
+	 * @param path the path
+	 * @return the sftp file[]
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public SftpFile[] ls(String path) throws SshException {
 		synchronized (lock) {
@@ -272,6 +389,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Mkdir.
+	 *
+	 * @param path        the path
+	 * @param permissions the permissions
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void mkdir(String path, int permissions) throws SshException {
 		synchronized (lock) {
@@ -280,6 +404,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Do upload.
+	 *
+	 * @param path the path
+	 * @param in   the in
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void doUpload(String path, InputStream in) throws SshException {
 		synchronized (lock) {
@@ -298,6 +429,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Rename.
+	 *
+	 * @param oldpath the oldpath
+	 * @param newpath the newpath
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void rename(String oldpath, String newpath) throws SshException {
 		synchronized (lock) {
@@ -306,6 +444,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Rm.
+	 *
+	 * @param path the path
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void rm(String path) throws SshException {
 		synchronized (lock) {
@@ -314,6 +458,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Rmdir.
+	 *
+	 * @param path the path
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void rmdir(String path) throws SshException {
 		synchronized (lock) {
@@ -322,11 +472,25 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Sets the last modified.
+	 *
+	 * @param path    the path
+	 * @param modtime the modtime
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void setLastModified(String path, long modtime) throws SshException {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Stat.
+	 *
+	 * @param path the path
+	 * @return the sftp file
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public SftpFile stat(String path) throws SshException {
 		synchronized (lock) {
@@ -368,6 +532,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Symlink.
+	 *
+	 * @param oldpath the oldpath
+	 * @param newpath the newpath
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void symlink(String oldpath, String newpath) throws SshException {
 		synchronized (lock) {
@@ -376,6 +547,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Resume get.
+	 *
+	 * @param path        the path
+	 * @param destination the destination
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void resumeGet(String path, File destination) throws SshException {
 		synchronized (lock) {
@@ -394,6 +572,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Resume put.
+	 *
+	 * @param source the source
+	 * @param path   the path
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public void resumePut(File source, String path) throws SshException {
 		synchronized (lock) {
@@ -417,6 +602,11 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * On close.
+	 *
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void onClose() throws SshException {
 		synchronized (lock) {
@@ -437,6 +627,11 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * On open.
+	 *
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void onOpen() throws SshException {
 		try {
@@ -506,6 +701,13 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Check common errors.
+	 *
+	 * @param path    the path
+	 * @param results the results
+	 * @throws SshException the ssh exception
+	 */
 	private void checkCommonErrors(String path, String[] results) throws SshException {
 		for (String r : results) {
 			if (r.endsWith(": No such file or directory") || r.endsWith("\" not found")) {
@@ -527,6 +729,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		}
 	}
 
+	/**
+	 * Creates the command.
+	 *
+	 * @param args the args
+	 * @return the string
+	 */
 	private String createCommand(Object... args) {
 		StringBuilder b = new StringBuilder();
 		for (Object o : args) {
@@ -545,6 +753,14 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		return b.toString();
 	}
 
+	/**
+	 * Creates the file.
+	 *
+	 * @param parentPath the parent path
+	 * @param r          the r
+	 * @return the sftp file
+	 * @throws SshException the ssh exception
+	 */
 	private SftpFile createFile(String parentPath, String r) throws SshException {
 		StringBuilder bui = new StringBuilder();
 		StringBuilder dateWord = new StringBuilder();
@@ -651,12 +867,24 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		return new SftpFile(type.toSSHAPIType(), path, size, lastModified, 0, 0, gid, uid, permissions);
 	}
 
+	/**
+	 * Creates the temp file.
+	 *
+	 * @return the file
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private File createTempFile() throws IOException {
 		File file = File.createTempFile("javaopensshftp", "put");
 		file.deleteOnExit();
 		return file;
 	}
 
+	/**
+	 * Process results.
+	 *
+	 * @param results the results
+	 * @return the string[]
+	 */
 	private String[] processResults(String results) {
 		String[] s = results.split("\n");
 		for (int i = 0; i < s.length; i++) {
@@ -665,6 +893,12 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		return s;
 	}
 
+	/**
+	 * Pwd.
+	 *
+	 * @return the string
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private String pwd() throws IOException {
 		String[] results = processResults(runCommand("pwd"));
 		checkCommonErrors(null, results);
@@ -675,10 +909,25 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 		return r;
 	}
 
+	/**
+	 * Run command.
+	 *
+	 * @param cmd the cmd
+	 * @return the string
+	 * @throws SshException the ssh exception
+	 */
 	private String runCommand(String cmd) throws SshException {
 		return runCommand(cmd, true);
 	}
 
+	/**
+	 * Run command.
+	 *
+	 * @param cmd          the cmd
+	 * @param waitForReply the wait for reply
+	 * @return the string
+	 * @throws SshException the ssh exception
+	 */
 	private String runCommand(String cmd, boolean waitForReply) throws SshException {
 		Semaphore sftpPromptSem = new Semaphore(1);
 		try {

@@ -159,6 +159,7 @@ public interface Logger {
 	 * 
 	 * @param message
 	 *            message
+	 * @param exception exception
 	 * @param args formatting arguments
 	 */
 	default void warn(String message, Throwable exception, Object... args) {

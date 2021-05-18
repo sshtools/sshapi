@@ -27,6 +27,8 @@ import java.util.List;
 /**
  * Abstract implementation of a file transfer client, providing some useful
  * default methods (currently transfer events).
+ * @param <L> the type of listener
+ * @param <C> the type of component
  */
 public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
 		extends AbstractLifecycleComponentWithEvents<L, C> {

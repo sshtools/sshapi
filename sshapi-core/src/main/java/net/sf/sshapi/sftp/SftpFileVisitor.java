@@ -23,5 +23,8 @@ package net.sf.sshapi.sftp;
 
 import java.nio.file.SimpleFileVisitor;
 
+/**
+ * Concrete {@link SimpleFileVisitor} for use with {@link SftpFile}.
+ */
 public class SftpFileVisitor extends SimpleFileVisitor<SftpFile> {
 }

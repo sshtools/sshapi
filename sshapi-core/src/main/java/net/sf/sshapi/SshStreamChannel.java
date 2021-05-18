@@ -30,6 +30,8 @@ import java.util.concurrent.Future;
 /**
  * Extension to {@link SshLifecycleComponent} for channels who expose I/O
  * streams, such as executing a command, or a {@link SshShell}.
+ * @param <L> listener type
+ * @param <C> component type
  * 
  */
 public interface SshStreamChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
@@ -47,6 +49,7 @@ public interface SshStreamChannel<L extends SshLifecycleListener<C>, C extends S
 	 * Write bytes to the output of this channel without block. This is the non-blocking
 	 * variant of using {@link #getOutputStream()}. 
 	 * 
+	 * @param buffer buffer
 	 * @return future
 	 */
 	Future<Void> writeLater(ByteBuffer buffer);

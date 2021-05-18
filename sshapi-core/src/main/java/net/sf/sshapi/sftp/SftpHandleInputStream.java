@@ -33,6 +33,12 @@ public class SftpHandleInputStream extends InputStream {
 	private final SftpHandle h;
 	private long mark = -1;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param buf buffer
+	 * @param h handle
+	 */
 	public SftpHandleInputStream(ByteBuffer buf, SftpHandle h) {
 		this.buf = buf;
 		this.h = h;

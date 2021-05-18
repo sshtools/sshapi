@@ -24,6 +24,12 @@ package net.sf.sshapi;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Abstract {@link SshExtendedChannel} implementation.
+ *
+ * @param <L> listener type
+ * @param <C> component type
+ */
 public abstract class AbstractSshExtendedChannel<L extends SshChannelListener<C>, C extends SshStreamChannel<L, C>>
 		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 	private SshInput errInput;

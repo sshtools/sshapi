@@ -41,6 +41,9 @@ import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
+/**
+ * libssh remote port forward implementation.
+ */
 public class LibsshRemoteForward extends AbstractPortForward implements SshPortForward, Runnable {
 
 	private ssh_session libSshSession;
@@ -54,6 +57,17 @@ public class LibsshRemoteForward extends AbstractPortForward implements SshPortF
 	private ServerSocketChannel ssc;
 	private boolean closed;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param provider provider
+	 * @param libSshSession session
+	 * @param library library
+	 * @param localAddress local address
+	 * @param localPort local port
+	 * @param remoteHost remote host
+	 * @param remotePort remote port
+	 */
 	public LibsshRemoteForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress, int localPort, String remoteHost,
 			int remotePort) {
 		super(provider);

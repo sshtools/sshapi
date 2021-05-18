@@ -23,13 +23,34 @@ package net.sf.sshapi;
 
 import net.sf.sshapi.SshChannel.ChannelData;
 
+/**
+ * A basic {@link ChannelData} implementation.
+ */
 public class DefaultChannelData implements ChannelData {
+	
+	/** The window size. */
 	int windowSize;
+	
+	/** The packet size. */
 	int packetSize;
+	
+	/** The timeout. */
 	long timeout;
+	
+	/** The create. */
 	byte[] create;
+	
+	/** The request data. */
 	byte[] requestData;
 
+	/**
+	 * Instantiates a new default channel data.
+	 *
+	 * @param windowSize the window size
+	 * @param packetSize the packet size
+	 * @param timeout the timeout
+	 * @param requestData the request data
+	 */
 	public DefaultChannelData(int windowSize, int packetSize, long timeout, byte[] requestData) {
 		super();
 		this.windowSize = windowSize;
@@ -38,6 +59,15 @@ public class DefaultChannelData implements ChannelData {
 		this.requestData = requestData;
 	}
 
+	/**
+	 * Instantiates a new default channel data.
+	 *
+	 * @param windowSize the window size
+	 * @param packetSize the packet size
+	 * @param timeout the timeout
+	 * @param create the create
+	 * @param requestData the request data
+	 */
 	public DefaultChannelData(int windowSize, int packetSize, long timeout, byte[] create, byte[] requestData) {
 		super();
 		this.windowSize = windowSize;
@@ -47,42 +77,92 @@ public class DefaultChannelData implements ChannelData {
 		this.requestData = requestData;
 	}
 
+	/**
+	 * Gets the window size.
+	 *
+	 * @return the window size
+	 */
 	public int getWindowSize() {
 		return windowSize;
 	}
 
+	/**
+	 * Sets the window size.
+	 *
+	 * @param windowSize the new window size
+	 */
 	public void setWindowSize(int windowSize) {
 		this.windowSize = windowSize;
 	}
 
+	/**
+	 * Gets the packet size.
+	 *
+	 * @return the packet size
+	 */
 	public int getPacketSize() {
 		return packetSize;
 	}
 
+	/**
+	 * Sets the packet size.
+	 *
+	 * @param packetSize the new packet size
+	 */
 	public void setPacketSize(int packetSize) {
 		this.packetSize = packetSize;
 	}
 
+	/**
+	 * Gets the timeout.
+	 *
+	 * @return the timeout
+	 */
 	public long getTimeout() {
 		return timeout;
 	}
 
+	/**
+	 * Sets the timeout.
+	 *
+	 * @param timeout the new timeout
+	 */
 	public void setTimeout(long timeout) {
 		this.timeout = timeout;
 	}
 
+	/**
+	 * Sets the creates the.
+	 *
+	 * @param create the new creates the
+	 */
 	public void setCreate(byte[] create) {
 		this.create = create;
 	}
 
+	/**
+	 * Gets the request data.
+	 *
+	 * @return the request data
+	 */
 	public byte[] getRequestData() {
 		return requestData;
 	}
 
+	/**
+	 * Sets the request data.
+	 *
+	 * @param requestData the new request data
+	 */
 	public void setRequestData(byte[] requestData) {
 		this.requestData = requestData;
 	}
 
+	/**
+	 * Creates the.
+	 *
+	 * @return the byte[]
+	 */
 	public byte[] create() {
 		return create;
 	}

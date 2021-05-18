@@ -24,6 +24,8 @@ package net.sf.sshapi;
 /**
  * Interface to be implemented by any lifecycle components that might produce
  * data that can be listened to.
+ * @param <L> listener type
+ * @param <C> component type
  * 
  * @see SshDataListener
  */

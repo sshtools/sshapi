@@ -26,8 +26,17 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Test server.
+ */
 public class TestSrv {
 
+	/**
+	 * Entry point.
+	 * 
+	 * @param args arguments
+	 * @throws Exception on error
+	 */
 	public static void main(String[] args) throws Exception {
 		try (ServerSocket ss = new ServerSocket(9999)) {
 			while (true) {

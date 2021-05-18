@@ -36,11 +36,20 @@ import net.sf.sshapi.util.ConsoleLogger;
 import net.sf.sshapi.util.ConsolePasswordAuthenticator;
 import net.sf.sshapi.util.Util;
 
+/**
+ * Test client close
+ */
 public class TestClientClose {
 	static {
 		((ConsoleLogger)SshConfiguration.getLogger()).setDefaultLevel(Level.INFO);
 	}
 
+	/**
+	 * Entry point.
+	 * 
+	 * @param args arguments
+	 * @throws IOException on error
+	 */
 	public static void main(String[] args) throws IOException {
 		
 		SshConfiguration config = new SshConfiguration().setHostKeyValidator(new ConsoleHostKeyValidator())

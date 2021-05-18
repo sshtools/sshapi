@@ -39,49 +39,118 @@ public class DefaultX509PublicKeyAuthenticator extends DefaultPublicKeyAuthentic
 	private String alias;
 	private SshPasswordPrompt keyPassphrasePrompt;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param privateKeyData private key data
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, byte[] privateKeyData) {
 		super(privateKeyData);
 		init(alias, null);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param privateKeyData private key data
+	 * @throws IOException on error
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, InputStream privateKeyData) throws IOException {
 		super(privateKeyData);
 		init(alias, null);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param privateKeyFile private key file
+	 * @throws IOException on error
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, File privateKeyFile) throws IOException {
 		super(privateKeyFile);
 		init(alias, null);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param privateKeyData private key data
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) {
 		super(passphrasePrompt, privateKeyData);
 		init(alias, null);
 	}
-
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param privateKeyData private key data
+	 * @throws IOException pm errpr
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt, InputStream privateKeyData) throws IOException {
 		super(passphrasePrompt, privateKeyData);
 		init(alias, null);
 	}
-
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param privateKeyFile private key file
+	 * @throws IOException pm errpr
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt, File privateKeyFile)
 			throws IOException {
 		super(passphrasePrompt, privateKeyFile);
 		init(alias, null);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param keyPassphrasePrompt key passphrase prompt
+	 * @param privateKeyData private key data
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt,
 			SshPasswordPrompt keyPassphrasePrompt, byte[] privateKeyData) {
 		super(passphrasePrompt, privateKeyData);
 		init(alias, keyPassphrasePrompt);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param keyPassphrasePrompt key passphrase prompt
+	 * @param privateKeyData private key data 
+	 * @throws IOException on error
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt,
 			SshPasswordPrompt keyPassphrasePrompt, InputStream privateKeyData) throws IOException {
 		super(passphrasePrompt, privateKeyData);
 		init(alias, keyPassphrasePrompt);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param alias alias
+	 * @param passphrasePrompt passphrase prompt
+	 * @param keyPassphrasePrompt key passphrase prompt
+	 * @param privateKeyFile private key file 
+	 * @throws IOException on error
+	 */
 	public DefaultX509PublicKeyAuthenticator(String alias, SshPasswordPrompt passphrasePrompt,
 			SshPasswordPrompt keyPassphrasePrompt, File privateKeyFile) throws IOException {
 		super(passphrasePrompt, privateKeyFile);

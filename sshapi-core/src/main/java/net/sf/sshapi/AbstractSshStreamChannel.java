@@ -28,6 +28,12 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.Future;
 
+/**
+ * Abstract {@link SshStreamChannel} implementation.
+ *
+ * @param <L> listener type
+ * @param <C> component type
+ */
 public abstract class AbstractSshStreamChannel<L extends SshChannelListener<C>, C extends SshStreamChannel<L, C>>
 		extends AbstractDataProducingComponent<L, C> implements SshStreamChannel<L, C> {
 

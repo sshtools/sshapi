@@ -31,14 +31,14 @@ import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Put file command.
+ */
 @Command(name = "put", mixinStandardHelpOptions = true, description = "Upload local file.")
 public class Put extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "1", description = "File to store.")
 	private String file;
-
-	public Put() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

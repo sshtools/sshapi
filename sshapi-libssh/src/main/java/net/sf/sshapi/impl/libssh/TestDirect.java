@@ -26,8 +26,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+/**
+ * Test direct connection.
+ */
 public class TestDirect {
 
+	/**
+	 * Entry point.
+	 * 
+	 * @param args arguments
+	 * @throws IOException on error
+	 */
 	public static void main(String[] args) throws IOException {
 
 

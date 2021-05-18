@@ -30,6 +30,9 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 
+/**
+ * The Class MaverickSynergyPublicKey.
+ */
 public class MaverickSynergyPublicKey implements SshPublicKey {
 
 	private byte[] key;
@@ -38,10 +41,26 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 	private int bitLength;
 	private com.sshtools.common.ssh.components.SshPublicKey publicKey;
 
+	/**
+	 * Instantiates a new maverick synergy public key.
+	 *
+	 * @param fingerprintHashingAlgorithm the fingerprint hashing algorithm
+	 * @param publicKeyFile the public key file
+	 * @throws SshException the ssh exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws com.sshtools.common.ssh.SshException error
+	 */
 	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, SshPublicKeyFile publicKeyFile) throws com.sshtools.common.ssh.SshException, IOException {
 		init(fingerprintHashingAlgorithm, publicKeyFile.toPublicKey());
 	}
 
+	/**
+	 * Inits the.
+	 *
+	 * @param fingerprintHashingAlgorithm the fingerprint hashing algorithm
+	 * @param publicKey the public key
+	 * @throws SshException the ssh exception
+	 */
 	private void init(String fingerprintHashingAlgorithm, com.sshtools.common.ssh.components.SshPublicKey publicKey)
 			throws com.sshtools.common.ssh.SshException {
 		this.publicKey = publicKey;
@@ -51,11 +70,25 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
+	/**
+	 * Instantiates a new maverick synergy public key.
+	 *
+	 * @param fingerprintHashingAlgorithm the fingerprint hashing algorithm
+	 * @param publicKey the public key
+	 * @throws com.sshtools.common.ssh.SshException the ssh exception
+	 */
 	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, com.sshtools.common.ssh.components.SshPublicKey publicKey)
 			throws com.sshtools.common.ssh.SshException {
 		init(fingerprintHashingAlgorithm, publicKey);
 	}
 
+	/**
+	 * Instantiates a new maverick synergy public key.
+	 *
+	 * @param fingerprintHashingAlgorithm the fingerprint hashing algorithm
+	 * @param publicKey the public key
+	 * @throws SshException the ssh exception
+	 */
 	public MaverickSynergyPublicKey(String fingerprintHashingAlgorithm, SshPublicKey publicKey) throws SshException {
 		key = publicKey.getEncodedKey();
 		try {
@@ -67,22 +100,47 @@ public class MaverickSynergyPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
+	/**
+	 * Gets the public key.
+	 *
+	 * @return the public key
+	 */
 	public com.sshtools.common.ssh.components.SshPublicKey getPublicKey() {
 		return publicKey;
 	}
 
+	/**
+	 * Gets the algorithm.
+	 *
+	 * @return the algorithm
+	 */
 	public Algorithm getAlgorithm() {
 		return algorithm;
 	}
 
+	/**
+	 * Gets the fingerprint.
+	 *
+	 * @return the fingerprint
+	 */
 	public String getFingerprint() {
 		return fingerPrint;
 	}
 
+	/**
+	 * Gets the encoded key.
+	 *
+	 * @return the encoded key
+	 */
 	public byte[] getEncodedKey() {
 		return key;
 	}
 
+	/**
+	 * Gets the bit length.
+	 *
+	 * @return the bit length
+	 */
 	public int getBitLength() {
 		return bitLength;
 	}

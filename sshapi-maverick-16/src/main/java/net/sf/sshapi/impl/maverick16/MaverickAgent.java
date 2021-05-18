@@ -47,6 +47,9 @@ import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.identity.SshKeyPair;
 
+/**
+ * Maverick implementation of an SSH agent.
+ */
 public class MaverickAgent implements SshAgent {
 	final static Logger LOG = LoggerFactory.getLogger(MaverickAgent.class);
 
@@ -54,6 +57,15 @@ public class MaverickAgent implements SshAgent {
 	private String location;
 	private AgentSocketType agentSocketType;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param application application
+	 * @param location location
+	 * @param socketType socket type
+	 * @param protocol protocol
+	 * @throws SshException on error
+	 */
 	public MaverickAgent(String application, String location, int socketType, int protocol) throws SshException {
 		AgentSocketType agentSocketType = AgentSocketType.TCPIP;
 
@@ -120,6 +132,11 @@ public class MaverickAgent implements SshAgent {
 		}
 	}
 
+	/**
+	 * Get the native agent.
+	 * 
+	 * @return agent
+	 */
 	public SshAgentClient getAgent() {
 		return sshAgent;
 	}

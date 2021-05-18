@@ -40,10 +40,27 @@ public class SftpOutputStream extends OutputStream {
 	private long length;
 	private long progress;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param out out
+	 * @param client client
+	 * @param path path
+	 * @param target target
+	 */
 	public SftpOutputStream(OutputStream out, AbstractSftpClient client, String path, String target) {
 		this(out, client, path, target, -1);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param out out
+	 * @param client client
+	 * @param path path
+	 * @param target target
+	 * @param length
+	 */
 	public SftpOutputStream(OutputStream out, AbstractSftpClient client, String path, String target, long length) {
 		this.out = out;
 		this.client = client;
@@ -102,6 +119,11 @@ public class SftpOutputStream extends OutputStream {
 		}
 	}
 
+	/**
+	 * Get the length.
+	 * 
+	 * @return length
+	 */
 	public long getLength() {
 		return length;
 	}

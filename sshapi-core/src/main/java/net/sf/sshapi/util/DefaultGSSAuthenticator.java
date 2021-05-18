@@ -35,8 +35,7 @@ import net.sf.sshapi.auth.SshGSSAPIAuthenticator;
  * Default implementation of an {@link SshGSSAPIAuthenticator}. This should
  * suffice for most uses.
  * 
- * See the documentation for
- * {@link com.sun.security.auth.module.Krb5LoginModule} for more details.
+ * See the documentation for <code>com.sun.security.auth.module.Krb5LoginModule</code> for more details.
  */
 public class DefaultGSSAuthenticator implements SshGSSAPIAuthenticator {
 

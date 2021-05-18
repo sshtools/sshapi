@@ -28,6 +28,8 @@ import java.util.concurrent.Future;
 /**
  * Abstract implementation of an {@link SshLifecycleComponent}, providing some
  * command methods.
+ * @param <L> the listener type
+ * @param <C> the component type 
  */
 public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> implements SshLifecycleComponent<L, C> {
 

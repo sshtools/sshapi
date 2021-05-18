@@ -43,12 +43,20 @@ import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
 
+/**
+ * SSHJ SFTP implementation.
+ */
 public class SSHJSftpClient extends AbstractSftpClient {
 
 	private SSHJSshClient client;
 	private String defaultPath;
 	private SFTPClient sftp;
 
+	/**
+	 * Constructor..
+	 * 
+	 * @param client client
+	 */
 	public SSHJSftpClient(SSHJSshClient client) {
 		super(client.getProvider(), client.getConfiguration());
 		this.client = client;

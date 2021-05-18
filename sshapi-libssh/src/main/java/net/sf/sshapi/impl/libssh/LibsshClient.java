@@ -56,15 +56,23 @@ import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_key;
 import ssh.SshLibrary.ssh_session;
 
+/**
+ * libssh client implementation.
+ *
+ */
 public class LibsshClient extends AbstractClient {
+	/**
+	 * Forwarding buffer size
+	 */
 	public static final int FORWARDING_BUFFER_SIZE = 32768;
-	public final static int S_IRUSR = 256;
-	public final static int S_IRWXU = 448;
-	public final static int S_IWUSR = 128;
-	public final static int S_IXUSR = 64;
+	
+	final static int S_IRUSR = 256;
+	final static int S_IRWXU = 448;
+	final static int S_IWUSR = 128;
+	final static int S_IXUSR = 64;
 	// TODO make configurable
-	public final static int SCP_BUFFER_SIZE = 32768;
-	public final static int SFTP_BUFFER_SIZE = 32768;
+	final static int SCP_BUFFER_SIZE = 32768;
+	final static int SFTP_BUFFER_SIZE = 32768;
 	final static Logger LOG = SshConfiguration.getLogger();
 
 	protected final static Pointer bytePointer(byte[] bytes) {
@@ -88,6 +96,11 @@ public class LibsshClient extends AbstractClient {
 	// Private instance variables
 	private String username;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param configuration configuration
+	 */
 	public LibsshClient(SshConfiguration configuration) {
 		super(configuration);
 		library = SshLibrary.INSTANCE;

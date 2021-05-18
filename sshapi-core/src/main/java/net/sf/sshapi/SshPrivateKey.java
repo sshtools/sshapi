@@ -30,28 +30,61 @@ import java.util.List;
 public interface SshPrivateKey {
 	
 	/**
-	 * Algorithm
+	 * Algorithm.
 	 */
 	public enum Algorithm {
+		
+		/** rsa1. */
 		RSA1,
+		
+		/** ssh dss. */
 		SSH_DSS,
+		
+		/** ssh rsa. */
 		SSH_RSA,
+		
+		/** ecdsa. */
 		ECDSA,
+		
+		/** ed25519. */
 		ED25519,
+		
+		/** x509v3 sign rsa sha1. */
 		X509V3_SIGN_RSA_SHA1,
+		
+		/** error. */
 		ERROR,
+		
+		/** unknown. */
 		UNKNOWN;
 		
+		/**
+		 * From algo name.
+		 *
+		 * @param algoName the algo name
+		 * @return the algorithm
+		 */
 		public static Algorithm fromAlgoName(String algoName) {
 			return Algorithm.valueOf(algoName.toUpperCase().replace("-", "_"));
 		}
 		
+		/**
+		 * To algo name.
+		 *
+		 * @return the string
+		 */
 		public String toAlgoName() {
 			if(this == ERROR || this == Algorithm.UNKNOWN)
 				throw new IllegalArgumentException("Not actually a valid algorithm");
 			return name().toLowerCase().replace("_", "-");
 		}
 		
+		/**
+		 * To key type.
+		 *
+		 * @param bits the bits
+		 * @return the string
+		 */
 		public String toKeyType(int bits) {
 			switch(this) {
 			case RSA1:
@@ -81,6 +114,11 @@ public interface SshPrivateKey {
 			}
 		}
 
+		/**
+		 * Algos.
+		 *
+		 * @return the algorithm[]
+		 */
 		public static Algorithm[] algos() {
 			List<Algorithm> l = new ArrayList<>();
 			for(Algorithm a : values()) {
@@ -100,10 +138,10 @@ public interface SshPrivateKey {
 
 	/**
 	 * Sign the data using this private key.
-	 * 
-	 * @param data
+	 *
+	 * @param data the data
 	 * @return signed data
-	 * @throws SshException
+	 * @throws SshException the ssh exception
 	 */
 	byte[] sign(byte[] data) throws SshException;
 }

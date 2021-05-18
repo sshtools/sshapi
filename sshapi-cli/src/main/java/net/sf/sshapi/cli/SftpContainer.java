@@ -28,18 +28,57 @@ import org.jline.terminal.Terminal;
 
 import net.sf.sshapi.sftp.SftpClient;
 
+/**
+ * The Interface SftpContainer.
+ */
 public interface SftpContainer {
+	
+	/**
+	 * Gets the client.
+	 *
+	 * @return the client
+	 */
 	SftpClient getClient();
 
+	/**
+	 * Gets the cwd.
+	 *
+	 * @return the cwd
+	 */
 	String getCwd();
 
+	/**
+	 * Sets the cwd.
+	 *
+	 * @param path the new cwd
+	 */
 	void setCwd(String path);
 	
+	/**
+	 * Gets the terminal.
+	 *
+	 * @return the terminal
+	 */
 	Terminal getTerminal();
 	
+	/**
+	 * Gets the line reader.
+	 *
+	 * @return the line reader
+	 */
 	LineReader getLineReader();
 
+	/**
+	 * Sets the lcwd.
+	 *
+	 * @param lcwd the new lcwd
+	 */
 	void setLcwd(File lcwd);
 
+	/**
+	 * Gets the lcwd.
+	 *
+	 * @return the lcwd
+	 */
 	File getLcwd();
 }

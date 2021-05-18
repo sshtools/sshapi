@@ -35,10 +35,20 @@ public class SimpleKeyboardInteractiveAuthenticator implements SshKeyboardIntera
 
 	private String[] answers;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param answer answer
+	 */
 	public SimpleKeyboardInteractiveAuthenticator(String answer) {
 		this(new String[] { answer });
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param answers answers
+	 */
 	public SimpleKeyboardInteractiveAuthenticator(String[] answers) {
 		this.answers = answers;
 	}

@@ -29,6 +29,8 @@ import java.util.concurrent.Future;
  * This applies to sessions, SFTP clients, port forwards and more.
  * <p>
  * All of the components may fire events when the lifecycle events occur.
+ * @param <L> listener type
+ * @param <C> component type
  *
  */
 public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> extends Closeable, AutoCloseable {
@@ -60,6 +62,7 @@ public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C exte
 	 * Open the component without blocking. Remember to {@link #close()} or {@link #closeLater()} the component when
 	 * you are finished with it.
 	 * 
+	 * @return future
 	 * @throws SshException
 	 * @see {@link #close()}
 	 * @see {@link #closeLater()}

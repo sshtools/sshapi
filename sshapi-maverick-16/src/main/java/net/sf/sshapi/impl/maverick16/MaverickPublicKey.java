@@ -30,6 +30,9 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.SshPublicKey;
 
+/**
+ * Maverick implementation of a Public Key
+ */
 public class MaverickPublicKey implements SshPublicKey {
 
 	private Algorithm algorithm;
@@ -38,10 +41,26 @@ public class MaverickPublicKey implements SshPublicKey {
 	private byte[] key;
 	private com.maverick.ssh.components.SshPublicKey publicKey;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param hashingAlgorithm hashing algorithm
+	 * @param publicKey public key
+	 * @throws com.maverick.ssh.SshException on error
+	 * @throws IOException on error
+	 */
 	public MaverickPublicKey(String hashingAlgorithm, com.maverick.ssh.components.SshPublicKey publicKey) throws com.maverick.ssh.SshException {
 		init(hashingAlgorithm, publicKey);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param hashingAlgorithm hashing algorithm
+	 * @param publicKey public key
+	 * @throws SshException on error
+	 * @throws IOException on error
+	 */
 	public MaverickPublicKey(String hashingAlgorithm, SshPublicKey publicKey) throws SshException {
 		key = publicKey.getEncodedKey();
 		try {
@@ -54,6 +73,14 @@ public class MaverickPublicKey implements SshPublicKey {
 		bitLength = publicKey.getBitLength();
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param hashingAlgorithm hashing algorithm
+	 * @param publicKeyFile public key file
+	 * @throws com.maverick.ssh.SshException on error
+	 * @throws IOException on error
+	 */
 	public MaverickPublicKey(String hashingAlgorithm, SshPublicKeyFile publicKeyFile) throws com.maverick.ssh.SshException,
 			IOException {
 		init(hashingAlgorithm, publicKeyFile.toPublicKey());
@@ -79,6 +106,11 @@ public class MaverickPublicKey implements SshPublicKey {
 		return fingerPrint;
 	}
 
+	/**
+	 * Get the native public key object
+	 * 
+	 * @return native public key object
+	 */
 	public com.maverick.ssh.components.SshPublicKey getPublicKey() {
 		return publicKey;
 	}

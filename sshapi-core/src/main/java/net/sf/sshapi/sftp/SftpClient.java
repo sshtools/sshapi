@@ -22,7 +22,6 @@
 package net.sf.sshapi.sftp;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,7 +35,7 @@ import net.sf.sshapi.SshFileTransferClient;
 import net.sf.sshapi.SshLifecycleListener;
 
 /**
- * Providers will create an instance of an implementation of this interface to
+ * Providers will create an instance of an implementation o	f this interface to
  * access the SFTP system. All paths provides should be fully qualified. Some
  * providers internally may provide 'pwd' and 'cd' like functionality, but as
  * not all do SSHAPI does NOT expose this.
@@ -53,11 +52,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 *
 	 */
 	public enum TransferMode {
-		/**
-		 * Files transferred using {@link SftpClient#get(String)} and
-		 * {@link SftpClient#put(String, int)} methods will be transformed using
-		 * the configured end-of-line settings
-		 */
+		
+		/** Files transferred using {@link SftpClient#get(String)} and {@link SftpClient#put(String, int)} methods will be transformed using the configured end-of-line settings. */
 		TEXT,
 		/**
 		 * Files transferred using {@link SftpClient#get(String)} and
@@ -79,30 +75,30 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 		 * Whether to force the remote end of line.
 		 */
 		FORCE_REMOTE,
-		/**
-		 * Use LF on the remote end
-		 */
+		
+		/** Use LF on the remote end. */
 		REMOTE_LF,
-		/**
-		 * Use CR on the remote end
-		 */
+		
+		/** Use CR on the remote end. */
 		REMOTE_CR,
-		/**
-		 * Use CR,LF on the remote end
-		 */
+		
+		/** Use CR,LF on the remote end. */
 		REMOTE_CR_LF,
-		/**
-		 * Use LF on the local end
-		 */
+		
+		/** Use LF on the local end. */
 		LOCAL_LF,
-		/**
-		 * Use CR on the local end
-		 */
+		
+		/** Use CR on the local end. */
 		LOCAL_CR,
-		/**
-		 * Use CR_LF on the local end
-		 */
+		
+		/** Use CR_LF on the local end. */
 		LOCAL_CR_LF;
+		
+		/**
+		 * To string.
+		 *
+		 * @return the string
+		 */
 		@Override
 		public String toString() {
 			switch (this) {
@@ -125,8 +121,25 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 * Mode supplied to {@link SftpClient#file(String, OpenMode...)}.
 	 */
 	public enum OpenMode {
-		SFTP_READ, SFTP_WRITE, SFTP_APPEND, SFTP_CREAT, SFTP_TRUNC, SFTP_EXCL;
 		
+		/** sftp read. */
+		SFTP_READ,
+		/** sftp write. */
+		SFTP_WRITE,
+		/** sftp append. */
+		SFTP_APPEND,
+		/** sftp creat. */
+		SFTP_CREAT,
+		/** sftp trunc. */
+		SFTP_TRUNC,
+		/** sftp excl. */
+		SFTP_EXCL;
+		
+		/**
+		 * To POSIX.
+		 *
+		 * @return the int
+		 */
 		public int toPOSIX() {
 			switch (this) {
 			case SFTP_READ:
@@ -146,6 +159,11 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 			}
 		}
 		
+		/**
+		 * To int.
+		 *
+		 * @return the int
+		 */
 		public int toInt() {
 			switch (this) {
 			case SFTP_READ:
@@ -165,6 +183,12 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 			}
 		}
 
+		/**
+		 * To POSIX.
+		 *
+		 * @param modes the modes
+		 * @return the int
+		 */
 		public static int toPOSIX(OpenMode... modes) {
 			int m = 0;
 			for (OpenMode mode : modes) {
@@ -173,6 +197,12 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 			return m;
 		}
 
+		/**
+		 * To flags.
+		 *
+		 * @param modes the modes
+		 * @return the int
+		 */
 		public static int toFlags(OpenMode... modes) {
 			int m = 0;
 			for (OpenMode mode : modes) {
@@ -275,8 +305,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	FileVisitResult visit(String path, FileVisitor<SftpFile> visitor) throws SshException;
 
 	/**
-	 * Get the default path
-	 * 
+	 * Get the default path.
+	 *
 	 * @return default path
 	 */
 	String getDefaultPath();
@@ -334,21 +364,19 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	/**
 	 * Create a directory, creating missing parents. If any element of the
 	 * parent path does not exist it will be created.
-	 * 
-	 * @param path path of directory to create.
+	 *
+	 * @param dir the dir
 	 * @throws SshException on other error
-	 * @throws FileNotFoundException
 	 */
 	void mkdirs(String dir) throws SshException;
 
 	/**
 	 * Create a directory, creating missing parents. If any element of the
 	 * parent path does not exist it will be created.
-	 * 
+	 *
 	 * @param path path of directory to create.
 	 * @param permissions permissions
 	 * @throws SshException on other error
-	 * @throws FileNotFoundException
 	 */
 	void mkdirs(String path, int permissions) throws SshException;
 
@@ -363,11 +391,10 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 
 	/**
 	 * Remove a file or directory, optionally recursively.
-	 * 
+	 *
 	 * @param path path of file or directory to remove.
-	 * @param recursively delete files and directories
+	 * @param recursive the recursive
 	 * @throws SshException on other error
-	 * 
 	 */
 	void rm(String path, boolean recursive) throws SshException;
 
@@ -433,8 +460,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 
 	/**
 	 * Set the last modified time of a file.
-	 * 
-	 * @param path
+	 *
+	 * @param path the path
 	 * @param modtime last modified time in milliseconds since 00:00:00, Jan 1st
 	 *            1970.
 	 * @throws SshException on other error
@@ -512,13 +539,13 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 * <p>
 	 * If the provider doesn't support setting the file pointer, an exception
 	 * will be thrown.
-	 * 
+	 *
 	 * @param path path of remote file
 	 * @param filePointer position to set filePointer to
 	 * @return input stream
 	 * @throws SshException on other error
-	 * @see {@link #get(String, OutputStream)}
 	 * @throws UnsupportedOperationException uoe
+	 * @see {@link #get(String, OutputStream)}
 	 */
 	InputStream get(String path, long filePointer) throws SshException;
 
@@ -641,10 +668,10 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 * with any bytes written to the returned output stream written to the
 	 * remote file. A file pointer should be provided indicating the position in
 	 * the file to start writing. This may be used to 'resume' uploads.
-	 * 
+	 *
 	 * @param path path to save file to
 	 * @param permissions permissions of file when created
-	 * @param filePointer position to set filePointer to
+	 * @param offset the offset
 	 * @return output stream
 	 * @throws SshException on other error
 	 */
@@ -678,8 +705,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit) throws SshException;
 
 	/**
-	 * Copy the contents of a remote directory to a local directory
-	 * 
+	 * Copy the contents of a remote directory to a local directory.
+	 *
 	 * @param remotedir the remote directory whose contents will be copied.
 	 * @param localdir the local directory to where the contents will be copied
 	 * @param recurse recurse into child folders
@@ -689,9 +716,7 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 *            operation will be processed and a
 	 *            <a href="DirectoryOperation.html">DirectoryOperation</a> will
 	 *            be returned without actually transfering any files.
-	 * @param progress
 	 * @return SftpOperation information about the copy
-	 * @throws FileNotFoundException if local target directory does not exist
 	 * @throws SshException on any error
 	 */
 	SftpOperation download(String remotedir, File localdir, boolean recurse, boolean sync, boolean commit) throws SshException;

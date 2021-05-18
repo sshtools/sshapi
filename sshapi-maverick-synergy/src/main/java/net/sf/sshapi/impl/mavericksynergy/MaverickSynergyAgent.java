@@ -45,12 +45,24 @@ import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.identity.SshKeyPair;
 
+/**
+ * Maverick synergy Agent implementation.
+ */
 public class MaverickSynergyAgent implements SshAgent {
 
 	private SshAgentClient sshAgent;
 	private String location;
 	private AgentSocketType agentSocketType;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param application application
+	 * @param location location
+	 * @param socketType socket type
+	 * @param protocol protocol
+	 * @throws SshException on error
+	 */
 	public MaverickSynergyAgent(String application, String location, int socketType, int protocol) throws SshException {
 		AgentSocketType agentSocketType = AgentSocketType.TCPIP;
 
@@ -117,6 +129,11 @@ public class MaverickSynergyAgent implements SshAgent {
 		}
 	}
 
+	/**
+	 * Get the native agent.
+	 * 
+	 * @return native agent
+	 */
 	public SshAgentClient getAgent() {
 		return sshAgent;
 	}

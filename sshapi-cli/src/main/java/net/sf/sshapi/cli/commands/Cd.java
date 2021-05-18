@@ -30,14 +30,14 @@ import net.sf.sshapi.sftp.SftpFile;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Change directory.
+ */
 @Command(name = "cd", mixinStandardHelpOptions = true, description = "Change remote directory.")
 public class Cd extends SftpCommand implements Callable<Integer> {
 
     @Parameters(index = "0", arity = "0..1", description = "Directory to change to.")
 	private String directory;
-    
-	public Cd() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

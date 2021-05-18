@@ -41,6 +41,7 @@ public interface SshHostKeyManager {
 	 * Remove a key.
 	 * 
 	 * @param hostKey key to remove
+	 * @throws SshException  on error
 	 */
 	void remove(SshManagedHostKey hostKey) throws SshException;
 

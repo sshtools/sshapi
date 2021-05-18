@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * {@link OutputStream} that writes sequentially to an {@link SftpHandle}.
+ */
 public class SftpHandleOutputStream extends OutputStream {
 	/**
 	 * 
@@ -32,6 +35,13 @@ public class SftpHandleOutputStream extends OutputStream {
 	private final ByteBuffer buf;
 	private final SftpHandle h;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param abstractSftpClient client
+	 * @param buf buffer
+	 * @param h handle
+	 */
 	public SftpHandleOutputStream(AbstractSftpClient abstractSftpClient, ByteBuffer buf, SftpHandle h) {
 		this.buf = buf;
 		this.h = h;

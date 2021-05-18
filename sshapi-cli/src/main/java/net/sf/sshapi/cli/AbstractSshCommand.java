@@ -49,6 +49,9 @@ import net.sf.sshapi.util.ConsolePasswordAuthenticator;
 import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import picocli.CommandLine.Option;
 
+/**
+ * Abstract command.
+ */
 public abstract class AbstractSshCommand implements Logger {
 
 	protected SshConfiguration configuration;

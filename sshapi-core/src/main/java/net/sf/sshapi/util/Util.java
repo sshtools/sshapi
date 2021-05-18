@@ -138,6 +138,7 @@ public class Util {
 	 * Format a byte array as a hex string.
 	 * 
 	 * @param arr byte array
+	 * @param delimiter delimiter
 	 * @return hex string
 	 */
 	public static String formatAsHexString(byte[] arr, String delimiter) {
@@ -224,6 +225,12 @@ public class Util {
 		return path + "/" + filename;
 	}
 
+	/**
+	 * Remove '..' and '.' where possible to canonicalise path.
+	 * 
+	 * @param path path to canonicalise 
+	 * @return  canonicalised path
+	 */
 	public static String canonicalisePath(String path) {
 		List<String> newParts = new ArrayList<>();
 		for (String part : path.split("/")) {
@@ -431,7 +438,7 @@ public class Util {
 	 * Set permissions value for a file.
 	 * 
 	 * @param path path
-	 * @return permissions
+	 * @param permissions permissions
 	 */
 	public static void setPermissions(File path, int permissions) {
 		try {
@@ -522,7 +529,7 @@ public class Util {
 	 * Parse a formatted permissions string. The file type is one of
 	 * {@link SftpFile#TYPES}.
 	 * 
-	 * @param permissions permissions string
+	 * @param perm permissions string
 	 * @return type in first element, permissions in secon
 	 */
 	public static long[] parsePermissionsString(String perm) {
@@ -647,6 +654,13 @@ public class Util {
 		}
 	}
 
+	/**
+	 * Extract the hostname from a string in the format <code>[username@]host:[:port]</code>. If host 
+	 * is not provided, <code>null</code> will be returned.
+	 * 
+	 * @param connectionSpec user, host and port string
+	 * @return hostname or null
+	 */
 	public static String extractHostname(String connectionSpec) {
 		connectionSpec = connectionSpec.substring(connectionSpec.indexOf('@') + 1);
 		int idx = connectionSpec.indexOf(':');
@@ -656,10 +670,24 @@ public class Util {
 		return connectionSpec;
 	}
 
+	/**
+	 * Extract the username from a string in the format <code>[username@]host:[:port]</code>. If username 
+	 * is not provided, <code>null</code> will be returned.
+	 * 
+	 * @param connectionSpec user, host and port string
+	 * @return username or null
+	 */
 	public static String extractUsername(String connectionSpec) {
 		return connectionSpec.substring(0, connectionSpec.indexOf('@'));
 	}
 
+	/**
+	 * Extract the port number from a string in the format <code>[username@]host:[:port]</code>. If port 
+	 * is not provided, 22 will be returned.
+	 * 
+	 * @param connectionSpec user, host and port string
+	 * @return port
+	 */
 	public static int extractPort(String connectionSpec) {
 		connectionSpec = connectionSpec.substring(connectionSpec.indexOf('@') + 1);
 		int idx = connectionSpec.indexOf(':');
@@ -669,12 +697,25 @@ public class Util {
 		return 22;
 	}
 
+	/**
+	 * 
+	 * Read all bytes from an {@link InputStream} to a byte array
+	 * @param in input stream
+	 * @return byte array
+	 * @throws IOException
+	 */
 	public static byte[] toByteArray(InputStream in) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		joinStreams(in, baos);
 		return baos.toByteArray();
 	}
 
+	/**
+	 * Encode a UTF-8 string as bytes.
+	 * 
+	 * @param data
+	 * @return bytes
+	 */
 	public static byte[] toBytes(String data) {
 		try {
 			return data.getBytes("UTF-8");
@@ -683,10 +724,23 @@ public class Util {
 		}
 	}
 
+	/**
+	 * Turn a string into a buffer (of current default encoding).
+	 * 
+	 * @param data
+	 * @return buffer
+	 */
 	public static ByteBuffer wrap(String data) {
 		return ByteBuffer.wrap(toBytes(data));
 	}
 
+	/**
+	 * Get the full target path of a link given the linked file and the directory the link would be in.
+	 * 
+	 * @param targetLinkPath link file path
+	 * @param sourceFilePath source file path
+	 * @return full link path
+	 */
 	public static String linkPath(String targetLinkPath, String sourceFilePath) {
 		if (targetLinkPath.startsWith("/"))
 			return targetLinkPath;
@@ -758,6 +812,14 @@ public class Util {
 		return relativePath.toString();
 	}
 
+	/**
+	 * Get the version of a maven artifact that is on the classpath, and contains the appropriate
+	 * meta-data in it's jar.
+	 * 
+	 * @param groupId group ID of artifact
+	 * @param artifactId ID of artifact
+	 * @return version
+	 */
 	public static String getArtifactVersion(String groupId, String artifactId) {
 		String version = "0.0.0";
 		// try to load from maven properties first
@@ -819,6 +881,7 @@ public class Util {
 	 * way possible.
 	 * 
 	 * @param buffer buffer to read
+	 * @return byte array
 	 * @throws IOException I/O error
 	 */
 	public static byte[] read(ByteBuffer buffer) {
@@ -837,6 +900,7 @@ public class Util {
 	 * way possible, without changing the position in the buffer.
 	 * 
 	 * @param buffer buffer to read
+	 * @return byte array
 	 * @throws IOException I/O error
 	 */
 	public static byte[] peek(ByteBuffer buffer) {

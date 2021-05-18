@@ -23,10 +23,24 @@ package net.sf.sshapi;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Callback interface used for non-blocking operations.
+ */
 public interface SshInput {
+
+	/**
+	 * Read.
+	 *
+	 * @param buffer buffer
+	 */
 	void read(ByteBuffer buffer);
-	
-	default void onError(Exception e) {
-		SshConfiguration.getLogger().error("Error reading input.", e);
+
+	/**
+	 * On error.
+	 *
+	 * @param error the error
+	 */
+	default void onError(Exception error) {
+		SshConfiguration.getLogger().error("Error reading input.", error);
 	}
 }

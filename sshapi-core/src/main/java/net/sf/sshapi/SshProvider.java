@@ -299,7 +299,7 @@ public interface SshProvider {
 	 * @param application
 	 *            the application connecting
 	 * @return connected agent client
-	 * @throws UnsupportedOperationException
+	 * @throws SshException
 	 *             if the provider configuration is not valid
 	 */
 	SshAgent connectToLocalAgent(String application) throws SshException;
@@ -316,7 +316,7 @@ public interface SshProvider {
 	 *            {@link SshAgent#OPENSSH_PROTOCOL} or
 	 *            {@link SshAgent#RFC_PROTOCOL}.
 	 * @return connected agent client
-	 * @throws UnsupportedOperationException
+	 * @throws SshException
 	 *             if the provider configuration is not valid
 	 */
 	SshAgent connectToLocalAgent(String application, int protocol) throws SshException;
@@ -338,7 +338,7 @@ public interface SshProvider {
 	 *            {@link SshAgent#OPENSSH_PROTOCOL} or
 	 *            {@link SshAgent#RFC_PROTOCOL}.
 	 * @return connected agent client
-	 * @throws UnsupportedOperationException
+	 * @throws SshException
 	 *             if the provider configuration is not valid
 	 */
 	SshAgent connectToLocalAgent(String application, String location, int socketType, int protocol) throws SshException;

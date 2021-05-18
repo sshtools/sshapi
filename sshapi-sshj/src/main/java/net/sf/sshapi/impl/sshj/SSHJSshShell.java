@@ -36,6 +36,9 @@ import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
+/**
+ * SSHJ Shell implementation.
+ */
 public class SSHJSshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell>
 		implements SshShell {
 	private final String termType;
@@ -114,6 +117,12 @@ public class SSHJSshShell extends AbstractSshExtendedChannel<SshChannelListener<
 		}
 	}
 
+	/**
+	 * Convert pty mode bytes to enum map.
+	 * 
+	 * @param modes modes
+	 * @return modes
+	 */
 	public static Map<PTYMode, Integer> toModeMap(byte[] modes) {
 		Map<PTYMode, Integer> modeMap = new HashMap<>();
 		if (modes != null) {

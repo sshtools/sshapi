@@ -26,6 +26,9 @@ import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Spec;
 
+/**
+ * Abstract sftp command.
+ */
 public abstract class SftpCommand {
 	@Spec
 	private CommandSpec spec;

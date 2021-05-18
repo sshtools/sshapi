@@ -27,9 +27,17 @@ import java.security.PrivateKey;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPrivateKey;
 
+/**
+ * Maverick privatge ke implementation.
+ */
 public class MaverickSshPrivateKey implements com.maverick.ssh.components.SshPrivateKey {
 	private final SshPrivateKey key;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param key key 
+	 */
 	public MaverickSshPrivateKey(SshPrivateKey key) {
 		this.key = key;
 	}

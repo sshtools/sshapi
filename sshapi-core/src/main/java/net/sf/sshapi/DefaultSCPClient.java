@@ -31,10 +31,18 @@ import java.io.OutputStream;
 
 import net.sf.sshapi.util.Util;
 
+/**
+ * A default SCP implementation that can be used for providers that don't implement SCP themselves.
+ */
 public class DefaultSCPClient extends AbstractSCPClient {
 	private static final Logger LOG = SshConfiguration.getLogger();
 	private final SshClient sshClient;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param jschSshClient client
+	 */
 	public DefaultSCPClient(SshClient jschSshClient) {
 		super(jschSshClient.getProvider());
 		sshClient = jschSshClient;

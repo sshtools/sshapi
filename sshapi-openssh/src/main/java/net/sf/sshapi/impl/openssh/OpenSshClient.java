@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.io.IOUtils;
 
 import net.sf.sshapi.AbstractClient;
-import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -50,16 +49,35 @@ import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.forwarding.SshPortForward;
 import net.sf.sshapi.sftp.SftpClient;
 
+/**
+ * The Class OpenSshClient.
+ */
 public class OpenSshClient extends AbstractClient {
+	
 	final static int ARGS_SFTP = 0;
 	final static int ARGS_SSH = 1;
 
+	/**
+	 * Configure command.
+	 *
+	 * @param dir the dir
+	 * @param pb the pb
+	 * @return the process builder
+	 */
 	public static ProcessBuilder configureCommand(File dir, ProcessBuilder pb) {
 		pb.directory(dir);
 		pb.redirectErrorStream(true);
 		return pb;
 	}
 
+	/**
+	 * Run.
+	 *
+	 * @param pb the pb
+	 * @return the process
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws InterruptedException the interrupted exception
+	 */
 	public static Process run(ProcessBuilder pb) throws IOException, InterruptedException {
 		Process process = pb.start();
 		IOUtils.copy(process.getInputStream(), System.out);
@@ -67,6 +85,14 @@ public class OpenSshClient extends AbstractClient {
 		return process;
 	}
 
+	/**
+	 * Run and check return.
+	 *
+	 * @param pb the pb
+	 * @return the process
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws InterruptedException the interrupted exception
+	 */
 	public static Process runAndCheckReturn(ProcessBuilder pb) throws IOException, InterruptedException {
 		Process process = pb.start();
 		IOUtils.copy(process.getInputStream(), System.out);
@@ -76,6 +102,15 @@ public class OpenSshClient extends AbstractClient {
 		return process;
 	}
 
+	/**
+	 * Run and check return with file input.
+	 *
+	 * @param input the input
+	 * @param pb the pb
+	 * @return the process
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws InterruptedException the interrupted exception
+	 */
 	public static Process runAndCheckReturnWithFileInput(final File input, ProcessBuilder pb)
 			throws IOException, InterruptedException {
 		final Process process = pb.start();
@@ -103,25 +138,59 @@ public class OpenSshClient extends AbstractClient {
 		return process;
 	}
 
+	/**
+	 * Debug args.
+	 *
+	 * @param args the args
+	 */
 	protected static void debugArgs(List<String> args) {
 		SshConfiguration.getLogger().info("Arguments: {0}", String.join(" ", args));
 		System.out.println(String.format("Arguments: %s", String.join(" ", args)));
 	}
 
+	/** The authenticated. */
 	private boolean authenticated;
+	
+	/** The authenticators. */
 	private Map<String, SshAuthenticator> authenticators = new HashMap<>();
+	
+	/** The cached passphrase. */
 	private String cachedPassphrase;
+	
+	/** The cached password. */
 	private String cachedPassword;
+	
+	/** The connected. */
 	private boolean connected;
+	
+	/** The hostname. */
 	private String hostname;
+	
+	/** The port. */
 	private int port;
+	
+	/** The pubkey. */
 	private SshPublicKeyAuthenticator pubkey;
+	
+	/** The username. */
 	private String username;
 
+	/**
+	 * Instantiates a new open ssh client.
+	 *
+	 * @param configuration the configuration
+	 */
 	public OpenSshClient(SshConfiguration configuration) {
 		super(configuration);
 	}
 
+	/**
+	 * Authenticate.
+	 *
+	 * @param authenticators the authenticators
+	 * @return true, if successful
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public boolean authenticate(SshAuthenticator... authenticators) throws SshException {
 		boolean res = processAuthenticators(authenticators);
@@ -144,31 +213,63 @@ public class OpenSshClient extends AbstractClient {
 		return res;
 	}
 
+	/**
+	 * Gets the channel count.
+	 *
+	 * @return the channel count
+	 */
 	@Override
 	public int getChannelCount() {
 		return 0;
 	}
 
+	/**
+	 * Gets the remote identification.
+	 *
+	 * @return the remote identification
+	 */
 	@Override
 	public String getRemoteIdentification() {
 		return null;
 	}
 
+	/**
+	 * Gets the remote protocol version.
+	 *
+	 * @return the remote protocol version
+	 */
 	@Override
 	public int getRemoteProtocolVersion() {
 		return 0;
 	}
 
+	/**
+	 * Checks if is authenticated.
+	 *
+	 * @return true, if is authenticated
+	 */
 	@Override
 	public boolean isAuthenticated() {
 		return authenticated;
 	}
 
+	/**
+	 * Checks if is connected.
+	 *
+	 * @return true, if is connected
+	 */
 	@Override
 	public boolean isConnected() {
 		return connected;
 	}
 
+	/**
+	 * Adds the.
+	 *
+	 * @param args the args
+	 * @param opt the opt
+	 * @param fmt the fmt
+	 */
 	protected void add(List<String> args, String opt, int fmt) {
 		switch (fmt) {
 		case ARGS_SFTP:
@@ -181,6 +282,12 @@ public class OpenSshClient extends AbstractClient {
 		}
 	}
 
+	/**
+	 * Agent authentication.
+	 *
+	 * @param pb the pb
+	 * @param enabled the enabled
+	 */
 	protected void agentAuthentication(ProcessBuilder pb, boolean enabled) {
 		if (enabled) {
 			// SshAgent agent = agent.getAgent(getConfiguration());
@@ -188,16 +295,35 @@ public class OpenSshClient extends AbstractClient {
 			pb.environment().put("SSH_AUTH_SOCK", "");
 	}
 
+	/**
+	 * Challenge response authentication.
+	 *
+	 * @param args the args
+	 * @param enabled the enabled
+	 * @param fmt the fmt
+	 * @return the list
+	 */
 	protected List<String> challengeResponseAuthentication(List<String> args, boolean enabled, int fmt) {
 		add(args, "ChallengeResponseAuthentication=" + yesNo(enabled), fmt);
 		return args;
 	}
 
+	/**
+	 * Configure ssh command.
+	 *
+	 * @param pb the pb
+	 * @return the process builder
+	 */
 	protected ProcessBuilder configureSshCommand(ProcessBuilder pb) {
 		configureCommand(new File(System.getProperty("user.dir")), pb);
 		return pb;
 	}
 
+	/**
+	 * Creates the SCP args.
+	 *
+	 * @return the list
+	 */
 	protected List<String> createSCPArgs() {
 		List<String> l = new ArrayList<String>();
 		l.add("unbuffer");
@@ -208,6 +334,11 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Creates the sftp args.
+	 *
+	 * @return the list
+	 */
 	protected List<String> createSftpArgs() {
 		List<String> l = new ArrayList<String>();
 		l.add("unbuffer");
@@ -219,6 +350,11 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Creates the ssh args.
+	 *
+	 * @return the list
+	 */
 	protected List<String> createSshArgs() {
 		List<String> l = new ArrayList<String>();
 		l.add("unbuffer");
@@ -229,6 +365,15 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Creates the local fwd args.
+	 *
+	 * @param localBindAddress the local bind address
+	 * @param localBindPort the local bind port
+	 * @param targetAddress the target address
+	 * @param targetPort the target port
+	 * @return the list
+	 */
 	protected List<String> createLocalFwdArgs(String localBindAddress, int localBindPort, String targetAddress, int targetPort) {
 		List<String> l = new ArrayList<String>();
 		l.add("unbuffer");
@@ -249,6 +394,11 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Creates the cmd args.
+	 *
+	 * @return the list
+	 */
 	protected List<String> createCmdArgs() {
 		List<String> l = new ArrayList<String>();
 		l.add(getConfiguration().getProperties().getProperty(OpenSshProvider.CFG_OPENSSH_SSH_COMMAND, "ssh"));
@@ -257,6 +407,15 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Do connect.
+	 *
+	 * @param username the username
+	 * @param hostname the hostname
+	 * @param port the port
+	 * @param authenticators the authenticators
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void doConnect(String username, String hostname, int port, SshAuthenticator... authenticators) throws SshException {
 		this.port = port;
@@ -276,6 +435,16 @@ public class OpenSshClient extends AbstractClient {
 		connected = true;
 	}
 
+	/**
+	 * Do create local forward.
+	 *
+	 * @param localBindAddress the local bind address
+	 * @param localBindPort the local bind port
+	 * @param targetAddress the target address
+	 * @param targetPort the target port
+	 * @return the ssh port forward
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected SshPortForward doCreateLocalForward(String localBindAddress, int localBindPort, String targetAddress, int targetPort)
 			throws SshException {
@@ -284,6 +453,19 @@ public class OpenSshClient extends AbstractClient {
 		return new OpenSshLocalForward(this, configureSshCommand(pb));
 	}
 
+	/**
+	 * Do create command.
+	 *
+	 * @param command the command
+	 * @param termType the term type
+	 * @param cols the cols
+	 * @param rows the rows
+	 * @param pixWidth the pix width
+	 * @param pixHeight the pix height
+	 * @param terminalModes the terminal modes
+	 * @return the ssh command
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected SshCommand doCreateCommand(String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws SshException {
@@ -291,18 +473,42 @@ public class OpenSshClient extends AbstractClient {
 		return new OpenSshCommand(this, configureSshCommand(pb), termType, command);
 	}
 
+	/**
+	 * Do create SCP.
+	 *
+	 * @return the ssh SCP client
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected SshSCPClient doCreateSCP() throws SshException {
 		ProcessBuilder pb = createSshCommand(createSCPArgs(), false, ARGS_SFTP);
 		return new OpenSshSCPClient(configureSshCommand(pb), this);
 	}
 
+	/**
+	 * Do create sftp.
+	 *
+	 * @return the sftp client
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected SftpClient doCreateSftp() throws SshException {
 		ProcessBuilder pb = createSshCommand(createSftpArgs(), true, ARGS_SFTP);
 		return new OpenSshSftpClient(this, configureSshCommand(pb));
 	}
 
+	/**
+	 * Do create shell.
+	 *
+	 * @param termType the term type
+	 * @param cols the cols
+	 * @param rows the rows
+	 * @param pixWidth the pix width
+	 * @param pixHeight the pix height
+	 * @param terminalModes the terminal modes
+	 * @return the ssh shell
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException {
@@ -310,6 +516,14 @@ public class OpenSshClient extends AbstractClient {
 		return new OpenSshShell(this, configureSshCommand(pb), termType);
 	}
 
+	/**
+	 * Host key verification.
+	 *
+	 * @param args the args
+	 * @param dumb the dumb
+	 * @param fmt the fmt
+	 * @return the list
+	 */
 	protected List<String> hostKeyVerification(List<String> args, boolean dumb, int fmt) {
 		if (dumb) {
 			add(args, "StrictHostKeyChecking=no", fmt);
@@ -318,6 +532,11 @@ public class OpenSshClient extends AbstractClient {
 		return args;
 	}
 
+	/**
+	 * On close.
+	 *
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	protected void onClose() throws SshException {
 		for (SshLifecycleComponent<?, ?> c : activeComponents)
@@ -330,11 +549,27 @@ public class OpenSshClient extends AbstractClient {
 		connected = false;
 	}
 
+	/**
+	 * Password authentication.
+	 *
+	 * @param args the args
+	 * @param enabled the enabled
+	 * @param fmt the fmt
+	 * @return the list
+	 */
 	protected List<String> passwordAuthentication(List<String> args, boolean enabled, int fmt) {
 		add(args, "PasswordAuthentication=" + yesNo(enabled), fmt);
 		return args;
 	}
 
+	/**
+	 * Public key authentication.
+	 *
+	 * @param args the args
+	 * @param enabled the enabled
+	 * @param fmt the fmt
+	 * @return the list
+	 */
 	protected List<String> publicKeyAuthentication(List<String> args, boolean enabled, int fmt) {
 		add(args, "PubkeyAuthentication=" + yesNo(enabled), fmt);
 		if (enabled) {
@@ -345,6 +580,14 @@ public class OpenSshClient extends AbstractClient {
 		return args;
 	}
 
+	/**
+	 * Ssh tail.
+	 *
+	 * @param username the username
+	 * @param l the l
+	 * @param command the command
+	 * @return the list
+	 */
 	protected List<String> sshTail(String username, List<String> l, String command) {
 		l.add((username == null ? getUsername() : username) + "@" + hostname);
 		if (command != null) {
@@ -353,10 +596,23 @@ public class OpenSshClient extends AbstractClient {
 		return l;
 	}
 
+	/**
+	 * Yes no.
+	 *
+	 * @param enabled the enabled
+	 * @return the string
+	 */
 	protected String yesNo(boolean enabled) {
 		return enabled ? "yes" : "no";
 	}
 
+	/**
+	 * Setup authentication.
+	 *
+	 * @param process the process
+	 * @return the process builder
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	ProcessBuilder setupAuthentication(ProcessBuilder process) throws IOException {
 		if (authenticators.containsKey("password")) {
 			if (cachedPassword == null)
@@ -390,6 +646,15 @@ public class OpenSshClient extends AbstractClient {
 		return process;
 	}
 
+	/**
+	 * Creates the ssh command.
+	 *
+	 * @param args the args
+	 * @param tail the tail
+	 * @param fmt the fmt
+	 * @return the process builder
+	 * @throws SshException the ssh exception
+	 */
 	private ProcessBuilder createSshCommand(List<String> args, boolean tail, int fmt) throws SshException {
 		args.add("-q");
 		hostKeyVerification(args, true, fmt);
@@ -403,6 +668,13 @@ public class OpenSshClient extends AbstractClient {
 		return processBuilder;
 	}
 
+	/**
+	 * Process authenticators.
+	 *
+	 * @param authenticators the authenticators
+	 * @return true, if successful
+	 * @throws SshException the ssh exception
+	 */
 	private boolean processAuthenticators(SshAuthenticator[] authenticators) throws SshException {
 		boolean ok = false;
 		for (SshAuthenticator auth : authenticators) {

@@ -40,10 +40,27 @@ public class SftpInputStream extends InputStream {
 	private long length;
 	private long progress;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param in input satream
+	 * @param client client
+	 * @param path path
+	 * @param target target
+	 */
 	public SftpInputStream(InputStream in, AbstractSftpClient client, String path, String target) {
 		this(in, client, path, target, -1);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param in input stream
+	 * @param client client
+	 * @param path path
+	 * @param target target
+	 * @param length
+	 */
 	public SftpInputStream(InputStream in, AbstractSftpClient client, String path, String target, long length) {
 		this.in = in;
 		this.client = client;

@@ -22,7 +22,6 @@
 package net.sf.sshapi.sftp;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -41,17 +40,23 @@ public interface SftpHandle extends Closeable {
 	 * Set the current position of the handle.
 	 * 
 	 * @param position position
+	 * @return this for chaining
 	 */
 	SftpHandle position(long position);
 	
 	/**
 	 * Write the provided buffer to the current position.
-	 * @throws IOException 
+	 * 
+	 * @param buffer
+	 * @return this for chaining
+	 * @throws SftpException 
 	 */
 	SftpHandle write(ByteBuffer buffer) throws SftpException;
 	
 	/**
 	 * Write the provided buffer to the current position.
+	 * @param buffer 
+	 * @return bytes read
 	 * @throws SftpException 
 	 */
 	int read(ByteBuffer buffer) throws SftpException;

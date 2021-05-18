@@ -25,11 +25,11 @@ import java.util.concurrent.Callable;
 
 import picocli.CommandLine.Command;
 
+/**
+ * Print working directory.
+ */
 @Command(name = "pwd", mixinStandardHelpOptions = true, description = "Print current remote directory.")
 public class Pwd extends SftpCommand implements Callable<Integer> {
-
-	public Pwd() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

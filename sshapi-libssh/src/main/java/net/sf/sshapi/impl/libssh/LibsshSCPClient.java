@@ -41,11 +41,22 @@ import ssh.SshLibrary.SizeT;
 import ssh.SshLibrary.ssh_scp;
 import ssh.SshLibrary.ssh_session;
 
+/**
+ * libssh SCP implementation.
+ *
+ */
 public class LibsshSCPClient extends AbstractSCPClient implements SshSCPClient {
 	final static Logger LOG = SshConfiguration.getLogger();
 	private SshLibrary library;
 	private ssh_session libSshSession;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param provider provider
+	 * @param library library
+	 * @param libSshSession session
+	 */
 	public LibsshSCPClient(SshProvider provider, SshLibrary library, ssh_session libSshSession) {
 		super(provider);
 		this.library = library;

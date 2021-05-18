@@ -32,6 +32,9 @@ import net.sf.sshapi.SshConfiguration;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 
+/**
+ * libssh input stream.
+ */
 public class LibsshInputStream extends InputStream {
 
 	private static final Logger LOG = SshConfiguration.getLogger();
@@ -40,6 +43,13 @@ public class LibsshInputStream extends InputStream {
 	private boolean stderr;
 	private boolean closed;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param library library
+	 * @param channel channel
+	 * @param stderr standard error channel
+	 */
 	public LibsshInputStream(SshLibrary library, ssh_channel channel, boolean stderr) {
 		this.channel = channel;
 		this.library = library;

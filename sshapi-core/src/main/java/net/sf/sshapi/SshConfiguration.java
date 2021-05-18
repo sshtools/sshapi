@@ -52,11 +52,29 @@ import net.sf.sshapi.util.XDetails;
  * 
  */
 public class SshConfiguration {
+	/**
+	 * Maximum shell packet size
+	 */
 	public static final int SHELL_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	/**
+	 * Maximum shell window size
+	 */
 	public static final int SHELL_WINDOW_SIZE_MAX = (64 * SHELL_MAXIMUM_PACKET_SIZE);
+	/**
+	 * Maximum SFTP packet size
+	 */
 	public static final int SFTP_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	/**
+	 * Maximum SFTP window size
+	 */
 	public static final int SFTP_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
+	/**
+	 * Maximum tunnel packet size
+	 */
 	public static final int TUNNEL_MAXIMUM_PACKET_SIZE = 32 * 1024;
+	/**
+	 * Maximum tunnel window size
+	 */
 	public static final int TUNNEL_WINDOW_SIZE_MAX = (64 * SFTP_MAXIMUM_PACKET_SIZE);
 
 	/** The 3DES CBC cipher **/
@@ -325,7 +343,7 @@ public class SshConfiguration {
 	 * Set the tunnel size max <strong>hint</strong> for tunnels. Use zero for no
 	 * hint.
 	 * 
-	 * @param tunnelWindowSize Tunnel window size max
+	 * @param tunnelWindowSizeMax Tunnel window size max
 	 * @return this for chaining
 	 */
 	public SshConfiguration setTunnelWindowSizeMax(long tunnelWindowSizeMax) {
@@ -385,7 +403,7 @@ public class SshConfiguration {
 	/**
 	 * Set the window size max <strong>hint</strong> for SFTP. Use zero for no hint.
 	 * 
-	 * @param sftpWindowSize SFTP window size max
+	 * @param sftpWindowSizeMax SFTP window size max
 	 * @return this for chaining
 	 */
 	public SshConfiguration setSftpWindowSizeMax(long sftpWindowSizeMax) {
@@ -593,7 +611,7 @@ public class SshConfiguration {
 	 * that provides access to the local X11 server. The provider must support
 	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
-	 * @param x11Host X11 host
+	 * @param x11UnixSocketFile X11 host
 	 * @return this for chaining
 	 */
 	public SshConfiguration setX11UnixSocketFile(File x11UnixSocketFile) {
@@ -634,21 +652,21 @@ public class SshConfiguration {
 	 * either {@link Capability#X11_FORWARDING_TCP} or
 	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
-	 * @return port to use for X11 forwarding
+	 * @return screen to use for X11 forwarding
 	 */
 	public int getX11Screen() {
 		return x11Screen;
 	}
 
 	/**
-	 * Set the port to use for X11 forwarding. This will be used to determining the
-	 * port the local X11 server is listening on if TCP/IP X11 forwarding is in use,
-	 * or the name of the unix socket file if unix socket X11 is in use. The
-	 * provider must support {@link Capability#X11_FORWARDING} and either
-	 * {@link Capability#X11_FORWARDING_TCP} or
+	 * Set the screen number to use for X11 forwarding. This will be used to
+	 * determining the port the local X11 server is listening on if TCP/IP X11
+	 * forwarding is in use, or the name of the unix socket file if unix socket X11
+	 * is in use. The provider must support {@link Capability#X11_FORWARDING} and
+	 * either {@link Capability#X11_FORWARDING_TCP} or
 	 * {@link Capability#X11_FORWARDING_UNIX_SOCKET}.
 	 * 
-	 * @param x11Port port to use for X11 forwarding
+	 * @param x11Screen screen to use for X11 forwarding
 	 * @return this for chaining
 	 */
 	public SshConfiguration setX11Screen(int x11Screen) {

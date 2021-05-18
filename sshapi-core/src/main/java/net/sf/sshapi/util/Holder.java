@@ -21,20 +21,43 @@
  */
 package net.sf.sshapi.util;
 
+/**
+ * Simple typed container.
+ *
+ * @param <T> type
+ */
 public class Holder<T> {
 	private T value;
 
+	/**
+	 * Constructor
+	 */
 	public Holder() {
 	}
-	
+
+	/**
+	 * Constructor
+	 * 
+	 * @param value value
+	 */
 	public Holder(T value) {
 		set(value);
 	}
 
+	/**
+	 * Get the value
+	 * 
+	 * @return value
+	 */
 	public T get() {
 		return value;
 	}
 
+	/**
+	 * Set the value.
+	 * 
+	 * @param value value
+	 */
 	public void set(T value) {
 		this.value = value;
 	}

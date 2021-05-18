@@ -26,6 +26,8 @@ package net.sf.sshapi;
  * {@link SshLifecycleComponent} opening, closing and data transfer.
  * <p>
  * Note, to date, not all providers will support all of these events.
+ * 
+ * @param <C> component type
  */
 public interface SshLifecycleListener<C extends SshLifecycleComponent<?, C>> {
 

@@ -26,8 +26,18 @@ import java.io.InputStream;
 
 import net.sf.sshapi.util.Util;
 
+/**
+ * Abstract OpenSsh Client.
+ */
 public interface AbstractOpenSshClient {
 
+	/**
+	 * Read two streams (one in a separate thread) and dump them to {@link System#err} and {@link System#out}.
+	 * 
+	 * @param in in
+	 * @param errIn error in
+	 * @throws IOException on error
+	 */
 	default void pump(InputStream in, InputStream errIn) throws IOException {
 		Thread readOutput = new Thread("ReadSftpStdoout") {
 			@Override

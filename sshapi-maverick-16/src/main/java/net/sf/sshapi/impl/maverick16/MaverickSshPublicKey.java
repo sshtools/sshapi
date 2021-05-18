@@ -28,9 +28,17 @@ import com.maverick.ssh.SecurityLevel;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
 
+/**
+ * Maverick public key implementation.
+ */
 public class MaverickSshPublicKey implements com.maverick.ssh.components.SshPublicKey {
 	private final SshPublicKey key;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param key key
+	 */
 	public MaverickSshPublicKey(SshPublicKey key) {
 		this.key = key;
 	}

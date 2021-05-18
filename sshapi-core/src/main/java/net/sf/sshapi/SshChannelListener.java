@@ -21,6 +21,12 @@
  */
 package net.sf.sshapi;
 
+/**
+ * Interface to be implemented by consumers of events that SSH channels might produce, such as <strong>EOF</strong>
+ * or a <strong>Request</strong>.
+ *
+ * @param <C> type of component
+ */
 public interface SshChannelListener<C extends SshDataProducingComponent<?, C>> extends SshLifecycleListener<C> {
 
 	/**

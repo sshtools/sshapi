@@ -30,11 +30,11 @@ import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 
+/**
+ * List directory command.
+ */
 @Command(name = "ls", mixinStandardHelpOptions = true, description = "List directory.")
 public class Ls extends SftpCommand implements Callable<Integer> {
-
-	public Ls() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

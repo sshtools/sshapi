@@ -32,26 +32,58 @@ import net.sf.sshapi.AbstractSocket;
 import net.sf.sshapi.SshChannel;
 import net.sf.sshapi.SshClient;
 
+/**
+ * The Class RemoteSocket.
+ */
 public class RemoteSocket extends AbstractSocket {
+	
+	/** The channel. */
 	private SshChannel channel;
+	
+	/** The client. */
 	private SshClient client;
 
+	/**
+	 * Instantiates a new remote socket.
+	 *
+	 * @param client the client
+	 */
 	RemoteSocket(SshClient client) {
 		super();
 		this.client = client;
 	}
 
+	/**
+	 * Instantiates a new remote socket.
+	 *
+	 * @param client the client
+	 * @param host the host
+	 * @param port the port
+	 * @throws UnknownHostException the unknown host exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	RemoteSocket(SshClient client, String host, int port) throws UnknownHostException, IOException {
 		super();
 		this.client = client;
 		this.connect(new InetSocketAddress(host, port));
 	}
 
+	/**
+	 * Bind.
+	 *
+	 * @param bindpoint the bindpoint
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public void bind(SocketAddress bindpoint) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Do close.
+	 *
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public synchronized void doClose() throws IOException {
 		if (channel != null) {
@@ -63,6 +95,12 @@ public class RemoteSocket extends AbstractSocket {
 		}
 	}
 
+	/**
+	 * Gets the input stream.
+	 *
+	 * @return the input stream
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public InputStream getInputStream() throws IOException {
 		if (!isConnected()) {
@@ -71,6 +109,12 @@ public class RemoteSocket extends AbstractSocket {
 		return channel.getInputStream();
 	}
 
+	/**
+	 * Gets the output stream.
+	 *
+	 * @return the output stream
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		if (!isConnected()) {
@@ -79,11 +123,23 @@ public class RemoteSocket extends AbstractSocket {
 		return channel.getOutputStream();
 	}
 
+	/**
+	 * Checks if is connected.
+	 *
+	 * @return true, if is connected
+	 */
 	@Override
 	public boolean isConnected() {
 		return channel != null && !isClosed();
 	}
 
+	/**
+	 * On connect.
+	 *
+	 * @param addr the addr
+	 * @param timeout the timeout
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public void onConnect(InetSocketAddress addr, int timeout) throws IOException {
 		if (client == null || !client.isConnected()) {

@@ -54,6 +54,7 @@ public interface SshChannelHandler {
 	 * can hook in here to add listeners.
 	 * 
 	 * @param channel channel
+	 * @throws IOException on error
 	 */
 	void channelCreated(SshChannel channel) throws IOException;
 }

@@ -35,8 +35,10 @@ import net.sf.sshapi.SshShell;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
-// Crazy name :)SshLifecycleListener<SshShell>, SshShell
 
+/**
+ * libssh shell implementation.
+ */
 public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
 	private InputStream in;
 	private InputStream ext;
@@ -49,6 +51,18 @@ public class LibsshShell extends AbstractSshExtendedChannel<SshChannelListener<S
 	private boolean useExtendedStream;
 	private ssh_session libSshSession;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param provider provider
+	 * @param configuration configuration
+	 * @param libSshSession session
+	 * @param library library
+	 * @param termType term type
+	 * @param cols columns 
+	 * @param rows rows
+	 * @param useExtendedStream use extended stream
+	 */
 	public LibsshShell(SshProvider provider, SshConfiguration configuration, ssh_session libSshSession, SshLibrary library,
 			String termType, int cols, int rows, boolean useExtendedStream) {
 		super(provider, configuration);

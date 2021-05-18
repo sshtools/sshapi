@@ -40,7 +40,7 @@ public interface SshX509PublicKeyAuthenticator extends SshPublicKeyAuthenticator
 	
 	/**
 	 * Invoked when the session requires the key passphrase (for a key). By
-	 * default this will be the same as the {@link promptForPassphrase(SshClient, String)}
+	 * default this will be the same as the {@link SshPublicKeyAuthenticator#promptForPassphrase(SshClient, String)}
 	 * method.
 	 * 
 	 * @param session session

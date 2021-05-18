@@ -25,6 +25,8 @@ package net.sf.sshapi;
  * Abstract implementation of an {@link AbstractLifecycleComponent} that fires
  * events when the lifecycle methods are called. Most SSHAPI lifecycle
  * components will extend this.
+ * @param <L> 
+ * @param <C> 
  * 
  */
 public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
@@ -40,26 +42,49 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 		super(provider);
 	}
 
+	/**
+	 * Get whether the component fires it's own close events.
+	 * 
+	 * @return fires own close events.
+	 */
 	public final boolean isFiresOwnCloseEvents() {
 		return firesOwnCloseEvents;
 	}
 
+
+	/**
+	 * Get whether the component fires it's own close events.
+	 * 
+	 * @param firesOwnCloseEvents fires own close events.
+	 */
 	public final void setFiresOwnCloseEvents(boolean firesOwnCloseEvents) {
 		this.firesOwnCloseEvents = firesOwnCloseEvents;
 	}
 	
+	/**
+	 * Get if this component is closed.
+	 * 
+	 * @return closed
+	 */
 	public final boolean isClosed() {
 		return closed;
 	}
 	
+	/**
+	 * Get if this component is closing.
+	 * 
+	 * @return closing
+	 */
 	public final boolean isClosing() {
 		return closing;
 	}
 
+	@Override
 	public boolean isOpen() {
 		return open;
 	}
 
+	@Override
 	public final void open() throws SshException {
 		if (isOpen()) {
 			throw new SshException(SshException.ALREADY_OPEN, "Channel already open.");
@@ -75,6 +100,7 @@ public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycl
 		}
 	}
 
+	@Override
 	public final void close() throws SshException {
 		if (!closing) {
 			if(LOG.isDebug())

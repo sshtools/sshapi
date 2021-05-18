@@ -27,14 +27,34 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * The Class AbstractFuture.
+ *
+ * @param <V> the value type
+ */
 public abstract class AbstractFuture<V> implements Future<V> {
+	
+	/** The cancelled. */
 	private boolean cancelled;
+	
+	/** The val. */
 	private V val;
+	
+	/** The exception. */
 	private Exception exception;
+	
+	/** The thread. */
 	private Thread thread;
+	
+	/** The done. */
 	private boolean done;
+	
+	/** The sem. */
 	private Semaphore sem = new Semaphore(1);
 	
+	/**
+	 * Instantiates a new abstract future.
+	 */
 	AbstractFuture() {
 		try {
 			sem.acquire();
@@ -43,6 +63,11 @@ public abstract class AbstractFuture<V> implements Future<V> {
 		}
 	}
 	
+	/**
+	 * Creates the runnable.
+	 *
+	 * @return the runnable
+	 */
 	Runnable createRunnable() {
 		return new Runnable() {
 			@Override
@@ -59,8 +84,20 @@ public abstract class AbstractFuture<V> implements Future<V> {
 		};
 	}
 	
+	/**
+	 * Do future.
+	 *
+	 * @return the v
+	 * @throws Exception the exception
+	 */
 	abstract V doFuture() throws Exception;
 	
+	/**
+	 * Cancel.
+	 *
+	 * @param mayInterruptIfRunning the may interrupt if running
+	 * @return true, if successful
+	 */
 	@Override
 	public boolean cancel(boolean mayInterruptIfRunning) {
 		if (done || cancelled)
@@ -73,6 +110,13 @@ public abstract class AbstractFuture<V> implements Future<V> {
 		}
 	}
 
+	/**
+	 * Gets the.
+	 *
+	 * @return the v
+	 * @throws InterruptedException the interrupted exception
+	 * @throws ExecutionException the execution exception
+	 */
 	@Override
 	public V get() throws InterruptedException, ExecutionException {
 		sem.acquire();
@@ -85,6 +129,16 @@ public abstract class AbstractFuture<V> implements Future<V> {
 		}
 	}
 
+	/**
+	 * Gets the.
+	 *
+	 * @param timeout the timeout
+	 * @param unit the unit
+	 * @return the v
+	 * @throws InterruptedException the interrupted exception
+	 * @throws ExecutionException the execution exception
+	 * @throws TimeoutException the timeout exception
+	 */
 	@Override
 	public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		if (sem.tryAcquire(timeout, unit))
@@ -94,11 +148,21 @@ public abstract class AbstractFuture<V> implements Future<V> {
 		return val;
 	}
 
+	/**
+	 * Checks if is cancelled.
+	 *
+	 * @return true, if is cancelled
+	 */
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
 
+	/**
+	 * Checks if is done.
+	 *
+	 * @return true, if is done
+	 */
 	@Override
 	public boolean isDone() {
 		return done;

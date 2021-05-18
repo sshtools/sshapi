@@ -21,12 +21,32 @@
  */
 package net.sf.sshapi;
 
+/**
+ * The Class AbstractForwardingChannel.
+ *
+ * @param <C> the client type
+ */
 public abstract class AbstractForwardingChannel<C extends SshClient>
 		extends AbstractSshStreamChannel<SshChannelListener<SshChannel>, SshChannel> implements SshChannel {
+	
+	/** The hostname. */
 	protected String hostname;
+	
+	/** The port. */
 	protected int port;
+	
+	/** The client. */
 	protected C client;
 
+	/**
+	 * Instantiates a new abstract forwarding channel.
+	 *
+	 * @param client the client
+	 * @param provider the provider
+	 * @param configuration the configuration
+	 * @param hostname the hostname
+	 * @param port the port
+	 */
 	protected AbstractForwardingChannel(C client, SshProvider provider, SshConfiguration configuration, String hostname,
 			int port) {
 		super(provider, configuration);
@@ -35,16 +55,35 @@ public abstract class AbstractForwardingChannel<C extends SshClient>
 		this.port = port;
 	}
 
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
 	@Override
 	public String getName() {
 		return "direct-tcpip";
 	}
 
+	/**
+	 * Gets the channel data.
+	 *
+	 * @return the channel data
+	 */
 	@Override
 	public ChannelData getChannelData() {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Send request.
+	 *
+	 * @param requesttype the requesttype
+	 * @param wantreply the wantreply
+	 * @param requestdata the requestdata
+	 * @return true, if successful
+	 * @throws SshException the ssh exception
+	 */
 	@Override
 	public boolean sendRequest(String requesttype, boolean wantreply, byte[] requestdata) throws SshException {
 		throw new UnsupportedOperationException();

@@ -89,7 +89,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	 * Entry point.
 	 * 
 	 * @param args command line arguments
-	 * @throws SshException
+	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
 		ssh client = new ssh();

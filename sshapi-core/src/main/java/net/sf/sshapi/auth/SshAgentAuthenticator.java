@@ -29,6 +29,13 @@ import net.sf.sshapi.agent.SshAgent;
  * Authenticator that uses keys from the local agent.
  */
 public interface SshAgentAuthenticator extends SshAuthenticator {
+	/**
+	 * Get the agent given the configuration.
+	 * 
+	 * @param configuration configuration
+	 * @return agent
+	 * @throws SshException on error
+	 */
 	SshAgent getAgent(SshConfiguration configuration) throws SshException;
 
 	@Override

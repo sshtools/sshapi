@@ -28,14 +28,14 @@ import net.sf.sshapi.sftp.SftpClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Remove file command.
+ */
 @Command(name = "rm", mixinStandardHelpOptions = true, description = "Remove file.")
 public class Rm extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "1", description = "File to remove.")
 	private String file;
-
-	public Rm() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

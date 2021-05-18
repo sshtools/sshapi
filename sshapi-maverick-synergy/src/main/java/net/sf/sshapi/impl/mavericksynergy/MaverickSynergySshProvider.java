@@ -193,6 +193,11 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 		return Util.getArtifactVersion("com.sshtools", "maverick-synergy-client");
 	}
 
+	/**
+	 * Get the native engine.
+	 * 
+	 * @return engine
+	 */
 	public SshEngine getEngine() {
 		checkEngine();
 		return engine;

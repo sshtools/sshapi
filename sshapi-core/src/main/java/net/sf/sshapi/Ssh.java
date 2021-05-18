@@ -34,15 +34,28 @@ import net.sf.sshapi.util.Util;
  * usually be the entry point.
  */
 public class Ssh {
+	/**
+	 * Callable appropriate for use with an SSH component.
+	 *
+	 * @param <T> type of component
+	 */
 	public interface SshCallable<T> {
+		/**
+		 * Call.
+		 * 
+		 * @param component component
+		 * @throws IOException on error
+		 */
 		void call(T component) throws IOException;
 	}
 	
 	/**
 	 * Utility method to wait for a future, then chain to another task.
 	 * 
+	 * @param future future to wait for
+	 * @param callable task to run
 	 * @return the object from the future
-	 * @throws SshException on any error
+	 * @throws IOException on any error
 	 */
 	public static <T> T then(Future<T> future, SshCallable<T> callable) throws IOException {
 		try {
@@ -63,6 +76,7 @@ public class Ssh {
 	 * Connect to an SSH server as a specified user and password.
 	 * 
 	 * @param username username
+	 * @param password password
 	 * @param hostname hostname
 	 * @param port port
 	 * @return connect client
@@ -107,6 +121,7 @@ public class Ssh {
 	 * block, instead return a future to monitor state of connection operation.
 	 * 
 	 * @param username username
+	 * @param password password
 	 * @param hostname hostname
 	 * @param port port
 	 * @return connect client

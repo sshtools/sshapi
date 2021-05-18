@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Default {@link SftpOperation}
+ */
 public class DefaultSftpOperation implements SftpOperation {
 	private List<String> deleted = new ArrayList<String>();
 	private List<String> unchanged = new ArrayList<String>();
@@ -81,10 +84,20 @@ public class DefaultSftpOperation implements SftpOperation {
 		return updated.size() + created.size() + unchanged.size() + deleted.size();
 	}
 
+	/**
+	 * Increase size.
+	 * 
+	 * @param size size to increase biz
+	 */
 	public void increaseSize(long size) {
 		this.size += size;
 	}
 
+	/**
+	 * Add a new operation.
+	 * 
+	 * @param op op to add
+	 */
 	public void add(SftpOperation op) {
 		updated.addAll(op.updated());
 		created.addAll(op.created());
@@ -93,6 +106,12 @@ public class DefaultSftpOperation implements SftpOperation {
 		errors.putAll(op.errors());
 	}
 
+	/**
+	 * Get if this operation contains a path.
+	 * 
+	 * @param path path to test
+	 * @return contains path
+	 */
 	public boolean contains(String path) {
 		return updated.contains(path) || created.contains(path) || deleted.contains(path) || unchanged.contains(path);
 	}

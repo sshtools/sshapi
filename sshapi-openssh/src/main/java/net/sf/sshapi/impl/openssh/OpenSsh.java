@@ -21,8 +21,16 @@
  */
 package net.sf.sshapi.impl.openssh;
 
+/**
+ * OpenSsh utilities.
+ */
 public class OpenSsh {
 
+	/**
+	 * Escape a command
+	 * @param command command to escape
+	 * @return escaped
+	 */
 	public static String escape(String command) {
 		StringBuffer b = new StringBuffer();
 		for(char c : command.toCharArray()) {

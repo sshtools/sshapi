@@ -605,7 +605,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @throws SshException on any error
 	 * @see #command(String, String, int, int, int, int, byte[])
 	 * @see #createCommand(String, String, int, int, int, int, byte[])
-	 * @see {@#createCommand(String)
+	 * @see #createCommand(String)
 	 */
 	SshCommand command(String command) throws SshException;
 

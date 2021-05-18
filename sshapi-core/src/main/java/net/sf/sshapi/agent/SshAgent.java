@@ -96,10 +96,11 @@ public interface SshAgent extends SshChannelHandler, Closeable {
 	/**
 	 * Add a key to the agent.
 	 * 
-	 * @param keypair
+	 * @param keyPair
 	 *            keypair
 	 * @param description
 	 *            description
+	 * @throws SshException on SSH error
 	 * @throws UnsupportedOperationException
 	 *             if keys cannot be added using this API
 	 */
@@ -199,7 +200,7 @@ public interface SshAgent extends SshChannelHandler, Closeable {
 	 * @param padding
 	 *            the padding data
 	 * 
-	 * @throws IOException
+	 * @throws SshException
 	 *             if an IO error occurs
 	 */
 	void ping(byte[] padding) throws SshException;

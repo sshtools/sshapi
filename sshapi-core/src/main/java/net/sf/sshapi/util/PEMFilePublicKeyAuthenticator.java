@@ -35,10 +35,24 @@ import net.sf.sshapi.SshPasswordPrompt;
  */
 @Deprecated
 public class PEMFilePublicKeyAuthenticator extends DefaultPublicKeyAuthenticator {
+	/**
+	 * Constructor.
+	 * 
+	 * @param passphrasePrompt
+	 * @param privateKeyData
+	 * @throws IOException
+	 */
 	public PEMFilePublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, byte[] privateKeyData) throws IOException {
 		super(passphrasePrompt, privateKeyData);
 	}
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param passphrasePrompt passphrase prompt
+	 * @param privateKeyFile private key file
+	 * @throws IOException on error
+	 */
 	public PEMFilePublicKeyAuthenticator(SshPasswordPrompt passphrasePrompt, File privateKeyFile) throws IOException {
 		super(passphrasePrompt, privateKeyFile);
 	}

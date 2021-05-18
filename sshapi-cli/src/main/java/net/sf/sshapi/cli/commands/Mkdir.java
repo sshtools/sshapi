@@ -28,14 +28,14 @@ import net.sf.sshapi.sftp.SftpClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Make directory command.
+ */
 @Command(name = "mkdir", mixinStandardHelpOptions = true, description = "Create directory.")
 public class Mkdir extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "1", description = "Directory to create.")
 	private String directory;
-
-	public Mkdir() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

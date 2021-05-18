@@ -184,7 +184,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 	 * Entry point.
 	 * 
 	 * @param args command line arguments
-	 * @throws SshException
+	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
 		ssh cli = new ssh();

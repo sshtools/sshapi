@@ -27,24 +27,56 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * The Class CaptureInputStream.
+ */
 public class CaptureInputStream extends FilterInputStream {
+	
+	/**
+	 * The Class Match.
+	 */
 	public class Match {
+		
+		/** The idx. */
 		private int idx;
+		
+		/** The pattern. */
 		private byte[] pattern;
 
+		/**
+		 * Instantiates a new match.
+		 *
+		 * @param pattern the pattern
+		 */
 		public Match(byte[] pattern) {
 			super();
 			this.pattern = pattern;
 		}
 
+		/**
+		 * Gets the idx.
+		 *
+		 * @return the idx
+		 */
 		public int getIdx() {
 			return idx;
 		}
 
+		/**
+		 * Gets the pattern.
+		 *
+		 * @return the pattern
+		 */
 		public byte[] getPattern() {
 			return pattern;
 		}
 
+		/**
+		 * Matched.
+		 *
+		 * @param b the b
+		 * @return the match type
+		 */
 		MatchType matched(byte b) {
 			if (b == pattern[idx]) {
 				idx++;
@@ -57,31 +89,91 @@ public class CaptureInputStream extends FilterInputStream {
 			return idx == 0 ? MatchType.NONE : MatchType.PARTIAL;
 		}
 
+		/**
+		 * Gets the pattern string.
+		 *
+		 * @return the pattern string
+		 */
 		public String getPatternString() {
 			return new String(pattern);
 		}
 
+		/**
+		 * Reset.
+		 */
 		public void reset() {
 			idx = 0;
 		}
 	}
 
+	/**
+	 * The Interface Matcher.
+	 */
 	public interface Matcher {
+		
+		/**
+		 * Matched.
+		 *
+		 * @param pattern the pattern
+		 * @param capture the capture
+		 * @return the match result
+		 * @throws IOException Signals that an I/O exception has occurred.
+		 */
 		MatchResult matched(Match pattern, CaptureInputStream capture) throws IOException;
 
+		/**
+		 * No match.
+		 *
+		 * @param pattern the pattern
+		 * @param capture the capture
+		 * @return the match result
+		 * @throws IOException Signals that an I/O exception has occurred.
+		 */
 		default MatchResult noMatch(Match pattern, CaptureInputStream capture) throws IOException {
 			return MatchResult.CONTINUE;
 		}
 	}
 
+	/**
+	 * The Enum MatchResult.
+	 */
 	public enum MatchResult {
-		ACTIVATE, ACTIVATE_NEXT_BYTE, CONTINUE, DEACTIVATE, DEACTIVATE_NEXT_BYTE, END, TERMINATE;
+		
+		/** The activate. */
+		ACTIVATE, 
+ /** The activate next byte. */
+ ACTIVATE_NEXT_BYTE, 
+ /** The continue. */
+ CONTINUE, 
+ /** The deactivate. */
+ DEACTIVATE, 
+ /** The deactivate next byte. */
+ DEACTIVATE_NEXT_BYTE, 
+ /** The end. */
+ END, 
+ /** The terminate. */
+ TERMINATE;
 	}
 
+	/**
+	 * The Enum MatchType.
+	 */
 	public enum MatchType {
-		FULL, NONE, PARTIAL
+		
+		/** The full. */
+		FULL, 
+ /** The none. */
+ NONE, 
+ /** The partial. */
+ PARTIAL
 	}
 
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 * @throws Exception the exception
+	 */
 	public static void main(String[] args) throws Exception {
 		Util.joinStreams(new CaptureInputStream((p, capture) -> {
 			return MatchResult.ACTIVATE;
@@ -89,6 +181,12 @@ public class CaptureInputStream extends FilterInputStream {
 		System.out.flush();
 	}
 
+	/**
+	 * To byte array.
+	 *
+	 * @param patterns the patterns
+	 * @return the byte[][]
+	 */
 	private static byte[][] toByteArray(String[] patterns) {
 		byte[][] b = new byte[patterns.length][];
 		for (int i = 0; i < patterns.length; i++) {
@@ -97,51 +195,121 @@ public class CaptureInputStream extends FilterInputStream {
 		return b;
 	}
 
+	/** The active. */
 	private boolean active;
+	
+	/** The ended. */
 	private boolean ended;
+	
+	/** The matcher. */
 	private Matcher matcher;
+	
+	/** The patterns. */
 	private Match[] patterns;
+	
+	/** The capture. */
 	private ByteArrayOutputStream capture;
+	
+	/** The sinking. */
 	private boolean sinking;
 
+	/**
+	 * Instantiates a new capture input stream.
+	 *
+	 * @param in the in
+	 */
 	public CaptureInputStream(InputStream in) {
 		this(null, (String) null, in);
 	}
 
+	/**
+	 * Instantiates a new capture input stream.
+	 *
+	 * @param matcher the matcher
+	 * @param pattern the pattern
+	 * @param out the out
+	 */
 	public CaptureInputStream(Matcher matcher, byte[] pattern, InputStream out) {
 		this(matcher, pattern == null ? null : new byte[][] { pattern }, out);
 	}
 
+	/**
+	 * Instantiates a new capture input stream.
+	 *
+	 * @param matcher the matcher
+	 * @param patterns the patterns
+	 * @param out the out
+	 */
 	public CaptureInputStream(Matcher matcher, byte[][] patterns, InputStream out) {
 		super(out);
 		this.matcher = matcher;
 		setPatterns(patterns);
 	}
 
+	/**
+	 * Instantiates a new capture input stream.
+	 *
+	 * @param matcher the matcher
+	 * @param pattern the pattern
+	 * @param out the out
+	 */
 	public CaptureInputStream(Matcher matcher, String pattern, InputStream out) {
 		this(matcher, pattern == null ? null : pattern.getBytes(), out);
 	}
 
+	/**
+	 * Instantiates a new capture input stream.
+	 *
+	 * @param matcher the matcher
+	 * @param patterns the patterns
+	 * @param out the out
+	 */
 	public CaptureInputStream(Matcher matcher, String[] patterns, InputStream out) {
 		this(matcher, toByteArray(patterns), out);
 	}
 
+	/**
+	 * Gets the matcher.
+	 *
+	 * @return the matcher
+	 */
 	public Matcher getMatcher() {
 		return matcher;
 	}
 
+	/**
+	 * Gets the patterns.
+	 *
+	 * @return the patterns
+	 */
 	public Match[] getPatterns() {
 		return patterns;
 	}
 
+	/**
+	 * Sets the capture.
+	 *
+	 * @param capture the new capture
+	 */
 	public void setCapture(boolean capture) {
 		this.capture = capture ? new ByteArrayOutputStream() : null;
 	}
 
+	/**
+	 * Checks if is active.
+	 *
+	 * @return true, if is active
+	 */
 	public boolean isActive() {
 		return active;
 	}
 
+	/**
+	 * Read.
+	 *
+	 * @return the int
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public int read() throws IOException {
 		int b;
@@ -188,6 +356,15 @@ public class CaptureInputStream extends FilterInputStream {
 		return b;
 	}
 
+	/**
+	 * Read.
+	 *
+	 * @param b the b
+	 * @param off the off
+	 * @param len the len
+	 * @return the int
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		int r;
@@ -201,18 +378,38 @@ public class CaptureInputStream extends FilterInputStream {
 		return len;
 	}
 
+	/**
+	 * Sets the active.
+	 *
+	 * @param active the new active
+	 */
 	public void setActive(boolean active) {
 		this.active = active;
 	}
 
+	/**
+	 * Sets the matcher.
+	 *
+	 * @param matcher the new matcher
+	 */
 	public void setMatcher(Matcher matcher) {
 		this.matcher = matcher;
 	}
 
+	/**
+	 * Sets the patterns.
+	 *
+	 * @param patterns the new patterns
+	 */
 	public void setPatterns(String... patterns) {
 		setPatterns(toByteArray(patterns));
 	}
 
+	/**
+	 * Sets the patterns.
+	 *
+	 * @param patterns the new patterns
+	 */
 	public void setPatterns(byte[][] patterns) {
 		if (patterns == null)
 			this.patterns = null;
@@ -224,10 +421,20 @@ public class CaptureInputStream extends FilterInputStream {
 		}
 	}
 
+	/**
+	 * Sets the pattern.
+	 *
+	 * @param pattern the new pattern
+	 */
 	public void setPattern(String pattern) {
 		setPatterns(new String[] { pattern });
 	}
 
+	/**
+	 * Gets the captured string.
+	 *
+	 * @return the captured string
+	 */
 	public String getCapturedString() {
 		if (capture == null)
 			return null;
@@ -240,6 +447,9 @@ public class CaptureInputStream extends FilterInputStream {
 		}
 	}
 	
+	/**
+	 * Reset.
+	 */
 	public void reset() {
 		active = false;
 		ended = false;
@@ -248,6 +458,12 @@ public class CaptureInputStream extends FilterInputStream {
 			m.reset();
 	}
 
+	/**
+	 * Read until EOF ended or active.
+	 *
+	 * @return the long
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public long readUntilEOFEndedOrActive() throws IOException {
 		if(sinking)
 			throw new IllegalStateException("Already sinking");

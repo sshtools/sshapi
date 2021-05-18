@@ -52,6 +52,9 @@ import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
+/**
+ * libssh local port forward implementation.
+ */
 public class LibsshLocalForward extends AbstractPortForward implements SshPortForward, Runnable {
 
 	private static final Logger LOG = SshConfiguration.getLogger();
@@ -273,6 +276,17 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 	private int boundPort;
 	private Map<SocketChannel, TunnelChannel> channels = Collections.synchronizedMap(new HashMap<>());
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param provider provider
+	 * @param libSshSession session
+	 * @param library library
+	 * @param localAddress local address
+	 * @param localPort local port
+	 * @param remoteHost remote host
+	 * @param remotePort remote port
+	 */
 	public LibsshLocalForward(SshProvider provider, ssh_session libSshSession, SshLibrary library, String localAddress,
 			int localPort, String remoteHost, int remotePort) {
 		super(provider);

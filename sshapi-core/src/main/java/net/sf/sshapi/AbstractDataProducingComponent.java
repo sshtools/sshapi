@@ -32,6 +32,8 @@ import java.util.List;
 /**
  * Abstract implementation of {@link SshDataProducingComponent} that provides
  * some default common methods.
+ * @param <L> the type of listener
+ * @param <C> the type of component
  */
 public abstract class AbstractDataProducingComponent<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
 		extends AbstractLifecycleComponentWithEvents<L, C> implements SshDataProducingComponent<L, C> {

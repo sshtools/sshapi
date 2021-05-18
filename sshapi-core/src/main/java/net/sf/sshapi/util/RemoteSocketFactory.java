@@ -30,33 +30,87 @@ import javax.net.SocketFactory;
 
 import net.sf.sshapi.SshClient;
 
+/**
+ * A factory for creating RemoteSocket objects.
+ */
 public class RemoteSocketFactory extends SocketFactory {
+	
+	/** The client. */
 	private SshClient client;
 
+	/**
+	 * Instantiates a new remote socket factory.
+	 *
+	 * @param client the client
+	 */
 	public RemoteSocketFactory(SshClient client) {
 		this.client = client;
 	}
 
+	/**
+	 * Creates a new RemoteSocket object.
+	 *
+	 * @return the socket
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public Socket createSocket() throws IOException {
 		return new RemoteSocket(client);
 	}
 
+	/**
+	 * Creates a new RemoteSocket object.
+	 *
+	 * @param host the host
+	 * @param port the port
+	 * @return the socket
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public Socket createSocket(InetAddress host, int port) throws IOException {
 		return new RemoteSocket(client, host.getHostAddress(), port);
 	}
 
+	/**
+	 * Creates a new RemoteSocket object.
+	 *
+	 * @param address the address
+	 * @param port the port
+	 * @param localAddress the local address
+	 * @param localPort the local port
+	 * @return the socket
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	@Override
 	public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
 		return new RemoteSocket(client, address.getHostAddress(), port);
 	}
 
+	/**
+	 * Creates a new RemoteSocket object.
+	 *
+	 * @param host the host
+	 * @param port the port
+	 * @return the socket
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws UnknownHostException the unknown host exception
+	 */
 	@Override
 	public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
 		return new RemoteSocket(client, host, port);
 	}
 
+	/**
+	 * Creates a new RemoteSocket object.
+	 *
+	 * @param host the host
+	 * @param port the port
+	 * @param localHost the local host
+	 * @param localPort the local port
+	 * @return the socket
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws UnknownHostException the unknown host exception
+	 */
 	@Override
 	public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
 			throws IOException, UnknownHostException {

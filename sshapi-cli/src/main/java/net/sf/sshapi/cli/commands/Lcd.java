@@ -28,14 +28,14 @@ import net.sf.sshapi.cli.SftpContainer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Local change directory.
+ */
 @Command(name = "lcd", mixinStandardHelpOptions = true, description = "Change local directory.")
 public class Lcd extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "0..1", description = "Directory to change to.")
 	private File directory;
-
-	public Lcd() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

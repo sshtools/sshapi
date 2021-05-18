@@ -291,6 +291,11 @@ public class SftpException extends SshException {
 			this.serverCode = serverCode;
 		}
 		
+		/**
+		 * The code.
+		 * 
+		 * @return code
+		 */
 		public int getServerCode() {
 			return serverCode;
 		}

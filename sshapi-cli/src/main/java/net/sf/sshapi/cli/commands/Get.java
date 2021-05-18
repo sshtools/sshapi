@@ -30,14 +30,14 @@ import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+/**
+ * Get command.
+ */
 @Command(name = "get", mixinStandardHelpOptions = true, description = "Download remote file.")
 public class Get extends SftpCommand implements Callable<Integer> {
 
 	@Parameters(index = "0", arity = "1", description = "File to retrieve.")
 	private String file;
-
-	public Get() {
-	}
 
 	@Override
 	public Integer call() throws Exception {

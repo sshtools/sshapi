@@ -31,6 +31,9 @@ import net.sf.sshapi.SshConfiguration;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 
+/**
+ * libssh output stream.
+ */
 public class LibsshOutputStream extends OutputStream {
 
 	private static final Logger LOG = SshConfiguration.getLogger();
@@ -38,6 +41,12 @@ public class LibsshOutputStream extends OutputStream {
 	private SshLibrary library;
 	private boolean closed;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param library library
+	 * @param channel channel
+	 */
 	public LibsshOutputStream(SshLibrary library, ssh_channel channel) {
 		this.channel = channel;
 		this.library = library;

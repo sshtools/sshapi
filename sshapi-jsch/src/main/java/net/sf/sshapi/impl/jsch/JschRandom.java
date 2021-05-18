@@ -25,10 +25,21 @@ import java.security.SecureRandom;
 
 import com.jcraft.jsch.Random;
 
+/**
+ * Jsch implementation of random number generator.
+ */
 public class JschRandom implements Random {
+	
 	private byte[] tmp = new byte[16];
 	private SecureRandom random = JschSshProvider.RANDOM;
 
+	/**
+	 * Fill.
+	 *
+	 * @param foo the foo
+	 * @param start the start
+	 * @param len the len
+	 */
 	@Override
 	public void fill(byte[] foo, int start, int len) {
 		/*

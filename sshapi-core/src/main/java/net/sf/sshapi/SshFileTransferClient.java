@@ -24,6 +24,8 @@ package net.sf.sshapi;
 /**
  * Interface to be implemented by components that can produce file transfer
  * events, such as SFTP and SCP.
+ * @param <L> listener type
+ * @param <C> component type
  * 
  */
 public interface SshFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> extends SshLifecycleComponent<L, C> {

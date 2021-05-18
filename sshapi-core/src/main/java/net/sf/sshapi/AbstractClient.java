@@ -55,6 +55,9 @@ import net.sf.sshapi.util.Util;
  */
 public abstract class AbstractClient implements SshClient {
 
+	/**
+	 * Abstract implementation for a tunnel channel.
+	 */
 	public final static class ForwardingChannel
 			extends AbstractSshStreamChannel<SshChannelListener<SshChannel>, SshChannel> implements SshChannel {
 		private SshPortForward localForward;
