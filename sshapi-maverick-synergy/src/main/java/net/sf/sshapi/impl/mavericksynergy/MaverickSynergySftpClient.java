@@ -182,7 +182,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 	public void onOpen() throws SshException {
 		try {
 			sftpClient = new SftpClient(client);
-			sftpClient.cd(getDefaultPath());
+			sftpClient.cd("");
 			if (getSftpVersion() > 3) {
 				defaultRemoteEOL = sftpClient.getRemoteEOL();
 				if (eolPolicy != null)

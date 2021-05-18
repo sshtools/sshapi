@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 
@@ -180,6 +181,7 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 		try {
 			start();
 		} catch (SshException sshe) {
+			sshe.printStackTrace();
 			if (sshe.getCode().equals(SshException.HOST_KEY_REJECTED)) {
 				// Already displayed a message, just exit
 			} else {
@@ -263,9 +265,12 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 						}
 					}
 
-				} catch (Exception e) {
+				} catch(EndOfFileException ee) {
+					exitWhenDone = true;
+				} catch(Exception e) {
+					e.printStackTrace(err);
 					err.println(String.format("%s", e.getMessage()));
-				}
+				} 
 			} while (!exitWhenDone);
 		} catch (Exception e1) {
 			e1.printStackTrace();
