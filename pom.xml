@@ -1,26 +1,17 @@
-<!--
-
-    Copyright (c) 2020 The JavaSSH Project
-
-     Permission is hereby granted, free of charge, to any person obtaining a copy
-     of this software and associated documentation files (the "Software"), to deal
-     in the Software without restriction, including without limitation the rights
-     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-     copies of the Software, and to permit persons to whom the Software is
-     furnished to do so, subject to the following conditions:
-
-     The above copyright notice and this permission notice shall be included in
-     all copies or substantial portions of the Software.
-
-     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-     THE SOFTWARE.
-
--->
+<!-- Copyright (c) 2020 The JavaSSH Project Permission is hereby granted, 
+	free of charge, to any person obtaining a copy of this software and associated 
+	documentation files (the "Software"), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, 
+	distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following 
+	conditions: The above copyright notice and this permission notice shall be 
+	included in all copies or substantial portions of the Software. THE SOFTWARE 
+	IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+	BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+	BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+	THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -124,7 +115,7 @@
 						<!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
 						<detectJavaApiLink>false</detectJavaApiLink>
 						<source>8</source>
-						<additionalparam>-Xdoclint:none</additionalparam>
+						<doclint>none</doclint>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -455,7 +446,7 @@
 		<!-- <module>../sshapi-site</module> -->
 	</modules>
 	<profiles>
-	
+
 		<profile>
 			<activation>
 				<jdk>[9,)</jdk>
@@ -469,13 +460,18 @@
 							<configuration>
 								<!-- TODO: Why is this STILL broken! -->
 								<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+								<excludePackageNames>**.impl.*</excludePackageNames>
+								<!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+								<detectJavaApiLink>false</detectJavaApiLink>
+								<source>8</source>
+								<doclint>none</doclint>
 							</configuration>
 						</plugin>
 					</plugins>
 				</pluginManagement>
 			</build>
 		</profile>
-		
+
 		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>
