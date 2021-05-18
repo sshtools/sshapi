@@ -42,16 +42,6 @@ This library is the provider bridge for SSHAPI.</description>
 		<relativePath>..</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
-	<distributionManagement>
-		<repository>
-			<id>opensource-releases</id>
-			<url>http://artifactory.javassh.com/opensource-releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>opensource-snapshots</id>
-			<url>http://artifactory.javassh.com/opensource-snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
@@ -103,17 +93,12 @@ This library is the provider bridge for SSHAPI.</description>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-ed25519</artifactId>
-			<version>3.0.0-RC1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-ed25519</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-x509</artifactId>
-			<version>3.0.0-RC1</version>
+			<version>${maverickSynergyVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
