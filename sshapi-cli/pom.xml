@@ -171,13 +171,6 @@ ssh-keygen - (TODO)  Generate identities</description>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>info.picocli</groupId>
 			<artifactId>picocli</artifactId>
 			<version>4.6.1</version>
