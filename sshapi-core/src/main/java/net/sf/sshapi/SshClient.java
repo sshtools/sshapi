@@ -195,10 +195,10 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * {@link SshShell#close()}, or use a try-with-resource.
 	 * 
 	 * @return shell
-	 * @throws SshException
-	 * @see {@link #shell(String, int, int, int, int, byte[])}
-	 * @see {@link #createShell(String, int, int, int, int, byte[])}
-	 * @see {@link #shell()}
+	 * @throws SshException on error
+	 * @see #shell(String, int, int, int, int, byte[])
+	 * @see #createShell(String, int, int, int, int, byte[])
+	 * @see #shell()
 	 */
 	SshShell createShell() throws SshException;
 
@@ -223,12 +223,12 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * {@link SshShell#close()}, or use a try-with-resource.
 	 * 
 	 * @return shell
-	 * @throws SshException
-	 * @see {@link #createShell(String, int, int, int, int, byte[])}
-	 * @see {@link #createShell()}
-	 * @see {@link #shell(String, int, int, int, int, byte[])}
-	 * @see {@link #shellLater()}
-	 * @see {@link #shellLater(String, int, int, int, int, byte[])}
+	 * @throws SshException on error
+	 * @see #createShell(String, int, int, int, int, byte[])
+	 * @see #createShell()
+	 * @see #shell(String, int, int, int, int, byte[])
+	 * @see #shellLater()
+	 * @see #shellLater(String, int, int, int, int, byte[])
 	 */
 	SshShell shell() throws SshException;
 
@@ -260,10 +260,10 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * {@link SshShell#close()}, or use a try-with-resource.
 	 * 
 	 * @return future
-	 * @throws SshException
-	 * @see {@link #createShell(String, int, int, int, int, byte[])}
-	 * @see {@link #createShell()}
-	 * @see {@link #shell(String, int, int, int, int, byte[])}
+	 * @throws SshException on error
+	 * @see #createShell(String, int, int, int, int, byte[])
+	 * @see #createShell()
+	 * @see #shell(String, int, int, int, int, byte[])
 	 */
 	Future<SshShell> shellLater();
 
@@ -288,8 +288,8 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 *            zero)
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return shell
-	 * @throws SshException
-	 * @see {@link #shell(String, int, int, int, int, byte[])}
+	 * @throws SshException on error
+	 * @see #shell(String, int, int, int, int, byte[])
 	 */
 	SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException;
@@ -328,12 +328,12 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 *            zero)
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return shell
-	 * @throws SshException
-	 * @see {@link #createShell(String, int, int, int, int, byte[])}
-	 * @see {@link #createShell()}
-	 * @see {@link #shell()}
-	 * @see {@link #shellLater()}
-	 * @see {@link #shellLater(String, int, int, int, int, byte[])}
+	 * @throws SshException on error
+	 * @see #createShell(String, int, int, int, int, byte[])
+	 * @see #createShell()
+	 * @see #shell()
+	 * @see #shellLater()
+	 * @see #shellLater(String, int, int, int, int, byte[])
 	 */
 	SshShell shell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes) throws SshException;
 
@@ -371,12 +371,12 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 *            zero)
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return future
-	 * @throws SshException
-	 * @see {@link #createShell(String, int, int, int, int, byte[])}
-	 * @see {@link #createShell()}
-	 * @see {@link #shell()}
-	 * @see {@link #shell(String, int, int, int, int, byte[])}
-	 * @see {@link #shellLater()}
+	 * @throws SshException on error
+	 * @see #createShell(String, int, int, int, int, byte[])
+	 * @see #createShell()
+	 * @see #shell()
+	 * @see #shell(String, int, int, int, int, byte[])
+	 * @see #shellLater()
 	 */
 	Future<SshShell> shellLater(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes);
 
@@ -402,7 +402,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort remote port to tunnel to
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #localForward(String, int, String, int)}
+	 * @see #localForward(String, int, String, int)
 	 */
 	SshPortForward createLocalForward(String localBindAddress, int localBindPort, String targetAddress, int targetPort)
 			throws SshException;
@@ -425,7 +425,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort remote port to tunnel to
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #createLocalForward(String, int, String, int)}
+	 * @see #createLocalForward(String, int, String, int)
 	 */
 	SshPortForward localForward(String localBindAddress, int localBindPort, String targetAddress, int targetPort)
 			throws SshException;
@@ -455,7 +455,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort local port to listen on
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #remoteForward(String, int, String, int)}
+	 * @see #remoteForward(String, int, String, int)
 	 */
 	SshPortForward createRemoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress, int targetPort)
 			throws SshException;
@@ -482,7 +482,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort local port to listen on
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #createRemoteForward(String, int, String, int)}
+	 * @see #createRemoteForward(String, int, String, int)
 	 */
 	SshPortForward remoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress, int targetPort)
 			throws SshException;
@@ -499,9 +499,9 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param command command to execute
 	 * @return channel
 	 * @throws SshException on any error
-	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
-	 * @see {@link #command(String)}
-	 * @see {@link #command(String, String, int, int, int, int, byte[])}
+	 * @see #createCommand(String, String, int, int, int, int, byte[])
+	 * @see #command(String)
+	 * @see #command(String, String, int, int, int, int, byte[])
 	 */
 	SshCommand createCommand(String command) throws SshException;
 
@@ -541,9 +541,9 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return channel
 	 * @throws SshException on any error
-	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
-	 * @see {@link #command(String)}
-	 * @see {@link #createCommand(String)}
+	 * @see #createCommand(String, String, int, int, int, int, byte[])
+	 * @see #command(String)
+	 * @see #createCommand(String)
 	 */
 	SshCommand command(String command, String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException;
@@ -571,9 +571,9 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return channel
 	 * @throws SshException on any error
-	 * @see {@link #command(String, String, int, int, int, int, byte[])}
-	 * @see {@link #command(String)}
-	 * @see {@link #createCommand(String)}
+	 * @see #command(String, String, int, int, int, int, byte[])
+	 * @see #command(String)
+	 * @see #createCommand(String)
 	 */
 	SshCommand createCommand(String command, String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException;
@@ -603,9 +603,9 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param command command to execute
 	 * @return channel
 	 * @throws SshException on any error
-	 * @see {@link #command(String, String, int, int, int, int, byte[])}
-	 * @see {@link #createCommand(String, String, int, int, int, int, byte[])}
-	 * @see {@link #createCommand(String)}
+	 * @see #command(String, String, int, int, int, int, byte[])
+	 * @see #createCommand(String, String, int, int, int, int, byte[])
+	 * @see {@#createCommand(String)
 	 */
 	SshCommand command(String command) throws SshException;
 
@@ -638,7 +638,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @return scp client
 	 * @throws SshException on any error
-	 * @see {@link #scp()}
+	 * @see #scp()
 	 */
 	SshSCPClient createSCP() throws SshException;
 
@@ -652,7 +652,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @return scp client
 	 * @throws SshException on any error
-	 * @see {@link #createSCP()}
+	 * @see #createSCP()
 	 */
 	SshSCPClient scp() throws SshException;
 
@@ -671,7 +671,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @return SFTP client
 	 * @throws SshException
-	 * @see {@link #sftp()}
+	 * @see #sftp()
 	 */
 	SftpClient createSftp() throws SshException;
 
@@ -683,8 +683,8 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * {@link SshLifecycleComponent#close()} or use try-with-resource.
 	 * 
 	 * @return SFTP client
-	 * @throws SshException
-	 * @see {@link #createSftp()}
+	 * @throws SshException on error
+	 * @see #createSftp()
 	 */
 	SftpClient sftp() throws SshException;
 
@@ -737,7 +737,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @return public key subsystem instance.
 	 * @throws SshException
 	 * @throws UnsupportedOperationException if no supported
-	 * @see {@link #publicKeySubsystem()}
+	 * @see #publicKeySubsystem()
 	 */
 	SshPublicKeySubsystem createPublicKeySubsystem() throws SshException;
 
@@ -751,7 +751,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @return public key subsystem instance.
 	 * @throws SshException
 	 * @throws UnsupportedOperationException if no supported
-	 * @see {@link #createPublicKeySubsystem()}
+	 * @see #createPublicKeySubsystem()
 	 */
 	SshPublicKeySubsystem publicKeySubsystem() throws SshException;
 

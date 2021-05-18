@@ -122,7 +122,7 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	}
 
 	/**
-	 * Mode supplied to {@link SftpClient#file(String, OpenMode...))}.
+	 * Mode supplied to {@link SftpClient#file(String, OpenMode...)}.
 	 */
 	public enum OpenMode {
 		SFTP_READ, SFTP_WRITE, SFTP_APPEND, SFTP_CREAT, SFTP_TRUNC, SFTP_EXCL;

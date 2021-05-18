@@ -286,7 +286,6 @@ public interface SshLibrary extends Library {
 	public static final int SSH_LOG_PACKET = 3;
 	public static final int SSH_LOG_FUNCTIONS = 4;
 	/**
-	 * @}<br>
 	 * <i>native declaration : /usr/include/libssh/libssh.h:155</i><br>
 	 * enum values
 	 */
