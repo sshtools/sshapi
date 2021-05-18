@@ -30,7 +30,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.sshapi.Logger;
+import net.sf.sshapi.SshClient;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine;
@@ -67,9 +70,18 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 			term = "dumb";
 		}
 		// TODO sizes, resizing
-		try(SshShell shell = connect(destination).shell(term, 80, 24, 0, 0, null)) {
-			joinShellToConsole(shell);
-		} 
+		try(SshClient client = connect(destination)) {
+			if(command == null) {
+				try(SshShell shell = client.shell(term, 80, 24, 0, 0, null)) {
+					joinChannelToConsole(shell);
+				} 
+			}
+			else {
+				try(SshCommand cmd = client.command(command, term, 80, 24, 0, 0, null)) {
+					joinChannelToConsole(cmd);
+				}
+			}
+		}
 	}
 
 		
@@ -112,7 +124,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 		return port;
 	}
 	
-	static void joinShellToConsole(final SshShell channel) throws IOException, SshException {
+	static void joinChannelToConsole(final SshExtendedChannel<?, ?> channel) throws IOException, SshException {
 		AtomicBoolean fin = new AtomicBoolean();
 		AtomicBoolean closed = new AtomicBoolean();
 		Thread mainThread = Thread.currentThread();

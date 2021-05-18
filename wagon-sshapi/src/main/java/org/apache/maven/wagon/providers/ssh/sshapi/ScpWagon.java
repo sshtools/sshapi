@@ -44,9 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshSCPClient;
-
 import org.apache.maven.wagon.CommandExecutionException;
 import org.apache.maven.wagon.InputData;
 import org.apache.maven.wagon.OutputData;
@@ -57,18 +54,20 @@ import org.apache.maven.wagon.providers.ssh.ScpHelper;
 import org.apache.maven.wagon.repository.RepositoryPermissions;
 import org.apache.maven.wagon.resource.Resource;
 
+import net.sf.sshapi.SshSCPClient;
+
 /**
- * SCP protocol wagon.
- * <p/>
+ * <p>SCP protocol wagon.</p>
+ * <p>
  * Note that this implementation is <i>not</i> thread-safe, and multiple
  * channels can not be used on the session at the same time.
- * <p/>
- * See <a href="http://blogs.sun.com/janp/entry/how_the_scp_protocol_works">
+ * </p>
+ * <p>See <a href="http://blogs.sun.com/janp/entry/how_the_scp_protocol_works">
  * http://blogs.sun.com/janp/entry/how_the_scp_protocol_works</a> for
- * information on how the SCP protocol works.
+ * information on how the SCP protocol works.</p>
  * 
  * @version $Id: ScpWagon.java 1174063 2011-09-22 11:22:43Z olamy $
- * @todo [BP] add compression flag
+ * <strong>todo</strong> [BP] add compression flag
  * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="scp"
  *                   instantiation-strategy="per-lookup"
  */

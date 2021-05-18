@@ -28,7 +28,7 @@ import net.sf.sshapi.util.ConsoleKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.util.Util;
 
 /**
- * Similar to link {@link E01ShellWithConsolePrompts}, except keyboard
+ * Similar to link {@link E02ShellWithConsolePrompts}, except keyboard
  * interactive authentication is used instead of password.
  */
 public class E11KeyboardInteractiveAuthentication {

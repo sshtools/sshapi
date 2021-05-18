@@ -22,23 +22,22 @@
 package net.sf.sshapi.forwarding;
 
 import net.sf.sshapi.SshDataProducingComponent;
-import net.sf.sshapi.SshLifecycleComponent;
 import net.sf.sshapi.SshLifecycleListener;
 
 /**
- * Represents a single tunneled connection that is spawned as the result of a
+ * Represents a single tunnelled connection that is spawned as the result of a
  * client making a connection to the listening socket of a configured port
  * forward.
  * <p>
  * For example, if a single port forward to a web server address has been
- * configured, upon using entering the tunneled URL the browser will make
+ * configured, upon using entering the tunnelled URL the browser will make
  * multiple concurrent connections. For each connection that browser makes, all
  * registered {@link SshPortForwardListener} will be notified via
- * {@link SshPortForwardListener#channelOpened(int, SshLifecycleComponent)}.
+ * {@link SshPortForwardListener#channelOpened(int, SshPortForwardTunnel)}.
  * <p>
  * The browser will eventually time-out, and start closing all the connections
  * it made. When this happens,
- * {@link SshPortForwardListener#channelClosed(int, SshLifecycleComponent)} will
+ * {@link SshPortForwardListener#channelClosed(int, SshPortForwardTunnel)} will
  * be fired.
  */
 

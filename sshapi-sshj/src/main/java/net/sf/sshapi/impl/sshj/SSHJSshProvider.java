@@ -24,7 +24,10 @@ package net.sf.sshapi.impl.sshj;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import net.schmizz.sshj.DefaultConfig;
+import net.schmizz.sshj.transport.random.Random;
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
@@ -36,14 +39,50 @@ import net.sf.sshapi.util.Util;
  * 
  */
 public class SSHJSshProvider extends AbstractProvider {
+	/**
+	 * The maximum number of concurrent sockets that can be accepted by the client's
+	 * server socket used in a local port forward.
+	 */
+	public final static String CFG_LOCAL_FORWARD_BACKLOG = "sshapi.sshj.localForwardBacklog";
 
-	protected static final SecureRandom RANDOM = new SecureRandom();
+	private DefaultConfig underlyingConfiguration;
+	private long seed;
 
 	/**
 	 * Constructor
 	 */
 	public SSHJSshProvider() {
 		super("SSHJ", "https://github.com/hierynomus/sshj");
+
+		underlyingConfiguration = new DefaultConfig();
+		underlyingConfiguration.setRandomFactory(() -> new Random() {
+			private byte[] tmp = new byte[16];
+			protected final SecureRandom random = new SecureRandom();
+
+			{
+				random.setSeed(seed);
+			}
+
+			@Override
+			public synchronized void fill(byte[] foo, int start, int len) {
+				if (start == 0 && len == foo.length) {
+					random.nextBytes(foo);
+				} else {
+					synchronized (this) {
+						if (len > tmp.length)
+							tmp = new byte[len];
+						random.nextBytes(tmp);
+						System.arraycopy(tmp, 0, foo, start, len);
+					}
+				}
+			}
+
+			@Override
+			public void fill(final byte[] bytes) {
+				random.nextBytes(bytes);
+			}
+
+		});
 	}
 
 	@Override
@@ -53,7 +92,7 @@ public class SSHJSshProvider extends AbstractProvider {
 
 	@Override
 	public SshClient doCreateClient(SshConfiguration configuration) {
-		return new SSHJSshClient(configuration);
+		return new SSHJSshClient(this.underlyingConfiguration, configuration);
 	}
 
 	@Override
@@ -72,42 +111,40 @@ public class SSHJSshProvider extends AbstractProvider {
 	public List<Capability> getCapabilities() {
 		return Arrays.asList(new Capability[] { Capability.SSH2, Capability.PASSWORD_AUTHENTICATION, Capability.SHELL,
 				Capability.SET_LAST_MODIFIED, Capability.SFTP, Capability.SFTP_LSTAT, Capability.SFTP_READ_LINK,
-				Capability.SCP, Capability.FILTERS_SFTP_DOT_DIRECTORIES });
+				Capability.SCP, Capability.FILTERS_SFTP_DOT_DIRECTORIES, Capability.LOCAL_PORT_FORWARD, Capability.REMOTE_PORT_FORWARD,
+				Capability.RECURSIVE_SCP_GET, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION });
 	}
 
 	@Override
 	public List<String> getSupportedCiphers(int protocolVersion) {
-		// TODO
-		return null;
+		return underlyingConfiguration.getCipherFactories().stream().map(k -> k.getName()).collect(Collectors.toList());
 	}
 
 	@Override
 	public List<String> getSupportedMAC() {
-		// TODO
-		return null;
+		return underlyingConfiguration.getMACFactories().stream().map(k -> k.getName()).collect(Collectors.toList());
 	}
 
 	@Override
 	public List<String> getSupportedCompression() {
-		// TODO
-		return null;
+		return underlyingConfiguration.getCompressionFactories().stream().map(k -> k.getName())
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<String> getSupportedKeyExchange() {
-		// TODO
-		return null;
+		return underlyingConfiguration.getKeyExchangeFactories().stream().map(k -> k.getName())
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<String> getSupportedPublicKey() {
-		// TODO
-		return null;
+		return underlyingConfiguration.getKeyAlgorithms().stream().map(k -> k.getName()).collect(Collectors.toList());
 	}
 
 	@Override
 	public void seed(long seed) {
-		RANDOM.setSeed(seed);
+		this.seed = seed;
 	}
 
 }

@@ -69,7 +69,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * Get all active components of a particular type.  This may be {@link SshShell}, 
 	 * {@link SshPortForward} etc. The collection returned cannot be manipulated.
 	 * 
-	 * @param type of component
+	 * @param clazz type of component
 	 * @return active components
 	 */
 	<T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz);
@@ -100,7 +100,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * Connect to specified host and port using the provided username, and
 	 * optionally authenticate if you provide one of more authenticate. If you
 	 * do not provide an authenticator, you must call
-	 * {@link #authenticate(SshAuthenticator)}. If authentication fails the
+	 * {@link #authenticate(SshAuthenticator...)}. If authentication fails the
 	 * first time, it will be reattempted until
 	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
 	 * 
@@ -114,7 +114,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * Connect to specified host and port using the provided username, and
 	 * optionally authenticate if you provide one of more authenticate. If you
 	 * do not provide an authenticator, you must call
-	 * {@link #authenticate(SshAuthenticator)}. If authentication fails the
+	 * {@link #authenticate(SshAuthenticator...)}. If authentication fails the
 	 * first time, it will be reattempted until
 	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
 	 * 
@@ -130,7 +130,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * Connect to specified host and port using the provided username, and
 	 * optionally authenticate if you provide one of more authenticate. If you
 	 * do not provide an authenticator, you must call
-	 * {@link #authenticate(SshAuthenticator)}. If authentication fails the
+	 * {@link #authenticate(SshAuthenticator...)}. If authentication fails the
 	 * first time, it will be reattempted until
 	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
 	 * 
@@ -145,7 +145,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * optionally authenticate if you provide one of more authenticate, but do
 	 * not block. Instead a future is returned allowing monitoring the state of
 	 * the connection progress. If you do not provide an authenticator, you must
-	 * call {@link #authenticate(SshAuthenticator)}. If authentication fails the
+	 * call {@link #authenticate(SshAuthenticator...)}. If authentication fails the
 	 * first time, it will be reattempted until
 	 * {@link SshConfiguration#getMaxAuthAttempts()}] is reached.
 	 * 
@@ -196,7 +196,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @return shell
 	 * @throws SshException
-	 * @see {@link #shell(String, int, int, int, int, byte[])}}
+	 * @see {@link #shell(String, int, int, int, int, byte[])}
 	 * @see {@link #createShell(String, int, int, int, int, byte[])}
 	 * @see {@link #shell()}
 	 */
@@ -206,18 +206,17 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * <p>
 	 * Create a new shell without a pseudo tty and open it. This method is
 	 * intended for simpler cases and is at it's best when used with
-	 * try-with-resource. E.g. <code>
-	 * <pre>
+	 * try-with-resource. E.g. <pre><code>
+	 * 
 	 * try(client.shell()) {
 	 * 	// Do stuff. The channel will be automatically closed when leaving the scope of the try.
 	 * }
-	 * </pre>
-	 * </code>
+	 * </code></pre>
 	 * </p>
 	 * <p>
 	 * Note, this method does not give you the opportunity to add any listeners
 	 * before the shell is started, so data may be missed if you wish to use
-	 * listeners. In this case, use {@link #createShell)} instead.
+	 * listeners. In this case, use {@link #createShell()} instead.
 	 * </p>
 	 * <p>
 	 * Remember to close the shell when you are finished with it using
@@ -236,8 +235,8 @@ public interface SshClient extends Closeable, AutoCloseable {
 	/**
 	 * <p>
 	 * Create a new shell without a pseudo tty and open it, but do not block.
-	 * E.g. <code>
-	 * <pre>
+	 * E.g. <pre><code>
+	 * 
 	 * future = ssh.shellLater();
 	 * ..
 	 * try {
@@ -248,13 +247,13 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 	  SshException c = (SshException)e.getCause();
 	 *    ..
 	 * }
-	 * </pre>
-	 * </code>
+	 * 
+	 * </code></pre>
 	 * </p>
 	 * <p>
 	 * Note, this method does not give you the opportunity to add any listeners
 	 * before the shell is started, so data may be missed if you wish to use
-	 * listeners. In this case, use {@link #createShell)} instead.
+	 * listeners. In this case, use {@link #createShell()} instead.
 	 * </p>
 	 * <p>
 	 * Remember to close the shell when you are finished with it using
@@ -290,7 +289,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param terminalModes terminal modes (or null or empty array)
 	 * @return shell
 	 * @throws SshException
-	 * @see {@link #shell(String, int, int, int, int, byte[])}}
+	 * @see {@link #shell(String, int, int, int, int, byte[])}
 	 */
 	SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException;
@@ -299,13 +298,13 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * <p>
 	 * Create a new shell with a pseduo tty and open it. This method is intended
 	 * for simpler cases and is at it's best when used with try-with-resource.
-	 * E.g. <code>
-	 * <pre>
+	 * E.g. <pre><code>
+	 * 
 	 * try(client.shell("vt100",80,24,0,0,null)) {
 	 * 	// Do stuff. The channel will be automatically closed when leaving the scope of the try.
 	 * }
-	 * </pre>
-	 * </code>
+	 * 
+	 * </code></pre>
 	 * </p>
 	 * <p>
 	 * Note, this method does not give you the opportunity to add any listeners
@@ -456,7 +455,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort local port to listen on
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #remoteForward(String, int, String, int)}}
+	 * @see {@link #remoteForward(String, int, String, int)}
 	 */
 	SshPortForward createRemoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress, int targetPort)
 			throws SshException;
@@ -483,7 +482,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param targetPort local port to listen on
 	 * @return local forward
 	 * @throws SshException on any error
-	 * @see {@link #createRemoteForward(String, int, String, int)}}
+	 * @see {@link #createRemoteForward(String, int, String, int)}
 	 */
 	SshPortForward remoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress, int targetPort)
 			throws SshException;

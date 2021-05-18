@@ -38,9 +38,9 @@ public final class E01Shell {
 	 */
 	public static void main(String[] arg) throws Exception {
 		// Set the basic configuration for this conneciton
-		// Put your own detains in here
-		String username = "CHANGE_THIS";
-		String hostname = "CHANGE_THIS";
+		// Put your own details in here
+		String username = System.getProperty("user.name");
+		String hostname = "localhost";
 		char[] password = "CHANGE_THIS".toCharArray();
 		int port = 22;
 

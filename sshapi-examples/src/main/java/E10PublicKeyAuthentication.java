@@ -33,7 +33,7 @@ import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import net.sf.sshapi.util.Util;
 
 /**
- * Similar to link {@link E01ShellWithConsolePrompts}, except public key
+ * Similar to link {@link E02ShellWithConsolePrompts}, except public key
  * authentication is used instead of password.
  * 
  */

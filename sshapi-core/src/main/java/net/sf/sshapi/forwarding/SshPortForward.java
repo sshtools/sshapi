@@ -21,16 +21,16 @@
  */
 package net.sf.sshapi.forwarding;
 
+import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleComponent;
 
 /**
  * Maintains state of either a local or remote port forward. The
- * {@link SshSession#createLocalForward(String, int, String, int)} and
- * {@link SshSession#createRemoteForward(String, int, String, int)} methods both
+ * {@link SshClient#createLocalForward(String, int, String, int)} and
+ * {@link SshClient#createRemoteForward(String, int, String, int)} methods both
  * create instances of of this class. That object may then be used to start and
  * stop the actual tunnel.
- * 
  */
 public interface SshPortForward extends SshLifecycleComponent<SshPortForwardListener, SshPortForward> {
 
@@ -83,11 +83,11 @@ public interface SshPortForward extends SshLifecycleComponent<SshPortForwardList
 	boolean isOpen();
 
 	/**
-	 * If a local port forward was started with a zero port (meaning next available port is chosen),
+	 * If a port forward (local or remote) was started with a zero port (meaning next available port is chosen),
 	 * this will return the actual port bound. Note, not all providers will support this,
-	 * zero will be returned if they do not. Remote port forwards will always return zero 
+	 * zero will be returned if they do not.  
 	 * 
-	 * @return bound port of zero if unsupported or a remote forward
+	 * @return bound port of zero if unsupported
 	 */
 	int getBoundPort();
 }

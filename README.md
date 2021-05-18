@@ -47,6 +47,7 @@ Providers include :-
  * sshapi-jsch
  * sshapi-trilead
  * sshapi-ganymed
+ * sshapi-sshj
  * sshapi-j2ssh (more or less obsolete as uses old ciphers and key exchange)
  * sshapi-libssh (experimental)
  * sshapi-openssh (incomplete experimental)

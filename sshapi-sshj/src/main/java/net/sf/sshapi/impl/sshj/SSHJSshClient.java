@@ -22,29 +22,51 @@
 package net.sf.sshapi.impl.sshj;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.schmizz.sshj.Config;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.KeyType;
 import net.schmizz.sshj.common.SecurityUtils;
 import net.schmizz.sshj.connection.ConnectionException;
+import net.schmizz.sshj.connection.channel.direct.LocalPortForwarder;
+import net.schmizz.sshj.connection.channel.direct.Parameters;
 import net.schmizz.sshj.connection.channel.direct.Session;
+import net.schmizz.sshj.connection.channel.direct.Session.Command;
+import net.schmizz.sshj.connection.channel.forwarded.RemotePortForwarder;
+import net.schmizz.sshj.connection.channel.forwarded.RemotePortForwarder.Forward;
+import net.schmizz.sshj.connection.channel.forwarded.SocketForwardingConnectListener;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.HostKeyVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+import net.schmizz.sshj.userauth.keyprovider.PKCS5KeyFile.DecryptException;
+import net.schmizz.sshj.userauth.method.AuthKeyboardInteractive;
 import net.schmizz.sshj.userauth.method.AuthMethod;
 import net.schmizz.sshj.userauth.method.AuthPassword;
+import net.schmizz.sshj.userauth.method.AuthPublickey;
+import net.schmizz.sshj.userauth.method.ChallengeResponseProvider;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
 import net.sf.sshapi.AbstractClient;
+import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshSCPClient;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.auth.SshAuthenticator;
+import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
+import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
+import net.sf.sshapi.forwarding.AbstractPortForward;
+import net.sf.sshapi.forwarding.SshPortForward;
 import net.sf.sshapi.hostkeys.SshHostKey;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
@@ -53,9 +75,9 @@ class SSHJSshClient extends AbstractClient {
 
 	private SSHClient ssh;
 
-	public SSHJSshClient(SshConfiguration configuration) {
+	public SSHJSshClient(Config underlyingConfiguration, SshConfiguration configuration) {
 		super(configuration);
-		ssh = new SSHClient();
+		ssh = new SSHClient(underlyingConfiguration);
 	}
 
 	@Override
@@ -109,6 +131,90 @@ class SSHJSshClient extends AbstractClient {
 	}
 
 	@Override
+	protected SshPortForward doCreateRemoteForward(String remoteBindAddress, int remoteBindPort, String targetAddress,
+			int targetPort) throws SshException {
+		RemotePortForwarder remotePortForward = ssh.getRemotePortForwarder();
+
+		return new AbstractPortForward(getProvider()) {
+
+			Forward fwd;
+
+			@Override
+			public int getBoundPort() {
+				return fwd == null ? 0 : fwd.getPort();
+			}
+
+			@Override
+			protected void onClose() throws net.sf.sshapi.SshException {
+				try {
+					remotePortForward.cancel(fwd);
+				} catch (ConnectionException | TransportException e) {
+					throw new SshException(SshException.IO_ERROR, "Failed to close remote forward.", e);
+				}
+			}
+
+			@Override
+			protected void onOpen() throws net.sf.sshapi.SshException {
+				try {
+					fwd = remotePortForward.bind(new Forward(remoteBindAddress, remoteBindPort),
+							new SocketForwardingConnectListener(new InetSocketAddress(targetAddress, targetPort)));
+				} catch (ConnectionException | TransportException e) {
+					throw new SshException(SshException.IO_ERROR, "Failed to open remote forward.", e);
+				}
+			}
+		};
+	}
+
+	@Override
+	protected SshPortForward doCreateLocalForward(String localBindAddress, int localBindPort, String targetAddress,
+			int targetPort) throws SshException {
+
+		final String fLocalAddress = localBindAddress == null ? "0.0.0.0" : localBindAddress;
+		ServerSocket serverSocket;
+		try {
+			serverSocket = new ServerSocket(localBindPort,
+					Integer.parseInt(getConfiguration().getProperties()
+							.getProperty(SSHJSshProvider.CFG_LOCAL_FORWARD_BACKLOG, "59")),
+					InetAddress.getByName(fLocalAddress));
+		} catch (NumberFormatException | IOException e1) {
+			throw new SshException(SshException.IO_ERROR, "Failed to create local forward.", e1);
+		}
+		Parameters parameters = new Parameters(fLocalAddress, localBindPort, targetAddress, targetPort);
+		LocalPortForwarder localPortForward = ssh.newLocalPortForwarder(parameters, serverSocket);
+
+		return new AbstractPortForward(getProvider()) {
+
+			@Override
+			public int getBoundPort() {
+				return serverSocket.getLocalPort();
+			}
+
+			@Override
+			protected void onClose() throws net.sf.sshapi.SshException {
+				try {
+					localPortForward.close();
+				} catch (IOException e) {
+					throw new net.sf.sshapi.SshException("Failed to stop local forward.", e);
+				}
+			}
+
+			@Override
+			protected void onOpen() throws net.sf.sshapi.SshException {
+				new Thread("SSHAPI-SSHJ-LocalForward-" + fLocalAddress + ":" + localBindPort + "->" + targetAddress
+						+ ":" + targetPort) {
+					public void run() {
+						try {
+							localPortForward.listen();
+						} catch (IOException e) {
+							throw new IllegalStateException("Failed to start local forward.", e);
+						}
+					}
+				}.start();
+			}
+		};
+	}
+
+	@Override
 	protected SshShell doCreateShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws net.sf.sshapi.SshException {
 		Session session;
@@ -118,6 +224,48 @@ class SSHJSshClient extends AbstractClient {
 			throw new SshException(SshException.FAILED_TO_OPEN_SHELL, e.getMessage(), e);
 		}
 		return new SSHJSshShell(this, session, termType, cols, rows, pixWidth, pixHeight, terminalModes);
+	}
+
+	@Override
+	protected SshCommand doCreateCommand(String command, String termType, int cols, int rows, int pixWidth,
+			int pixHeight, byte[] terminalModes) throws SshException {
+
+		try {
+			final Session sess = ssh.startSession();
+			if (termType != null) {
+				sess.allocatePTY(termType, cols, rows, 0, 0, SSHJSshShell.toModeMap(terminalModes));
+			}
+			return new SSHJStreamChannel(getProvider(), getConfiguration(), sess) {
+				private Command commandHandle;
+
+				@Override
+				public boolean isOpen() {
+					return super.isOpen() && commandHandle != null;
+				}
+
+				@Override
+				public void onChannelOpen() throws SshException {
+					try {
+						this.commandHandle = sess.exec(command);
+					} catch (IOException e) {
+						throw new SshException(SshException.IO_ERROR, e);
+					}
+				}
+
+				@Override
+				public InputStream getExtendedInputStream() throws IOException {
+					return commandHandle.getErrorStream();
+				}
+
+				@Override
+				public int exitCode() throws IOException {
+					Integer exitStatus = commandHandle.getExitStatus();
+					return exitStatus == null ? SshCommand.EXIT_CODE_NOT_RECEIVED : exitStatus;
+				}
+			};
+		} catch (IOException e) {
+			throw new SshException("Failed to create shell channel.", e);
+		}
 	}
 
 	@Override
@@ -190,6 +338,13 @@ class SSHJSshClient extends AbstractClient {
 			ssh.auth(getUsername(), toNativeAuthMethods(authenticators));
 			return true;
 		} catch (UserAuthException uae) {
+			if (uae.getCause() instanceof UserAuthException) {
+				uae = (UserAuthException) uae.getCause();
+				if (!(uae.getCause() instanceof DecryptException) && uae.getMessage() != null
+						&& uae.getMessage().indexOf("Problem getting public key") != -1) {
+					throw new SshException(SshException.PRIVATE_KEY_FORMAT_NOT_SUPPORTED, uae.getMessage(), uae);
+				}
+			}
 			return false;
 		}
 	}
@@ -210,87 +365,82 @@ class SSHJSshClient extends AbstractClient {
 						return pw.promptForPassword(SSHJSshClient.this, "Password");
 					}
 				}));
-			} else
+			} else if (auth instanceof SshPublicKeyAuthenticator) {
+				SshPublicKeyAuthenticator pka = (SshPublicKeyAuthenticator) auth;
+				methods.add(new AuthPublickey(new KeyProvider() {
+
+					KeyProvider keyProvider;
+
+					void getKey() throws IOException {
+						if (keyProvider == null) {
+							keyProvider = ssh.loadKeys(new String(pka.getPrivateKey()), null, new PasswordFinder() {
+								@Override
+								public boolean shouldRetry(Resource<?> resource) {
+									return false;
+								}
+
+								@Override
+								public char[] reqPassword(Resource<?> resource) {
+									char[] ps = pka.promptForPassphrase(SSHJSshClient.this, "Passphrase");
+									return ps == null ? new char[0] : ps;
+								}
+							});
+						}
+					}
+
+					@Override
+					public KeyType getType() throws IOException {
+						getKey();
+						return keyProvider.getType();
+					}
+
+					@Override
+					public PublicKey getPublic() throws IOException {
+						getKey();
+						return keyProvider.getPublic();
+					}
+
+					@Override
+					public PrivateKey getPrivate() throws IOException {
+						getKey();
+						return keyProvider.getPrivate();
+					}
+				}));
+			} 
+			else if (auth instanceof SshKeyboardInteractiveAuthenticator) {
+				SshKeyboardInteractiveAuthenticator pka = (SshKeyboardInteractiveAuthenticator) auth;
+				methods.add(new AuthKeyboardInteractive(new ChallengeResponseProvider() {
+					
+					private String instruction;
+					private String name;
+
+					@Override
+					public boolean shouldRetry() {
+						return false;
+					}
+					
+					@Override
+					public void init(Resource resource, String name, String instruction) {
+						this.name = name;
+						this.instruction = instruction;						
+					}
+					
+					@Override
+					public List<String> getSubmethods() {
+						return null;
+					}
+					
+					@Override
+					public char[] getResponse(String prompt, boolean echo) {
+						String[] rep = pka.challenge(name, instruction, new String[] {prompt}, new boolean[] { echo });
+						return rep == null || rep.length == 0 ? null : rep[0].toCharArray();
+					}
+				}));
+			}
+			else
 				throw new UnsupportedOperationException();
 		}
 
-//		Map<String, SshAuthenticator> authenticatorMap = createAuthenticatorMap(authenticators);
-//		while (true) {
-//			String[] remainingMethods = ssh.getUserAuth().getAllowedMethods();
-//			if (remainingMethods == null || remainingMethods.length == 0) {
-//				throw new SshException(SshException.AUTHENTICATION_FAILED, "No remaining authentication methods");
-//			}
-//			for (int i = 0; i < remainingMethods.length; i++) {
-//				SshAuthenticator authenticator = authenticatorMap.get(remainingMethods[i]);
-//				if (authenticator != null) {
-//					// Password
-//					if (authenticator instanceof SshPasswordAuthenticator) {
-//						char[] pw = ((SshPasswordAuthenticator) authenticator).promptForPassword(this, "Password");
-//						if (pw == null) {
-//							throw new SshException("Authentication cancelled.");
-//						}
-//						try {
-//							ssh.authPassword(getUsername(), pw);
-//							return true;
-//						}
-//						catch(UserAuthException uae) {
-//						}
-//						// Return to main loop so getRemainingMethods is called
-//						// again
-//						continue;
-//					}
-//					// Public key
-//					if (authenticator instanceof SshPublicKeyAuthenticator) {
-//						SshPublicKeyAuthenticator pk = (SshPublicKeyAuthenticator) authenticator;
-//						try {
-//							ssh.authPublickey(getUsername(), new KeyProvider() {
-//								@Override
-//								public KeyType getType() throws IOException {
-//									// TODO Auto-generated method stub
-//									return null;
-//								}
-//								
-//								@Override
-//								public PublicKey getPublic() throws IOException {
-//									// TODO Auto-generated method stub
-//									return null;
-//								}
-//								
-//								@Override
-//								public PrivateKey getPrivate() throws IOException {
-//									// TODO Auto-generated method stub
-//									return null;
-//								}
-//							});
-//							return true;
-//						}
-//						catch(UserAuthException uae) {
-//						}
-//						
-//						// Return to main loop so getRemainingMethods is called
-//						// again
-//						continue;
-//					}
-//					// Keyboard interactive
-//					// TODO
-////					if (authenticator instanceof SshKeyboardInteractiveAuthenticator) {
-////						final SshKeyboardInteractiveAuthenticator kbi = (SshKeyboardInteractiveAuthenticator) authenticator;
-////						if (connection.authenticateWithKeyboardInteractive(username, new InteractiveCallback() {
-////							@Override
-////							public String[] replyToChallenge(String name, String instruction, int numPrompts,
-////									String[] prompt, boolean[] echo) throws Exception {
-////								return kbi.challenge(name, instruction, prompt, echo);
-////							}
-////						})) {
-////							// Authenticated!
-////							return true;
-////						}
-////						continue;
-////					}
-//				}
-//			}
-//			return false;
-//		}
 		return methods;
 	}
 

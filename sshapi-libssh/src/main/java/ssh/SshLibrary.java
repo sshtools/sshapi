@@ -917,14 +917,15 @@ public interface SshLibrary extends Library {
 		SshLibrary.ssh_channel apply(Pointer session, Pointer userdata);
 	};
 	/**
-	 * @brief handle the beginning of a GSSAPI authentication, server side.<br>
-	 * @param session current session handler<br>
-	 * @param user the username of the client<br>
-	 * @param n_oid number of available oids<br>
-	 * @param oids OIDs provided by the client<br>
-	 * @returns an ssh_string containing the chosen OID, that's supported by both<br>
+	 * Handle the beginning of a GSSAPI authentication, server side.
+	 *
+	 * <strong>param</strong> session current session handler<br>
+	 * <strong>param</strong> user the username of the client<br>
+	 * <strong>param</strong> n_oid number of available oids<br>
+	 * <strong>param</strong> oids OIDs provided by the client<br>
+	 * <strong>returns</strong> an ssh_string containing the chosen OID, that's supported by both<br>
 	 * client and server.<br>
-	 * @warning It is not necessary to fill this callback in if libssh is linked<br>
+	 * <strong>warning</strong> It is not necessary to fill this callback in if libssh is linked<br>
 	 * with libgssapi.<br>
 	 * <i>native declaration : /usr/include/libssh/callbacks.h:166</i>
 	 */

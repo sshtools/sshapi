@@ -45,7 +45,7 @@ import org.apache.commons.vfs2.provider.UriParser;
 import org.apache.commons.vfs2.util.RandomAccessMode;
 
 /**
- * @{link {@link AbstractFileObject} for SFTP via SSHAPI.
+ * {@link AbstractFileObject} for SFTP via SSHAPI.
  */
 public class SftpFileObject extends AbstractFileObject<SftpFileSystem> {
 

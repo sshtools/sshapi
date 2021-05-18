@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -196,7 +197,7 @@ public abstract class AbstractClient implements SshClient {
 			Exception ex = null;
 			try {
 				synchronized (activeComponents) {
-					for (SshLifecycleComponent<?, ?> c : activeComponents) {
+					for (SshLifecycleComponent<?, ?> c : new LinkedList<>(activeComponents)) {
 						try {
 							SshConfiguration.getLogger().debug("Closing component {0}", c.hashCode());
 							c.close();

@@ -41,7 +41,7 @@ import net.sf.sshapi.SshLifecycleListener;
  * providers internally may provide 'pwd' and 'cd' like functionality, but as
  * not all do SSHAPI does NOT expose this.
  * 
- * @see SshClient#createSftpClient()
+ * @see SshClient#sftp()
  */
 public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient> {
 	/**
@@ -122,7 +122,7 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	}
 
 	/**
-	 * Mode supplied to {@link SftpClient#open(String, OpenMode...)}.
+	 * Mode supplied to {@link SftpClient#file(String, OpenMode...))}.
 	 */
 	public enum OpenMode {
 		SFTP_READ, SFTP_WRITE, SFTP_APPEND, SFTP_CREAT, SFTP_TRUNC, SFTP_EXCL;

@@ -27,7 +27,7 @@ import com.maverick.ssh.tests.client.AbstractClientMultipleConnected;
 
 public class MultipleClientsConnectedShutdownTest extends AbstractClientMultipleConnected {
 
-	int connectionCount = 5;
+	int connectionCount = 10;
 	
 	@Test
 	public void test100ClientsConnectedShutdown() throws Exception {

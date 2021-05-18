@@ -225,7 +225,7 @@ public class Capability {
 	 */
 	public final static Capability SET_LAST_MODIFIED = new Capability("setLastModified");
 	/**
-	 * The provider supports setting of last modified time.
+	 * The provider supports recursive getting of files over SCP.
 	 */
 	public final static Capability RECURSIVE_SCP_GET = new Capability("recursiveScpGet");
 	/**

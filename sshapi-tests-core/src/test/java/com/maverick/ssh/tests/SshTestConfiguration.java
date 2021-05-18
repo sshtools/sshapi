@@ -271,7 +271,8 @@ public class SshTestConfiguration {
 	}
 
 	public String[] getFingerprints() {
-		return getOrFail(KEY_FINGERPRINT).split("\n");
+		String v = getOrFail(KEY_FINGERPRINT);
+		return v.equals("") ? new String[0] : v.split("\n");
 	}
 
 	public int getGid() {

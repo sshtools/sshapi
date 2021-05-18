@@ -63,7 +63,12 @@ public class SimplePasswordAuthenticator implements SshPasswordAuthenticator {
 		this.password = password;
 	}
 
+	@Override
 	public char[] promptForPassword(SshClient session, String message) {
-		return password;
+		if(password == null)
+			return null;
+		char[] pw = new char[password.length];
+		System.arraycopy(password, 0, pw, 0, pw.length);
+		return pw;
 	}
 }

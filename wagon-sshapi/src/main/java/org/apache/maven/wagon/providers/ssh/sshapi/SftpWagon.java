@@ -72,8 +72,8 @@ import net.sf.sshapi.sftp.SftpFile;
  * 
  * @author <a href="mailto:brett@apache.org">Brett Porter</a>
  * @version $Id: SftpWagon.java 1172843 2011-09-19 21:28:04Z hboutemy $
- * @todo [BP] add compression flag
- * @todo see if SftpProgressMonitor allows us to do streaming (without it, we
+ * <strong>todo</<strong> [BP] add compression flag
+ * <strong>todo</strong> see if SftpProgressMonitor allows us to do streaming (without it, we
  *       can't do checksums as the input stream is lost)
  * 
  * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="sftp"

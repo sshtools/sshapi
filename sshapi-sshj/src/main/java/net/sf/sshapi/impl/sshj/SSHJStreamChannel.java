@@ -19,20 +19,21 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.auth;
+package net.sf.sshapi.impl.sshj;
 
-import net.sf.sshapi.SshClient;
+import net.schmizz.sshj.connection.channel.direct.Session;
+import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 
-/**
- * Call-back interface used when authenticating an {@link SshClient}.
- * 
- * @see SshClient#authenticate(SshAuthenticator...)
- */
-public interface SshAuthenticator {
-	/**
-	 * Get the name of this authenticator (e.g "password", "publickey" etc).
-	 * 
-	 * @return name
-	 */
-	String getTypeName();
+abstract class SSHJStreamChannel
+		extends AbstractSSHJStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		implements SshCommand {
+
+	public SSHJStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
+		super(provider, configuration, channel);
+	}
+
 }

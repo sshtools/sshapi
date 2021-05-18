@@ -107,21 +107,25 @@ public class SSHJSshShell extends AbstractSshExtendedChannel<SshChannelListener<
 	@Override
 	protected final void onOpenStream() throws SshException {
 		try {
-			Map<PTYMode, Integer> modeMap = new HashMap<>();
-			if (modes != null) {
-				for (int i = 0; i < modes.length; i += 5) {
-					modeMap.put(fromOpCode(modes[i]),
-							(modes[i + 1] << 24) | (modes[i + 2] << 16) | (modes[i + 3] << 8) | (modes[i + 4]));
-				}
-			}
-			session.allocatePTY(termType, cols, rows, width, height, modeMap);
+			session.allocatePTY(termType, cols, rows, width, height, toModeMap(modes));
 			shell = session.startShell();
 		} catch (IOException ioe) {
 			throw new SshException(SshException.IO_ERROR, "Failed to connect.", ioe);
 		}
 	}
 
-	private PTYMode fromOpCode(byte b) {
+	public static Map<PTYMode, Integer> toModeMap(byte[] modes) {
+		Map<PTYMode, Integer> modeMap = new HashMap<>();
+		if (modes != null) {
+			for (int i = 0; i < modes.length; i += 5) {
+				modeMap.put(fromOpCode(modes[i]),
+						(modes[i + 1] << 24) | (modes[i + 2] << 16) | (modes[i + 3] << 8) | (modes[i + 4]));
+			}
+		}
+		return modeMap;
+	}
+
+	private static PTYMode fromOpCode(byte b) {
 		/* TODO: precache these? */
 		for (PTYMode m : PTYMode.values()) {
 			if (m.getOpcode() == b) {

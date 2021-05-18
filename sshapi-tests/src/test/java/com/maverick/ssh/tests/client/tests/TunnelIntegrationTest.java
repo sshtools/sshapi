@@ -147,7 +147,8 @@ public class TunnelIntegrationTest extends AbstractClientConnected {
 			try (SshPortForward fwd = ssh.remoteForward("127.0.0.1", port, echoServerAddress, echoServerPort)) {
 				Assert.assertEquals("There must be active components.", 1, ssh.getAllActiveComponents().size());
 				int boundPort = fwd.getBoundPort();
-				Assert.assertEquals("Bound port must be zero", 0, boundPort);
+				if(boundPort == 0)
+					LOG.warn("Provider does not return bound port");
 				EchoClient ec = new EchoClient("127.0.0.1", port, 10, 100, 1000, size().kib(1).toBytesInt(),
 						size().kib(64).toBytesInt());
 				ec.run(10000);

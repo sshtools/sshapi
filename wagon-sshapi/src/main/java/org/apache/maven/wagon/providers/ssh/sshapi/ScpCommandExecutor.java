@@ -46,7 +46,7 @@ package org.apache.maven.wagon.providers.ssh.sshapi;
  * @author <a href="mailto:joakim@erdfelt.com">Joakim Erdfelt</a>
  * @version $Id: ScpCommandExecutor.java 658720 2008-05-21 14:49:22Z bentmann $
  * 
- * @todo is this even needed anymore?
+ * <strong>todo is this even needed anymore?</strong>
  * 
  * @plexus.component role="org.apache.maven.wagon.CommandExecutor"
  *                   role-hint="scp" instantiation-strategy="per-lookup"

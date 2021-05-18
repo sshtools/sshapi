@@ -32,8 +32,7 @@ import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.sftp.SftpClient;
 
 /**
- * @{link {@link FileSystemConfigBuilder} for SFTP via SSHAPI.
- * 
+ * {@link FileSystemConfigBuilder} for SFTP via SSHAPI.
  */
 public class SftpFileSystemConfigBuilder extends FileSystemConfigBuilder {
 	private final static SftpFileSystemConfigBuilder builder = new SftpFileSystemConfigBuilder();
