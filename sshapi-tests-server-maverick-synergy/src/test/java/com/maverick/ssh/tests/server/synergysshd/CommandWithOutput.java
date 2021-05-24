@@ -22,22 +22,35 @@
 package com.maverick.ssh.tests.server.synergysshd;
 
 import java.io.IOException;
+import java.util.Map;
 
-import com.sshtools.common.permissions.PermissionDeniedException;
-import com.sshtools.server.vsession.ShellCommand;
-import com.sshtools.server.vsession.UsageException;
-import com.sshtools.server.vsession.VirtualConsole;
+import com.sshtools.common.command.ExecutableCommand;
 
-public class CommandWithOutput extends ShellCommand {
+public class CommandWithOutput extends ExecutableCommand {
 
 	public CommandWithOutput() {
-		super("commandWithOutput", "test", "test", "test");
+		super();
 	}
 
-	@Override
-	public void run(String[] args, VirtualConsole console) throws IOException, PermissionDeniedException, UsageException {
-		console.println("This is line 1\r\nThis is line 2\r\nThis is line 3");
-		console.destroy();
+	public int getExitCode() {
+		return 0;
+	}
+
+	public void kill() {
+	}
+
+	public boolean createProcess(String[] args, Map<String,String> environment) {
+		return true;
+	}
+
+	public void onStart() {
+		try {
+			getOutputStream().write("This is line 1\r\nThis is line 2\r\nThis is line 3".getBytes());
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			session.close();
+		}
 	}
 
 }

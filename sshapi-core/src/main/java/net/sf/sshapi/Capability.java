@@ -233,6 +233,11 @@ public class Capability {
 	 */
 	public final static Capability SFTP_READ_LINK = new Capability("sftpReadLink");
 	/**
+	 * The provider supports hard links (hardlink@openssh.com) target ({@link SftpClient#link(String, String)}).
+	 * The server must support this extended message.
+	 */
+	public final static Capability SFTP_HARD_LINK = new Capability("sftpHardLink");
+	/**
 	 * The provider supports {@link SftpClient#lstat(String)} for reading file attributes without
 	 * following links
 	 */

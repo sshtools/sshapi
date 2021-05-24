@@ -203,6 +203,8 @@ public class LocalOpenSSHServerServiceImpl extends AbstractServer {
 		parser.set("KexAlgorithms", "+diffie-hellman-group1-sha1");
 		parser.set("Ciphers", "+3des-cbc");
 		parser.set("PubkeyAcceptedKeyTypes", "+ssh-dss");
+		parser.set("SyslogFacility", "AUTH");
+		parser.set("LogLevel", "DEBUG");
 		// if(methods.size() > 0) {
 		// parser.set("AuthenticationMethods", Util.listToSeparatedString(',',
 		// methods));

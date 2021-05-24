@@ -65,7 +65,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
@@ -90,22 +90,15 @@
 			<artifactId>sshapi-trilead</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-synergy</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency>-->
 		<!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> -->
-		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-libssh</artifactId>
 			<version>${project.version}</version>
@@ -127,14 +120,37 @@
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
+		</dependency> -->
+		
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.25</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-synergy-server</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-filesystem</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-session</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
 	</dependencies>
 
 </project>

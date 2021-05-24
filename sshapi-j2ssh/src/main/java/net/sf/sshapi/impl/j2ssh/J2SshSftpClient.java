@@ -46,13 +46,13 @@ import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpOperation;
 import net.sf.sshapi.util.Util;
 
-class J2SshSftpClient extends AbstractSftpClient {
+class J2SshSftpClient extends AbstractSftpClient<J2SshClient> {
 	private final SshClient client;
 	private String home;
 	private SftpClient sftpClient;
 
 	public J2SshSftpClient(J2SshClient sshapiClient, SshClient client) {
-		super(sshapiClient.getProvider(), sshapiClient.getConfiguration());
+		super(sshapiClient);
 		this.client = client;
 	}
 

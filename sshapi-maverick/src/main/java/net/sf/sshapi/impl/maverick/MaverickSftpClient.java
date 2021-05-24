@@ -42,6 +42,7 @@ import com.sshtools.sftp.SftpSubsystemChannel;
 import com.sshtools.ssh.SshClient;
 import com.sshtools.util.UnsignedInteger64;
 
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
@@ -52,14 +53,14 @@ import net.sf.sshapi.sftp.SftpOperation;
 import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
-class MaverickSftpClient extends AbstractSftpClient {
+class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 	private final SshClient client;
 	private SftpClient sftpClient;
 	private String home;
 	private int defaultRemoteEOL = SftpClient.EOL_CRLF;
 
 	MaverickSftpClient(MaverickSshClient client) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		this.client = client.getNativeClient();
 	}
 
@@ -155,7 +156,24 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			sftpClient.getSubsystemChannel().createSymbolicLink(path, target);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				}
+				else {
+					sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				}
+				break;
+			}
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {

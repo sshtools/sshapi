@@ -726,7 +726,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	protected SftpClient doCreateSftp() throws SshException {
 		try {
 			ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-			return new JschSftpClient(getProvider(), channel, getConfiguration()) {
+			return new JschSftpClient(this, channel) {
 				@Override
 				public void onClose() throws SshException {
 					super.onClose();

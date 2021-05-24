@@ -124,7 +124,7 @@ public class MaverickSSHServerServiceImpl extends AbstractServer implements
 		File file = new File(new File(homeRoot, user), ".ssh");
 		file.mkdirs();
 		File authKeyFile = new File(file, "authorized_keys");
-		System.out.println("Writing new authorized key to " + authKeyFile);
+		System.out.println("Writing new authorized key '" + keytext + "'to " + authKeyFile);
 		OutputStream out = new FileOutputStream(authKeyFile, true);
 		try {
 			out.write(keytext.getBytes());

@@ -39,6 +39,7 @@ import com.sshtools.client.SshClient;
 import com.sshtools.client.sftp.DirectoryOperation;
 import com.sshtools.client.sftp.SftpClient;
 import com.sshtools.client.tasks.FileTransferProgress;
+import com.sshtools.common.files.AbstractFile;
 import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.sftp.SftpFileAttributes;
 import com.sshtools.common.sftp.SftpStatusException;
@@ -56,7 +57,7 @@ import net.sf.sshapi.sftp.SftpOperation;
 import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
-class MaverickSynergySftpClient extends AbstractSftpClient {
+class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshClient> {
 	private final SshClient client;
 	private int defaultLocalEOL;
 	private int defaultRemoteEOL;
@@ -64,7 +65,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 	private SftpClient sftpClient;
 
 	MaverickSynergySftpClient(MaverickSynergySshClient client) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		defaultLocalEOL = EOLProcessor.TEXT_SYSTEM;
 		this.client = client.getNativeClient();
 	}
@@ -300,7 +301,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
-			throw new SshException("Failed to create directory.", e);
+			throw new SshException("Failed to read link.", e);
 		}
 	}
 
@@ -311,7 +312,25 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 			 * Avoid sftpClient.symlink() because it makes paths relative to the home
 			 * directory
 			 */
-			sftpClient.getSubsystemChannel().createLink(path, target, true);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				}
+				else {
+					sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				}
+				break;
+			}
+			
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -319,6 +338,20 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 		}
 	}
 
+
+	@Override
+	public void link(String path, String target) throws SshException {
+		try {
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			sftpClient.getSubsystemChannel().createLink(targetpath, linkpath, false);
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create symlink.", e);
+		}
+	}
+	
 	@Override
 	public SftpOperation upload(File localdir, String remotedir, boolean recurse, boolean sync, boolean commit)
 			throws SshException {
@@ -759,7 +792,18 @@ class MaverickSynergySftpClient extends AbstractSftpClient {
 	}
 
 	private String toOpPath(File localDir, String remotedir, String defaultPath, Object f) {
-		if (f instanceof File) {
+		if(f instanceof AbstractFile) {
+			AbstractFile file = (AbstractFile)f;
+			try {
+				if (localDir != null) {
+					return Util.concatenatePaths(remotedir, Util.relativeTo(Util.fixSlashes(file.getAbsolutePath()), Util.fixSlashes(localDir.getPath())));
+				}
+				return file.getAbsolutePath();
+			} catch (Exception e) {
+				return file.getName(); 
+			}
+		}
+		else if (f instanceof File) {
 			if (localDir != null) {
 				return Util.concatenatePaths(remotedir, Util.relativeTo(Util.fixSlashes(((File) f).getPath()), Util.fixSlashes(localDir.getPath())));
 			}

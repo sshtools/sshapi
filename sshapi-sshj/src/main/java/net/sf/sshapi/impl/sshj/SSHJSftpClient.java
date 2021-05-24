@@ -37,6 +37,7 @@ import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.xfer.FilePermission;
 import net.schmizz.sshj.xfer.InMemoryDestFile;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
@@ -46,7 +47,7 @@ import net.sf.sshapi.util.Util;
 /**
  * SSHJ SFTP implementation.
  */
-public class SSHJSftpClient extends AbstractSftpClient {
+public class SSHJSftpClient extends AbstractSftpClient<SSHJSshClient> {
 
 	private SSHJSshClient client;
 	private String defaultPath;
@@ -58,7 +59,7 @@ public class SSHJSftpClient extends AbstractSftpClient {
 	 * @param client client
 	 */
 	public SSHJSftpClient(SSHJSshClient client) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		this.client = client;
 	}
 
@@ -210,7 +211,25 @@ public class SSHJSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			sftp.symlink(path, target);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				sftp.symlink(linkpath, targetpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				sftp.symlink(targetpath, linkpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					sftp.symlink(targetpath, linkpath);
+				}
+				else {
+					sftp.symlink(linkpath, targetpath);
+				}
+				break;
+			}
+			
 		} catch (SFTPException sftpe) {
 			throw translateException(sftpe);
 		} catch (IOException e) {

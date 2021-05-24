@@ -57,6 +57,7 @@ public class RandomFilesGenerator {
 		if (!testFilesDir.mkdirs()) {
 			throw new IOException("Failed to create temporary directory");
 		}
+		SshConfiguration.getLogger().info("Generating test files to {0}", testFilesDir);
 
 		generateFiles(testFilesDir);
 		
@@ -151,7 +152,13 @@ public class RandomFilesGenerator {
 	}
 
 	public File getRandomTestFile() {
-		return testFiles.get((int)(Math.random() * (double)getSize()));
+		//return testFiles.get((int)(Math.random() * (double)getSize()));
+		// 
+		System.out.println("****************************************");
+		System.out.println("REMOVEME Only using one random test file");
+		System.out.println("****************************************");
+		
+		return testFiles.get(0);
 	}
 
 	public List<File> getTestFiles() {

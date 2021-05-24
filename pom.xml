@@ -39,12 +39,12 @@
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick Legacy bridge (New public 1.6+) -->
-		<maverickVersion>1.7.36</maverickVersion>
+		<maverickVersion>1.7.34</maverickVersion>
 		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
-		<maverickSynergyVersion>3.0.0-RC5</maverickSynergyVersion>
+		<maverickSynergyVersion>3.0.0-RC7-SNAPSHOT</maverickSynergyVersion>
 		<common.version>2.0.4</common.version>
 
 		<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 

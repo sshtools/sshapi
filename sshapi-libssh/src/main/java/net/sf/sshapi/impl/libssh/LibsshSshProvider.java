@@ -60,8 +60,8 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	String getVersion(long number) {
 		long major = number % 10000;
-		long minor = (number - major) % 100;
-		long build = number - minor;
+		long minor = (number - (major * 10000)) % 100;
+		long build = number - (major * 10000) - ( ( ( number - (major * 10000)) * 100 ));
 		return String.format("%d.%d.%d", major, minor, build);
 	}
 
@@ -127,13 +127,20 @@ public class LibsshSshProvider extends AbstractProvider {
 
 	@Override
 	public List<String> getSupportedKeyExchange() {
-		return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
-				"diffie-hellman-group1-sha1", "diffie-hellman-group14-sha1" });
+		if (getNumericVersion() >= getVersion("0.9.0"))
+			return Arrays.asList(new String[] { " curve25519-sha256", "ecdh-sha2-nistp256", "diffie-hellman-group18-sha512", 
+					"diffie-hellman-group16-sha512", "diffie-hellman-group-exchange-sha256", "diffie-hellman-group14-sha1", 
+					"diffie-hellman-group1-sha1", "diffie-hellman-group-exchange-sha1"  });
+		else
+			return Arrays.asList(new String[] { "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
+					"diffie-hellman-group1-sha1", "diffie-hellman-group14-sha1" });
 	}
 
 	@Override
 	public List<String> getSupportedPublicKey() {
-		return Arrays.asList(new String[] { SshConfiguration.PUBLIC_KEY_SSHRSA, SshConfiguration.PUBLIC_KEY_SSHDSA });
+		return Arrays.asList(new String[] { 
+					SshConfiguration.PUBLIC_KEY_SSHRSA, SshConfiguration.PUBLIC_KEY_SSHDSA,
+					SshConfiguration.PUBLIC_KEY_ED25519, SshConfiguration.PUBLIC_KEY_ECDSA_384 });
 	}
 
 	@Override

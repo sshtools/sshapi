@@ -23,8 +23,11 @@ package net.sf.sshapi.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -256,12 +259,51 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 						newargs.removeIf(item -> item == null || "".equals(item));
 						String[] args = newargs.toArray(new String[0]);
 						if (args.length > 0) {
-							CommandLine cl = new CommandLine(new InteractiveConsole());
-							cl.setTrimQuotes(true);
-							cl.setUnmatchedArgumentsAllowed(true);
-							cl.setUnmatchedOptionsAllowedAsOptionParameters(true);
-							cl.setUnmatchedOptionsArePositionalParams(true);
-							cl.execute(args);
+							if(args[0].startsWith("!")) {
+								args[0] = args[0].substring(1);
+								ProcessBuilder pb = new ProcessBuilder(Arrays.asList(args));
+								pb.directory(getLcwd());
+								pb.redirectErrorStream(true);
+								Process p = pb.start();
+								try {
+									Thread thread = new Thread() {
+										public void run() {
+											byte[] b = new byte[256];
+											InputStream in = terminal.input();
+											OutputStream out = p.getOutputStream();
+											int r;
+											try {
+												while( ( r = in.read(b)) != -1) {
+													out.write(b, 0, r);
+													out.flush();
+												}
+											}
+											catch(Exception ioe) {
+											}
+										}
+									};
+									thread.start();
+									try {
+										p.getInputStream().transferTo(System.out);
+									}
+									finally {
+										thread.interrupt();
+									}
+								}
+								finally {
+									if(p.waitFor() != 0) {
+										err.println(String.format("%s exited with error code %d.", args[0], p.exitValue()));
+									}
+								}
+							}
+							else {
+								CommandLine cl = new CommandLine(new InteractiveConsole());
+								cl.setTrimQuotes(true);
+								cl.setUnmatchedArgumentsAllowed(true);
+								cl.setUnmatchedOptionsAllowedAsOptionParameters(true);
+								cl.setUnmatchedOptionsArePositionalParams(true);
+								cl.execute(args);
+							}
 						}
 					}
 

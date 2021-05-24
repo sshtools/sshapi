@@ -156,6 +156,22 @@ public class SshConfiguration {
 	 * SHA1 fingerprint hashes
 	 */
 	public final static String FINGERPRINT_SHA1 = "sha1";
+	/***
+	 * Automatically detect if OpenSsh is in use and flip source
+	 * and target paths for symbolic links.
+	 */
+	public final static int AUTO_SFTP_SYMLINKS = 0;
+	/***
+	 * Flip source and target paths for symbolic links for OpenSSH 
+	 * compatibility with semantics of source and target
+	 * paths in SFTP symlinks.
+	 */
+	public final static int OPENSSH_SFTP_SYMLINKS = 1;
+	/***
+	 * Use the SSH specification semantics for source and target
+	 * paths in SFTP symlinks.
+	 */
+	public final static int STANDARD_SFTP_SYMLINKS = 2;
 
 	// Private statics
 	private static Logger logger = new ConsoleLogger();
@@ -197,6 +213,7 @@ public class SshConfiguration {
 	private int streamBufferSize = SFTP_MAXIMUM_PACKET_SIZE;
 	private static SshHostKeyValidator defaultHostKeyValidator = new DumbWithWarningHostKeyValidator();
 	private int ioTimeout = (int)TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty("sshapi.defaultIoTimeout", "60")));
+	private int sftpSymlinks = AUTO_SFTP_SYMLINKS;
 
 	/**
 	 * Do reverse DNS lookups for hosts in the known_hosts (
@@ -281,6 +298,33 @@ public class SshConfiguration {
 	public SshConfiguration(Properties properties, SshHostKeyValidator hostKeyValidator) {
 		this.properties = properties;
 		this.hostKeyValidator = hostKeyValidator;
+	}
+
+	/**
+	 * Get the behaviour of the source and target parameters when creating
+	 * symbolic links. This is to work-around the incorrect (according to the 
+	 * specification) semantics used by OpenSSH SFTP. Can be one off
+	 *  {@link #AUTO_SFTP_SYMLINKS} (the default), {@link #OPENSSH_SFTP_SYMLINKS} or
+	 *  {@link #STANDARD_SFTP_SYMLINKS}.  
+	 *  
+	 * @return sftp symlinks mode
+	 */
+	public int getSftpSymlinks() {
+		return sftpSymlinks;
+	}
+
+	/**
+	 * Set the behaviour of the source and target parameters when creating
+	 * symbolic links. This is to work-around the incorrect (according to the 
+	 * specification) semantics used by OpenSSH SFTP. Can be one off
+	 *  {@link #AUTO_SFTP_SYMLINKS} (the default), {@link #OPENSSH_SFTP_SYMLINKS} or
+	 *  {@link #STANDARD_SFTP_SYMLINKS}.  
+	 *  
+	 * @param sftpSymlinks sftp symlinks mode
+	 */
+	public SshConfiguration setSftpSymlinks(int sftpSymlinks) {
+		this.sftpSymlinks = sftpSymlinks;
+		return this;
 	}
 
 	/**

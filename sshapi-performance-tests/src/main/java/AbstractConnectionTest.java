@@ -1,3 +1,4 @@
+
 /**
  * Copyright (c) 2020 The JavaSSH Project
  *
@@ -22,6 +23,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +36,20 @@ import java.util.Properties;
 
 import org.apache.log4j.BasicConfigurator;
 import org.slf4j.LoggerFactory;
+
+import com.sshtools.common.auth.DefaultAuthenticationMechanismFactory;
+import com.sshtools.common.files.direct.DirectFileFactory;
+import com.sshtools.common.files.vfs.VirtualFileFactory;
+import com.sshtools.common.files.vfs.VirtualMountTemplate;
+import com.sshtools.common.permissions.PermissionDeniedException;
+import com.sshtools.common.publickey.InvalidPassphraseException;
+import com.sshtools.common.scp.ScpCommand;
+import com.sshtools.common.util.FileUtils;
+import com.sshtools.server.DefaultServerChannelFactory;
+import com.sshtools.server.InMemoryPasswordAuthenticator;
+import com.sshtools.server.SshServer;
+import com.sshtools.server.SshServerContext;
+import com.sshtools.synergy.nio.SshEngineContext;
 
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.Logger;
@@ -125,6 +141,8 @@ abstract class AbstractConnectionTest {
 	protected Map<SshProvider, Long> connectionTime = Collections.synchronizedMap(new HashMap<>());
 	protected int iterations;
 
+	private SshServer sshd;
+
 	public AbstractConnectionTest() throws IOException {
 		this("ConnectionTest");
 	}
@@ -133,6 +151,13 @@ abstract class AbstractConnectionTest {
 		configuration = new SshConfiguration();
 		configuration.setHostKeyValidator(new DumbHostKeyValidator());
 		iterations = Integer.parseInt(PROPERTIES.getProperty("iterations", "100"));
+		if (PROPERTIES.getProperty("synergyServer", "true").equals("true")) {
+			try {
+				doStart();
+			} catch (InvalidPassphraseException e) {
+				throw new IllegalStateException("Failed to start Synergy server.", e);
+			}
+		}
 		if (PROPERTIES.getProperty("fair", "true").equals("true")) {
 			configuration.setPreferredClientToServerCipher(PROPERTIES.getProperty("cipher.cs", "aes256-ctr"));
 			configuration.setPreferredServerToClientCipher(PROPERTIES.getProperty("cipher.sc", "aes256-ctr"));
@@ -306,5 +331,72 @@ abstract class AbstractConnectionTest {
 
 	protected void doConnection(SshClient client) throws Exception {
 		// For sub-classes to do something useful with a client
+	}
+
+	protected void doStart() throws IOException, InvalidPassphraseException {
+		sshd = new SshServer(0) {
+
+			@Override
+			public SshServerContext createContext(SshEngineContext daemonContext, SocketChannel sc)
+					throws IOException, com.sshtools.common.ssh.SshException {
+				SshServerContext sshContext = super.createContext(daemonContext, sc);
+				sshContext.setChannelLimit(1000);
+				sshContext.setRemoteForwardingCancelKillsTunnels(true);
+				sshContext.setSoftwareVersionComments("MaverickTests");
+				sshContext.setSocketOptionKeepAlive(true);
+				sshContext.setSocketOptionTcpNoDelay(true);
+				sshContext.setSocketOptionReuseAddress(true);
+				sshContext.setIdleConnectionTimeoutSeconds(60);
+
+				DefaultServerChannelFactory channelFactory = new DefaultServerChannelFactory() {
+					{
+						/* These are not using the shell */
+						commands.add("scp", ScpCommand.class);
+					}
+				};
+
+				sshContext.setChannelFactory(channelFactory);
+
+				DefaultAuthenticationMechanismFactory<SshServerContext> authFactory = new DefaultAuthenticationMechanismFactory<>();
+				authFactory
+						.addProvider(new InMemoryPasswordAuthenticator().addUser("testuser", "testuser".toCharArray()));
+				authFactory.addRequiredAuthentication("PASSWORD");
+				sshContext.setAuthenicationMechanismFactory(authFactory);
+
+				return sshContext;
+			}
+
+		};
+		File root = new File(System.getProperty("java.io.tmpdir"), "synergy-sshd-homes");
+		final File homeRoot = new File(root, "home");
+		FileUtils.deleteFolder(root);
+		homeRoot.mkdirs();
+		sshd.setFileFactory((con) -> {
+			try {
+				File home = new File(homeRoot, con.getUsername());
+				return new VirtualFileFactory(
+						new VirtualMountTemplate("/", home.getAbsolutePath(), new DirectFileFactory(home), true));
+			} catch (IOException | PermissionDeniedException e) {
+				if (e instanceof IOException)
+					throw (IOException) e;
+				else
+					throw new IOException("Failed to create virtual file factory.", e);
+			}
+		});
+//		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_rsa_key"), null));
+//		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_dsa_key"), null));
+		// sshd.useThisAuthorizedKeysFile("authorized_keys_folder/authorized_keys");
+		// Copy some keys for authentication
+
+		// Start
+		sshd.start();
+		// If port 0 was specified, get the actual port
+
+		PROPERTIES.put("port", String.valueOf(sshd.getPort()));
+		PROPERTIES.put("hostname", "localhost");
+		PROPERTIES.put("username", "testuser");
+		PROPERTIES.put("password", "password");
+
+		LOG.info("Maverick Synergy SSHD running on {0}", sshd.getPort());
 	}
 }

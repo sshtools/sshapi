@@ -72,6 +72,7 @@ import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.SshKeyFingerprint;
 import com.sshtools.common.ssh.Subsystem;
 import com.sshtools.common.ssh.UnsupportedChannelException;
+import com.sshtools.common.ssh.components.ComponentFactory;
 import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
 import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
@@ -530,15 +531,20 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	@Override
+	public void forceKeyExchange() throws net.sf.sshapi.SshException {
+		sshClient.getConnection().getConnectionProtocol().getTransport().sendNewKeys();
+	}
+
+	@Override
 	public Subsystem createSubsystem(String name, SessionChannel session)
 			throws UnsupportedChannelException, PermissionDeniedException {
 		return originalChannelFactory.createSubsystem(name, session);
 	}
 
 	@Override
-	public ExecutableCommand executeCommand(String[] args, Map<String, String> environment)
+	public ExecutableCommand executeCommand(SessionChannel channel, String[] args, Map<String, String> environment)
 			throws PermissionDeniedException, UnsupportedChannelException {
-		return originalChannelFactory.executeCommand(args, environment);
+		return originalChannelFactory.executeCommand(channel, args, environment);
 	}
 
 	// public void channelOpened(int type, String key, SshTunnel tunnel) {
@@ -633,6 +639,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				@Override
 				protected void configure(SshClientContext sshContext) throws SshException, IOException {
 					MaverickSynergySshClient.this.sshContext = sshContext;
+					sshContext.getComponentManager().enableAlgorithm(SshConfiguration.PUBLIC_KEY_SSHDSA);
 					if (timeout != -1)
 						sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
 					originalChannelFactory = sshContext.getChannelFactory();
@@ -967,5 +974,10 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 		}
 		throw new UnsupportedOperationException(
 				String.format("Authenticators of type %s are not supported.", authenticator.getClass()));
+	}
+
+	@Override
+	public ComponentFactory<ExecutableCommand> supportedCommands() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -266,10 +266,10 @@ public class DefaultSCPClient extends AbstractSCPClient {
 				sb.append((char) c);
 			} while (c != '\n');
 			if (b == 1) { // error
-				throw new IOException(String.format("Error. ", sb.toString()));
+				throw new IOException(String.format("Error. %s", sb.toString()));
 			}
 			if (b == 2) { // fatal error
-				throw new IOException(String.format("Fatal Error. ", sb.toString()));
+				throw new IOException(String.format("Fatal Error. %s", sb.toString()));
 			}
 		}
 		return b;

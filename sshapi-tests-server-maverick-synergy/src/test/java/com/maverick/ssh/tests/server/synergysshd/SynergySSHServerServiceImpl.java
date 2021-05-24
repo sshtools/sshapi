@@ -37,18 +37,17 @@ import com.maverick.ssh.tests.AbstractServer;
 import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.SshTestConfiguration;
 import com.sshtools.common.auth.AuthorizedKeysPublicKeyAuthenticationProvider;
-import com.sshtools.common.files.vfs.VFSFileFactory;
+import com.sshtools.common.auth.DefaultAuthenticationMechanismFactory;
+import com.sshtools.common.files.direct.DirectFileFactory;
 import com.sshtools.common.files.vfs.VirtualFileFactory;
 import com.sshtools.common.files.vfs.VirtualMountTemplate;
 import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.publickey.SshKeyUtils;
+import com.sshtools.common.scp.ScpCommand;
+import com.sshtools.server.DefaultServerChannelFactory;
 import com.sshtools.server.InMemoryPasswordAuthenticator;
 import com.sshtools.server.SshServer;
 import com.sshtools.server.SshServerContext;
-import com.sshtools.server.vsession.CommandFactory;
-import com.sshtools.server.vsession.ShellCommand;
-import com.sshtools.server.vsession.ShellCommandFactory;
-import com.sshtools.server.vsession.VirtualChannelFactory;
 import com.sshtools.synergy.nio.SshEngineContext;
 
 public class SynergySSHServerServiceImpl extends AbstractServer {
@@ -66,7 +65,7 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 		if (!configuration.getName().endsWith("synergy-server")) {
 			throw new Exception("This server is not intended for use with this configuration.");
 		}
-		return Arrays.asList(ServerCapability.CAN_DO_MULTIFACTOR_AUTH);
+		return Arrays.asList(ServerCapability.CAN_DO_MULTIFACTOR_AUTH, ServerCapability.SUPPORTS_PERMISSIONS, ServerCapability.SYMLINKS);
 	}
 
 	protected void doStart() throws Exception {
@@ -96,16 +95,32 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 				// TODO no idea
 //				sshContext.setAllowDeniedKEX(true); 
 				sshContext.setIdleConnectionTimeoutSeconds(60);
-				CommandFactory<ShellCommand> testCmds = new CommandFactory<ShellCommand>() {
+				
+				DefaultServerChannelFactory channelFactory = new DefaultServerChannelFactory() {
+					{
+						/* These are not using the shell */
+						commands.add("scp", ScpCommand.class);
+						commands.add("commandWithOutput", CommandWithOutput.class);
+						commands.add("commandWithInput", CommandWithInput.class);
+						commands.add("basicCommand", BasicCommand.class);
+					}
 				};
-				testCmds.installCommand(BasicCommand.class);
-				testCmds.installCommand(CommandWithInput.class);
-				testCmds.installCommand(CommandWithOutput.class);
 				
-				ShellCommandFactory factory= new ShellCommandFactory(testCmds);
-				sshContext.setChannelFactory(new VirtualChannelFactory(factory));
-				
-				
+				sshContext.setChannelFactory(channelFactory);
+
+				DefaultAuthenticationMechanismFactory<SshServerContext> authFactory = new DefaultAuthenticationMechanismFactory<>();
+				authFactory.addProvider(new InMemoryPasswordAuthenticator().addUser("root", configuration.getPassword())
+						.addUser("testuser", configuration.getPassword()).addUser("testuser2", configuration.getPassword()));
+				authFactory.addProvider(new SynergyKeyboardInteractiveProvider().addUser("root", configuration.getPassword(), false)
+						.addUser("testuser", configuration.getPassword(), false).addUser("testuser2", configuration.getPassword(), false));
+				authFactory.addProvider(new AuthorizedKeysPublicKeyAuthenticationProvider());
+				sshContext.setAuthenicationMechanismFactory(authFactory);
+								
+				for (AuthenticationMethod a : methods) {
+					authFactory.addRequiredAuthentication(a.toString());
+				}
+
+
 				
 //				//
 //				// Set the finger print in the configuration
@@ -122,23 +137,16 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 //				//
 //				sshContext.setBannerMessage("Maverick Integration Test Server.");
 //				sshContext.setSessionProvider(MaverickSSHSession.class);
-//				sshContext.addCommand("scp", ScpCommand.class);
-//				sshContext.addCommand("commandWithOutput", CommandWithOutput.class);
-//				sshContext.addCommand("commandWithInput", CommandWithInput.class);
-//				sshContext.addCommand("basicCommand", BasicCommand.class);
-//				for (AuthenticationMethod a : methods) {
-//					sshContext.addRequiredAuthentication(a.toString());
-//				}
+
 				return sshContext;
 			}
 			
 		};
-		sshd.addAuthenticator(new InMemoryPasswordAuthenticator().addUser("root", configuration.getPassword())
-				.addUser("testuser", configuration.getPassword()).addUser("testuser2", configuration.getPassword()));
 		homeRoot = new File(new File(System.getProperty("java.io.tmpdir"), "synergy-sshd-homes"), "home");
 		sshd.setFileFactory((con) -> {
 			try {
-				return new VirtualFileFactory(new VirtualMountTemplate("/", homeRoot.getAbsolutePath(), new VFSFileFactory(), true));
+				File home = new File(homeRoot, con.getUsername());
+				return new VirtualFileFactory(new VirtualMountTemplate("/", home.getAbsolutePath(), new DirectFileFactory(home), true));
 			} catch (IOException | PermissionDeniedException e) {
 				if(e instanceof IOException)
 					throw (IOException)e;
@@ -148,8 +156,6 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 		});
 		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_rsa_key"), null));
 		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_dsa_key"), null));
-		sshd.addAuthenticator(new SynergyKeyboardInteractiveProvider());
-		sshd.addAuthenticator(new AuthorizedKeysPublicKeyAuthenticationProvider());
 		// sshd.useThisAuthorizedKeysFile("authorized_keys_folder/authorized_keys");
 		// Copy some keys for authentication
 		try {
@@ -163,6 +169,14 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 			copyKeystore("rsa-valid", "testuser", "id_rsa.pub");
 			copyKeystore("rsa-with-passphrase", "testuser", "id_rsa.pub");
 			copyKeystore("x509-valid", "testuser", "authorized_keys");
+			copyKeystore("ed25519-valid", "testuser", "id_ed25519.pub");
+			copyKeystore("ed25519-with-passphrase", "testuser", "id_ed25519.pub");
+			copyKeystore("ecdsa384-valid", "testuser", "id_ecdsa.pub");
+			copyKeystore("ecdsa384-with-passphrase", "testuser", "id_ecdsa.pub");
+			copyKeystore("ecdsa521-valid", "testuser", "id_ecdsa.pub");
+			copyKeystore("ecdsa521-with-passphrase", "testuser", "id_ecdsa.pub");
+			copyKeystore("ecdsa256-with-passphrase", "testuser", "id_ecdsa.pub");
+			
 		} catch (IOException ioe) {
 			throw new RuntimeException(ioe);
 		}
@@ -182,7 +196,7 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 		File file = new File(new File(homeRoot, user), ".ssh");
 		file.mkdirs();
 		File authKeyFile = new File(file, "authorized_keys");
-		System.out.println("Writing new authorized key to " + authKeyFile);
+		System.out.println("Writing new authorized key '" + keytext + "' to " + authKeyFile);
 		OutputStream out = new FileOutputStream(authKeyFile, true);
 		try {
 			out.write(keytext.getBytes());

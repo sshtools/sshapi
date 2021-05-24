@@ -132,9 +132,10 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelLis
 			throw new IllegalStateException("Couldb not open session channel");
 		}
 		try {
-			if (!session.executeCommand(command).waitFor(30000).isSuccess()) {
-				throw new IllegalStateException("Could not execute command.");
-			}
+			session.executeCommand(command).waitForever();
+//			if (!session.executeCommand(command).waitFor(30000).isSuccess()) {
+//				throw new IllegalStateException("Could not execute command.");
+//			}
 		} catch (com.sshtools.common.ssh.SshException e) {
 			throw new SshException("Failed to execute command.", e);
 		}

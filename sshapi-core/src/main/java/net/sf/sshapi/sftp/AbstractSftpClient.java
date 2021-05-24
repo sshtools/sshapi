@@ -46,10 +46,10 @@ import java.util.concurrent.TimeUnit;
 
 import net.sf.sshapi.AbstractFileTransferClient;
 import net.sf.sshapi.Capability;
+import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshLifecycleListener;
-import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -65,15 +65,17 @@ import net.sf.sshapi.util.Util;
  * However, if a provider <strong>can</strong> implement it itself, it
  * <strong>should</strong>.
  */
-public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient>
+public abstract class AbstractSftpClient<C extends SshClient> extends AbstractFileTransferClient<SshLifecycleListener<SftpClient>, SftpClient>
 		implements SftpClient {
 	protected SshConfiguration configuration;
+	protected C client;
 	protected EOLPolicy[] eolPolicy;
 	protected TransferMode transferMode = TransferMode.BINARY;
 
-	protected AbstractSftpClient(SshProvider provider, SshConfiguration configuration) {
-		super(provider);
-		this.configuration = configuration;
+	protected AbstractSftpClient(C client) {
+		super(client.getProvider());
+		this.client = client;
+		this.configuration = client.getConfiguration();
 	}
 
 	@Override
@@ -451,6 +453,11 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	}
 
 	@Override
+	public void link(String path, String target) throws SshException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void resumePut(File source, String path) throws SshException {
 		try (InputStream in = new FileInputStream(source)) {
 			try {
@@ -740,6 +747,10 @@ public abstract class AbstractSftpClient extends AbstractFileTransferClient<SshL
 	}
 
 	protected void onTransferModeChange(TransferMode transferMode) {
+	}
+	
+	protected boolean isOpenSSH() {
+		return client.getRemoteIdentification() != null && client.getRemoteIdentification().contains("OpenSSH");
 	}
 
 	private BasicFileAttributes fileToBasicAttributes(SftpFile attrs) {

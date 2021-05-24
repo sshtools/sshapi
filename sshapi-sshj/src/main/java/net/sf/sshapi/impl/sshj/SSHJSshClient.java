@@ -223,7 +223,7 @@ class SSHJSshClient extends AbstractClient {
 		} catch (ConnectionException | TransportException e) {
 			throw new SshException(SshException.FAILED_TO_OPEN_SHELL, e.getMessage(), e);
 		}
-		return new SSHJSshShell(this, session, termType, cols, rows, pixWidth, pixHeight, terminalModes);
+		return new SSHJSshShell(this, session, termType == null ? "dumb" : termType, cols, rows, pixWidth, pixHeight, terminalModes);
 	}
 
 	@Override

@@ -123,13 +123,18 @@ public class LibsshClient extends AbstractClient {
 			}
 			
 			if(getConfiguration().getX11Screen() != -1) {
-				ssh_channel x11chan = library.ssh_channel_new(libSshSession);
-				if(x11chan == null) {
-					throw new SshException(SshException.GENERAL,
-							"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " retrieving public key");
+				byte[] x11Cookie = getConfiguration().getX11Cookie();
+				if(x11Cookie == null)
+					LOG.debug("X11 screen set, but no X11 cookie.");
+				else {
+					ssh_channel x11chan = library.ssh_channel_new(libSshSession);
+					if(x11chan == null) {
+						throw new SshException(SshException.GENERAL,
+								"Error  " + library.ssh_get_error(libSshSession.getPointer()) + " retrieving public key");
+					}
+					library.ssh_channel_open_session(x11chan);
+					library.ssh_channel_request_x11(x11chan, 0, null, Util.formatAsHexString(x11Cookie), getConfiguration().getX11Screen());
 				}
-				library.ssh_channel_open_session(x11chan);
-				library.ssh_channel_request_x11(x11chan, 0, null, Util.formatAsHexString(getConfiguration().getX11Cookie()), getConfiguration().getX11Screen());
 			}
 			
 			authenticated = true;
@@ -298,7 +303,7 @@ public class LibsshClient extends AbstractClient {
 
 	@Override
 	protected SftpClient doCreateSftp() throws SshException {
-		return new LibsshSFTPClient(getProvider(), getConfiguration(), library, libSshSession);
+		return new LibsshSFTPClient(this, library, libSshSession);
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import com.maverick.util.UnsignedInteger64;
 import com.sshtools.sftp.DirectoryOperation;
 import com.sshtools.sftp.SftpClient;
 
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
@@ -55,7 +56,7 @@ import net.sf.sshapi.sftp.SftpOperation;
 import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
-class MaverickSftpClient extends AbstractSftpClient {
+class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 	protected final class MaverickSftpOperation implements SftpOperation {
 		private final List<String> deleted;
 		private final DirectoryOperation op;
@@ -135,7 +136,7 @@ class MaverickSftpClient extends AbstractSftpClient {
 	private MaverickSshClient sshapiClient;
 
 	MaverickSftpClient(MaverickSshClient client) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		this.client = client.getNativeClient();
 		this.sshapiClient = client;
 	}
@@ -445,7 +446,37 @@ class MaverickSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			sftpClient.getSubsystemChannel().createSymbolicLink(path, target);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					sftpClient.getSubsystemChannel().createSymbolicLink(linkpath, targetpath);
+				}
+				else {
+					sftpClient.getSubsystemChannel().createSymbolicLink(targetpath, linkpath);
+				}
+				break;
+			}
+		} catch (SftpStatusException sftpE) {
+			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new SshException("Failed to create symlink.", e);
+		}
+	}
+
+	@Override
+	public void link(String path, String target) throws SshException {
+		try {
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			sftpClient.getSubsystemChannel().createLink(targetpath, linkpath, false);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {

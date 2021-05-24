@@ -54,7 +54,7 @@ import net.sf.sshapi.util.Util;
 /**
  * The Class OpenSshSftpClient.
  */
-public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpenSshClient {
+public class OpenSshSftpClient extends AbstractSftpClient<OpenSshClient> implements AbstractOpenSshClient {
 
 	/** The Constant SFTP_PROMPT. */
 	private static final String SFTP_PROMPT = "sftp> ";
@@ -223,7 +223,7 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 	 * @param pb     the pb
 	 */
 	public OpenSshSftpClient(OpenSshClient client, ProcessBuilder pb) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		this.client = client;
 		this.pb = pb;
 	}
@@ -542,11 +542,44 @@ public class OpenSshSftpClient extends AbstractSftpClient implements AbstractOpe
 	@Override
 	public void symlink(String oldpath, String newpath) throws SshException {
 		synchronized (lock) {
-			String[] results = processResults(runCommand(createCommand("ln", "-s", oldpath, newpath)));
+			String[] results;
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				results = processResults(runCommand(createCommand("ln", "-s", newpath, oldpath)));
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				results = processResults(runCommand(createCommand("ln", "-s", oldpath, newpath)));
+				break;
+			default:
+				if(isOpenSSH()) {
+					results = processResults(runCommand(createCommand("ln", "-s", oldpath, newpath)));
+				}
+				else {
+					results = processResults(runCommand(createCommand("ln", "-s", newpath, oldpath)));
+				}
+				break;
+			}
 			checkCommonErrors(oldpath, results);
 		}
 	}
 
+
+	/**
+	 * Link.
+	 *
+	 * @param oldpath the oldpath
+	 * @param newpath the newpath
+	 * @throws SshException the ssh exception
+	 */
+	@Override
+	public void link(String oldpath, String newpath) throws SshException {
+		synchronized (lock) {
+			String[] results;
+			results = processResults(runCommand(createCommand("ln", oldpath, newpath)));
+			checkCommonErrors(oldpath, results);
+		}
+	}
+	
 	/**
 	 * Resume get.
 	 *

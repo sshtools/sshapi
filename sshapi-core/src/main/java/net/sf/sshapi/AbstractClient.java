@@ -46,14 +46,13 @@ import net.sf.sshapi.forwarding.SshPortForwardTunnel;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.RemoteSocketFactory;
-import net.sf.sshapi.util.Util;
 
 /**
  * Abstract implementation of a {@link SshClient}. All provider client
  * implementations will probably want to extend this as it provides some basic
  * common services.
  */
-public abstract class AbstractClient implements SshClient {
+public abstract class AbstractClient extends AbstractBaseClient {
 
 	/**
 	 * Abstract implementation for a tunnel channel.
@@ -127,12 +126,10 @@ public abstract class AbstractClient implements SshClient {
 
 	protected Set<SshLifecycleComponent<?, ?>> activeComponents = Collections.synchronizedSet(new LinkedHashSet<>());
 	protected List<Thread> interruptable = Collections.synchronizedList(new ArrayList<>());
-	private SshConfiguration configuration;
 	private String hostname;
 	private int port;
 	private List<SshPortForwardListener> portForwardlisteners = new ArrayList<>();
 	private List<SshClientListener> listeners = new ArrayList<>();
-	private SshProvider provider;
 	private String username;
 
 	/**
@@ -141,7 +138,7 @@ public abstract class AbstractClient implements SshClient {
 	 * @param configuration configuration
 	 */
 	public AbstractClient(SshConfiguration configuration) {
-		this.configuration = configuration;
+		super(configuration);
 	}
 
 	@Override
@@ -234,19 +231,6 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public void closeQuietly() {
-		try {
-			close();
-		} catch (Exception e) {
-		}
-	}
-
-	@Override
-	public final SshCommand command(String command) throws SshException {
-		return command(command, null, 0, 0, 0, 0, null);
-	}
-
-	@Override
 	public SshCommand command(String command, String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws SshException {
 		SshCommand sshCommand = createCommand(command, termType, cols, rows, pixWidth, pixHeight, terminalModes);
@@ -255,26 +239,25 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final Future<Void> connectLater(String spec, SshAuthenticator... authenticators) {
-		return connectLater(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec),
-				authenticators);
-	}
-
-	@Override
 	public Future<Void> connectLater(String username, String hostname, int port, SshAuthenticator... authenticators) {
+		this.username = username;
+		this.port = port;
+		this.hostname = hostname;
 		return new AbstractFuture<Void>() {
+			{
+				getProvider().getExecutor().submit(createRunnable());	
+			}
+			
 			@Override
 			Void doFuture() throws Exception {
-				connect(username, hostname, port, authenticators);
+				if (isConnected()) {
+					throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.ALREADY_OPEN, "Already connected.");
+				}
+				connectImpl(username, hostname, port, authenticators);
 				;
 				return null;
 			}
 		};
-	}
-
-	@Override
-	public final void connect(String spec, SshAuthenticator... authenticators) throws SshException {
-		connect(Util.extractUsername(spec), Util.extractHostname(spec), Util.extractPort(spec), authenticators);
 	}
 
 	@Override
@@ -286,33 +269,7 @@ public abstract class AbstractClient implements SshClient {
 		this.username = username;
 		this.port = port;
 		this.hostname = hostname;
-		doConnect(username, hostname, port);
-		postConnect();
-		if (authenticators.length > 0) {
-			try {
-				for (int i = 0; i < getConfiguration().getMaxAuthAttempts() && !authenticate(authenticators); i++)
-					;
-				if (!isAuthenticated())
-					throw new SshException(SshException.AUTHENTICATION_FAILED);
-			} catch (SshException sshe) {
-				try {
-					close();
-				} catch (IOException e) {
-				}
-				throw sshe;
-			} catch (RuntimeException re) {
-				try {
-					close();
-				} catch (IOException ioe) {
-				}
-				throw re;
-			}
-		}
-	}
-
-	@Override
-	public final SshCommand createCommand(String command) throws SshException {
-		return createCommand(command, null, 0, 0, 0, 0, null);
+		connectImpl(username, hostname, port, authenticators);
 	}
 
 	@Override
@@ -415,11 +372,6 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshShell createShell() throws SshException {
-		return createShell(null, 0, 0, 0, 0, null);
-	}
-
-	@Override
 	public final SshShell createShell(String termType, int cols, int rows, int pixWidth, int pixHeight,
 			byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
@@ -469,11 +421,6 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public SshConfiguration getConfiguration() {
-		return configuration;
-	}
-
-	@Override
 	public String getHostname() {
 		return hostname;
 	}
@@ -484,11 +431,6 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshProvider getProvider() {
-		return provider;
-	}
-
-	@Override
 	public int getTimeout() throws IOException {
 		throw new UnsupportedOperationException();
 	}
@@ -496,18 +438,6 @@ public abstract class AbstractClient implements SshClient {
 	@Override
 	public String getUsername() {
 		return username;
-	}
-
-	@Override
-	public final void init(SshProvider provider) {
-		this.provider = provider;
-		if(provider.getCapabilities().contains(Capability.IO_TIMEOUTS)) {
-			try {
-				setTimeout(getConfiguration().getIoTimeout());
-			} catch (IOException e) {
-				SshConfiguration.getLogger().debug("Failed to set initial timeout.", e);
-			}
-		}
 	}
 
 	@Override
@@ -544,13 +474,6 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshSCPClient scp() throws SshException {
-		SshSCPClient scp = createSCP();
-		scp.open();
-		return scp;
-	}
-
-	@Override
 	public void setTimeout(int timeout) throws IOException {
 		throw new UnsupportedOperationException();
 	}
@@ -563,21 +486,11 @@ public abstract class AbstractClient implements SshClient {
 	}
 
 	@Override
-	public final SshShell shell() throws SshException {
-		return shell(null, 0, 0, 0, 0, null);
-	}
-
-	@Override
 	public final SshShell shell(String termType, int cols, int rows, int pixWidth, int pixHeight, byte[] terminalModes)
 			throws SshException {
 		SshShell shell = createShell(termType, cols, rows, pixWidth, pixHeight, terminalModes);
 		shell.open();
 		return shell;
-	}
-
-	@Override
-	public Future<SshShell> shellLater() {
-		return shellLater(null, 0, 0, 0, 0, null);
 	}
 
 	@Override
@@ -595,15 +508,30 @@ public abstract class AbstractClient implements SshClient {
 		};
 	}
 
-	@Override
-	public Future<Void> closeLater() {
-		return new AbstractFuture<Void>() {
-			@Override
-			Void doFuture() throws Exception {
-				close();
-				return null;
+	protected void connectImpl(String username, String hostname, int port, SshAuthenticator... authenticators)
+			throws SshException {
+		doConnect(username, hostname, port);
+		postConnect();
+		if (authenticators.length > 0) {
+			try {
+				for (int i = 0; i < getConfiguration().getMaxAuthAttempts() && !authenticate(authenticators); i++)
+					;
+				if (!isAuthenticated())
+					throw new SshException(SshException.AUTHENTICATION_FAILED);
+			} catch (SshException sshe) {
+				try {
+					close();
+				} catch (IOException e) {
+				}
+				throw sshe;
+			} catch (RuntimeException re) {
+				try {
+					close();
+				} catch (IOException ioe) {
+				}
+				throw re;
 			}
-		};
+		}
 	}
 
 	protected void checkConnectedAndAuthenticated() throws SshException {

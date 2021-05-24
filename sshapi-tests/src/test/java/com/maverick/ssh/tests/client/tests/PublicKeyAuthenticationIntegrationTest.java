@@ -86,7 +86,7 @@ public class PublicKeyAuthenticationIntegrationTest extends AbstractClientConnec
 			assertTrue("Authentication must be complete.", ssh.authenticate(createKey("dsa-valid", "id_dsa", null)));
 			assertTrue("Must be connected", ssh.isConnected());
 			return null;
-		}, 10000);
+		}, 1000000);
 	}
 
 	@Test

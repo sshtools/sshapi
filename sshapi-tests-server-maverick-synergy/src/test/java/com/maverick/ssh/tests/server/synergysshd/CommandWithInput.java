@@ -22,31 +22,65 @@
 package com.maverick.ssh.tests.server.synergysshd;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import com.sshtools.common.permissions.PermissionDeniedException;
-import com.sshtools.server.vsession.ShellCommand;
-import com.sshtools.server.vsession.UsageException;
-import com.sshtools.server.vsession.VirtualConsole;
+import com.sshtools.common.command.ExecutableCommand;
 
-public class CommandWithInput extends ShellCommand {
+public class CommandWithInput extends ExecutableCommand {
+
 	public CommandWithInput() {
-		super("commandWithInput", "test", "test", "test");
+		super();
 	}
 
-	@Override
-	public void run(String[] args, VirtualConsole console) throws IOException, PermissionDeniedException, UsageException {
-		List<String> l = new ArrayList<String>();
-		String line;
-		while ((line = console.readLine()) != null) {
-			l.add(line);
-		}
-		Collections.reverse(l);
-		for (String s : l) {
-			console.getTerminal().writer().println(s);
-		}
-		console.destroy();
+	public int getExitCode() {
+		return 0;
 	}
+
+	public void kill() {
+	}
+
+	public boolean createProcess(String cmd[], Map<String,String> environment) {
+		return true;
+	}
+
+	public void onStart() {
+		new Thread("CommandWithInput") {
+			public void run() {
+				try {
+					List<String> l = new ArrayList<String>();
+					int line;
+					StringBuilder bui = new StringBuilder();
+					InputStream stdin = getInputStream();
+					while ((line = (char) stdin.read()) != -1) {
+						System.out.println(String.format("%04d - %02x - %s", line, line, String.valueOf((char)line)));
+						if ( ( line == 65535 || line == 4 ) && bui.length() == 0) {
+							break;
+						}
+						if (line == '\n') {
+							l.add(bui.toString());
+							bui.setLength(0);
+						} else {
+							bui.append((char) line);
+						}
+					}
+					Collections.reverse(l);
+					OutputStream stdout  = getOutputStream();
+					for (String s : l) {
+						stdout.write((s + "\r\n").getBytes());
+					}
+					stdout.close();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} finally {
+					session.close();
+				}
+			}
+		}.start();
+	}
+
 }

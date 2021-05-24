@@ -40,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -285,8 +286,9 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			// Copy our test files to the remote server first
 			File testFilesDir = randomMultilevelFiles.getTestFilesDir();
+			String resolveRemote = resolveRemote(randomMultilevelFiles.getName());
 			runAndWatchProgress(
-					() -> sftp.upload(testFilesDir, resolveRemote(randomMultilevelFiles.getName()), true, false, true),
+					() -> sftp.upload(testFilesDir, resolveRemote, true, false, true),
 					createProgress());
 			// Do stuff to the remote files
 			sftp.rm(resolveRemote(randomMultilevelFiles.getName()) + "/testfile1");
@@ -297,9 +299,11 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 					new ByteArrayInputStream("This is a new file".getBytes()));
 			File newTestDir = new File(testFilesDir.getParent(), testFilesDir.getName() + ".back");
 			// Take a copy of the local files to synchronize against
-			FileUtils.copyDirectory(testFilesDir, new File(newTestDir, randomMultilevelFiles.getName()));
+			File localCopy = new File(newTestDir, randomMultilevelFiles.getName());
+			FileUtils.copyDirectory(testFilesDir, localCopy);
 			try {
-				runAndWatchProgress(() -> sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir,
+				runAndWatchProgress(() -> 
+					sftp.download(resolveRemote(randomMultilevelFiles.getName()), newTestDir,
 						true, true, true), createProgress());
 				// Compare local and remote
 				compareDirs(newTestDir, testFilesDir.getName());
@@ -663,16 +667,34 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		timeout(() -> {
 			checkCapabilities(ServerCapability.SYMLINKS);
 			File randomTestFile = randomFiles.getRandomTestFile();
-			sftp.put(randomTestFile, resolveRemote(randomTestFile.getName()));
-			String link = resolveRemote(randomTestFile.getName() + ".link");
-			sftp.symlink(link, randomTestFile.getName());
-			checkCapabilities(ServerCapability.SYMLINKS);
+			String targetPath = resolveRemote(randomTestFile.getName());
+			sftp.put(randomTestFile, targetPath);
+			String linkPath = resolveRemote(randomTestFile.getName() + ".link");
+			sftp.symlink(linkPath, randomTestFile.getName());
 			if(ssh.getProvider().getCapabilities().contains(Capability.SFTP_LSTAT))
-				sftp.lstat(link);
+				sftp.lstat(linkPath);
 			else
-				SshConfiguration.getLogger().warn("While the creation of a symlink of {0} did not throw any errors, we cannot tell if the link worked, as LSTAT is not implemented.", link);
+				SshConfiguration.getLogger().warn("While the creation of a symlink of {0} did not throw any errors, we cannot tell if the link worked, as LSTAT is not implemented.", linkPath);
 			return null;
-		}, TimeUnit.SECONDS.toMillis(30));
+		}, TimeUnit.SECONDS.toMillis(30000));
+	}
+	
+	@Test
+	public void testLink() throws Exception {
+		timeout(() -> {
+			checkCapabilities(ServerCapability.HARDLINKS);
+			Assume.assumeTrue(ssh.getProvider().getCapabilities().contains(Capability.SFTP_HARD_LINK));
+			File randomTestFile = randomFiles.getRandomTestFile();
+			String targetPath = resolveRemote(randomTestFile.getName());
+			sftp.put(randomTestFile, targetPath);
+			String linkPath = resolveRemote(randomTestFile.getName() + ".link");
+			sftp.link(linkPath, randomTestFile.getName());
+			if(ssh.getProvider().getCapabilities().contains(Capability.SFTP_LSTAT))
+				sftp.lstat(linkPath);
+			else
+				SshConfiguration.getLogger().warn("While the creation of a symlink of {0} did not throw any errors, we cannot tell if the link worked, as LSTAT is not implemented.", linkPath);
+			return null;
+		}, TimeUnit.SECONDS.toMillis(30000));
 	}
 
 	@Test
@@ -681,11 +703,13 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			Assume.assumeTrue(ssh.getProvider().getCapabilities().contains(Capability.SFTP_READ_LINK));
 			checkCapabilities(ServerCapability.SYMLINKS);
 			File randomTestFile = randomFiles.getRandomTestFile();
-			sftp.put(randomTestFile, resolveRemote(randomTestFile.getName()));
-			String link = resolveRemote(randomTestFile.getName() + ".link");
-			sftp.symlink(link, randomTestFile.getName());
-			String originalPath = sftp.readLink(link);
-			assertEquals("Link target must point to original file", resolveRemote(randomTestFile.getName()),
+			String targetName = randomTestFile.getName();
+			String targetPath = resolveRemote(targetName);
+			sftp.put(randomTestFile, targetPath);
+			String linkPath = resolveRemote(targetName + ".link");
+			sftp.symlink(linkPath, targetName);
+			String originalPath = sftp.readLink(linkPath);
+			assertEquals("Link target must point to original file", targetPath,
 					originalPath);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30000));
@@ -699,24 +723,24 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			String CRLFText = "line1\r\nline2\r\nline3\r\n";
 			String LFText = "line1\nline2\nline3\n";
 			String CRText = "line1\rline2\rline3\r";
-			doPutTextFile(LFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR_LF);
-			doPutTextFile(LFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR);
-			doPutTextFile(LFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_LF);
-			doPutTextFile(CRLFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR_LF);
-			doPutTextFile(CRLFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR);
-			doPutTextFile(CRLFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_LF);
-			doPutTextFile(CRText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR_LF);
-			doPutTextFile(CRText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR);
-			doPutTextFile(CRText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_LF);
-			doGetTextFile(CRLFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR_LF);
-			doGetTextFile(CRText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR);
-			doGetTextFile(LFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_LF);
-			doGetTextFile(CRLFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR_LF);
-			doGetTextFile(CRText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR);
-			doGetTextFile(LFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_LF);
-			doGetTextFile(CRLFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR_LF);
-			doGetTextFile(CRText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR);
-			doGetTextFile(LFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_LF);
+			doPutTextFile(1, LFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR_LF);
+			doPutTextFile(2, LFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR);
+			doPutTextFile(3, LFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_LF);
+			doPutTextFile(4, CRLFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR_LF);
+			doPutTextFile(5, CRLFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR);
+			doPutTextFile(6, CRLFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_LF);
+			doPutTextFile(7, CRText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR_LF);
+			doPutTextFile(8, CRText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR);
+			doPutTextFile(9, CRText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_LF);
+			doGetTextFile(10, CRLFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR_LF);
+			doGetTextFile(11, CRText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_CR);
+			doGetTextFile(12, LFText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, EOLPolicy.REMOTE_LF);
+			doGetTextFile(13, CRLFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR_LF);
+			doGetTextFile(14, CRText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_CR);
+			doGetTextFile(15, LFText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, EOLPolicy.REMOTE_LF);
+			doGetTextFile(16, CRLFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR_LF);
+			doGetTextFile(17, CRText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_CR);
+			doGetTextFile(18, LFText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, EOLPolicy.REMOTE_LF);
 			return null;
 		}, TimeUnit.SECONDS.toMillis(30));
 	}
@@ -731,12 +755,12 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 			String CRText = "line1\rline2\rline3\r";
 			String remoteText = "line1" + sftp.getRemoteEOL() + "line2" + sftp.getRemoteEOL() + "line3"
 					+ sftp.getRemoteEOL();
-			doPutTextFile(LFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, sftp.getRemoteEOL());
-			doPutTextFile(CRLFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, sftp.getRemoteEOL());
-			doPutTextFile(CRText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, sftp.getRemoteEOL());
-			doGetTextFile(remoteText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, sftp.getRemoteEOL());
-			doGetTextFile(remoteText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, sftp.getRemoteEOL());
-			doGetTextFile(remoteText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, sftp.getRemoteEOL());
+			doPutTextFile(1, LFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, sftp.getRemoteEOL());
+			doPutTextFile(2, CRLFText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, sftp.getRemoteEOL());
+			doPutTextFile(3, CRText, remoteText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, sftp.getRemoteEOL());
+			doGetTextFile(4, remoteText, LFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_LF, sftp.getRemoteEOL());
+			doGetTextFile(5, remoteText, CRLFText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR_LF, sftp.getRemoteEOL());
+			doGetTextFile(6, remoteText, CRText, EOLPolicy.FORCE_REMOTE, EOLPolicy.LOCAL_CR, sftp.getRemoteEOL());
 			return null;
 		}, TimeUnit.MINUTES.toMillis(2));
 	}
@@ -759,7 +783,7 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		}
 	}
 
-	private void doPutTextFile(String text, String expectedText, EOLPolicy... eol)
+	private void doPutTextFile(int idx, String text, String expectedText, EOLPolicy... eol)
 			throws UnsupportedEncodingException, SftpException, SshException {
 		sftp.mode(TransferMode.TEXT);
 		sftp.eol(eol);
@@ -768,10 +792,10 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		sftp.get("file.txt", out);
 		String actualText = new String(out.toByteArray(), "UTF-8");
-		assertEquals(expectedText, actualText);
+		assertEquals("PUT Text Comparision [" + idx + "] for " + Arrays.asList(eol), expectedText, actualText);
 	}
 
-	private void doGetTextFile(String text, String expectedText, EOLPolicy... eol)
+	private void doGetTextFile(int idx, String text, String expectedText, EOLPolicy... eol)
 			throws UnsupportedEncodingException, SftpException, SshException {
 		sftp.mode(TransferMode.BINARY);
 		sftp.eol(eol);
@@ -783,6 +807,6 @@ public class SftpIntegrationTest extends AbstractClientSftp {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		sftp.get("file.txt", out);
 		String actualText = new String(out.toByteArray(), "UTF-8");
-		assertEquals(expectedText, actualText);
+		assertEquals("GET Text Comparision [" + idx + "] for " + Arrays.asList(eol), expectedText, actualText);
 	}
 }

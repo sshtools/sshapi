@@ -29,7 +29,6 @@ import java.util.List;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
@@ -43,16 +42,16 @@ import ssh.sftp_dir_struct;
 import ssh.sftp_file_struct;
 import ssh.sftp_session_struct;
 
-class LibsshSFTPClient extends AbstractSftpClient {
+class LibsshSFTPClient extends AbstractSftpClient<LibsshClient> {
 
 	private SshLibrary library;
 	private ssh_session libSshSession;
 	private sftp_session_struct sftp;
 	private boolean free;
 
-	public LibsshSFTPClient(SshProvider provider, SshConfiguration configuration, SshLibrary library,
+	public LibsshSFTPClient(LibsshClient client, SshLibrary library,
 			ssh_session libSshSession) {
-		super(provider, configuration);
+		super(client);
 		this.library = library;
 		this.libSshSession = libSshSession;
 	}
@@ -185,6 +184,23 @@ class LibsshSFTPClient extends AbstractSftpClient {
 			if (LOG.isDebug())
 				LOG.debug("Symlink {0} {1}", path, target);
 			int ret = library.sftp_symlink(sftp, path, target);
+			
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				ret = library.sftp_symlink(sftp, target, path);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				ret = library.sftp_symlink(sftp, path, target);
+				break;
+			default:
+				if(isOpenSSH()) {
+					ret = library.sftp_symlink(sftp, path, target);
+				}
+				else {
+					ret = library.sftp_symlink(sftp, target, path);
+				}
+				break;
+			}
 			if (ret != SshLibrary.SSH_OK)
 				throw new LibsshSFTPException(String.format("Could not symlink file. %s", path));
 		}

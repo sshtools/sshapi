@@ -332,7 +332,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	SftpFile lstat(String path) throws SshException;
 
 	/**
-	 * Get a the actual path given the path to a link. The provider must support
+	 * Get a the actual path given the path to a link. T@Override
+	he provider must support
 	 * {@link Capability#SFTP_READ_LINK} or an {@link UnsupportedOperationException}
 	 * will be thrown. The target returned will be an absolute path name.
 	 * 
@@ -413,6 +414,21 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 */
 	void symlink(String path, String target) throws SshException;
 
+	/**
+	 * Create a hard link. The target is relative to the link itself. For 
+	 * example, if the path was <strong>myfolder/file.link</strong>, then for the
+	 * actual file to be in the same folder, but with a different name, the target would
+	 * be <strong>myoriginalfile</strong>. If it were in the parent directory, then it
+	 * would be <strong>../myoriginalfile</strong>. If it were in some directory not easily
+	 * reachable with a relative path, it would be <strong>/home/me/myoriginalfile</strong>.
+	 * 
+	 * @param path path of file to link.
+	 * @param target path to point link to
+	 * @throws SshException on other error
+	 * 
+	 */
+	void link(String path, String target) throws SshException;
+	
 	/**
 	 * Remove a directory given it's path.
 	 * 

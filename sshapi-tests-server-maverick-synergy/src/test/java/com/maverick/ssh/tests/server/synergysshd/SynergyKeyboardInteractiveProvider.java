@@ -23,6 +23,10 @@ package com.maverick.ssh.tests.server.synergysshd;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import com.sshtools.common.auth.KeyboardInteractiveAuthenticationProvider;
 import com.sshtools.common.auth.KeyboardInteractiveProvider;
@@ -38,7 +42,17 @@ public class SynergyKeyboardInteractiveProvider implements KeyboardInteractiveAu
 	final static int REQUESTED_PASSWORD = 1;
 	final static int CHANGING_PASSWORD = 2;
 	final static int FINISHED = 2;
-
+	
+	Map<String,char[]> users = new HashMap<>();
+	Set<String> needsChange = new HashSet<>();
+	
+	public SynergyKeyboardInteractiveProvider addUser(String name, char[] password, boolean needsChange) {
+		users.put(name, password);
+		if(needsChange)
+			this.needsChange.add(name);
+		return this;
+	}
+	
 	@Override
 	public KeyboardInteractiveProvider createInstance(SshConnection con) throws IOException {
 		return new KeyboardInteractiveProvider() {
@@ -63,26 +77,19 @@ public class SynergyKeyboardInteractiveProvider implements KeyboardInteractiveAu
 				switch (state) {
 				case REQUESTED_PASSWORD:
 					password = answers[0];
-//					try {
-						// TODO 
-						success = true;
-//						success = auth.getProvider().verifyPassword(
-//								connection, connection.getUsername(),
-//								password, auth.getTransport().getRemoteAddress());
+					char[] pw = users.get(con.getUsername());
+					if(needsChange.contains(con.getUsername())) {
+						state = CHANGING_PASSWORD;
+						additionalPrompts.add(new KBIPrompt("New Password:", false));
+						additionalPrompts.add(new KBIPrompt("Confirm Password:", false));
+						instruction = "Enter new password for " + connection.getUsername();
+						return false;
+					}
+					else { 
+						success = new String(pw).equals(password);
 						state = FINISHED;
-						return true;
-//					} 
-//					catch (PasswordChangeException e) {
-//						state = CHANGING_PASSWORD;
-//						KBIPrompt[] prompts = new KBIPrompt[2];
-//						additionalPrompts.add(new KBIPrompt("New Password:", false));
-//						additionalPrompts.add(new KBIPrompt("Confirm Password:", false));
-//						if (e.getMessage() == null)
-//							instruction = "Enter new password for " + connection.getUsername();
-//						else
-//							instruction = e.getMessage();
-//						return false;
-//					}
+						return success;
+					} 
 				case CHANGING_PASSWORD:
 					if (answers.length < 2) {
 						throw new RuntimeException("Not enough answers!");
@@ -95,9 +102,8 @@ public class SynergyKeyboardInteractiveProvider implements KeyboardInteractiveAu
 					String password2 = answers[1];
 					if (password1.equals(password2)) {
 						success = true;
-//						success = auth.getProvider().changePassword(
-//								ConnectionManager.getInstance().getConnectionById(auth.getTransport().getUUID()), connection.getUsername(),
-//								password, password1);
+						needsChange.remove(con.getUsername());
+						users.put(con.getUsername(), password1.toCharArray());
 						if (success) {
 							state = FINISHED;
 							return true;

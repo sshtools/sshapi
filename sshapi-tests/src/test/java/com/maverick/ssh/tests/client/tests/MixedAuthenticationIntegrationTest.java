@@ -24,6 +24,7 @@ package com.maverick.ssh.tests.client.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +33,8 @@ import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.ServerService.AuthenticationMethod;
 import com.maverick.ssh.tests.client.AbstractClientConnecting;
 
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshPrivateKey.Algorithm;
 import net.sf.sshapi.auth.SshKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.auth.SshPublicKeyAuthenticator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;
@@ -46,6 +49,9 @@ public class MixedAuthenticationIntegrationTest extends
 
 	@Test
 	public void testDsaValidAndPasswordValid() throws Exception {
+		assumeTrue("Server must support DSA keys.", config.getKeyAlgorithms().contains(Algorithm.SSH_DSS));
+		assumeTrue("Must support DSA keys.", ssh.getProvider().getSupportedPublicKey().contains(SshConfiguration.PUBLIC_KEY_SSHDSA));
+		
 		configureForMethods(AuthenticationMethod.PASSWORD,
 				AuthenticationMethod.PUBLICKEY);
 		try {
@@ -68,6 +74,9 @@ public class MixedAuthenticationIntegrationTest extends
 
 	@Test
 	public void testDsaValidAndKBIValid() throws Exception {
+		assumeTrue("Server must support DSA keys.", config.getKeyAlgorithms().contains(Algorithm.SSH_DSS));
+		assumeTrue("Must support DSA keys.", ssh.getProvider().getSupportedPublicKey().contains(SshConfiguration.PUBLIC_KEY_SSHDSA));
+		
 		configureForMethods(AuthenticationMethod.KEYBOARD_INTERACTIVE,
 				AuthenticationMethod.PUBLICKEY);
 		try {
@@ -105,6 +114,9 @@ public class MixedAuthenticationIntegrationTest extends
 
 	@Test
 	public void testDsaValidPasswordValidKBIValid() throws Exception {
+		assumeTrue("Server must support DSA keys.", config.getKeyAlgorithms().contains(Algorithm.SSH_DSS));
+		assumeTrue("Must support DSA keys.", ssh.getProvider().getSupportedPublicKey().contains(SshConfiguration.PUBLIC_KEY_SSHDSA));
+		
 		configureForMethods(AuthenticationMethod.PUBLICKEY,
 				AuthenticationMethod.KEYBOARD_INTERACTIVE,
 				AuthenticationMethod.PASSWORD);
@@ -133,6 +145,9 @@ public class MixedAuthenticationIntegrationTest extends
 
 	@Test
 	public void testDsaInvalid() throws Exception {
+		assumeTrue("Server must support DSA keys.", config.getKeyAlgorithms().contains(Algorithm.SSH_DSS));
+		assumeTrue("Must support DSA keys.", ssh.getProvider().getSupportedPublicKey().contains(SshConfiguration.PUBLIC_KEY_SSHDSA));
+		
 		configureForMethods(AuthenticationMethod.PUBLICKEY,
 				AuthenticationMethod.KEYBOARD_INTERACTIVE,
 				AuthenticationMethod.PASSWORD);
@@ -149,6 +164,9 @@ public class MixedAuthenticationIntegrationTest extends
 
 	@Test
 	public void testDsaValidPasswordInvalid() throws Exception {
+		assumeTrue("Server must support DSA keys.", config.getKeyAlgorithms().contains(Algorithm.SSH_DSS));
+		assumeTrue("Must support DSA keys.", ssh.getProvider().getSupportedPublicKey().contains(SshConfiguration.PUBLIC_KEY_SSHDSA));
+		
 		configureForMethods(AuthenticationMethod.PUBLICKEY,
 				AuthenticationMethod.PASSWORD);
 		try {

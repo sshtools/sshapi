@@ -32,6 +32,7 @@ import ch.ethz.ssh2.SFTPv3Client;
 import ch.ethz.ssh2.SFTPv3DirectoryEntry;
 import ch.ethz.ssh2.SFTPv3FileAttributes;
 import ch.ethz.ssh2.SFTPv3FileHandle;
+import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
@@ -39,13 +40,13 @@ import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 
-class GanymedSftpClient extends AbstractSftpClient {
+class GanymedSftpClient extends AbstractSftpClient<GanymedSshClient> {
 	private final Connection session;
 	private SFTPv3Client client;
 	private String home;
 
 	public GanymedSftpClient(GanymedSshClient client, Connection session) {
-		super(client.getProvider(), client.getConfiguration());
+		super(client);
 		this.session = session;
 	}
 
@@ -151,7 +152,26 @@ class GanymedSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			client.createSymlink(path, target);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				client.createSymlink(targetpath, linkpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				/* Is default Ganymed behaviour */
+				client.createSymlink(linkpath, targetpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					client.createSymlink(linkpath, targetpath);
+				}
+				else {
+					client.createSymlink(targetpath, linkpath);
+				}
+				break;
+			}
 		} catch (SFTPException sftpe) {
 			throw new GanymedSftpException(sftpe, String.format("Could not link file. %s", path));
 		} catch (IOException e) {

@@ -57,7 +57,6 @@ public abstract class AbstractClientFiles extends AbstractClientConnected {
 
 	@Before
 	public void onFilesSetUp() throws Exception {
-		randomFiles.resetLocal();
 		lwd = randomFiles.getLocalFilesDir().getAbsolutePath();
 		String name = ssh.getProvider().getClass().getName();
 		if (name.equals("net.sf.sshapi.impl.j2ssh.J2SshProvider")) {
@@ -92,5 +91,6 @@ public abstract class AbstractClientFiles extends AbstractClientConnected {
 	@After
 	public final void onFilesTearDown() throws Exception {
 		randomFiles.cleanup();
+		randomFiles.resetLocal();
 	}
 }

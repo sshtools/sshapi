@@ -39,18 +39,17 @@ import com.jcraft.jsch.SftpProgressMonitor;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshFileTransferListener;
-import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
-class JschSftpClient extends AbstractSftpClient {
+class JschSftpClient extends AbstractSftpClient<JschSshClient> {
 	private final ChannelSftp channel;
 	private String home;
 
-	public JschSftpClient(SshProvider provider, ChannelSftp channel, SshConfiguration configuration) {
-		super(provider, configuration);
+	public JschSftpClient(JschSshClient client, ChannelSftp channel) {
+		super(client);
 		this.channel = channel;
 	}
 
@@ -239,8 +238,36 @@ class JschSftpClient extends AbstractSftpClient {
 	@Override
 	public void symlink(String path, String target) throws SshException {
 		try {
-			String abspath = Util.getAbsolutePath(path, getDefaultPath());
-			channel.symlink(Util.getAbsolutePath(target, Util.dirname(abspath)), abspath);
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			switch(configuration.getSftpSymlinks()) {
+			case SshConfiguration.STANDARD_SFTP_SYMLINKS:
+				channel.symlink(linkpath, targetpath);
+				break;
+			case SshConfiguration.OPENSSH_SFTP_SYMLINKS:
+				/* Is default Jsch behaviour */
+				channel.symlink(targetpath, linkpath);
+				break;
+			default:
+				if(isOpenSSH()) {
+					channel.symlink(targetpath, linkpath);
+				}
+				else {
+					channel.symlink(linkpath, targetpath);
+				}
+				break;
+			}
+		} catch (SftpException e) {
+			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
+		}
+	}
+
+	@Override
+	public void link(String path, String target) throws SshException {
+		try {
+			String linkpath = Util.getAbsolutePath(path, getDefaultPath());
+			String targetpath = Util.getAbsolutePath(target, Util.dirname(linkpath));
+			channel.hardlink(targetpath, linkpath);
 		} catch (SftpException e) {
 			throw new net.sf.sshapi.sftp.SftpException(e.id, e.getLocalizedMessage(), e);
 		}
