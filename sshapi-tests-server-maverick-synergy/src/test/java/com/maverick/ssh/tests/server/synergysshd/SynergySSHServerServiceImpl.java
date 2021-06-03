@@ -87,7 +87,7 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 //				sshContext.setPreferredMacSC(SshContext.HMAC_MD5);
 				
 				sshContext.setChannelLimit(1000);
-				sshContext.setRemoteForwardingCancelKillsTunnels(true);
+//				sshContext.setRemoteForwardingCancelKillsTunnels(true);
 				sshContext.setSoftwareVersionComments("MaverickTests");
 				sshContext.setSocketOptionKeepAlive(true);
 				sshContext.setSocketOptionTcpNoDelay(true);

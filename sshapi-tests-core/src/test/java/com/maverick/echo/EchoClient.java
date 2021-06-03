@@ -258,6 +258,7 @@ public class EchoClient {
 								throws Exception {
 							synchronized (lock) {
 								running--;
+								System.out.println("Closed, running now " + running);
 								lock.notify();
 							}
 						}
@@ -311,10 +312,12 @@ public class EchoClient {
 						// Wait for the first connection to complete before
 						// allowing more, this mitigates too many open files
 						// error
+						System.out.println("Waiting for first connection");
 						while (!successfulConnectionCompleted
 								&& !isGivenUp(giveUpTime)) {
 							lock.wait(500);
 						}
+						System.out.println("Got first connection");
 					}
 				}
 

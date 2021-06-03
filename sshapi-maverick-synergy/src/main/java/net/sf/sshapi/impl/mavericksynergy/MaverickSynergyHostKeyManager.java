@@ -189,7 +189,7 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 
 				@Override
 				public SecurityLevel getSecurityLevel() {
-					return SecurityLevel.NONE;
+					return SecurityLevel.WEAK;
 				}
 
 				@Override

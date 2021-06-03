@@ -39,11 +39,13 @@ public class PortForwardEventCapture extends EventCapture<SshPortForward> implem
 	AtomicLong dataOut = new AtomicLong();
 	AtomicLong dataErr = new AtomicLong();
 
+	@Override
 	public void channelOpened(int type, SshPortForwardTunnel channel) {
 		channel.addDataListener(this);
 		channelOpens.incrementAndGet();
 	}
 
+	@Override
 	public void channelClosed(int type, SshPortForwardTunnel channel) {
 		channel.removeDataListener(this);
 		channelCloses.incrementAndGet();

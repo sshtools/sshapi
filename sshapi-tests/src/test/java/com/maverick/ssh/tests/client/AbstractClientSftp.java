@@ -63,11 +63,9 @@ public abstract class AbstractClientSftp extends AbstractClientFiles {
 		} else {
 			String resolvedPath = resolveRemote(remotePath);
 			System.out.println("Local file: " + localFile + " : " + remotePath + " resolved " + resolvedPath);
-			SftpFile rpath = sftp.stat(resolvedPath);
-			SftpFile attr = rpath;
-			assertTrue(rpath + " must exist", attr.isFile());
-			assertEquals(rpath + " must have same size",
-					localFile.length(), attr.getSize());
+			assertTrue(resolvedPath + " must exist", SftpFile.exists(sftp, resolvedPath));
+			assertEquals(resolvedPath + " must have same size",
+					localFile.length(), sftp.stat(resolvedPath).getSize());
 		}
 	}
 

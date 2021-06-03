@@ -24,12 +24,32 @@ package net.sf.sshapi.sftp;
 import java.text.DateFormat;
 import java.util.Date;
 
+import net.sf.sshapi.SshException;
 import net.sf.sshapi.util.Util;
 
 /**
  * Represents a single file on the remote server.
  */
 public class SftpFile {
+	
+	/**
+	 * Convenience method to test if a file exists.
+	 * 
+	 *  @param sftp sftp client
+	 *  @param path of file
+	 * @throws SshException on any error other than {@SftpException.SSH_FX_NO_SUCH_FILE}
+	 */
+	public static boolean exists(SftpClient sftp, String path) throws SshException {
+		try {
+			sftp.stat(path);
+		}
+		catch(SftpException sftpe) {
+			if(sftpe.getCode() == SftpException.SSH_FX_NO_SUCH_FILE)
+				return false;
+			throw sftpe;
+		}
+		return true;
+	}
 
 	/**
 	 * Type mnemonics (match those returned by 'ls' command)

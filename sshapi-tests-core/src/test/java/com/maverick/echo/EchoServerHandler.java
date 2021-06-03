@@ -38,6 +38,8 @@ public class EchoServerHandler extends SimpleChannelUpstreamHandler{
 		if(log.isDebugEnabled()) {
 			log.debug("Exception caught from " + evt.getChannel().getRemoteAddress(), evt.getCause());
 		}
+		System.out.println("Exception caught from " + evt.getChannel().getRemoteAddress());
+		evt.getCause().printStackTrace(System.out);
 	}
 
 	private static Logger log = LoggerFactory.getLogger(EchoServerHandler.class);
@@ -48,6 +50,7 @@ public class EchoServerHandler extends SimpleChannelUpstreamHandler{
 		if(log.isDebugEnabled()) {
 			log.debug("Client connected from " + e.getChannel().getRemoteAddress());
 		}
+		System.out.println("Client connected from " + e.getChannel().getRemoteAddress());
 	}
 
 	@Override
@@ -56,6 +59,7 @@ public class EchoServerHandler extends SimpleChannelUpstreamHandler{
 		if(log.isDebugEnabled()) {
 			log.debug("Client disconnected from " + e.getChannel().getRemoteAddress());
 		}
+		System.out.println("Client disconnected from " + e.getChannel().getRemoteAddress());
 	}
 
 	@Override

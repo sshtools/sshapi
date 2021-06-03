@@ -281,7 +281,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 	public List<String> getSupportedKeyExchange() {
 		checkEngine();
 		try {
-			SshClientContext ctx = new SshClientContext(engine, componentManager, SecurityLevel.NONE);
+			SshClientContext ctx = new SshClientContext(engine, componentManager, SecurityLevel.WEAK);
 			return Arrays.asList(ctx.supportedKeyExchanges().list("").split(","));
 		} catch (IOException | SshException e) {
 			return Arrays.asList("diffie-hellman-group-exchange-sha256",

@@ -62,59 +62,6 @@ This library is the provider bridge for SSHAPI.</description>
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
-		<plugins>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>compile-java-8</id>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<source>1.8</source>
-							<target>1.8</target>
-						</configuration>
-					</execution>
-					<execution>
-						<id>compile-java-9</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<release>9</release>
-							<compileSourceRoots>
-								<compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
-							</compileSourceRoots>
-							
-							<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core module
-							     and any provider dependencies when an MRJAR is in use. See the use of Maven plugins
-							     in sshapi-group/pom.xml that collect the classpath into a property to support this. -->
-							<compilerArgs>
-								<compilerArg>--module-path</compilerArg>
-								<compilerArg>${mrJarClasspath}:${project.basedir}/../sshapi-core/target/classes/META-INF/versions/9</compilerArg>
-							</compilerArgs>
-							
-							<multiReleaseOutput>true</multiReleaseOutput>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Multi-Release>true</Multi-Release>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
 	</build>
 	<repositories>
 		<repository>

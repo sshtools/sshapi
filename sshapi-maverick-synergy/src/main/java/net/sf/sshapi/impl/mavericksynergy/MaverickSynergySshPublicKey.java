@@ -98,7 +98,7 @@ public class MaverickSynergySshPublicKey implements com.sshtools.common.ssh.comp
 
 	@Override
 	public SecurityLevel getSecurityLevel() {
-		return SecurityLevel.NONE;
+		return SecurityLevel.WEAK;
 	}
 
 	@Override

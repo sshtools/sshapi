@@ -99,12 +99,14 @@ public class TunnelIntegrationTest extends AbstractClientConnected {
 				ec = new EchoClient("127.0.0.1", fwd.getBoundPort(), 10, 100, 1000, size().kib(1).toBytesInt(),
 						size().kib(64).toBytesInt());
 				ec.run(10000);
+				
 			} finally {
 				// This closes the tunnel (calling stopLocalForwarding())
 				fwd.close();
 			}
 
 			cap.assertEvents(1, 1, 1, 10, 10, ec.getBytesTransfered(), ec.getBytesTransfered(), 0);
+			
 			return null;
 		}, 120000);
 	}
