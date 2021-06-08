@@ -58,7 +58,7 @@ import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshClient> {
-	private final SshClient client;
+	private final SshClient nativeClient;
 	private int defaultLocalEOL;
 	private int defaultRemoteEOL;
 	private String home;
@@ -67,7 +67,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	MaverickSynergySftpClient(MaverickSynergySshClient client) {
 		super(client);
 		defaultLocalEOL = EOLProcessor.TEXT_SYSTEM;
-		this.client = client.getNativeClient();
+		this.nativeClient = client.getNativeClient();
 	}
 
 	@Override
@@ -182,8 +182,11 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	@Override
 	public void onOpen() throws SshException {
 		try {
-			sftpClient = new SftpClient(client);
+			sftpClient = new SftpClient(nativeClient);
 			sftpClient.cd("");
+			if(client.getConfiguration().getSftpBlockSize() != 0) {
+				sftpClient.setBlockSize((int)client.getConfiguration().getSftpBlockSize());
+			}
 			if (getSftpVersion() > 3) {
 				defaultRemoteEOL = sftpClient.getRemoteEOL();
 				if (eolPolicy != null)
@@ -195,7 +198,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 		} catch (com.sshtools.common.ssh.SshException | IOException e) {
 			throw new SshException(SshException.GENERAL, "Failed to start SFTP.", e);
 		} catch (PermissionDeniedException e) {
-			throw new SshException(SshException.PERMISSION_DENIED, "Failed to open SFTP client.", e);
+			throw new SshException(SshException.PERMISSION_DENIED, "Failed to open SFTP nativeClient.", e);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		}

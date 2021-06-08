@@ -61,6 +61,10 @@ public class SshConfiguration {
 	 */
 	public static final int SHELL_WINDOW_SIZE_MAX = (64 * SHELL_MAXIMUM_PACKET_SIZE);
 	/**
+	 * Default SFTP block size for providers to use
+	 */
+	public static final int SFTP_BLOCK_SIZE = 32 * 1024;
+	/**
 	 * Maximum SFTP packet size
 	 */
 	public static final int SFTP_MAXIMUM_PACKET_SIZE = 32 * 1024;
@@ -204,6 +208,7 @@ public class SshConfiguration {
 	private long sftpWindowSizeMax = SFTP_WINDOW_SIZE_MAX;
 	private long sftpWindowSize = SFTP_MAXIMUM_PACKET_SIZE * 2;
 	private long sftpPacketSize = SFTP_MAXIMUM_PACKET_SIZE;
+	private long sftpBlockSize = SFTP_BLOCK_SIZE;
 	private long shellWindowSizeMax = SHELL_WINDOW_SIZE_MAX;
 	private long shellWindowSize = SHELL_MAXIMUM_PACKET_SIZE * 2;
 	private long shellPacketSize = SHELL_MAXIMUM_PACKET_SIZE;
@@ -472,6 +477,26 @@ public class SshConfiguration {
 	 */
 	public SshConfiguration setSftpWindowSize(long sftpWindowSize) {
 		this.sftpWindowSize = sftpWindowSize;
+		return this;
+	}
+
+	/**
+	 * Get the block size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @return SFTP block size
+	 */
+	public long getSftpBlockSize() {
+		return sftpBlockSize;
+	}
+
+	/**
+	 * Set the window size <strong>hint</strong> for SFTP. Use zero for no hint.
+	 * 
+	 * @param sftpWindowSize SFTP window size
+	 * @return this for chaining
+	 */
+	public SshConfiguration setSftpBlockSize(long sftpBlockSize) {
+		this.sftpBlockSize = sftpBlockSize;
 		return this;
 	}
 
