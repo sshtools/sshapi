@@ -976,4 +976,8 @@ public class Util {
 
 		return getPOMVersion();
 	}
+
+	public static int msToSeconds(int timeout) {
+		return timeout == 0 ? 0 : Math.max(1, timeout / 1000);
+	}
 }

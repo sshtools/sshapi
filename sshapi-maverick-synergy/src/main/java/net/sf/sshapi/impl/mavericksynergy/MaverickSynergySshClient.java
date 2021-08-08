@@ -447,9 +447,17 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	@Override
 	public boolean authenticate(SshAuthenticator... authenticators) throws net.sf.sshapi.SshException {
 		try {
+			long timeout = Long.parseLong(getConfiguration().getProperties().getProperty(
+					MaverickSynergySshProvider.CFG_AUTHENTICATE_TIMEOUT, String.valueOf(MaverickSynergySshProvider.CFG_AUTHENTICATE_TIMEOUT_DEFAULT)));
 			for (SshAuthenticator a : authenticators) {
-				if (sshClient.authenticate(createAuthentication(a, ""), 600000)) {
+				if (sshClient.authenticate(createAuthentication(a, ""), timeout)) {
 					break;
+				}
+				else {
+					boolean connected = sshClient.isConnected() && sshClient.getConnection().getConnectionProtocol() != null && sshClient.getConnection().getConnectionProtocol().getTransport() != null && sshClient.getConnection().getConnectionProtocol().getTransport().isConnected();
+					if(!connected) {
+						throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, "Disconnected.");
+					}
 				}
 			}
 			
@@ -625,8 +633,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	public void setTimeout(int timeout) throws IOException {
 		this.timeout = timeout;
 		if (sshContext != null) {
-			sshContext.setIdleConnectionTimeoutSeconds(timeout);
-			sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
+			sshContext.setIdleConnectionTimeoutSeconds(Util.msToSeconds(timeout));
+			sshContext.setIdleAuthenticationTimeoutSeconds(Util.msToSeconds(timeout));
 		}
 	}
 
@@ -689,8 +697,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					if (configuration.getSftpWindowSize() > 0)
 						fsPolicy.setSftpMinWindowSize((int) configuration.getSftpWindowSize());
 					sshContext.setPolicy(FileSystemPolicy.class, fsPolicy);
-					sshContext.setIdleConnectionTimeoutSeconds(timeout);
-					sshContext.setIdleAuthenticationTimeoutSeconds(timeout);
+					sshContext.setIdleConnectionTimeoutSeconds(Util.msToSeconds(timeout));
+					sshContext.setIdleAuthenticationTimeoutSeconds(Util.msToSeconds(timeout));
 					sshContext.setBannerDisplay(new BannerDisplayBridge());
 					ForwardingPolicy forwardingPolicy = new ForwardingPolicy();
 					forwardingPolicy.allowForwarding();

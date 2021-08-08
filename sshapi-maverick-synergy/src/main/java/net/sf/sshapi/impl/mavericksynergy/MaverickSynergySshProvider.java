@@ -21,6 +21,7 @@
  */
 package net.sf.sshapi.impl.mavericksynergy;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -70,6 +71,12 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.SCP, Capability.RECURSIVE_SCP_GET, Capability.CHANNEL_DATA_EVENTS, Capability.PORT_FORWARD_EVENTS,
 			Capability.X11_FORWARDING, Capability.X11_FORWARDING_UNIX_SOCKET, Capability.SFTP_HARD_LINK,
 			Capability.FORCE_KEY_EXCHANGE };
+ 
+			/**
+			 * SFTP mode, can be one of SFTP_ALL_MODES, SFTP_OVER_SCP or SFTP_SUBSYSTEM
+			 */
+	public static final String CFG_AUTHENTICATE_TIMEOUT = "sshapi.maverickSynergy.authenticationTimeout";;
+	public static final long CFG_AUTHENTICATE_TIMEOUT_DEFAULT = 60000;
 	
 	private SshEngine engine;
 	private ComponentManager componentManager;
@@ -108,6 +115,21 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 				catch(Exception ex) {
 					SshConfiguration.getLogger().log(toLevel(level), msg + " " + Arrays.asList(args), e);
 				}
+			}
+
+			@Override
+			public void enableFile(Level level, String logFile) {
+				enableFile(level, new File(logFile));
+			}
+			
+			@Override
+			public synchronized void enableFile(Level level, File logFile) {
+				throw new UnsupportedOperationException();
+			}
+			
+			@Override
+			public synchronized void enableFile(Level level, File logFile, int maxFiles, long maxSize) {
+				throw new UnsupportedOperationException();
 			}
 			
 			private net.sf.sshapi.Logger.Level toLevel(com.sshtools.common.logger.Log.Level level) {
