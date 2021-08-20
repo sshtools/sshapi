@@ -27,7 +27,7 @@
 	<!-- TODO - Try and get the latest J2SSH uploaded to Maven central so the 
 		SSHAPI projects do not depend on the local repository -->
 	<properties>
-		<repositoryUrl>http://artifactory.javassh.com</repositoryUrl>
+		<repositoryUrl>https://artifactory.javassh.com</repositoryUrl>
 		<extReleasesUrl>${repositoryUrl}/ext-releases-local/</extReleasesUrl>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
