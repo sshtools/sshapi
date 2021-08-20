@@ -62,8 +62,37 @@ public class PasswordAuthenticationIntegrationTest extends AbstractClientConnect
 	}
 	
 	@Test(expected = SshException.class)
-	public void testAuthenticateTimeout() throws Exception {
+	public void testTimeoutDuringAuthenticate() throws Exception {
+		/* This test sets a timeout on the client connection to interrupt the authentication */
+		System.setProperty("sshapi.logLevel", "DEBUG");
 		Assume.assumeTrue("Must support data timeouts",ssh.getProvider().getCapabilities().contains(Capability.IO_TIMEOUTS));
+		AtomicBoolean flag = new AtomicBoolean();
+		ssh.setTimeout(15000);
+		timeout(() -> {
+			ssh.authenticate(new SshPasswordAuthenticator() {
+				@Override
+				public char[] promptForPassword(SshClient session, String message) {
+					try {
+						LOG.info("Waiting for 20 seconds");
+						Thread.sleep(20000);
+						LOG.info("Waited for 20 seconds");
+						flag.set(true);
+					} catch (InterruptedException e) {
+						LOG.info("Interrupted!");
+					}
+					return null;
+				}
+			});
+			LOG.info("Left authenticate");
+			return null;
+		}, 30000);
+		Assert.assertFalse("Mustn't have finished sleep while prompting.", flag.get());
+		LOG.info("Done");
+	}
+	
+	@Test(expected = SshException.class)
+	public void testAuthenticateTimeout() throws Exception {
+		/* This test expects the server to timeout the authentication */
 		AtomicBoolean flag = new AtomicBoolean();
 		timeout(() -> {
 			ssh.authenticate(new SshPasswordAuthenticator() {

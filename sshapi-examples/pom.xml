@@ -150,7 +150,15 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency> 
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-synergy-license</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>  
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick-16</artifactId>
@@ -158,6 +166,15 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-maverick-16-license</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>

@@ -1,26 +1,17 @@
-<!--
-
-    Copyright (c) 2020 The JavaSSH Project
-
-     Permission is hereby granted, free of charge, to any person obtaining a copy
-     of this software and associated documentation files (the "Software"), to deal
-     in the Software without restriction, including without limitation the rights
-     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-     copies of the Software, and to permit persons to whom the Software is
-     furnished to do so, subject to the following conditions:
-
-     The above copyright notice and this permission notice shall be included in
-     all copies or substantial portions of the Software.
-
-     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-     THE SOFTWARE.
-
--->
+<!-- Copyright (c) 2020 The JavaSSH Project Permission is hereby granted, 
+	free of charge, to any person obtaining a copy of this software and associated 
+	documentation files (the "Software"), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, 
+	distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following 
+	conditions: The above copyright notice and this permission notice shall be 
+	included in all copies or substantial portions of the Software. THE SOFTWARE 
+	IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+	BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+	BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+	THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -65,63 +56,27 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-jsch</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-openssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-ganymed</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-trilead</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency> 
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>-->
-		<!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-libssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
+		<!-- <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-jsch</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-openssh</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-ganymed</artifactId> 
+			<version>${project.version}</version> <scope>compile</scope> </dependency> 
+			<dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-trilead</artifactId> 
+			<version>${project.version}</version> <scope>compile</scope> </dependency> 
+			<dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-maverick-synergy</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-maverick-synergy-license</artifactId> 
+			<version>${project.version}</version> <optional>true</optional> <type>jar</type> 
+			<scope>compile</scope> </dependency> -->
+		<!-- <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-libssh</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-j2ssh</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> <dependency> <groupId>com.sshtools</groupId> <artifactId>sshapi-maverick-16</artifactId> 
+			<version>${project.version}</version> <type>jar</type> <scope>compile</scope> 
+			</dependency> -->
 
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> -->
-		
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-maverick</artifactId>
@@ -129,28 +84,59 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.25</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-synergy-server</artifactId>
-			<version>${maverickSynergyVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-virtual-filesystem</artifactId>
-			<version>${maverickSynergyVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>maverick-virtual-session</artifactId>
-			<version>${maverickSynergyVersion}</version>
-		</dependency>
 	</dependencies>
 
+
+	<profiles>
+		<profile>
+			<id>synergy-opensource</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>maverick-synergy-server</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>maverick-virtual-filesystem</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>maverick-virtual-session</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>synergy-hotfixes</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-synergy-server</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-virtual-filesystem</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-virtual-session</artifactId>
+					<version>${maverickSynergyVersion}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 </project>

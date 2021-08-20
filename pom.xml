@@ -44,7 +44,7 @@
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
-		<maverickSynergyVersion>3.0.3-FINAL</maverickSynergyVersion>
+		<maverickSynergyVersion>3.0.4</maverickSynergyVersion>
 		<common.version>2.0.4</common.version>
 
 		<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 

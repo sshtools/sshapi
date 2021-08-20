@@ -43,6 +43,7 @@ import com.sshtools.common.ssh.components.jce.JCEComponentManager;
 import com.sshtools.common.ssh.components.jce.JCEProvider;
 import com.sshtools.common.ssh.compression.NoneCompression;
 import com.sshtools.common.ssh.compression.SshCompression;
+import com.sshtools.synergy.nio.LicenseManager;
 import com.sshtools.synergy.nio.SshEngine;
 import com.sshtools.synergy.ssh.SshContext;
 
@@ -88,6 +89,31 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			SshConfiguration.getLogger().warn(
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
+		String licenseText = "----BEGIN SYNERGY LICENSE----\r\n"
+                + "Product        : Maverick Synergy\r\n"
+                + "Licensee       : JADAPTIVE Testing #1\r\n"
+                + "Comments       : SYNERGY-GOLD\r\n"
+                + "Type           : Gold Subscription\r\n"
+                + "Created        : 21-Jul-2021\r\n"
+                + "Support Expires: 21-Jul-2022\r\n"
+                + "License Expires: Never\r\n"
+                + "\r\n"
+                + "37872073826CB65BA600F3CF9CCEF4C8002D0DD504C1FC8B\r\n"
+                + "708D3429F2CC61E4D5266B47BC6F48192562FD938AFDEECE\r\n"
+                + "60802070187A3115182F99F37967D993CE96931F078C4E49\r\n"
+                + "A21BFF83EF8E7C40A18397323A42EF6C570F4D232CC5A1CC\r\n"
+                + "4FCABCAC77FF04F819D20CD9BBD39D3BACEB45A710847F6D\r\n"
+                + "F95C736C7D458F763044C86990F4106999A9770AEB63A706\r\n"
+                + "4EAF09FEB8E1E0B8494463CC4445E09FDA6E0094912B8EAC\r\n"
+                + "39FEB7DFC0BC710F7A60D22A30107E60C895A9268FA3A855\r\n"
+                + "6BAC5AD1B19979D36BC86241EECDF63B3911A5D56B17E58D\r\n"
+                + "64B360860C4B881B98F44845B1E55D2CC7C4226934D95B8F\r\n"
+                + "801B9271577CFC457C6361B7D375161B359F4FC5905972FC\r\n"
+                + "D7548DA0874F4ECD4981DDD3BEA1B3D1\r\n"
+                + "----END SYNERGY LICENSE----\r\n";
+        
+        LicenseManager.addLicense(licenseText);
+        
 		ComponentManager.enableCBCCiphers();
 		Log.setDefaultContext(new RootLoggerContext() {
 			@Override
@@ -117,17 +143,25 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 				}
 			}
 
-			@Override
+			@SuppressWarnings("unused")
+			/* TODO these shoud have @Override too, but there is some API difference
+			 * with the hotfixes branch that doesn't have this?
+			 */
 			public void enableFile(Level level, String logFile) {
 				enableFile(level, new File(logFile));
 			}
-			
-			@Override
+
+			/* TODO these shoud have @Override too, but there is some API difference
+			 * with the hotfixes branch that doesn't have this?
+			 */
 			public synchronized void enableFile(Level level, File logFile) {
 				throw new UnsupportedOperationException();
 			}
 			
-			@Override
+			@SuppressWarnings("unused")
+			/* TODO these shoud have @Override too, but there is some API difference
+			 * with the hotfixes branch that doesn't have this?
+			 */
 			public synchronized void enableFile(Level level, File logFile, int maxFiles, long maxSize) {
 				throw new UnsupportedOperationException();
 			}
