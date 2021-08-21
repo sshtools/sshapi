@@ -83,7 +83,7 @@
 	<repositories>
 		<repository>
 			<id>public-releases</id>
-			<url>https://artifactory.javassh.com/public-releases/</url>
+			<url>https://artifactory.jadaptive.com/public-releases/</url>
 		</repository>
 	</repositories>
 
