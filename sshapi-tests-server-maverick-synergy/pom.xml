@@ -27,6 +27,10 @@
 	<properties>
 		<applicationVersion>${project.version}</applicationVersion>
 		<projectDescription>${project.description}</projectDescription>
+		
+		<!-- Version of Synergy to use. When updating, also consider
+		updating the same property in sshapi-maverick-synergy and sshapi-performance-tests -->
+		<maverickSynergyVersion>3.0.3-FINAL</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-tests-server-maverick-synergy</artifactId>
@@ -74,54 +78,26 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-synergy-server</artifactId>
+			<version>${maverickSynergyVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-filesystem</artifactId>
+			<version>${maverickSynergyVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-virtual-session</artifactId>
+			<version>${maverickSynergyVersion}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
-
-	<profiles>
-		<profile>
-			<id>synergy-opensource</id>
-			<dependencies>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-synergy-server</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-virtual-filesystem</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-virtual-session</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>synergy-hotfixes</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-synergy-server</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-virtual-filesystem</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-virtual-session</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
 	<repositories>
 		<!-- The following two repository are for sshapi-private modules. Authentication is 
 			require for this repository -->

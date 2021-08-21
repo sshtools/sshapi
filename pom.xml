@@ -48,7 +48,6 @@
 		<!-- Now two different flavours of Synergy, that have different
 		group ids, and MAY have different versions. Version decided
 		by profile section below -->
-		<maverickSynergyOSVersion>3.0.3-FINAL</maverickSynergyOSVersion>
 		<maverickSynergyHotfixesVersion>3.0.4</maverickSynergyHotfixesVersion>
 		
 		<common.version>2.0.4</common.version>
@@ -523,21 +522,5 @@
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>synergy-opensource</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<properties>
-				<maverickSynergyVersion>${maverickSynergyOSVersion}</maverickSynergyVersion>
-			</properties>
-		</profile>
-		<profile>
-			<id>synergy-hotfixes</id>
-			<properties>
-				<maverickSynergyVersion>${maverickSynergyHotfixesVersion}</maverickSynergyVersion>
-			</properties>
-		</profile>
-		
 	</profiles>
 </project>

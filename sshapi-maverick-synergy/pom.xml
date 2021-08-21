@@ -1,36 +1,31 @@
-<!--
-
-    Copyright (c) 2020 The JavaSSH Project
-
-     Permission is hereby granted, free of charge, to any person obtaining a copy
-     of this software and associated documentation files (the "Software"), to deal
-     in the Software without restriction, including without limitation the rights
-     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-     copies of the Software, and to permit persons to whom the Software is
-     furnished to do so, subject to the following conditions:
-
-     The above copyright notice and this permission notice shall be included in
-     all copies or substantial portions of the Software.
-
-     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-     THE SOFTWARE.
-
--->
+<!-- Copyright (c) 2020 The JavaSSH Project Permission is hereby granted, 
+	free of charge, to any person obtaining a copy of this software and associated 
+	documentation files (the "Software"), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, 
+	distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following 
+	conditions: The above copyright notice and this permission notice shall be 
+	included in all copies or substantial portions of the Software. THE SOFTWARE 
+	IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+	BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+	BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+	THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
 		<maverickHome>${user.home}/maverick</maverickHome>
+		
+		<!-- Version of Synergy to use. When updating, also consider
+		updating the same property in sshapi-performance-tests and sshapi-tests-server-maverick-synergy -->
+		<maverickSynergyVersion>3.0.3-FINAL</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-maverick-synergy</artifactId>
 	<name>SSHAPI Maverick Synergy</name>
-	<description>This version uses the Maverick Synergy (3.x) branch of Maverick.
+	<description>This version uses the Open Source Maverick Synergy (3.x) branch of Maverick.
 
 Downloads and more information about Maverick may be found at https://www.jadaptive.com
 
@@ -88,71 +83,31 @@ This library is the provider bridge for SSHAPI.</description>
 			<artifactId>maverick-ed25519</artifactId>
 			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-synergy-client</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-zip</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-x509</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-bc</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-sshagent</artifactId>
+			<version>${maverickSynergyVersion}</version>
+		</dependency>
 	</dependencies>
 
-	<profiles>
-		<profile>
-			<id>synergy-opensource</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-synergy-client</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-zip</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-x509</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-bc</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>maverick-sshagent</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>synergy-hotfixes</id>
-			<dependencies>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-synergy-client</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-zip</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-x509</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-bc</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-				<dependency>
-					<groupId>com.sshtools.hotfixes</groupId>
-					<artifactId>maverick-sshagent</artifactId>
-					<version>${maverickSynergyVersion}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
 </project>
