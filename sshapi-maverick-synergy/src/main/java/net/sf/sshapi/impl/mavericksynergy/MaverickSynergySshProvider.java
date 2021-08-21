@@ -222,7 +222,11 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 
 	@Override
 	public String getVersion() {
-		return Util.getArtifactVersion("com.sshtools", "maverick-synergy-client");
+		String artifactVersion = Util.getArtifactVersion("com.sshtools", "maverick-synergy-client");
+		if(artifactVersion.equals("0.0.0")) {
+			artifactVersion = Util.getArtifactVersion("com.sshtools.hotfixes", "maverick-synergy-client");
+		}
+		return artifactVersion;
 	}
 
 	/**

@@ -75,6 +75,7 @@
 	     		
 	     Possible [sshapi-provider-name]s are :-
 	     		client-maverick-synergy
+	     		client-maverick-synergy-hotfixes
 	     		client-maverick-16
 	     		client-maverick
 	     		client-ganymed
@@ -226,14 +227,20 @@
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Maverick Synergy Client (Hotfixes) -->
+		<profile>
+			<id>client-maverick-synergy-hotfixes</id>
+			<dependencies>
 				<dependency>
 					<groupId>com.sshtools</groupId>
-					<artifactId>sshapi-maverick-synergy-license</artifactId>
+					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
 					<version>${project.version}</version>
-					<optional>true</optional>
 					<type>jar</type>
 					<scope>compile</scope>
-				</dependency>  
+				</dependency>
 			</dependencies>
 		</profile>
 		

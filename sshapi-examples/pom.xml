@@ -1,26 +1,17 @@
-<!--
-
-    Copyright (c) 2020 The JavaSSH Project
-
-     Permission is hereby granted, free of charge, to any person obtaining a copy
-     of this software and associated documentation files (the "Software"), to deal
-     in the Software without restriction, including without limitation the rights
-     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-     copies of the Software, and to permit persons to whom the Software is
-     furnished to do so, subject to the following conditions:
-
-     The above copyright notice and this permission notice shall be included in
-     all copies or substantial portions of the Software.
-
-     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-     THE SOFTWARE.
-
--->
+<!-- Copyright (c) 2020 The JavaSSH Project Permission is hereby granted, 
+	free of charge, to any person obtaining a copy of this software and associated 
+	documentation files (the "Software"), to deal in the Software without restriction, 
+	including without limitation the rights to use, copy, modify, merge, publish, 
+	distribute, sublicense, and/or sell copies of the Software, and to permit 
+	persons to whom the Software is furnished to do so, subject to the following 
+	conditions: The above copyright notice and this permission notice shall be 
+	included in all copies or substantial portions of the Software. THE SOFTWARE 
+	IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+	BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+	BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+	THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -96,6 +87,13 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.28</version>
+		</dependency>
+		
+		<!-- Providers -->
+		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-jsch</artifactId>
 			<version>${project.version}</version>
@@ -128,57 +126,12 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-libssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency> 
-
-		<!-- <dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency> -->
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy-license</artifactId>
-			<version>${project.version}</version>
-			<optional>true</optional>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>  
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-16-license</artifactId>
-			<version>${project.version}</version>
-			<optional>true</optional>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.28</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
@@ -190,6 +143,78 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 	</dependencies>
 
 	<profiles>
+
+		<!-- Enable / Disable these profiles to chose between different provider 
+			configurations, for example switching from Maverick Synergy Open Source to 
+			Synergy Hotfixes -->
+
+		<profile>
+			<id>maverick-synergy-opensource</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>maverick-synergy-hotfixes</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>legacy-maverick</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>stable-maverick</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-16</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-16-license</artifactId>
+					<version>${project.version}</version>
+					<optional>true</optional>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+
+		<!-- The following profiles are to execute individual examples via Maven -->
+
 		<!-- E01Shell -->
 		<profile>
 			<id>E01Shell</id>
@@ -252,8 +277,8 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 		</profile>
 	</profiles>
 	<repositories>
-		<!-- The following two repository are for sshapi-private modules. Authentication is 
-			require for this repository -->
+		<!-- The following two repository are for sshapi-private modules. Authentication 
+			is require for this repository -->
 		<repository>
 			<id>libs-releases</id>
 			<url>https://artifactory.jadaptive.com/libs-releases-local</url>
