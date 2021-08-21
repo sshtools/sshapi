@@ -458,7 +458,6 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				}
 				else {
 					boolean connected = sshClient.isConnected();
-					SshConfiguration.getLogger().log(net.sf.sshapi.Logger.Level.WARN, "XXXXXX Left authenticate(), Connected = " + connected);
 					if(!connected) {
 						throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, "Disconnected.");
 					}
