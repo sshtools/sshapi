@@ -251,4 +251,24 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 			</build>
 		</profile>
 	</profiles>
+	<repositories>
+		<!-- The following two repository are for sshapi-private modules. Authentication is 
+			require for this repository -->
+		<repository>
+			<id>libs-releases</id>
+			<url>https://artifactory.jadaptive.com/libs-releases-local</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>libs-snapshots</id>
+			<url>https://artifactory.jadaptive.com/libs-snapshots-local</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots />
+		</repository>
+	</repositories>
 </project>

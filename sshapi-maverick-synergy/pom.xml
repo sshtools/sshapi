@@ -93,6 +93,9 @@ This library is the provider bridge for SSHAPI.</description>
 	<profiles>
 		<profile>
 			<id>synergy-opensource</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>com.sshtools</groupId>
@@ -123,9 +126,6 @@ This library is the provider bridge for SSHAPI.</description>
 		</profile>
 		<profile>
 			<id>synergy-hotfixes</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>com.sshtools.hotfixes</groupId>
