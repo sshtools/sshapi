@@ -23,13 +23,13 @@ package net.sf.sshapi.impl.j2ssh;
 
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshCommand;
 
 abstract class J2SshStreamChannel
-		extends AbstractJ2SshStreamChannel<SshChannelListener<SshCommand>, SshCommand>
+		extends AbstractJ2SshStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 
 	public J2SshStreamChannel(SshProvider provider, SshConfiguration configuration, SessionChannelClient channel) {

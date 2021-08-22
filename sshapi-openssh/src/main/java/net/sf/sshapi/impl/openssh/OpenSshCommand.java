@@ -26,12 +26,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 
-class OpenSshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCommand>, SshCommand> implements SshCommand {
+class OpenSshCommand extends AbstractSshExtendedChannel<SshStreamChannelListener<SshCommand>, SshCommand> implements SshCommand {
 	private ProcessBuilder pb;
 	private Process process;
 	private final String termType;

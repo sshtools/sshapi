@@ -90,11 +90,12 @@ import com.sshtools.synergy.util.EncodingUtils;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
 import net.sf.sshapi.AbstractSshStreamChannel;
-import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
-import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshCustomChannel;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshShell;
@@ -326,8 +327,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	class MaverickSshChannel
-			extends AbstractSshStreamChannel<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
-			implements net.sf.sshapi.SshChannel {
+			extends AbstractSshStreamChannel<SshCustomChannelListener, SshCustomChannel>
+			implements net.sf.sshapi.SshCustomChannel {
 		private ChannelData channelData;
 		private String name;
 		private MaverickSynergySshChannel ssh2Channel;

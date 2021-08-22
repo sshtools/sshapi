@@ -27,7 +27,7 @@ package net.sf.sshapi;
  * @param <C> the client type
  */
 public abstract class AbstractForwardingChannel<C extends SshClient>
-		extends AbstractSshStreamChannel<SshChannelListener<SshChannel>, SshChannel> implements SshChannel {
+		extends AbstractSshStreamChannel<SshCustomChannelListener, SshCustomChannel> implements SshCustomChannel {
 	
 	/** The hostname. */
 	protected String hostname;

@@ -31,7 +31,7 @@ import java.io.InputStream;
  */
 
 public interface SshCommand
-		extends SshExtendedChannel<SshChannelListener<SshCommand>, SshCommand> {
+		extends SshExtendedChannel<SshStreamChannelListener<SshCommand>, SshCommand> {
 	
 	/**
 	 * Return value when exit code is not (yet) known.

@@ -30,7 +30,7 @@ import java.util.Objects;
  * @param <L> listener type
  * @param <C> component type
  */
-public abstract class AbstractSshExtendedChannel<L extends SshChannelListener<C>, C extends SshStreamChannel<L, C>>
+public abstract class AbstractSshExtendedChannel<L extends SshStreamChannelListener<C>, C extends SshStreamChannel<L, C>>
 		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 	private SshInput errInput;
 	private Thread errThread;

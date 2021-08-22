@@ -29,7 +29,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 import net.sf.sshapi.AbstractSocket;
-import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshClient;
 
 /**
@@ -38,7 +38,7 @@ import net.sf.sshapi.SshClient;
 public class RemoteSocket extends AbstractSocket {
 	
 	/** The channel. */
-	private SshChannel channel;
+	private SshCustomChannel channel;
 	
 	/** The client. */
 	private SshClient client;

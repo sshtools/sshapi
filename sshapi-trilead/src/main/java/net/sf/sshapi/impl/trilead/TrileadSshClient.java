@@ -194,7 +194,7 @@ class TrileadSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected net.sf.sshapi.SshChannel doCreateForwardingChannel(String hostname, int port)
+	protected net.sf.sshapi.SshCustomChannel doCreateForwardingChannel(String hostname, int port)
 			throws net.sf.sshapi.SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}

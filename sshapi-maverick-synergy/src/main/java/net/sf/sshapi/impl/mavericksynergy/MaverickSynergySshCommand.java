@@ -33,14 +33,14 @@ import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.synergy.ssh.Connection;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 
-class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshChannelListener<SshCommand>, SshCommand>
+class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshStreamChannelListener<SshCommand>, SshCommand>
 		implements SshCommand {
 	private SessionChannelNG session;
 	private InputStream extendedInputStream;

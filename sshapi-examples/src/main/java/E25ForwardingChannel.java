@@ -22,7 +22,7 @@
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.util.ConsoleBannerHandler;
@@ -52,7 +52,7 @@ public class E25ForwardingChannel {
 		// Create the client using that configuration, then connect and authenticate
 		try (SshClient client = config.open(Util.promptConnectionSpec(), new ConsolePasswordAuthenticator())) {
 
-			try (SshChannel local = client.forwardingChannel("www.jadaptive.com", 80)) {
+			try (SshCustomChannel local = client.forwardingChannel("www.jadaptive.com", 80)) {
 				
 				/* Make a very simple HTTP request */
 				OutputStream out = local.getOutputStream();

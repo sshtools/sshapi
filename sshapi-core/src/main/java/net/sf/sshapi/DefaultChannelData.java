@@ -21,7 +21,7 @@
  */
 package net.sf.sshapi;
 
-import net.sf.sshapi.SshChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
 
 /**
  * A basic {@link ChannelData} implementation.

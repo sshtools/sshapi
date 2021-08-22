@@ -19,21 +19,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverick;
+package net.sf.sshapi;
 
-import com.sshtools.ssh.SshSession;
-
-import net.sf.sshapi.SshStreamChannelListener;
-import net.sf.sshapi.SshCommand;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshProvider;
-
-abstract class MaverickSshStreamChannel
-		extends AbstractMaverickSshStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
-		implements SshCommand {
-
-	public MaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, SshSession session) {
-		super(provider, configuration, session);
-	}
+/**
+ * Interface to be implemented by consumers of events that SSH channels might
+ * produce, such as <strong>EOF</strong> or a <strong>Request</strong>.
+ */
+public interface SshCustomChannelListener extends SshChannelListener<SshCustomChannel> {
 
 }

@@ -35,10 +35,10 @@ import com.sshtools.common.ssh.SshKeyFingerprint;
 import com.sshtools.common.util.IOUtils;
 
 import net.sf.sshapi.DefaultChannelData;
-import net.sf.sshapi.SshChannel;
-import net.sf.sshapi.SshChannel.ChannelData;
-import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshCustomChannel;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshPublicKey;
@@ -149,15 +149,15 @@ public class MaverickSynergyAgent implements SshAgent {
 	}
 
 	@Override
-	public void channelCreated(SshChannel channel) throws IOException {
+	public void channelCreated(SshCustomChannel channel) throws IOException {
 
 		try {
 			final Socket socket = SshAgentClient.connectAgentSocket(location, agentSocketType);
-			channel.addListener(new SshChannelListener<SshChannel>() {
+			channel.addListener(new SshCustomChannelListener() {
 
 				@Override
-				public void opened(SshChannel ch) {
-					final SshChannel channel = ch;
+				public void opened(SshCustomChannel ch) {
+					final SshCustomChannel channel = ch;
 					Thread t = new Thread() {
 						@Override
 						public void run() {
@@ -176,10 +176,10 @@ public class MaverickSynergyAgent implements SshAgent {
 					t.start();
 				}
 			});
-			channel.addDataListener(new SshDataListener<SshChannel>() {
+			channel.addDataListener(new SshDataListener<SshCustomChannel>() {
 
 				@Override
-				public void data(SshChannel ch, int direction, byte[] buf, int off, int len) {
+				public void data(SshCustomChannel ch, int direction, byte[] buf, int off, int len) {
 					try {
 						socket.getOutputStream().write(buf, off, len);
 					} catch (IOException e) {

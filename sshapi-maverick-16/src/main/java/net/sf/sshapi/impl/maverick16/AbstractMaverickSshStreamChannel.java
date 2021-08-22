@@ -31,7 +31,7 @@ import com.maverick.ssh.SshSession;
 import com.maverick.ssh2.Ssh2Session;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -40,7 +40,7 @@ import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 
-abstract class AbstractMaverickSshStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
+abstract class AbstractMaverickSshStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C>, ChannelEventListener {
 	private final com.maverick.ssh.SshSession session;
 

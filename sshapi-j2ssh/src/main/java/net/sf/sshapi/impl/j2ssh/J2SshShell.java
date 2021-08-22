@@ -27,13 +27,13 @@ import java.io.InputStream;
 import com.sshtools.j2ssh.session.PseudoTerminal;
 import com.sshtools.j2ssh.session.SessionChannelClient;
 
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
 
-class J2SshShell extends AbstractJ2SshStreamChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
+class J2SshShell extends AbstractJ2SshStreamChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
 
 	public J2SshShell(SshProvider provider, SshConfiguration configuration, SessionChannelClient session) {
 		super(provider, configuration, session);

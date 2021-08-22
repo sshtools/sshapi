@@ -30,7 +30,7 @@ import com.trilead.ssh2.Session;
 import com.trilead.ssh2.channel.Channel;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -40,7 +40,7 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
-abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
+abstract class AbstractTrileadStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Session session;
 	private Field flagField;

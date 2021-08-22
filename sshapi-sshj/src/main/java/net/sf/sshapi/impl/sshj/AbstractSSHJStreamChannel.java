@@ -29,7 +29,7 @@ import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.transport.TransportException;
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
@@ -38,7 +38,7 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
-abstract class AbstractSSHJStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
+abstract class AbstractSSHJStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Session session;
 

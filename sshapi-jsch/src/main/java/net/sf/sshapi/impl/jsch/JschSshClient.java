@@ -53,7 +53,7 @@ import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractForwardingChannel;
 import net.sf.sshapi.DefaultSCPClient;
 import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -353,7 +353,7 @@ class JschSshClient extends AbstractClient implements Logger {
 	}
 
 	@Override
-	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+	protected SshCustomChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 

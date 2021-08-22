@@ -23,12 +23,12 @@ package net.sf.sshapi;
 
 import java.io.IOException;
 
-import net.sf.sshapi.SshChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
 
 /**
  * SSH allows custom channels to be handled. Implement this interface, and add
  * the handler to the {@link SshClient} instance. When the server requests a
- * channel with this name, {@link #channelCreated(SshChannel)} will be called.
+ * channel with this name, {@link #channelCreated(SshCustomChannel)} will be called.
  * 
  */
 public interface SshChannelHandler {
@@ -56,5 +56,5 @@ public interface SshChannelHandler {
 	 * @param channel channel
 	 * @throws IOException on error
 	 */
-	void channelCreated(SshChannel channel) throws IOException;
+	void channelCreated(SshCustomChannel channel) throws IOException;
 }

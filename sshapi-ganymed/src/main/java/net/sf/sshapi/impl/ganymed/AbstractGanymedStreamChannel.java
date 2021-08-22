@@ -29,7 +29,7 @@ import java.util.Objects;
 import ch.ethz.ssh2.Session;
 import ch.ethz.ssh2.channel.Channel;
 import net.sf.sshapi.AbstractSshStreamChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -40,7 +40,7 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
-abstract class AbstractGanymedStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
+abstract class AbstractGanymedStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 
 	private SshInput errInput;

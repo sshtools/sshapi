@@ -27,12 +27,12 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
 
-class OpenSshShell extends AbstractSshExtendedChannel<SshChannelListener<SshShell>, SshShell> implements SshShell {
+class OpenSshShell extends AbstractSshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
 	private ProcessBuilder pb;
 	private Process process;
 	private final String termType;

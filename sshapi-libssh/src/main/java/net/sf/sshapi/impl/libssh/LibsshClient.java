@@ -34,7 +34,7 @@ import com.sun.jna.ptr.PointerByReference;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshBannerHandler;
-import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -280,7 +280,7 @@ public class LibsshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+	protected SshCustomChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
 		return new LibsshForwardingChannel(library, this, getProvider(), getConfiguration(), hostname, port);
 	}
 

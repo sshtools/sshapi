@@ -20,7 +20,7 @@
  *  THE SOFTWARE.
  */
 import net.sf.sshapi.Capability;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -74,7 +74,7 @@ public class E02ShellWithConsolePrompts {
 						}
 					});
 				}
-				shell.addListener(new SshChannelListener<SshShell>() {
+				shell.addListener(new SshStreamChannelListener<SshShell>() {
 					public void opened(SshShell channel) {
 						System.out.println("Shell channel opened!");
 					}

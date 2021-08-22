@@ -50,7 +50,7 @@ import ch.ethz.ssh2.crypto.digest.MAC;
 import ch.ethz.ssh2.transport.KexManager;
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractForwardingChannel;
-import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -267,7 +267,7 @@ class GanymedSshClient extends AbstractClient {
 	}
 
 	@Override
-	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+	protected SshCustomChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 

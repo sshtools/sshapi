@@ -25,12 +25,12 @@ import java.io.OutputStream;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.DefaultChannelData;
-import net.sf.sshapi.SshChannel;
-import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
-import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshCustomChannel;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.util.ConsoleBannerHandler;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
 import net.sf.sshapi.util.ConsolePasswordAuthenticator;
@@ -77,7 +77,7 @@ public class E20CustomChannel {
 			 * the createChannel() method is called. This allows the client to react to the
 			 * initial request data and configure window sizes.
 			 * 
-			 * Next, channelCreated() will be called which will provide the SshChannel
+			 * Next, channelCreated() will be called which will provide the SshCustomChannel
 			 * object. This may then have event listeners attached to it to react on
 			 * opening, closing and other events.
 			 */
@@ -92,11 +92,11 @@ public class E20CustomChannel {
 					return new DefaultChannelData(32768, 32768, 0, requestData);
 				}
 
-				public void channelCreated(final SshChannel channel) throws IOException {
+				public void channelCreated(final SshCustomChannel channel) throws IOException {
 					System.out.println("Channel " + channel.getName() + " created");
-					channel.addListener(new SshChannelListener<SshChannel>() {
+					channel.addListener(new SshCustomChannelListener() {
 
-						public void opened(SshChannel channel) {
+						public void opened(SshCustomChannel channel) {
 							System.out.println("Channel " + channel.getName() + " opened");
 							byte[] rd = channel.getChannelData().getRequestData();
 							if (rd != null) {
@@ -128,15 +128,15 @@ public class E20CustomChannel {
 							}
 						}
 
-						public void closing(SshChannel channel) {
+						public void closing(SshCustomChannel channel) {
 							System.out.println("Channel " + channel.getName() + " closed");
 						}
 
-						public void closed(SshChannel channel) {
+						public void closed(SshCustomChannel channel) {
 							System.out.println("Channel " + channel.getName() + " closed");
 						}
 
-						public boolean request(SshChannel channel, String requestType, boolean wantReply,
+						public boolean request(SshCustomChannel channel, String requestType, boolean wantReply,
 								byte[] requestData) {
 							System.out.println("Channel " + channel.getName() + " requests " + requestType
 									+ " wants reply = " + wantReply);
@@ -146,7 +146,7 @@ public class E20CustomChannel {
 							return false;
 						}
 
-						public void eof(SshChannel channel) {
+						public void eof(SshCustomChannel channel) {
 							System.out.println("Channel " + channel.getName() + " closed");
 						}
 					});

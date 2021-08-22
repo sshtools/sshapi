@@ -85,11 +85,11 @@ import net.sf.sshapi.AbstractForwardingChannel;
 import net.sf.sshapi.AbstractSshStreamChannel;
 import net.sf.sshapi.DefaultSCPClient;
 import net.sf.sshapi.Logger.Level;
-import net.sf.sshapi.SshChannel.ChannelData;
 import net.sf.sshapi.SshChannelHandler;
-import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshCustomChannel.ChannelData;
+import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshLifecycleListener;
 import net.sf.sshapi.SshProvider;
@@ -288,8 +288,8 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	class MaverickSshChannel
-			extends AbstractSshStreamChannel<SshChannelListener<net.sf.sshapi.SshChannel>, net.sf.sshapi.SshChannel>
-			implements net.sf.sshapi.SshChannel {
+			extends AbstractSshStreamChannel<SshCustomChannelListener, net.sf.sshapi.SshCustomChannel>
+			implements net.sf.sshapi.SshCustomChannel {
 		private ChannelData channelData;
 		private String name;
 		private Ssh2Channel ssh2Channel;
@@ -531,7 +531,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	@Override
-	protected net.sf.sshapi.SshChannel doCreateForwardingChannel(String hostname, int port)
+	protected net.sf.sshapi.SshCustomChannel doCreateForwardingChannel(String hostname, int port)
 			throws net.sf.sshapi.SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}

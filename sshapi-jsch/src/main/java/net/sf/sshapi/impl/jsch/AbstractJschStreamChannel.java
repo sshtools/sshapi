@@ -29,7 +29,7 @@ import java.util.Objects;
 import com.jcraft.jsch.Channel;
 
 import net.sf.sshapi.AbstractSshStreamChannel;
-import net.sf.sshapi.SshChannelListener;
+import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
@@ -39,7 +39,7 @@ import net.sf.sshapi.SshInput;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 
-abstract class AbstractJschStreamChannel<L extends SshChannelListener<C>, C extends SshExtendedChannel<L, C>>
+abstract class AbstractJschStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
 		extends AbstractSshStreamChannel<L, C> implements SshExtendedChannel<L, C> {
 	private final Channel channel;
 

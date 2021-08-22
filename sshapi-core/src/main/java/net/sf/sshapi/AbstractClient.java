@@ -58,19 +58,13 @@ public abstract class AbstractClient extends AbstractBaseClient {
 	 * Abstract implementation for a tunnel channel.
 	 */
 	public final static class ForwardingChannel
-			extends AbstractSshStreamChannel<SshChannelListener<SshChannel>, SshChannel> implements SshChannel {
+			extends AbstractForwardingChannel<AbstractClient> {
 		private SshPortForward localForward;
 		private Socket socket;
-		private String hostname;
-		private int port;
-		private AbstractClient client;
 
 		protected ForwardingChannel(AbstractClient client, SshProvider provider, SshConfiguration configuration,
 				String hostname, int port) {
-			super(provider, configuration);
-			this.client = client;
-			this.hostname = hostname;
-			this.port = port;
+			super(client, provider, configuration, hostname, port);
 		}
 
 		@Override
@@ -111,16 +105,6 @@ public abstract class AbstractClient extends AbstractBaseClient {
 		@Override
 		public String getName() {
 			return "local-tcpip";
-		}
-
-		@Override
-		public ChannelData getChannelData() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean sendRequest(String requesttype, boolean wantreply, byte[] requestdata) throws SshException {
-			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -277,7 +261,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			int pixHeight, byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshCommand client = doCreateCommand(command, termType, cols, rows, pixWidth, pixHeight, terminalModes);
-		client.addListener(new SshChannelListener<SshCommand>() {
+		client.addListener(new SshStreamChannelListener<SshCommand>() {
 			@Override
 			public void closed(SshCommand channel) {
 				activeComponents.remove(channel);
@@ -376,7 +360,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshShell client = doCreateShell(termType, cols, rows, pixWidth, pixHeight, terminalModes);
-		client.addListener(new SshChannelListener<SshShell>() {
+		client.addListener(new SshStreamChannelListener<SshShell>() {
 			@Override
 			public void closed(SshShell channel) {
 				activeComponents.remove(channel);
@@ -394,11 +378,11 @@ public abstract class AbstractClient extends AbstractBaseClient {
 	}
 
 	@Override
-	public final SshChannel createForwardingChannel(String hostname, int port) throws SshException {
-		SshChannel client = doCreateForwardingChannel(hostname, port);
-		client.addListener(new SshChannelListener<SshChannel>() {
+	public final SshCustomChannel createForwardingChannel(String hostname, int port) throws SshException {
+		SshCustomChannel client = doCreateForwardingChannel(hostname, port);
+		client.addListener(new SshCustomChannelListener() {
 			@Override
-			public void closed(SshChannel channel) {
+			public void closed(SshCustomChannel channel) {
 				activeComponents.remove(channel);
 				fireComponentRemoved(channel);
 			}
@@ -409,8 +393,8 @@ public abstract class AbstractClient extends AbstractBaseClient {
 	}
 
 	@Override
-	public final SshChannel forwardingChannel(String hostname, int port) throws SshException {
-		SshChannel channel = createForwardingChannel(hostname, port);
+	public final SshCustomChannel forwardingChannel(String hostname, int port) throws SshException {
+		SshCustomChannel channel = createForwardingChannel(hostname, port);
 		channel.open();
 		return channel;
 	}
@@ -615,7 +599,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			addChannelHandler(getConfiguration().getAgent());
 	}
 
-	protected SshChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
+	protected SshCustomChannel doCreateForwardingChannel(String hostname, int port) throws SshException {
 		return new ForwardingChannel(this, getProvider(), getConfiguration(), hostname, port);
 	}
 	
