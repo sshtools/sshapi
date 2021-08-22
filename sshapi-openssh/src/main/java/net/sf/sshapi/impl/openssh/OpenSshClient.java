@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.IOUtils;
 
@@ -539,7 +538,7 @@ public class OpenSshClient extends AbstractClient {
 	 */
 	@Override
 	protected void onClose() throws SshException {
-		for (SshLifecycleComponent<?, ?> c : activeComponents)
+		for (SshLifecycleComponent<?> c : activeComponents)
 			c.closeQuietly();
 		// if (pipeInThread != null)
 		// pipeInThread.interrupt();
@@ -709,7 +708,7 @@ public class OpenSshClient extends AbstractClient {
 				ProcessBuilder pb = new ProcessBuilder(getConfiguration().getProperties()
 						.getProperty(OpenSshProvider.CFG_OPENSSH_SSH_KEYGEN_COMMAND, "ssh-keygen"), "-y", "-f",
 						pk.getPrivateKeyFile().getAbsolutePath());
-				AtomicBoolean failed = new AtomicBoolean();
+//				AtomicBoolean failed = new AtomicBoolean();
 				try {
 					pb.redirectErrorStream(true);
 					pb.environment().put("DISPLAY", "");

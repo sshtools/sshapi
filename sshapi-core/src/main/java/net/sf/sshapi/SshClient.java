@@ -63,7 +63,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * 
 	 * @return active components
 	 */
-	Set<SshLifecycleComponent<?, ?>> getAllActiveComponents();
+	Set<SshLifecycleComponent<?>> getAllActiveComponents();
 	
 	/**
 	 * Get all active components of a particular type.  This may be {@link SshShell}, 
@@ -72,7 +72,7 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @param clazz type of component
 	 * @return active components
 	 */
-	<T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz);
+	<T extends SshLifecycleComponent<?>> Set<T> getActiveComponents(Class<T> clazz);
 	
 	/**
 	 * Get the configuration this client is using

@@ -108,7 +108,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 		}
 	}
 
-	protected Set<SshLifecycleComponent<?, ?>> activeComponents = Collections.synchronizedSet(new LinkedHashSet<>());
+	protected Set<SshLifecycleComponent<?>> activeComponents = Collections.synchronizedSet(new LinkedHashSet<>());
 	protected List<Thread> interruptable = Collections.synchronizedList(new ArrayList<>());
 	private String hostname;
 	private int port;
@@ -126,16 +126,16 @@ public abstract class AbstractClient extends AbstractBaseClient {
 	}
 
 	@Override
-	public Set<SshLifecycleComponent<?, ?>> getAllActiveComponents() {
+	public Set<SshLifecycleComponent<?>> getAllActiveComponents() {
 		return Collections.unmodifiableSet(activeComponents);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends SshLifecycleComponent<?, ?>> Set<T> getActiveComponents(Class<T> clazz) {
+	public <T extends SshLifecycleComponent<?>> Set<T> getActiveComponents(Class<T> clazz) {
 		synchronized (activeComponents) {
 			Set<T> ts = new LinkedHashSet<>();
-			for (SshLifecycleComponent<?, ?> en : activeComponents) {
+			for (SshLifecycleComponent<?> en : activeComponents) {
 				if (en.getClass().isAssignableFrom(clazz))
 					ts.add((T) en);
 			}
@@ -181,7 +181,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			Exception ex = null;
 			try {
 				synchronized (activeComponents) {
-					for (SshLifecycleComponent<?, ?> c : new LinkedList<>(activeComponents)) {
+					for (SshLifecycleComponent<?> c : new LinkedList<>(activeComponents)) {
 						try {
 							SshConfiguration.getLogger().debug("Closing component {0}", c.hashCode());
 							c.close();
@@ -261,7 +261,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			int pixHeight, byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshCommand client = doCreateCommand(command, termType, cols, rows, pixWidth, pixHeight, terminalModes);
-		client.addListener(new SshStreamChannelListener<SshCommand>() {
+		client.addListener(new SshCommandListener() {
 			@Override
 			public void closed(SshCommand channel) {
 				activeComponents.remove(channel);
@@ -360,7 +360,7 @@ public abstract class AbstractClient extends AbstractBaseClient {
 			byte[] terminalModes) throws SshException {
 		checkConnectedAndAuthenticated();
 		SshShell client = doCreateShell(termType, cols, rows, pixWidth, pixHeight, terminalModes);
-		client.addListener(new SshStreamChannelListener<SshShell>() {
+		client.addListener(new SshShellListener() {
 			@Override
 			public void closed(SshShell channel) {
 				activeComponents.remove(channel);
@@ -572,12 +572,12 @@ public abstract class AbstractClient extends AbstractBaseClient {
 		throw new UnsupportedOperationException("Shell is is not supported in this implementation.");
 	}
 
-	protected void fireComponentCreated(SshLifecycleComponent<?, ?> component) {
+	protected void fireComponentCreated(SshLifecycleComponent<?> component) {
 		for (int i = listeners.size() - 1; i >= 0; i--)
 			listeners.get(i).created(component);
 	}
 
-	protected void fireComponentRemoved(SshLifecycleComponent<?, ?> component) {
+	protected void fireComponentRemoved(SshLifecycleComponent<?> component) {
 		for (int i = listeners.size() - 1; i >= 0; i--)
 			listeners.get(i).removed(component);
 	}

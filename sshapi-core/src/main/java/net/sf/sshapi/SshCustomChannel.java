@@ -27,7 +27,7 @@ import java.io.IOException;
  * Interface for custom channels created by {@link SshChannelHandler}
  * implementations.
  */
-public interface SshCustomChannel extends SshStreamChannel<SshCustomChannelListener, SshCustomChannel> {
+public interface SshCustomChannel extends SshChannel<SshCustomChannelListener, SshCustomChannel> {
 
 	/**
 	 * Encapsulate details needed for channel creation

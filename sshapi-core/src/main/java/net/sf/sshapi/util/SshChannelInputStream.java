@@ -26,7 +26,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.sf.sshapi.SshStreamChannel;
+import net.sf.sshapi.SshChannel;
 
 /**
  * Ensures an {@link EOFException} is thrown if {@link #available()} is called
@@ -36,7 +36,7 @@ import net.sf.sshapi.SshStreamChannel;
  */
 public class SshChannelInputStream extends FilterInputStream {
 
-	private SshStreamChannel<?, ?> channel;
+	private SshChannel<?, ?> channel;
 
 	/**
 	 * Constructor.
@@ -44,7 +44,7 @@ public class SshChannelInputStream extends FilterInputStream {
 	 * @param in original stream
 	 * @param channel channel to derive open status from
 	 */
-	public SshChannelInputStream(InputStream in, SshStreamChannel<?, ?> channel) {
+	public SshChannelInputStream(InputStream in, SshChannel<?, ?> channel) {
 		super(in);
 		this.channel = channel;
 	}

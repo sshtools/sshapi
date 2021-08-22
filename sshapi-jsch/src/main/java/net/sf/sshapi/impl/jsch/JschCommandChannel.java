@@ -19,40 +19,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverick16;
+package net.sf.sshapi.impl.jsch;
 
-import com.maverick.ssh.SshSession;
+import com.jcraft.jsch.Channel;
 
+import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshCommandListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.SshShell;
-import net.sf.sshapi.SshShellListener;
 
-class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshShellListener, SshShell> implements SshShell {
-	
-	MaverickSshShell(SshProvider provider, SshConfiguration configuration, SshSession session) {
-		super(provider, configuration, session);
+abstract class JschCommandChannel
+		extends AbstractJschStreamChannel<SshCommandListener, SshCommand>
+		implements SshCommand {
+
+	public JschCommandChannel(SshProvider provider, SshConfiguration configuration, Channel channel) throws SshException {
+		super(provider, configuration, channel);
 	}
 
-	@Override
-	public void onChannelOpen() throws SshException {
-		try {
-			if (!((SshSession) getChannel()).startShell()) {
-				throw new SshException("Failed to start shell");
-			}
-		} catch (com.maverick.ssh.SshException e) {
-			throw new SshException("Failed to open shell.", e);
-		}
-	}
-
-	@Override
-	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
-		try {
-			((SshSession) getChannel()).changeTerminalDimensions(width, height, pixw, pixw);
-		} catch (com.maverick.ssh.SshException e) {
-			throw new SshException(SshException.GENERAL, e);
-		}
-
-	}
 }

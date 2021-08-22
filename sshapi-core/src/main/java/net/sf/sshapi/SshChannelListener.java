@@ -27,7 +27,7 @@ package net.sf.sshapi;
  *
  * @param <C> type of component
  */
-public interface SshChannelListener<C extends SshDataProducingComponent<?, C>> extends SshLifecycleListener<C> {
+public interface SshChannelListener<C extends SshDataProducingComponent<? extends SshChannelListener<C>, SshDataListener<C> >> extends SshLifecycleListener<C> {
 
 	/**
 	 * A channel has been reached EOF.

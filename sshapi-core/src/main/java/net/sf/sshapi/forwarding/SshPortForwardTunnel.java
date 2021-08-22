@@ -21,8 +21,9 @@
  */
 package net.sf.sshapi.forwarding;
 
+import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshDataProducingComponent;
-import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPortForwardTunnelListener;
 
 /**
  * Represents a single tunnelled connection that is spawned as the result of a
@@ -41,8 +42,7 @@ import net.sf.sshapi.SshLifecycleListener;
  * be fired.
  */
 
-public interface SshPortForwardTunnel
-		extends SshDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel> {
+public interface SshPortForwardTunnel extends SshDataProducingComponent<SshPortForwardTunnelListener, SshDataListener<SshPortForwardTunnel>> {
 
 	/**
 	 * Get the address the tunnel connection originated from

@@ -23,14 +23,14 @@ package net.sf.sshapi.impl.trilead;
 
 import com.trilead.ssh2.Session;
 
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshCommandListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 
 abstract class TrileadStreamChannel
-		extends AbstractTrileadStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
+		extends AbstractTrileadStreamChannel<SshCommandListener, SshCommand>
 		implements SshCommand {
 
 	public TrileadStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {

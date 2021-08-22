@@ -26,11 +26,10 @@ package net.sf.sshapi;
  * events when the lifecycle methods are called. Most SSHAPI lifecycle
  * components will extend this.
  * @param <L> 
- * @param <C> 
  * 
  */
-public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
-		extends AbstractLifecycleComponent<L, C> {
+public abstract class AbstractLifecycleComponentWithEvents<L extends SshLifecycleListener<SshLifecycleComponent<L>>>
+		extends AbstractLifecycleComponent<L> {
 	protected static final Logger LOG = SshConfiguration.getLogger();
 	private boolean open;
 	private boolean firesOwnCloseEvents;

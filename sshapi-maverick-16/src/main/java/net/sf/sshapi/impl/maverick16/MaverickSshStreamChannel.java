@@ -23,13 +23,13 @@ package net.sf.sshapi.impl.maverick16;
 
 import com.maverick.ssh.SshSession;
 
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshCommandListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshProvider;
 
 abstract class MaverickSshStreamChannel
-		extends AbstractMaverickSshStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
+		extends AbstractMaverickSshStreamChannel<SshCommandListener, SshCommand>
 		implements SshCommand {
 
 	public MaverickSshStreamChannel(SshProvider provider, SshConfiguration configuration, SshSession session) {

@@ -30,10 +30,9 @@ import java.util.concurrent.Future;
  * <p>
  * All of the components may fire events when the lifecycle events occur.
  * @param <L> listener type
- * @param <C> component type
  *
  */
-public interface SshLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> extends Closeable, AutoCloseable {
+public interface SshLifecycleComponent<L extends SshLifecycleListener<? extends SshLifecycleComponent<L>>> extends Closeable, AutoCloseable {
 	/**
 	 * Add a listener to those informed when the current phase in this components lifecycle changes.
 	 * 

@@ -25,6 +25,6 @@ package net.sf.sshapi;
  * Interface to be implemented by consumers of events that SSH channels might
  * produce, such as <strong>EOF</strong> or a <strong>Request</strong>.
  */
-public interface SshStreamChannelListener<C extends SshStreamChannel<?, C>> extends SshChannelListener<C> {
+public interface SshShellListener extends SshChannelListener<SshShell> {
 
 }

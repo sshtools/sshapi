@@ -30,12 +30,12 @@ public interface SshClientListener {
 	 * 
 	 * @param component component created
 	 */
-	void created(SshLifecycleComponent<?, ?> component);
+	void created(SshLifecycleComponent<?> component);
 
 	/**
 	 * An existing component has been removed.
 	 * 
 	 * @param component component created
 	 */
-	void removed(SshLifecycleComponent<?, ?> component);
+	void removed(SshLifecycleComponent<?> component);
 }

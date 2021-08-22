@@ -42,7 +42,7 @@ import net.sf.sshapi.Logger;
 import net.sf.sshapi.Logger.Level;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPortForwardTunnelListener;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.forwarding.AbstractPortForward;
 import net.sf.sshapi.forwarding.SshPortForward;
@@ -60,7 +60,7 @@ public class LibsshLocalForward extends AbstractPortForward implements SshPortFo
 	private static final Logger LOG = SshConfiguration.getLogger();
 
 	class TunnelChannel
-			extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
+			extends AbstractDataProducingComponent<SshPortForwardTunnelListener>
 			implements SshPortForwardTunnel {
 		private SocketChannel socket;
 		private ssh_channel channel;

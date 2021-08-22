@@ -28,7 +28,7 @@ package net.sf.sshapi;
  * @param <C> component type
  * 
  */
-public interface SshFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> extends SshLifecycleComponent<L, C> {
+public interface SshFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L>> extends SshLifecycleComponent<L> {
 	/**
 	 * Add a listener to those informed when file transfer events occur.
 	 * 

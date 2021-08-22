@@ -26,12 +26,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.SshShellListener;
 import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
@@ -39,7 +39,7 @@ import ssh.SshLibrary.ssh_session;
 /**
  * libssh shell implementation.
  */
-public class LibsshShell extends AbstractSshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
+public class LibsshShell extends AbstractSshExtendedChannel<SshShellListener, SshShell> implements SshShell {
 	private InputStream in;
 	private InputStream ext;
 	private OutputStream out;

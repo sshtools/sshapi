@@ -32,7 +32,7 @@ import net.sf.sshapi.SshLifecycleComponent;
  * create instances of of this class. That object may then be used to start and
  * stop the actual tunnel.
  */
-public interface SshPortForward extends SshLifecycleComponent<SshPortForwardListener, SshPortForward> {
+public interface SshPortForward extends SshLifecycleComponent<SshPortForwardListener> {
 
 	/**
 	 * Constant used to specify whether the event relates to a local forwarding

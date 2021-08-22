@@ -19,40 +19,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.impl.maverick16;
+package net.sf.sshapi;
 
-import com.maverick.ssh.SshSession;
+/**
+ * Interface to be implemented by consumers of events fired when commands
+ * are executed.
+ */
+public interface SshCommandListener extends SshChannelListener<SshCommand> {
 
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.SshShell;
-import net.sf.sshapi.SshShellListener;
-
-class MaverickSshShell extends AbstractMaverickSshStreamChannel<SshShellListener, SshShell> implements SshShell {
-	
-	MaverickSshShell(SshProvider provider, SshConfiguration configuration, SshSession session) {
-		super(provider, configuration, session);
-	}
-
-	@Override
-	public void onChannelOpen() throws SshException {
-		try {
-			if (!((SshSession) getChannel()).startShell()) {
-				throw new SshException("Failed to start shell");
-			}
-		} catch (com.maverick.ssh.SshException e) {
-			throw new SshException("Failed to open shell.", e);
-		}
-	}
-
-	@Override
-	public void requestPseudoTerminalChange(int width, int height, int pixw, int pixh) throws SshException {
-		try {
-			((SshSession) getChannel()).changeTerminalDimensions(width, height, pixw, pixw);
-		} catch (com.maverick.ssh.SshException e) {
-			throw new SshException(SshException.GENERAL, e);
-		}
-
-	}
 }

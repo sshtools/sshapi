@@ -32,14 +32,14 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Shell;
 import net.schmizz.sshj.transport.TransportException;
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.SshShellListener;
 
 /**
  * SSHJ Shell implementation.
  */
-public class SSHJSshShell extends AbstractSshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell>
+public class SSHJSshShell extends AbstractSshExtendedChannel<SshShellListener, SshShell>
 		implements SshShell {
 	private final String termType;
 	private Session session;

@@ -29,7 +29,7 @@ package net.sf.sshapi;
  * 
  * @param <C> component type
  */
-public interface SshLifecycleListener<C extends SshLifecycleComponent<?, C>> {
+public interface SshLifecycleListener<C extends SshLifecycleComponent<? extends SshLifecycleListener<?>>> {
 
 	/**
 	 * A component has been opened. This is called once the component has confirmed, or

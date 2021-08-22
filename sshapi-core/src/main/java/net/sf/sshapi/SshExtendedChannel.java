@@ -26,7 +26,7 @@ import java.io.InputStream;
 
 // TODO: Auto-generated Javadoc
 /**
- * Extension of a {@link SshStreamChannel} that adds the Extended Input Stream,
+ * Extension of a {@link SshChannel} that adds the Extended Input Stream,
  * used for STDERR.
  * 
  * @param <L> listener type
@@ -34,8 +34,9 @@ import java.io.InputStream;
  * 
  */
 
-public interface SshExtendedChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
-		extends SshStreamChannel<L, C> {
+public interface SshExtendedChannel<L extends SshChannelListener<C>,
+	C extends SshDataProducingComponent<L, SshDataListener<SshExtendedChannel<L, C>>>>
+	extends SshChannel<L, C> {
 
 	/**
 	 * Signal.

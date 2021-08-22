@@ -32,14 +32,14 @@ import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.synergy.ssh.Connection;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.SshShellListener;
 
-class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
+class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshShellListener, SshShell> implements SshShell {
 	private SessionChannelNG session;
 	private InputStream extendedInputStream;
 	private InputStream inputStream;

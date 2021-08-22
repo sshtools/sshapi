@@ -26,11 +26,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Assert;
 
+import net.sf.sshapi.SshChannel;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshStreamChannel;
-import net.sf.sshapi.SshStreamChannelListener;
 
-public class DataEventCapture<C extends SshStreamChannel<?, C>> extends EventCapture<C> implements SshStreamChannelListener<C>, SshDataListener<C> {
+public class DataEventCapture<C extends SshChannel<?, C>> extends EventCapture<C> implements SshChannelListener<C>, SshDataListener<C> {
 	public AtomicInteger eofs = new AtomicInteger();
 	public AtomicLong dataIn = new AtomicLong();
 	public AtomicLong dataOut = new AtomicLong();

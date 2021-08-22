@@ -24,26 +24,25 @@ package net.sf.sshapi;
 /**
  * Interface to be implemented by any lifecycle components that might produce
  * data that can be listened to.
+ * 
  * @param <L> listener type
- * @param <C> component type
  * 
  * @see SshDataListener
  */
-public interface SshDataProducingComponent<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>> extends SshLifecycleComponent<L, C> {
+public interface SshDataProducingComponent<L extends SshLifecycleListener<? extends SshDataProducingComponent<L, DL>>,
+		DL extends SshDataListener<? extends SshDataProducingComponent<L, DL>>> extends SshLifecycleComponent<L> {
 
 	/**
 	 * Add a listener to those informed when a component produces data.
 	 * 
-	 * @param listener
-	 *            listener
+	 * @param listener listener
 	 */
-	void addDataListener(SshDataListener<C> listener);
+	void addDataListener(DL listener);
 
 	/**
 	 * Remove a listener from those informed when a component produces data.
 	 * 
-	 * @param listener
-	 *            listener
+	 * @param listener listener
 	 */
-	void removeDataListener(SshDataListener<C> listener);
+	void removeDataListener(DL listener);
 }

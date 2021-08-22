@@ -89,7 +89,7 @@ import com.sshtools.synergy.util.EncodingUtils;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
-import net.sf.sshapi.AbstractSshStreamChannel;
+import net.sf.sshapi.AbstractSshChannel;
 import net.sf.sshapi.SshChannelHandler;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
@@ -97,7 +97,7 @@ import net.sf.sshapi.SshCustomChannel;
 import net.sf.sshapi.SshCustomChannel.ChannelData;
 import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPortForwardTunnelListener;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.auth.SshAgentAuthenticator;
 import net.sf.sshapi.auth.SshAuthenticator;
@@ -254,7 +254,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	class TunnelChannel
-			extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
+			extends AbstractDataProducingComponent<SshPortForwardTunnelListener>
 			implements SshPortForwardTunnel {
 		private com.sshtools.synergy.ssh.ForwardingChannel<SshClientContext> tunnel;
 
@@ -327,7 +327,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	class MaverickSshChannel
-			extends AbstractSshStreamChannel<SshCustomChannelListener, SshCustomChannel>
+			extends AbstractSshChannel<SshCustomChannelListener, SshCustomChannel>
 			implements net.sf.sshapi.SshCustomChannel {
 		private ChannelData channelData;
 		private String name;

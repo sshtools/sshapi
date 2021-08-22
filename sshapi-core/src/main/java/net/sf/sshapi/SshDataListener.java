@@ -29,7 +29,7 @@ package net.sf.sshapi;
  * 
  * @param <C> component type
  */
-public interface SshDataListener<C extends SshDataProducingComponent<?,?>> {
+public interface SshDataListener<C extends SshDataProducingComponent<? extends SshLifecycleListener<C>, SshDataListener<C>>> {
 
 	/**
 	 * Data was sent to the server on this channel
@@ -44,8 +44,8 @@ public interface SshDataListener<C extends SshDataProducingComponent<?,?>> {
 	 */
 	public final static int RECEIVED = 1;
 	/**
-	 * Extended data was received from the server on this channel. Only applies
-	 * for channels that support it.
+	 * Extended data was received from the server on this channel. Only applies for
+	 * channels that support it.
 	 * 
 	 * @see #data(int, byte[], int, int)
 	 */
@@ -54,11 +54,11 @@ public interface SshDataListener<C extends SshDataProducingComponent<?,?>> {
 	/**
 	 * Data has traveled over this channel.
 	 * 
-	 * @param channel the channel data is traveling over.
+	 * @param channel   the channel data is traveling over.
 	 * @param direction will be one of {@link #SENT} or {@link #RECEIVED}
-	 * @param buf buffer
-	 * @param off buffer offset
-	 * @param len buffer length
+	 * @param buf       buffer
+	 * @param off       buffer offset
+	 * @param len       buffer length
 	 */
 	void data(C channel, int direction, byte[] buf, int off, int len);
 }

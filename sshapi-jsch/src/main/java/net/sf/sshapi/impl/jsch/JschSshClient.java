@@ -132,7 +132,7 @@ class JschSshClient extends AbstractClient implements Logger {
 			if (hostKeyValidator != null) {
 				try {
 					Class<?> c = Class.forName(JSch.getConfig("md5"));
-					final HASH hash = (HASH) (c.newInstance());
+					final HASH hash = (HASH) (c.getConstructor().newInstance());
 					switch (hostKeyValidator.verifyHost(new AbstractHostKey() {
 						@Override
 						public String getFingerprint() {
@@ -618,7 +618,7 @@ class JschSshClient extends AbstractClient implements Logger {
 				channel.setPty(true);
 			}
 			channel.setCommand(command);
-			return new JschStreamChannel(getProvider(), getConfiguration(), channel) {
+			return new JschCommandChannel(getProvider(), getConfiguration(), channel) {
 				@Override
 				protected void onChannelClose() throws SshException {
 					channelCount--;

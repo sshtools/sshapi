@@ -24,7 +24,7 @@ package net.sf.sshapi;
 /**
  * A remote shell.
  */
-public interface SshShell extends SshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell> {
+public interface SshShell extends SshExtendedChannel<SshShellListener, SshShell> {
 
 	/**
 	 * Request that the pseudo terminal attributes are changed.

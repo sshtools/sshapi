@@ -29,9 +29,8 @@ import java.util.concurrent.Future;
  * Abstract implementation of an {@link SshLifecycleComponent}, providing some
  * command methods.
  * @param <L> the listener type
- * @param <C> the component type 
  */
-public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>> implements SshLifecycleComponent<L, C> {
+public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<SshLifecycleComponent<L>>> implements SshLifecycleComponent<L> {
 
 	protected List<L> listeners;
 
@@ -93,35 +92,32 @@ public abstract class AbstractLifecycleComponent<L extends SshLifecycleListener<
 	/**
 	 * Inform all listeners the component has opened.
 	 */
-	@SuppressWarnings("unchecked")
 	protected void fireOpened() {
 		if (listeners != null) {
 			for (int i = listeners.size() - 1; i >= 0; i--)
-				listeners.get(i).opened((C) this);
+				listeners.get(i).opened(this);
 		}
 	}
 
 	/**
 	 * Inform all listeners the component has closed.
 	 */
-	@SuppressWarnings("unchecked")
 	protected void fireClosed() {
 		if (listeners != null && !closeFired) {
 			closeFired = true;
 			for (int i = listeners.size() - 1; i >= 0; i--)
-				listeners.get(i).closed((C) this);
+				listeners.get(i).closed(this);
 		}
 	}
 
 	/**
 	 * Inform all listeners the component is closing.
 	 */
-	@SuppressWarnings("unchecked")
 	protected void fireClosing() {
 		if (listeners != null && !closingFired) {
 			closingFired = true;
 			for (int i = listeners.size() - 1; i >= 0; i--)
-				listeners.get(i).closing((C) this);
+				listeners.get(i).closing(this);
 		}
 	}
 

@@ -25,13 +25,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Extension of a {@link SshStreamChannel} that adds the Extended Input Stream,
+ * Extension of a {@link SshChannel} that adds the Extended Input Stream,
  * used for STDERR.
  * 
  */
 
 public interface SshCommand
-		extends SshExtendedChannel<SshStreamChannelListener<SshCommand>, SshCommand> {
+		extends SshExtendedChannel<SshCommandListener, SshCommand> {
 	
 	/**
 	 * Return value when exit code is not (yet) known.

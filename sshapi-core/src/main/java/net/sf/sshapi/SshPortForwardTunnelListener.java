@@ -19,22 +19,13 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.impl.jsch;
+package net.sf.sshapi;
 
-import com.jcraft.jsch.Channel;
+import net.sf.sshapi.forwarding.SshPortForwardTunnel;
 
-import net.sf.sshapi.SshStreamChannelListener;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshProvider;
-import net.sf.sshapi.SshCommand;
-
-abstract class JschStreamChannel
-		extends AbstractJschStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
-		implements SshCommand {
-
-	public JschStreamChannel(SshProvider provider, SshConfiguration configuration, Channel channel) throws SshException {
-		super(provider, configuration, channel);
-	}
-
+/**
+ * Interface to be implemented by consumers of events fired when port forward
+ * tunnels change state.
+ */
+public interface SshPortForwardTunnelListener extends SshLifecycleListener<SshPortForwardTunnel> {
 }

@@ -32,12 +32,11 @@ import java.util.List;
 /**
  * Abstract implementation of {@link SshDataProducingComponent} that provides
  * some default common methods.
+ * 
  * @param <L> the type of listener
- * @param <C> the type of component
  */
-public abstract class AbstractDataProducingComponent<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
-		extends AbstractLifecycleComponentWithEvents<L, C> implements SshDataProducingComponent<L, C> {
-	
+public abstract class AbstractDataProducingComponent<L extends SshLifecycleListener<SshDataProducingComponent<L>>> 
+		extends AbstractLifecycleComponentWithEvents<L> implements SshDataProducingComponent<L> {
 
 	protected class EventFiringOutputStream extends FilterOutputStream {
 
@@ -48,7 +47,7 @@ public abstract class AbstractDataProducingComponent<L extends SshLifecycleListe
 		@Override
 		public void write(int b) throws IOException {
 			super.write(b);
-			fireData(SshDataListener.SENT, new byte[] { (byte)b }, 0, 1);
+			fireData(SshDataListener.SENT, new byte[] { (byte) b }, 0, 1);
 		}
 
 		@Override
@@ -56,7 +55,7 @@ public abstract class AbstractDataProducingComponent<L extends SshLifecycleListe
 			out.write(b, off, len);
 			fireData(SshDataListener.SENT, b, off, len);
 		}
-		
+
 	}
 
 	protected class EventFiringInputStream extends FilterInputStream {
@@ -67,14 +66,13 @@ public abstract class AbstractDataProducingComponent<L extends SshLifecycleListe
 			super(in);
 			this.direction = direction;
 		}
-		
+
 		@Override
 		public int read() throws IOException {
 			int r = super.read();
-			if(r != -1) {
-				fireData(direction, new byte[] { (byte)r }, 0, 1);
-			}
-			else
+			if (r != -1) {
+				fireData(direction, new byte[] { (byte) r }, 0, 1);
+			} else
 				fireEof();
 			return r;
 		}
@@ -82,35 +80,33 @@ public abstract class AbstractDataProducingComponent<L extends SshLifecycleListe
 		@Override
 		public int read(byte[] b, int off, int len) throws IOException {
 			int r = super.read(b, off, len);
-			if(r != -1) {
+			if (r != -1) {
 				fireData(direction, b, off, r);
-			}
-			else
+			} else
 				fireEof();
 			return r;
 		}
-		
+
 		protected void fireEof() {
 		}
 	}
 
-	private List<SshDataListener<C>> dataListeners = new ArrayList<>();
-	
+	private List<SshDataListener<? extends SshDataProducingComponent<L>> > dataListeners = new ArrayList<>();
+
 	protected AbstractDataProducingComponent(SshProvider provider) {
 		super(provider);
 	}
 
-	public final synchronized void addDataListener(SshDataListener<C> listener) {
+	public final synchronized void addDataListener(SshDataListener<? extends SshDataProducingComponent<L>>  listener) {
 		dataListeners.add(listener);
 	}
 
-	public final synchronized void removeDataListener(SshDataListener<C> listener) {
+	public final synchronized void removeDataListener(SshDataListener<? extends SshDataProducingComponent<L>>  listener) {
 		dataListeners.remove(listener);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void fireData(int direction, byte[] buf, int off, int len) {
 		for (int i = dataListeners.size() - 1; i >= 0; i--)
-			dataListeners.get(i).data((C) this, direction, buf, off, len);
+			dataListeners.get(i).data(this, direction, buf, off, len);
 	}
 }

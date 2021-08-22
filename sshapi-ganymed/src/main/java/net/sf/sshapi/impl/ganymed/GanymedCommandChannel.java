@@ -19,20 +19,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.impl.j2ssh;
+package net.sf.sshapi.impl.ganymed;
 
-import com.sshtools.j2ssh.session.SessionChannelClient;
-
-import net.sf.sshapi.SshStreamChannelListener;
-import net.sf.sshapi.SshConfiguration;
-import net.sf.sshapi.SshProvider;
+import ch.ethz.ssh2.Session;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshCommandListener;
+import net.sf.sshapi.SshConfiguration;
+import net.sf.sshapi.SshException;
+import net.sf.sshapi.SshProvider;
 
-abstract class J2SshStreamChannel
-		extends AbstractJ2SshStreamChannel<SshStreamChannelListener<SshCommand>, SshCommand>
+abstract class GanymedCommandChannel
+		extends AbstractGanymedStreamChannel<SshCommandListener, SshCommand>
 		implements SshCommand {
 
-	public J2SshStreamChannel(SshProvider provider, SshConfiguration configuration, SessionChannelClient channel) {
+	public GanymedCommandChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
 		super(provider, configuration, channel);
 	}
 

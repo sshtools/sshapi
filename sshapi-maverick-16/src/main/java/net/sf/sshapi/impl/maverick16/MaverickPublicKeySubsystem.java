@@ -35,7 +35,7 @@ import net.sf.sshapi.SshPublicKey;
 import net.sf.sshapi.identity.SshPublicKeySubsystem;
 
 class MaverickPublicKeySubsystem extends
-		AbstractLifecycleComponentWithEvents<SshLifecycleListener<SshPublicKeySubsystem>, SshPublicKeySubsystem>
+		AbstractLifecycleComponentWithEvents<SshLifecycleListener<SshPublicKeySubsystem>>
 		implements SshPublicKeySubsystem {
 
 	private PublicKeySubsystem subsystem;

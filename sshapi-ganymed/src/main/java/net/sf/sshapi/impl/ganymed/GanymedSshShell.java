@@ -26,14 +26,14 @@ import java.io.InputStream;
 import java.util.Objects;
 
 import ch.ethz.ssh2.Session;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshInput;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.SshShellListener;
 
-class GanymedSshShell extends AbstractGanymedStreamChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
+class GanymedSshShell extends AbstractGanymedStreamChannel<SshShellListener, SshShell> implements SshShell {
 	private Thread errThread;
 	private SshInput errInput;
 

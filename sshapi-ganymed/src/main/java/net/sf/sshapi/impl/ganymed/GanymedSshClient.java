@@ -347,7 +347,7 @@ class GanymedSshClient extends AbstractClient {
 			if (termType != null) {
 				sess.requestPTY(termType, cols, rows, 0, 0, terminalModes);
 			}
-			return new GanymedStreamChannel(getProvider(), getConfiguration(), sess) {
+			return new GanymedCommandChannel(getProvider(), getConfiguration(), sess) {
 				@Override
 				public void onChannelOpen() throws SshException {
 					try {

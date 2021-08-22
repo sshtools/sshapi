@@ -27,8 +27,8 @@ import java.io.OutputStream;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.Logger;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshCommand;
+import net.sf.sshapi.SshCommandListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
@@ -37,7 +37,7 @@ import ssh.SshLibrary;
 import ssh.SshLibrary.ssh_channel;
 import ssh.SshLibrary.ssh_session;
 
-class LibsshSshCommand extends AbstractSshExtendedChannel<SshStreamChannelListener<SshCommand>, SshCommand> implements SshCommand {
+class LibsshSshCommand extends AbstractSshExtendedChannel<SshCommandListener, SshCommand> implements SshCommand {
 	private static final Logger LOG = SshConfiguration.getLogger();
 	private InputStream in;
 	private InputStream ext;

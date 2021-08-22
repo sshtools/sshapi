@@ -179,6 +179,7 @@ public class MaverickAgent implements SshAgent {
 					t.start();
 				}
 			});
+
 			channel.addDataListener(new SshDataListener<SshCustomChannel>() {
 
 				@Override

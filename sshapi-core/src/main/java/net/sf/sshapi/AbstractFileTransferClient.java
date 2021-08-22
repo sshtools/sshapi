@@ -30,8 +30,8 @@ import java.util.List;
  * @param <L> the type of listener
  * @param <C> the type of component
  */
-public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L, C>>
-		extends AbstractLifecycleComponentWithEvents<L, C> {
+public abstract class AbstractFileTransferClient<L extends SshLifecycleListener<C>, C extends SshLifecycleComponent<L>>
+		extends AbstractLifecycleComponentWithEvents<L> {
 
 	private List<SshFileTransferListener> fileTransferListeners;
 	

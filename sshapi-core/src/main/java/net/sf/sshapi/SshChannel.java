@@ -30,12 +30,14 @@ import java.util.concurrent.Future;
 /**
  * Extension to {@link SshLifecycleComponent} for channels who expose I/O
  * streams, such as executing a command, or a {@link SshShell}.
+ * 
  * @param <L> listener type
  * @param <C> component type
  * 
  */
-public interface SshStreamChannel<L extends SshLifecycleListener<C>, C extends SshDataProducingComponent<L, C>>
-		extends SshDataProducingComponent<L, C> {
+public interface SshChannel<L extends SshChannelListener<C>,
+	C extends SshDataProducingComponent<L, SshDataListener<C>>>
+	extends SshDataProducingComponent<L, SshDataListener<C>> {
 	
 	/**
 	 * Set the callback that will be invoked when bytes are available on the input of this

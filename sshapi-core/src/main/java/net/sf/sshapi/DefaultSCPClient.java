@@ -134,7 +134,7 @@ public class DefaultSCPClient extends AbstractSCPClient {
 	@Override
 	public void get(final String remoteFilePath, File targetFile, boolean recursive) throws SshException {
 		LOG.debug("SCPd for file {0} (mode {1})", remoteFilePath, targetFile);
-		SshStreamChannel<?, ?> cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
+		SshCommand cmd = sshClient.createCommand("scp -f " + (recursive ? "-r " : "") + remoteFilePath);
 		cmd.open();
 		// get I/O streams for remote scp
 		try {
@@ -156,7 +156,7 @@ public class DefaultSCPClient extends AbstractSCPClient {
 		}
 	}
 
-	private boolean doGet(final String remoteFilePath, File targetFile, SshStreamChannel<?, ?> cmd, OutputStream out, InputStream in,
+	private boolean doGet(final String remoteFilePath, File targetFile, SshCommand cmd, OutputStream out, InputStream in,
 			byte[] buf) throws IOException, SshException, FileNotFoundException {
 		LOG.debug("Send first ACK for file {0} (mode {1})", remoteFilePath, targetFile);
 		buf[0] = 0;

@@ -35,7 +35,7 @@ import net.sf.sshapi.SshPublicKey;
  * 
  */
 public interface SshPublicKeySubsystem
-		extends SshLifecycleComponent<SshLifecycleListener<SshPublicKeySubsystem>, SshPublicKeySubsystem> {
+		extends SshLifecycleComponent<SshLifecycleListener<SshPublicKeySubsystem>> {
 
 	/**
 	 * Add a new authorized key.

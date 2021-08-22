@@ -552,7 +552,7 @@ class J2SshClient extends AbstractClient {
 		try {
 			final SessionChannelClient session = con.openSessionChannel();
 			requestPty(termType, colWidth, rowHeight, pixWidth, pixHeight, terminalModes, session);
-			return new J2SshStreamChannel(getProvider(), getConfiguration(), session) {
+			return new J2SshCommandChannel(getProvider(), getConfiguration(), session) {
 				@Override
 				public void onChannelOpen() throws net.sf.sshapi.SshException {
 					try {

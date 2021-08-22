@@ -25,27 +25,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 import com.trilead.ssh2.Session;
 import com.trilead.ssh2.channel.Channel;
 
-import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshStreamChannelListener;
+import net.sf.sshapi.AbstractSshChannel;
+import net.sf.sshapi.SshChannelListener;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshInput;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.util.SshChannelInputStream;
 import net.sf.sshapi.util.Util;
 
-abstract class AbstractTrileadStreamChannel<L extends SshStreamChannelListener<C>, C extends SshExtendedChannel<L, C>>
-		extends AbstractSshExtendedChannel<L, C> implements SshExtendedChannel<L, C> {
+abstract class AbstractTrileadStreamChannel<L extends SshChannelListener<C, SshDataListener<C>>, C extends SshExtendedChannel<L, C>>
+		extends AbstractSshChannel<L, C> implements SshExtendedChannel<L, C> {
+
 	private final Session session;
 	private Field flagField;
 	private Field channelField;
 	private Field eofField;
+	private SshInput errInput;
+	private Thread errThread;
 
 	public AbstractTrileadStreamChannel(SshProvider provider, SshConfiguration configuration, Session channel) throws SshException {
 		super(provider, configuration);
@@ -105,6 +110,27 @@ abstract class AbstractTrileadStreamChannel<L extends SshStreamChannelListener<C
 			}
 		}
 		onChannelOpen();
+	}
+
+	@Override
+	public void setErrInput(SshInput errInput) {
+		if (!Objects.equals(errInput, this.errInput)) {
+			this.errInput = errInput;
+			if (errInput == null) {
+				errThread.interrupt();
+			} else {
+				try {
+					errThread = pump(errInput, getExtendedInputStream());
+				} catch (IOException e) {
+					throw new IllegalStateException("Failed to extended input stream.", e);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		throw new UnsupportedOperationException();
 	}
 
 	public abstract void onChannelOpen() throws SshException;

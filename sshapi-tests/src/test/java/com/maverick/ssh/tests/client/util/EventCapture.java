@@ -28,7 +28,7 @@ import org.junit.Assert;
 import net.sf.sshapi.SshLifecycleComponent;
 import net.sf.sshapi.SshLifecycleListener;
 
-public class EventCapture<C extends SshLifecycleComponent<?, C>> implements SshLifecycleListener<C> {
+public class EventCapture<C extends SshLifecycleComponent<SshLifecycleListener<C>>> implements SshLifecycleListener<C> {
 	AtomicInteger opens = new AtomicInteger();
 	AtomicInteger closings = new AtomicInteger();
 	AtomicInteger closes = new AtomicInteger();

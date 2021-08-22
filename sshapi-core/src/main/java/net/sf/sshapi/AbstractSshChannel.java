@@ -29,13 +29,14 @@ import java.util.Objects;
 import java.util.concurrent.Future;
 
 /**
- * Abstract {@link SshStreamChannel} implementation.
+ * Abstract {@link SshChannel} implementation.
  *
  * @param <L> listener type
  * @param <C> component type
  */
-public abstract class AbstractSshStreamChannel<L extends SshChannelListener<C>, C extends SshStreamChannel<L, C>>
-		extends AbstractDataProducingComponent<L, C> implements SshStreamChannel<L, C> {
+public abstract class AbstractSshChannel<L extends SshChannelListener<C>, 
+		C extends SshChannel<L, C>>
+		extends AbstractDataProducingComponent<L> implements SshChannel<L, C> {
 
 	protected SshConfiguration configuration;
 
@@ -43,7 +44,7 @@ public abstract class AbstractSshStreamChannel<L extends SshChannelListener<C>, 
 	private Thread inputThread;
 	private boolean eofFired;
 
-	protected AbstractSshStreamChannel(SshProvider provider, SshConfiguration configuration) {
+	protected AbstractSshChannel(SshProvider provider, SshConfiguration configuration) {
 		super(provider);
 		this.configuration = configuration;
 	}

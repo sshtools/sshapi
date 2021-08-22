@@ -90,7 +90,7 @@ import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
 import net.sf.sshapi.AbstractForwardingChannel;
 import net.sf.sshapi.AbstractSocket;
-import net.sf.sshapi.AbstractSshStreamChannel;
+import net.sf.sshapi.AbstractSshChannel;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshChannelHandler;
 import net.sf.sshapi.SshCommand;
@@ -98,7 +98,7 @@ import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshCustomChannel.ChannelData;
 import net.sf.sshapi.SshCustomChannelListener;
 import net.sf.sshapi.SshDataListener;
-import net.sf.sshapi.SshLifecycleListener;
+import net.sf.sshapi.SshPortForwardTunnelListener;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshProxyServerDetails;
 import net.sf.sshapi.SshSCPClient;
@@ -290,7 +290,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 	}
 
 	class MaverickSshChannel
-			extends AbstractSshStreamChannel<SshCustomChannelListener, net.sf.sshapi.SshCustomChannel>
+			extends AbstractSshChannel<SshCustomChannelListener, net.sf.sshapi.SshCustomChannel>
 			implements net.sf.sshapi.SshCustomChannel {
 		private ChannelData channelData;
 		private String name;
@@ -514,7 +514,7 @@ class MaverickSshClient extends AbstractClient implements ForwardingClientListen
 		}
 	}
 
-	class TunnelChannel extends AbstractDataProducingComponent<SshLifecycleListener<SshPortForwardTunnel>, SshPortForwardTunnel>
+	class TunnelChannel extends AbstractDataProducingComponent<SshPortForwardTunnelListener>
 			implements SshPortForwardTunnel {
 		private SshTunnel tunnel;
 
