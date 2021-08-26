@@ -45,7 +45,6 @@ import java.util.Set;
 import org.bouncycastle.openssl.EncryptionException;
 
 import com.sshtools.client.AbstractKeyboardInteractiveCallback;
-import com.sshtools.client.AuthenticationMessage;
 import com.sshtools.client.BannerDisplay;
 import com.sshtools.client.ClientAuthenticator;
 import com.sshtools.client.ConnectionProtocolClient;
@@ -53,11 +52,10 @@ import com.sshtools.client.ExternalKeyAuthenticator;
 import com.sshtools.client.KeyboardInteractiveAuthenticator;
 import com.sshtools.client.KeyboardInteractivePrompt;
 import com.sshtools.client.KeyboardInteractivePromptCompletor;
+import com.sshtools.client.PasswordAuthenticator;
 import com.sshtools.client.PublicKeyAuthenticator;
-import com.sshtools.client.SimpleClientAuthenticator;
 import com.sshtools.client.SshClient;
 import com.sshtools.client.SshClientContext;
-import com.sshtools.client.TransportProtocolClient;
 import com.sshtools.common.command.ExecutableCommand;
 import com.sshtools.common.forwarding.ForwardingPolicy;
 import com.sshtools.common.knownhosts.HostKeyVerification;
@@ -85,7 +83,6 @@ import com.sshtools.synergy.ssh.ChannelOutputStream;
 import com.sshtools.synergy.ssh.ForwardingFactory;
 import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager;
 import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager.TunnelListener;
-import com.sshtools.synergy.util.EncodingUtils;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
@@ -886,55 +883,55 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
 			return new ExternalKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent(getConfiguration())).getAgent());
 		} else if (authenticator instanceof SshPasswordAuthenticator) {
-//			return new PasswordAuthenticator() {
-//				@Override
-//				public String getPassword() {
-//					char[] answer = ((SshPasswordAuthenticator) authenticator)
-//							.promptForPassword(MaverickSynergySshClient.this, "Password");
-//					return answer == null ? null : new String(answer);
-//				}
-//			};
-			/* We don't use Synergy's PasswordAuthenticator because it pre-empts
-			 * retrieval of the password. We want to provide it when it is 
-			 * required, no sooner. This also addresses some blocking issues
-			 * with authentication timeouts. 
-			 */
-			return new SimpleClientAuthenticator() {
-				
+			return new PasswordAuthenticator() {
 				@Override
-				public String getName() {
-					return "password";
-				}
-				
-				@Override
-				public void authenticate(TransportProtocolClient transport, String username) throws IOException, SshException {
-					Thread pt = new Thread("PasswordPromptThread") {
-						@Override
-						public void run() {
-							char[] answer = ((SshPasswordAuthenticator) authenticator)
-									.promptForPassword(MaverickSynergySshClient.this, "Password");
-							if(answer == null) {
-								cancel();
-							}
-							else {
-								byte[] tmp = EncodingUtils.getUTF8Bytes(new String(answer));
-								transport.postMessage(new AuthenticationMessage(username, "ssh-connection", "password") {
-									@Override
-									public boolean writeMessageIntoBuffer(ByteBuffer buf) {
-										super.writeMessageIntoBuffer(buf);
-										buf.put((byte)0);
-										buf.putInt(tmp.length);
-										buf.put(tmp);
-										return true;
-									}			
-								});			
-							}	
-						}
-					};
-					pt.start();
-					
+				public String getPassword() {
+					char[] answer = ((SshPasswordAuthenticator) authenticator)
+							.promptForPassword(MaverickSynergySshClient.this, "Password");
+					return answer == null ? null : new String(answer);
 				}
 			};
+//			/* We don't use Synergy's PasswordAuthenticator because it pre-empts
+//			 * retrieval of the password. We want to provide it when it is 
+//			 * required, no sooner. This also addresses some blocking issues
+//			 * with authentication timeouts. 
+//			 */
+//			return new SimpleClientAuthenticator() {
+//				
+//				@Override
+//				public String getName() {
+//					return "password";
+//				}
+//				
+//				@Override
+//				public void authenticate(TransportProtocolClient transport, String username) throws IOException, SshException {
+//					Thread pt = new Thread("PasswordPromptThread") {
+//						@Override
+//						public void run() {
+//							char[] answer = ((SshPasswordAuthenticator) authenticator)
+//									.promptForPassword(MaverickSynergySshClient.this, "Password");
+//							if(answer == null) {
+//								cancel();
+//							}
+//							else {
+//								byte[] tmp = EncodingUtils.getUTF8Bytes(new String(answer));
+//								transport.postMessage(new AuthenticationMessage(username, "ssh-connection", "password") {
+//									@Override
+//									public boolean writeMessageIntoBuffer(ByteBuffer buf) {
+//										super.writeMessageIntoBuffer(buf);
+//										buf.put((byte)0);
+//										buf.putInt(tmp.length);
+//										buf.put(tmp);
+//										return true;
+//									}			
+//								});			
+//							}	
+//						}
+//					};
+//					pt.start();
+//					
+//				}
+//			};
 		} else if (authenticator instanceof SshX509PublicKeyAuthenticator) {
 			SshX509PublicKeyAuthenticator pk = (SshX509PublicKeyAuthenticator) authenticator;
 			try {

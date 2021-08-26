@@ -40,7 +40,7 @@ import picocli.CommandLine.Parameters;
 /**
  * Java clone of the de-facto standard OpenSSH ssh command.
  */
-@Command(name = "ssh", mixinStandardHelpOptions = true, description = "Secure file copy.")
+@Command(name = "scp", mixinStandardHelpOptions = true, description = "Secure file copy.")
 public class scp extends AbstractSshCommand implements SshFileTransferListener, Logger, Callable<Integer> {
 
 	private long transferLength;
@@ -51,7 +51,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 	private long transferBlock;
 
 	@Option(names = { "-P", "--port" }, description = "Port number on which the server is listening.")
-	private int port;
+	private int port = 22;
 
 	@Option(names = { "-B",
 			"--batch" }, description = "Selects batch mode (prevents asking for passwords or passphrases).")
@@ -90,6 +90,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 				// Local to remote
 			} else {
 				// Local to local
+				throw new UnsupportedOperationException("TODO");
 			}
 		}
 	}
@@ -187,7 +188,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
-		ssh cli = new ssh();
+		scp cli = new scp();
 		System.exit(new CommandLine(cli).execute(args));
 	}
 	
@@ -196,17 +197,25 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		try {
 			start();
 		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage() + ": No such file or directory");
+			if(!isQuiet()) {
+				System.err.println(e.getMessage() + ": No such file or directory");
+			}
 			return 1;
 		} catch (SshException sshe) {
 			if (sshe.getCode().equals(SshException.HOST_KEY_REJECTED)) {
 				// Already displayed a message, just exit
 			} else {
-				System.err.println("ssh: " + sshe.getMessage());
+				if(!isQuiet()) {
+					System.err.println("scp: " + sshe.getMessage());
+					sshe.printStackTrace();
+				}
 			}
 			return 1;
 		} catch (Exception e) {
-			System.err.println("ssh: " + e.getMessage());
+			if(!isQuiet()) {
+				System.err.println("scp: " + e.getMessage());
+				e.printStackTrace();
+			}
 			return 1;
 		}
 		return 0;
@@ -248,7 +257,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		String sizeSoFar = formatSize(transferProgressed);
 		// width - ( 5+ 10 + 8 + 3 + 1 + 1 + 1 + 1 )
 		int w = reader == null ? 80 : terminal.getWidth();
-		int filenameWidth = w - 32;
+		int filenameWidth = Math.max(10, w - 32);
 
 		String result = String.format("%-" + filenameWidth + "s %3d%% %-8s %10s %5s",
 				new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), "??:??" });

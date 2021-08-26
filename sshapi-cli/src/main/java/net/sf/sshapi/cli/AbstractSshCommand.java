@@ -181,6 +181,10 @@ public abstract class AbstractSshCommand implements Logger {
 		onStart();
 	}
 
+	protected boolean isQuiet() {
+		return quiet;
+	}
+
 	protected abstract boolean isBatchMode();
 
 	protected abstract void onStart() throws SshException, IOException;
