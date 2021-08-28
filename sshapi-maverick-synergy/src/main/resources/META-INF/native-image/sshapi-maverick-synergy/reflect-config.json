@@ -21,6 +21,13 @@
     "allPublicMethods" : true
   },
   {
+    "name" : "com.sshtools.common.ssh.components.Curve25519SHA256Client",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
     "name" : "com.sshtools.client.components.Curve25519SHA256LibSshClient",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
@@ -407,6 +414,34 @@
   },
   {
     "name" : "com.sshtools.common.ssh.components.jce.SshEd25519PublicKeyJCE",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "com.sshtools.common.ssh.components.jce.SshEd25519PublicKeyJCE",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "com.sshtools.common.ssh.components.SshEd25519PublicKey",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "com.sshtools.common.zlib.ZLibCompression",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "com.sshtools.common.zlib.OpenSSHZLibCompression",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
