@@ -191,7 +191,6 @@ ssh-keygen - (TODO)  Generate identities</description>
 	</dependencies>
 
 	<profiles>
-	
 
 		<!-- Enable / Disable these profiles to chose between different provider 
 			configurations, for example switching from Maverick Synergy Open Source to 
@@ -199,9 +198,6 @@ ssh-keygen - (TODO)  Generate identities</description>
 
 		<profile>
 			<id>maverick-synergy-opensource</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>com.sshtools</groupId>
@@ -221,6 +217,14 @@ ssh-keygen - (TODO)  Generate identities</description>
 					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
 					<version>${project.version}</version>
 					<type>pom</type>
+					<scope>compile</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy-license</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -240,9 +244,6 @@ ssh-keygen - (TODO)  Generate identities</description>
 
 		<profile>
 			<id>stable-maverick</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>com.sshtools</groupId>
@@ -390,4 +391,22 @@ ssh-keygen - (TODO)  Generate identities</description>
 			</build>
 		</profile>
 	</profiles>
+	<repositories>
+		<repository>
+			<id>libs-releases</id>
+			<url>https://artifactory.jadaptive.com/libs-releases-local</url>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>libs-snapshots</id>
+			<url>https://artifactory.jadaptive.com/libs-snapshots-local</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots />
+		</repository>
+	</repositories>
 </project>

@@ -43,7 +43,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.bouncycastle.openssl.EncryptionException;
+/* TODO: forces use of maverick-bc */
+/*import org.bouncycastle.openssl.EncryptionException;*/
 
 import com.sshtools.client.AbstractKeyboardInteractiveCallback;
 import com.sshtools.client.BannerDisplay;
@@ -990,7 +991,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 						}
 						try {
 							pair = pkf.toKeyPair(new String(pa));
-						} catch (EncryptionException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
+						} catch (/* EncryptionException | */com.sshtools.common.publickey.InvalidPassphraseException ipe) {
 							if (i == 0) {
 								throw new net.sf.sshapi.SshException(
 										net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED);
@@ -999,7 +1000,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					} else {
 						try {
 							pair = pkf.toKeyPair("");
-						} catch (EncryptionException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
+						} catch (/* EncryptionException | */com.sshtools.common.publickey.InvalidPassphraseException ipe) {
 							throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_FAILED, ipe);
 						}
 					}

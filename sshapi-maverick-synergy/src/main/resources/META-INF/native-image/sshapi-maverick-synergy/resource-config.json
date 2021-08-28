@@ -2,7 +2,9 @@
 	"resources": {
 		"includes": [
 			{
-				"pattern": "sshapi-providers.properties"
+				"pattern": "sshapi-providers.properties",
+				"pattern": "simplelog.properties",
+				"pattern": "publickey.properties"
 			}
 		]
 	}

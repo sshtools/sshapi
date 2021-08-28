@@ -107,11 +107,11 @@ This library is the provider bridge for SSHAPI.</description>
 			<artifactId>maverick-x509</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-bc</artifactId>
 			<version>${maverickSynergyVersion}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-sshagent</artifactId>

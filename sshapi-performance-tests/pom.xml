@@ -191,6 +191,7 @@
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
 					<version>${project.version}</version>
+					<type>pom</type>
 				</dependency>
 			</dependencies>
 		</profile>
