@@ -825,12 +825,8 @@ public class Util {
 		// try to load from maven properties first
 		try {
 			Properties p = new Properties();
-			InputStream is = Thread.currentThread().getContextClassLoader()
-					.getResourceAsStream("META-INF/maven/com.hypersocket/" + artifactId + "/pom.properties");
-			if (is == null) {
-				is = Util.class
+			InputStream is = Util.class
 						.getResourceAsStream("/META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties");
-			}
 			if (is != null) {
 				p.load(is);
 				version = p.getProperty("version", "");
