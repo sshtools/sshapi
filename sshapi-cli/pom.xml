@@ -27,6 +27,7 @@
 	<properties>
 		<applicationVersion>${project.version}</applicationVersion>
 		<projectDescription>${project.description}</projectDescription>
+		<graalvm.version>21.2.0</graalvm.version>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-cli</artifactId>
@@ -63,30 +64,80 @@ ssh-keygen - (TODO)  Generate identities</description>
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>info.picocli</groupId>
+							<artifactId>picocli-codegen</artifactId>
+							<version>4.6.1</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>3.1.1</version>
 				<groupId>org.apache.maven.plugins</groupId>
 				<inherited>false</inherited>
-				<configuration>
-					<archive> <!-- Please document this -->
-						<manifest>
-							<mainClass>net.sf.sshapi.cli.ssh</mainClass>
-						</manifest>
-					</archive>
-					<appendAssemblyId>false</appendAssemblyId>
-					<descriptors>
-					</descriptors>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
 				<executions>
 					<execution>
-						<id>make-assembly</id>
+						<id>make-assembly-scp</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
+						<configuration>
+							<finalName>scp</finalName>
+							<archive>
+								<manifest>
+									<mainClass>net.sf.sshapi.cli.scp</mainClass>
+								</manifest>
+							</archive>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>make-assembly-sftp</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>sftp</finalName>
+							<archive>
+								<manifest>
+									<mainClass>net.sf.sshapi.cli.sftp</mainClass>
+								</manifest>
+							</archive>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>make-assembly-ssh</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>ssh</finalName>
+							<archive>
+								<manifest>
+									<mainClass>net.sf.sshapi.cli.ssh</mainClass>
+								</manifest>
+							</archive>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -120,19 +171,6 @@ ssh-keygen - (TODO)  Generate identities</description>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-maverick-synergy-license</artifactId>
-			<version>${project.version}</version>
-			<optional>true</optional>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>  
-		<dependency>
 			<groupId>info.picocli</groupId>
 			<artifactId>picocli</artifactId>
 			<version>4.6.1</version>
@@ -149,9 +187,150 @@ ssh-keygen - (TODO)  Generate identities</description>
 			<type>jar</type>
 			<scope>provided</scope>
 		</dependency>
+
 	</dependencies>
 
 	<profiles>
+	
+
+		<!-- Enable / Disable these profiles to chose between different provider 
+			configurations, for example switching from Maverick Synergy Open Source to 
+			Synergy Hotfixes -->
+
+		<profile>
+			<id>maverick-synergy-opensource</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>maverick-synergy-hotfixes</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
+					<version>${project.version}</version>
+					<type>pom</type>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>legacy-maverick</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>stable-maverick</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-16</artifactId>
+					<version>${project.version}</version>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-maverick-16-license</artifactId>
+					<version>${project.version}</version>
+					<optional>true</optional>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+		<!-- Graal Native Image -->
+
+		<profile>
+			<id>native-images</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.graalvm.sdk</groupId>
+					<artifactId>graal-sdk</artifactId>
+					<version>${graalvm.version}</version>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.graalvm.nativeimage</groupId>
+						<artifactId>native-image-maven-plugin</artifactId>
+						<version>${graalvm.version}</version>
+						<executions>
+							<execution>
+								<id>scp-native-image</id>
+								<goals>
+									<goal>native-image</goal>
+								</goals>
+								<phase>package</phase>
+								<configuration>
+									<mainClass>net.sf.sshapi.cli.scp</mainClass>
+									<skip>false</skip>
+									<imageName>scp</imageName>
+									<buildArgs>--allow-incomplete-classpath
+									</buildArgs>
+								</configuration>
+							</execution>
+							<execution>
+								<id>ssh-native-image</id>
+								<goals>
+									<goal>native-image</goal>
+								</goals>
+								<phase>package</phase>
+								<configuration>
+									<mainClass>net.sf.sshapi.cli.ssh</mainClass>
+									<skip>false</skip>
+									<imageName>ssh</imageName>
+									<buildArgs>--allow-incomplete-classpath
+									</buildArgs>
+								</configuration>
+							</execution>
+							<execution>
+								<id>sftp-native-image</id>
+								<goals>
+									<goal>native-image</goal>
+								</goals>
+								<phase>package</phase>
+								<configuration>
+									<mainClass>net.sf.sshapi.cli.sftp</mainClass>
+									<skip>false</skip>
+									<imageName>sftp</imageName>
+									<buildArgs>--allow-incomplete-classpath
+									</buildArgs>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Shaded Jars -->
+		
 		<!-- scp -->
 		<profile>
 			<id>scp</id>

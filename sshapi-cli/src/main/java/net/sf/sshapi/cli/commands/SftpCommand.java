@@ -24,12 +24,13 @@ package net.sf.sshapi.cli.commands;
 import net.sf.sshapi.cli.SftpContainer;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Spec;
 
 /**
  * Abstract sftp command.
  */
-public abstract class SftpCommand {
+public abstract class SftpCommand implements IVersionProvider {
 	@Spec
 	private CommandSpec spec;
 
@@ -52,5 +53,10 @@ public abstract class SftpCommand {
 			}
 		}
 		return newCwd;
+	}
+
+	@Override
+	public String[] getVersion() throws Exception {
+		return Util.getArtifactVersion("com.sshtools", "sshapi-cli").split("\\.");
 	}
 }

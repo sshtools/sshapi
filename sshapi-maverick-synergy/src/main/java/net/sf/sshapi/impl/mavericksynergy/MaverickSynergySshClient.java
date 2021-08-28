@@ -38,6 +38,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -196,57 +197,73 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	class HostKeyVerificationBridge implements HostKeyVerification {
+		
+		Set<String> acceptedKeys = new HashSet<>();
+		
 		@Override
 		public boolean verifyHost(final String host, final SshPublicKey pk) throws SshException {
-			if (getConfiguration().getHostKeyValidator() != null) {
-				int status;
-				try {
-					status = getConfiguration().getHostKeyValidator().verifyHost(new AbstractHostKey() {
-
-						@Override
-						public String getFingerprint() {
-							try {
-								return stripAlgorithmFromFingerprint(
-										SshKeyFingerprint.getFingerprint(getKey(), getMaverickFingerprintAlgo()));
-							} catch (SshException e) {
-								throw new RuntimeException(e);
+			synchronized(acceptedKeys) {
+				/* TODO: This is a work around to a bug Synergy 3.0.4 
+				 * where host keys may be re-requested during a session.
+				 * 
+				 * Remote it when fixed in synergy upstream
+				 */
+				String ak = host + ":" + pk.getFingerprint();
+				boolean ok = false;
+				if(acceptedKeys.contains(ak))
+					ok = true;
+				else if (getConfiguration().getHostKeyValidator() != null) {
+					int status;
+					try {
+						status = getConfiguration().getHostKeyValidator().verifyHost(new AbstractHostKey() {
+	
+							@Override
+							public String getFingerprint() {
+								try {
+									return stripAlgorithmFromFingerprint(
+											SshKeyFingerprint.getFingerprint(getKey(), getMaverickFingerprintAlgo()));
+								} catch (SshException e) {
+									throw new RuntimeException(e);
+								}
 							}
-						}
-
-						@Override
-						public String getHost() {
-							return host;
-						}
-
-						@Override
-						public byte[] getKey() {
-							try {
-								return pk.getEncoded();
-							} catch (SshException e) {
-								throw new RuntimeException(e);
+	
+							@Override
+							public String getHost() {
+								return host;
 							}
-						}
-
-						@Override
-						public String getType() {
-							return pk.getAlgorithm();
-						}
-
-						@Override
-						public int getBits() {
-							return pk.getBitLength();
-						}
-					});
-					return status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
-				} catch (net.sf.sshapi.SshException e) {
-					SshConfiguration.getLogger().error("Failed to verify host key.", e);
+	
+							@Override
+							public byte[] getKey() {
+								try {
+									return pk.getEncoded();
+								} catch (SshException e) {
+									throw new RuntimeException(e);
+								}
+							}
+	
+							@Override
+							public String getType() {
+								return pk.getAlgorithm();
+							}
+	
+							@Override
+							public int getBits() {
+								return pk.getBitLength();
+							}
+						});
+						ok = status == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
+					} catch (net.sf.sshapi.SshException e) {
+						SshConfiguration.getLogger().error("Failed to verify host key.", e);
+					}
+				} else {
+					System.out.println("The authenticity of host '" + host + "' can't be established.");
+					System.out.println(pk.getAlgorithm() + " key fingerprint is " + pk.getFingerprint());
+					ok = Util.promptYesNo("Are you sure you want to continue connecting?");
 				}
-			} else {
-				System.out.println("The authenticity of host '" + host + "' can't be established.");
-				System.out.println(pk.getAlgorithm() + " key fingerprint is " + pk.getFingerprint());
-				return Util.promptYesNo("Are you sure you want to continue connecting?");
+				if(ok)
+					acceptedKeys.add(ak);
+				return ok;
 			}
-			return false;
 		}
 	}
 

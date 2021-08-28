@@ -392,10 +392,10 @@ public class DefaultProviderFactory implements SshProviderFactory {
 			String dependsOn = properties.getProperty(requestedProviderClassName + ".dependsOn", "");
 			if (!dependsOn.equals("")) {
 				try {
-					Class.forName(dependsOn, true, getClassLoader());
+					Class.forName(dependsOn, false, getClassLoader());
 				} catch (ClassNotFoundException cnfe) {
 					LOG.warn(
-							"The provider {0} was found, but a class it depends on ({1}, does not exist. Probably caused by a missing dependency.",
+							"The provider {0} was found, but a class it depends on ({1}, does not exist. Probably caused by a missing dependency.", cnfe,
 							requestedProviderClassName, dependsOn);
 					return null;
 				}
@@ -429,15 +429,20 @@ public class DefaultProviderFactory implements SshProviderFactory {
 		private static final SshProviderFactory instance = createInstance();
 
 		private static SshProviderFactory createInstance() {
-			String factoryClassName = System.getProperty(FACTORY_CLASS_NAME, DefaultProviderFactory.class.getName());
-			try {
-				// Instantiating using Constructor is required because
-				// obfuscation changes the access of the constructor
-				Constructor<?> c = Class.forName(factoryClassName).getConstructor(new Class[] {});
-				c.setAccessible(true);
-				return (SshProviderFactory) c.newInstance(new Object[0]);
-			} catch (Exception e) {
-				throw new RuntimeException("Failed to create SSH client factory.", e);
+			String factoryClassName = System.getProperty(FACTORY_CLASS_NAME, null);
+			if(factoryClassName == null) {
+				return new DefaultProviderFactory();
+			}
+			else {
+				try {
+					// Instantiating using Constructor is required because
+					// obfuscation changes the access of the constructor
+					Constructor<?> c = Class.forName(factoryClassName).getConstructor(new Class[] {});
+					c.setAccessible(true);
+					return (SshProviderFactory) c.newInstance(new Object[0]);
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to create SSH client factory.", e);
+				}
 			}
 		}
 	}

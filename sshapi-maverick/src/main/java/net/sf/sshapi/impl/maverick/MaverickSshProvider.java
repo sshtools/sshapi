@@ -71,7 +71,7 @@ public class MaverickSshProvider extends AbstractProvider {
 		if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1
 				|| System.getProperty("os.name").toLowerCase().indexOf("solaris") != -1)
 				&& System.getProperty("java.security.egd") == null) {
-			SshConfiguration.getLogger().warn(
+			SshConfiguration.getLogger().debug(
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
 

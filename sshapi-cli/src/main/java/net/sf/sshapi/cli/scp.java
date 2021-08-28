@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
@@ -43,6 +44,8 @@ import picocli.CommandLine.Parameters;
 @Command(name = "scp", mixinStandardHelpOptions = true, description = "Secure file copy.")
 public class scp extends AbstractSshCommand implements SshFileTransferListener, Logger, Callable<Integer> {
 
+	private static final long MS_IN_MINUTE = TimeUnit.MINUTES.toMillis(1);
+	private static final long MS_IN_HOUR = TimeUnit.HOURS.toMillis(1);
 	private long transferLength;
 	private String transferPath;
 	private long transferProgressed;
@@ -61,20 +64,21 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 			"--recursive" }, description = " Recursively copy entire directories.  Note that ssh follows symbolic links encountered in the tree traversal.")
 	private boolean recursive;
 
-    @Parameters(index = "0", description = "The source file or directory.")
+	@Parameters(index = "0", description = "The source file or directory.")
 	private String source;
 
-    @Parameters(index = "1", description = "The target file or directory.")
+	@Parameters(index = "1", description = "The target file or directory.")
 	private String target;
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @throws SshException
 	 */
 	public scp() throws SshException {
 	}
 
+	@Override
 	protected void onStart() throws SshException, IOException {
 		if (isRemotePath(source)) {
 			if (isRemotePath(target)) {
@@ -126,6 +130,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		return file;
 	}
 
+	@Override
 	String getPath(String path) {
 		int idx = path.indexOf(":");
 		if (idx == -1) {
@@ -134,6 +139,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		return path.substring(idx + 1);
 	}
 
+	@Override
 	boolean isRemotePath(String path) {
 		int idx = path.indexOf("@");
 		int idx2 = path.indexOf(":");
@@ -180,10 +186,9 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 //				"Classname of SSH provider to use (Note, in OpenSSH this option is 'program' which is an executable. In this case, it must be the classname of an SSHAPI provider.");
 //	}
 
-	
 	/**
 	 * Entry point.
-	 * 
+	 *
 	 * @param args command line arguments
 	 * @throws Exception on error
 	 */
@@ -191,13 +196,13 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		scp cli = new scp();
 		System.exit(new CommandLine(cli).execute(args));
 	}
-	
+
 	@Override
 	public Integer call() throws SshException {
 		try {
 			start();
 		} catch (FileNotFoundException e) {
-			if(!isQuiet()) {
+			if (!isQuiet()) {
 				System.err.println(e.getMessage() + ": No such file or directory");
 			}
 			return 1;
@@ -205,22 +210,25 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 			if (sshe.getCode().equals(SshException.HOST_KEY_REJECTED)) {
 				// Already displayed a message, just exit
 			} else {
-				if(!isQuiet()) {
+				if (!isQuiet()) {
 					System.err.println("scp: " + sshe.getMessage());
-					sshe.printStackTrace();
+					if(isLevelEnabled(Level.DEBUG))
+						sshe.printStackTrace();
 				}
 			}
 			return 1;
 		} catch (Exception e) {
-			if(!isQuiet()) {
+			if (!isQuiet()) {
 				System.err.println("scp: " + e.getMessage());
-				e.printStackTrace();
+				if(isLevelEnabled(Level.DEBUG))
+					e.printStackTrace();
 			}
 			return 1;
 		}
 		return 0;
 	}
 
+	@Override
 	public void startedTransfer(String path, String targetPath, long length) {
 		this.transferLength = length;
 		this.transferLastUpdate = System.currentTimeMillis();
@@ -231,6 +239,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		updateProgress(false);
 	}
 
+	@Override
 	public void transferProgress(String path, String targetPath, long progress) {
 		transferBlock += progress;
 		if ((System.currentTimeMillis() - this.transferLastUpdate) > 1000) {
@@ -238,6 +247,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		}
 	}
 
+	@Override
 	public void finishedTransfer(String path, String targetPath) {
 		updateBlock(true);
 	}
@@ -246,7 +256,7 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		long now = System.currentTimeMillis();
 		long taken = now - this.transferLastUpdate;
 		this.transferLastUpdate = now;
-		this.transferSpeed = (int) (((double) taken / 1000.0) * (double) transferBlock);
+		this.transferSpeed = (int) ((taken / 1000.0) * transferBlock);
 		transferProgressed += transferBlock;
 		transferBlock = 0;
 		updateProgress(newline);
@@ -257,23 +267,29 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 		String sizeSoFar = formatSize(transferProgressed);
 		// width - ( 5+ 10 + 8 + 3 + 1 + 1 + 1 + 1 )
 		int w = reader == null ? 80 : terminal.getWidth();
-		int filenameWidth = Math.max(10, w - 32);
-
+		int filenameWidth = Math.max(10, w - 38);
+		long msRemain = ( transferLength - transferProgressed ) / Math.max(1, transferSpeed / 1000);
 		String result = String.format("%-" + filenameWidth + "s %3d%% %-8s %10s %5s",
-				new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), "??:??" });
+				new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), formatTime(msRemain) });
 		if (terminal == null) {
 			System.out.print(result + "\r");
 			if (newline) {
 				System.out.println();
 			}
 		} else {
-			reader.getBuffer().clear();
-			reader.getBuffer().write(result);
-			reader.getBuffer().atChar(w);
-			if (newline) {
-				reader.getBuffer().down();
-				reader.getBuffer().atChar(0);
+			if(newline)
+				terminal.writer().println(result);
+			else {
+				terminal.writer().print(result + "\r");
 			}
+			terminal.writer().flush();
+//			reader.getBuffer().clear();
+//			reader.getBuffer().write(result);
+//			reader.getBuffer().atChar(w);
+//			if (newline) {
+//				reader.getBuffer().down();
+//				reader.getBuffer().atChar(0);
+//			}
 		}
 
 	}
@@ -293,6 +309,25 @@ public class scp extends AbstractSshCommand implements SshFileTransferListener, 
 			}
 		}
 		return speedText;
+	}
+
+	private String formatTime(long ms) {
+		long hrs = ms / MS_IN_HOUR;
+		long mins = (ms % MS_IN_HOUR) / MS_IN_MINUTE;
+		long secs = (ms - (hrs * MS_IN_HOUR + (mins * MS_IN_MINUTE))) / 1000;
+
+		if(hrs > 99999) {
+			return String.format("%08d ETA", hrs);
+		}
+		else if(hrs > 99) {
+			return String.format("%4d:%02dm ETA", hrs, mins);
+		}
+		else if(hrs > 0) {
+			return String.format("%02d:%02d:%02d ETA", hrs, mins, secs);
+		}
+		else {
+			return String.format("   %02d:%02d ETA", mins, secs);
+		}
 	}
 
 	private String formatSize(long bytes) {

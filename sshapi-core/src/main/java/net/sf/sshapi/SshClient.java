@@ -24,6 +24,7 @@ package net.sf.sshapi;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -170,6 +171,22 @@ public interface SshClient extends Closeable, AutoCloseable {
 	 * @throws SshException
 	 */
 	boolean authenticate(SshAuthenticator... authenticators) throws SshException;
+	
+	/**
+	 * Authenticate. An authenticator should be provided for each type
+	 * supported. This method may be called multiple times until
+	 * <code>true</code> is return or an exception is thrown.
+	 * {@link SshConfiguration#getMaxAuthAttempts()}] has no impact on this
+	 * method.
+	 * 
+	 * @param authenticators authenticators. At least one must be provided
+	 * @return <code>true</code> when full authenticated, or <code>false</code>
+	 *         if more authentication is required
+	 * @throws SshException
+	 */
+	default boolean authenticate(Collection<SshAuthenticator> authenticators) throws SshException {
+		return authenticate(authenticators.toArray(new SshAuthenticator[0]));
+	}
 	
 	/**
 	 * Authenticate, but  do not block, instead return a future to monitor state

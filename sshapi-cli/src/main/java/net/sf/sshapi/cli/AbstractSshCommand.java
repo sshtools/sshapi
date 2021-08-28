@@ -22,6 +22,7 @@
 package net.sf.sshapi.cli;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -32,12 +33,14 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.DefaultProviderFactory;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
+import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
 import net.sf.sshapi.hostkeys.SshHostKeyManager;
@@ -46,6 +49,7 @@ import net.sf.sshapi.util.BatchHostKeyValidator;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
 import net.sf.sshapi.util.ConsoleKeyboardInteractiveAuthenticator;
 import net.sf.sshapi.util.ConsolePasswordAuthenticator;
+import net.sf.sshapi.util.DefaultAgentAuthenticator;
 import net.sf.sshapi.util.DefaultPublicKeyAuthenticator;
 import picocli.CommandLine.Option;
 
@@ -55,7 +59,6 @@ import picocli.CommandLine.Option;
 public abstract class AbstractSshCommand implements Logger {
 
 	protected SshConfiguration configuration;
-	protected File identityFile;
 	protected Terminal terminal;
 	protected LineReader reader;
 	protected SshProvider provider;
@@ -83,6 +86,14 @@ public abstract class AbstractSshCommand implements Logger {
 	@Option(names = { "-q", "--quiet" }, description = "No output.")
 	private boolean quiet;
 
+	@Option(names = { "--ssh-auth-sock" }, description = "Identifies the path of a UNIX-domain socket used to communicate with the agent.")
+	private File sshAuthSock;
+
+	@Option(names = { "-i", "--identity-file" }, description = "elects the file from which the identity (private key) for public key authentication is read.")
+	private File identityFile;
+	
+	private SshAgent agent;
+
 	/**
 	 * Constructor.
 	 * 
@@ -96,7 +107,8 @@ public abstract class AbstractSshCommand implements Logger {
 			reader = LineReaderBuilder.builder().terminal(terminal).build();
 			// terminal.beforeReadLine(reader, "", (char)0);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if(verbosity > 1)
+				e.printStackTrace();
 			terminal = null;
 		}
 
@@ -163,7 +175,7 @@ public abstract class AbstractSshCommand implements Logger {
 			}
 			validator = new BatchHostKeyValidator(keyManager);
 		} else {
-			validator = new ConsoleHostKeyValidator();
+			validator = new ConsoleHostKeyValidator(keyManager);
 		}
 		configuration.setHostKeyValidator(validator);
 
@@ -190,10 +202,42 @@ public abstract class AbstractSshCommand implements Logger {
 	protected abstract void onStart() throws SshException, IOException;
 
 	protected SshClient connect(String connectionDetails) throws SshException, IOException {
+			
+
+		File auth = this.sshAuthSock;
+		if (provider.getCapabilities().contains(Capability.AGENT) && agent == null) {
+			if(auth == null) {
+				String authStr = System.getenv("SSH_AUTH_SOCK");
+				if(authStr != null && authStr.length() > 0)
+					auth = new File(authStr);
+			}
+			auth = authSockWorkaround(auth);
+			if(auth != null) {
+				info("Using {0} for agent socket", auth);
+				try {
+					int type = SshAgent.AUTO_AGENT_SOCKET_TYPE;
+					info("Starting agent");
+					agent = provider.connectToLocalAgent(getClass().getSimpleName(), auth.getAbsolutePath(), type, SshAgent.AUTO_PROTOCOL);
+					info("Started agent");
+				} catch (SshException e) {
+					if (auth != null && auth.length() > 0) {
+						if(!quiet)
+							System.err.println(
+									"Failed to to agent, and SSH_AUTH_SOCK was set, so it is expected to be working. Will fall back to other authentication methods.");
+					} else
+						info("Could not connect to agent, but no SSH_AUTH_SOCK was set, so it is probably not running.");
+				}
+			}
+		}
+		
 		// Connect
 		SshClient client = provider.createClient(configuration);
 		client.connect(extractUsername(connectionDetails), extractHostname(connectionDetails), getPort());
 		List<SshAuthenticator> authenticators = new ArrayList<>();
+		if(auth != null && agent != null) {
+			client.addChannelHandler(agent);
+			authenticators.add(new DefaultAgentAuthenticator(agent));
+		}
 		SshPasswordAuthenticator pwAuth = null;
 
 		// Create the non-batch authenticators
@@ -206,8 +250,37 @@ public abstract class AbstractSshCommand implements Logger {
 		}
 
 		// Key authentication
-		if (identityFile != null && identityFile.exists()) {
-			authenticators.add(new DefaultPublicKeyAuthenticator(pwAuth, identityFile));
+		File identityFile = this.identityFile;
+		if(identityFile == null) {
+			for(String pk : provider.getSupportedPublicKey()) {
+				String name = null;
+				if(pk.equals(SshConfiguration.PUBLIC_KEY_SSHDSA)) {
+					name = "id_dsa";
+				}
+				else if(pk.equals(SshConfiguration.PUBLIC_KEY_SSHRSA)) {
+					name = "id_rsa";
+				}
+				else if(pk.equals(SshConfiguration.PUBLIC_KEY_ED25519)) {
+					name = "id_ed25519";
+				}
+				else if(pk.equals(SshConfiguration.PUBLIC_KEY_ECDSA_256) || pk.equals(SshConfiguration.PUBLIC_KEY_ECDSA_521) || pk.equals(SshConfiguration.PUBLIC_KEY_ECDSA_384)) {
+					name = "id_ecdsa";
+				}
+				if(name != null) {
+					File pkFile = new File(new File(System.getProperty("user.home"), ".ssh"), name);
+					if(pkFile.exists()) {
+						identityFile = pkFile;
+					}
+				}
+			}
+		}
+		if (identityFile != null) {
+			if(identityFile.exists()) {
+				info("Using {0} for key authentication", identityFile);
+				authenticators.add(new DefaultPublicKeyAuthenticator(pwAuth, identityFile));
+			}
+			else
+				throw new FileNotFoundException(String.format("No such file %s", identityFile));
 		}
 
 		// Add the non-batch authenticators
@@ -217,12 +290,10 @@ public abstract class AbstractSshCommand implements Logger {
 		}
 
 		// Now authenticate
-		for (SshAuthenticator auth : authenticators) {
-			for (int i = 0; i < 3; i++) {
-				if (client.authenticate(auth)) {
-					return client;
-				}
-			}
+
+		info("Using authenticators: {0}", authenticators);
+		if (client.authenticate(authenticators)) {
+			return client;
 		}
 
 		// Failed
@@ -276,8 +347,8 @@ public abstract class AbstractSshCommand implements Logger {
 	@Override
 	public void log(Level level, String message, Throwable exception, Object... args) {
 		if (isLevelEnabled(level)) {
-			log(level, message);
-			if (traces) {
+			log(level, message, args);
+			if (traces && exception != null) {
 				exception.printStackTrace();
 			}
 		}
@@ -286,5 +357,24 @@ public abstract class AbstractSshCommand implements Logger {
 	@Override
 	public boolean isLevelEnabled(Level level) {
 		return this.level.compareTo(level) <= 0;
+	}
+
+	private File authSockWorkaround(File auth) {
+		if (auth == null) {
+			File f = new File(System.getProperty("user.home") + File.separator + ".desktop-ssh-agent" + File.separator + "agent.sock");
+			if (f.exists()) {
+				try {
+					/*
+					 * Should point to a link, check that exists before using
+					 * the link path
+					 */
+					File canon = f.getCanonicalFile();
+					if (canon.exists())
+						auth = f;
+				} catch (IOException ioe) {
+				}
+			}
+		}
+		return auth;
 	}
 }
