@@ -86,7 +86,7 @@ This library is the provider bridge for SSHAPI.</description>
 			<groupId>org.wildfly.openssl</groupId>
 			<artifactId>wildfly-openssl</artifactId>
 			<version>1.0.7.Final</version>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-ed25519</artifactId>
@@ -107,11 +107,11 @@ This library is the provider bridge for SSHAPI.</description>
 			<artifactId>maverick-x509</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-bc</artifactId>
 			<version>${maverickSynergyVersion}</version>
-		</dependency> -->
+		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-sshagent</artifactId>

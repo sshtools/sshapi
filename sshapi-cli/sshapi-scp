@@ -1,7 +1,0 @@
-#!/bin/bash
-
-for d in ../sshapi-*/target/classes ; do
-    cp="${cp}:${d}"
-done
-
-java -classpath "${cp}" scp $@

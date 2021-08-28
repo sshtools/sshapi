@@ -35,8 +35,8 @@
 	<description>Clones of the commands provided by OpenSSH that are option compatible wherever possible.
 
 scp  - (WIP) Secure copy
-sftp - (TODO) Secure File Transfer Protocol client
-ssh - (TODO) A shell (with some restrictions)
+sftp - (WIP) Secure File Transfer Protocol client
+ssh - (WIP) A shell (with some restrictions)
 ssh-keygen - (TODO)  Generate identities</description>
 	<parent>
 		<artifactId>sshapi-group</artifactId>
@@ -216,7 +216,7 @@ ssh-keygen - (TODO)  Generate identities</description>
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
 					<version>${project.version}</version>
-					<type>pom</type>
+					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
 				<dependency>
@@ -257,6 +257,19 @@ ssh-keygen - (TODO)  Generate identities</description>
 					<artifactId>sshapi-maverick-16-license</artifactId>
 					<version>${project.version}</version>
 					<optional>true</optional>
+					<type>jar</type>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>sshj</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.sshtools</groupId>
+					<artifactId>sshapi-sshj</artifactId>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>

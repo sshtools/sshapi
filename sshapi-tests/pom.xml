@@ -238,7 +238,7 @@
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-maverick-synergy-hotfixes</artifactId>
 					<version>${project.version}</version>
-					<type>pom</type>
+					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
 			</dependencies>

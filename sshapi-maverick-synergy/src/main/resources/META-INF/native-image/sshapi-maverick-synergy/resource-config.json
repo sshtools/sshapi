@@ -2,9 +2,43 @@
 	"resources": {
 		"includes": [
 			{
-				"pattern": "sshapi-providers.properties",
-				"pattern": "simplelog.properties",
+				"pattern": "sshapi-providers.properties"
+			},
+			{
+				"pattern": "simplelog.properties"
+			},
+			{
 				"pattern": "publickey.properties"
+			},
+			{
+				"pattern": "generator.properties"
+			},
+			{
+				"pattern": "kex-client.properties"
+			},
+			{
+				"pattern": "kex-server.properties"
+			},
+			{
+				"pattern": "zip.properties"
+			},
+			{
+				"pattern": "openssh-parser.properties"
+			},
+			{
+				"pattern": "META-INF/synergy-license.txt"
+			},
+			{
+				"pattern": "META-INF/services/java.nio.file.spi.FileSystemProvider"
+			},
+			{
+				"pattern": "META-INF/services/java.security.Provider"
+			},
+			{
+				"pattern": "META-INF/services/org.line.terminal.spi.JansiSupport"
+			},
+			{
+				"pattern": "META-INF/services/org.line.terminal.spi.JnaSupport"
 			}
 		]
 	}

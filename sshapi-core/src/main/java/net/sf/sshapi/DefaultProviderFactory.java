@@ -353,7 +353,7 @@ public class DefaultProviderFactory implements SshProviderFactory {
 		try {
 			LOG.info("Attempting to load provider {0}.", className);
 			SshProvider provider = (SshProvider) (Class.forName(className, true, getClassLoader()).getConstructor().newInstance());
-			LOG.info("Provider {0} loaded", className);
+			LOG.info("Provider {0} ({1}, {2}) loaded", className, provider.getVersion(), provider.getVendor());
 			return provider;
 		} catch (InstantiationException ie) {
 			if (ie.getCause() != null && ie.getCause() instanceof ClassNotFoundException) {

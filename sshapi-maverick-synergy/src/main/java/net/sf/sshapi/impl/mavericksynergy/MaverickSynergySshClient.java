@@ -43,9 +43,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-/* TODO: forces use of maverick-bc */
-/*import org.bouncycastle.openssl.EncryptionException;*/
-
 import com.sshtools.client.AbstractKeyboardInteractiveCallback;
 import com.sshtools.client.BannerDisplay;
 import com.sshtools.client.ClientAuthenticator;
@@ -991,17 +988,22 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 						}
 						try {
 							pair = pkf.toKeyPair(new String(pa));
-						} catch (/* EncryptionException | */com.sshtools.common.publickey.InvalidPassphraseException ipe) {
-							if (i == 0) {
+						} catch (IOException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
+
+							if(i == 0 && (!(ipe instanceof IOException) || (ipe instanceof IOException && ipe.getClass().getSimpleName().equals("EncryptionException"))))
 								throw new net.sf.sshapi.SshException(
 										net.sf.sshapi.SshException.AUTHENTICATION_ATTEMPTS_EXCEEDED);
-							}
+							else if(i == 0)
+								throw (IOException)ipe;
 						}
 					} else {
 						try {
 							pair = pkf.toKeyPair("");
-						} catch (/* EncryptionException | */com.sshtools.common.publickey.InvalidPassphraseException ipe) {
-							throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_FAILED, ipe);
+						} catch (IOException | com.sshtools.common.publickey.InvalidPassphraseException ipe) {
+							if(!(ipe instanceof IOException) || (ipe instanceof IOException && ipe.getClass().getSimpleName().equals("EncryptionException")))
+								throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.AUTHENTICATION_FAILED, ipe);
+							else
+								throw (IOException)ipe;
 						}
 					}
 				}

@@ -45,11 +45,6 @@
 		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
 		
-		<!-- Now two different flavours of Synergy, that have different
-		group ids, and MAY have different versions. Version decided
-		by profile section below -->
-		<maverickSynergyHotfixesVersion>3.0.4</maverickSynergyHotfixesVersion>
-		
 		<common.version>2.0.4</common.version>
 
 		<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
