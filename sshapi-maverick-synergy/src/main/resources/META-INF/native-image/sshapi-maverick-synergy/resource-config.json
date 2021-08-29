@@ -35,12 +35,6 @@
 				"pattern": "META-INF/services/java\\.security\\.Provider"
 			},
 			{
-				"pattern": "META-INF/services/org\\.line\\.terminal\\.spi\\.JansiSupport"
-			},
-			{
-				"pattern": "META-INF/services/org\\.line\\.terminal\\.spi\\.JnaSupport"
-			},
-			{
 				"pattern": "META-INF/maven/com\\.sshtools/.*/.*\\.xml"
 			},
 			{

@@ -132,7 +132,7 @@ public class JschSshProvider extends AbstractProvider {
 				Capability.SHELL, Capability.SET_LAST_MODIFIED, Capability.LOCAL_PORT_FORWARD,
 				Capability.REMOTE_PORT_FORWARD, Capability.RECURSIVE_SCP_GET, Capability.SFTP_READ_LINK,
 				Capability.FORWARDING_CHANNELS, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
-				Capability.SIGNALS, Capability.SFTP_HARD_LINK });
+				Capability.SIGNALS, Capability.SFTP_HARD_LINK, Capability.SCP_CAN_PRESERVE_ATTRIBUTES });
 	}
 
 	@Override

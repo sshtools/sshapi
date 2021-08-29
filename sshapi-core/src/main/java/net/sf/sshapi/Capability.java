@@ -279,6 +279,13 @@ public class Capability {
 	
 	/** The provider filters out '.' and '..' entries returned by SFTP list operations */
 	public final static Capability FILTERS_SFTP_DOT_DIRECTORIES = new Capability("filters-sftp-dot-directories");
+	
+	/** The provider provides option to configure if last access / last modification times
+	 * are preserved during SCP transfers. Note, if this capability is missing, it doesn't mean
+	 * the provide WONT preserve access times, it just means it is not configurable with
+	 * {@link ScpClient#setTimesPreserved(boolean)}.
+	 */
+	public final static Capability SCP_CAN_PRESERVE_ATTRIBUTES = new Capability("scp-can-preserve-times");
 
 	private String name;
 

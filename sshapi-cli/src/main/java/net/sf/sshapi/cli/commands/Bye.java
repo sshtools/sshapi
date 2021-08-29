@@ -19,74 +19,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.cli;
+package net.sf.sshapi.cli.commands;
 
-import java.io.File;
+import java.util.concurrent.Callable;
 
-import org.jline.reader.LineReader;
-import org.jline.terminal.Terminal;
-
-import net.sf.sshapi.sftp.SftpClient;
-import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Command;
 
 /**
- * The Interface SftpContainer.
+ * Quit sftp
  */
-public interface SftpContainer {
-	
-	/**
-	 * Gets the client.
-	 *
-	 * @return the client
-	 */
-	SftpClient getClient();
-
-	/**
-	 * Gets the cwd.
-	 *
-	 * @return the cwd
-	 */
-	String getCwd();
-
-	/**
-	 * Sets the cwd.
-	 *
-	 * @param path the new cwd
-	 */
-	void setCwd(String path);
-	
-	/**
-	 * Gets the terminal.
-	 *
-	 * @return the terminal
-	 */
-	Terminal getTerminal();
-	
-	/**
-	 * Gets the line reader.
-	 *
-	 * @return the line reader
-	 */
-	LineReader getLineReader();
-
-	/**
-	 * Sets the lcwd.
-	 *
-	 * @param lcwd the new lcwd
-	 */
-	void setLcwd(File lcwd);
-
-	/**
-	 * Gets the lcwd.
-	 *
-	 * @return the lcwd
-	 */
-	File getLcwd();
-
-	/**
-	 * Gets the command line spec.
-	 *
-	 * @return the spec
-	 */
-	CommandSpec getSpec();
+@Command(name = "bye", mixinStandardHelpOptions = false, description = "Quit sftp.")
+public class Bye extends SftpCommand implements Callable<Integer> {
+	@Override
+	public Integer call() throws Exception {
+		System.exit(0);
+		return 0;
+	}
 }

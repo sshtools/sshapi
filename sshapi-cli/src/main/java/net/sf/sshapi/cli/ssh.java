@@ -27,13 +27,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.jline.utils.Signals;
+
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
+import net.sf.sshapi.SshExtendedChannel.Signal;
 import net.sf.sshapi.SshShell;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine;
@@ -50,11 +57,19 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	@Option(names = { "-p", "--port" }, description = "Port number on which the server is listening.")
 	private int port = 22;
 
-    @Parameters(index = "0", description = "Destination.")
+	@Option(names = { "-L",
+			"--local-forward" }, description = "Specifies that connections to the given TCP port on the local (client) host are to be forwarded to the given host andport, on the remote side.")
+	private String[] localForwards;
+
+	@Parameters(index = "0", description = "Destination.")
 	private String destination;
 
-    @Parameters(index = "1", arity = "0..1", description = "Command to run.")
+	@Parameters(index = "1", arity = "0..1", description = "Command to run.")
 	private String command;
+
+	private int height;
+	private int width;
+	private ScheduledExecutorService terminalDimensionsMonitor;
 
 	/**
 	 * Constructor.
@@ -64,27 +79,90 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	public ssh() throws SshException {
 	}
 
+	protected boolean calcWidthAndHeight() {
+		int nwidth = 0;
+		int nheight = 0;
+		if (terminal == null) {
+			nwidth = 80;
+			nheight = 24;
+		} else {
+			nwidth = terminal.getWidth();
+			nheight = terminal.getHeight();
+		}
+		try {
+			return width != -1 && (width != nwidth || height != nheight);
+		} finally {
+			width = nwidth;
+			height = nheight;
+		}
+	}
+
 	protected void onStart() throws SshException, IOException {
 		String term = System.getenv("TERM");
-		if(term == null || term.equals("")) {
+		if (term == null || term.equals("")) {
 			term = "dumb";
 		}
-		// TODO sizes, resizing
-		try(SshClient client = connect(destination)) {
-			if(command == null) {
-				try(SshShell shell = client.shell(term, 80, 24, 0, 0, null)) {
-					joinChannelToConsole(shell);
-				} 
+		calcWidthAndHeight();
+		try (SshClient client = connect(destination)) {
+			if (localForwards != null) {
+				for (String localForward : localForwards) {
+					String[] spec = localForward.split(":");
+					if (spec.length == 4) {
+						client.localForward(spec[0], Integer.parseInt(spec[1]), spec[2], Integer.parseInt(spec[3]));
+					} else if (spec.length == 3) {
+						client.localForward(null, Integer.parseInt(spec[0]), spec[1], Integer.parseInt(spec[2]));
+					} else {
+						throw new IllegalArgumentException("Invalid local forwarding specification.");
+					}
+				}
 			}
-			else {
-				try(SshCommand cmd = client.command(command, term, 80, 24, 0, 0, null)) {
+			if (command == null) {
+				try (SshShell shell = client.shell(term, width, height, 0, 0, null)) {
+					if (terminal != null) {
+						terminalDimensionsMonitor = Executors.newSingleThreadScheduledExecutor();
+						terminalDimensionsMonitor.scheduleAtFixedRate(() -> {
+							if (calcWidthAndHeight()) {
+								try {
+									shell.requestPseudoTerminalChange(width, height, 0, 0);
+								} catch (SshException e) {
+									debug("Failed to change terminal dimensions.");
+								}
+							}
+						}, 500, 500, TimeUnit.MILLISECONDS);
+						terminal.echo(false);
+					}
+					Runnable ctrlC = () -> {
+						try {
+							if (provider.getCapabilities().contains(Capability.SIGNALS)) {
+								shell.sendSignal(Signal.INT);
+							} else {
+								/* Will echo Ctrl+C twice on linux, maybe others */
+								shell.getOutputStream().write(3);
+							}
+						} catch (IOException e) {
+							if (!isQuiet())
+								error("Failed to send signal. {0}", e.getMessage());
+						}
+					};
+					Signals.register("INT", ctrlC);
+					try {
+						joinChannelToConsole(shell);
+					} finally {
+						Signals.unregister("INT", ctrlC);
+						System.out.println();
+					}
+				} finally {
+					if(terminalDimensionsMonitor != null)
+						terminalDimensionsMonitor.shutdown();
+				}
+			} else {
+				try (SshCommand cmd = client.command(command, term, 80, 24, 0, 0, null)) {
 					joinChannelToConsole(cmd);
 				}
 			}
 		}
 	}
 
-		
 	/**
 	 * Entry point.
 	 * 
@@ -95,7 +173,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 		ssh client = new ssh();
 		System.exit(new CommandLine(client).execute(args));
 	}
-	
+
 	@Override
 	public Integer call() throws SshException {
 		try {
@@ -123,7 +201,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	protected int getPort() {
 		return port;
 	}
-	
+
 	static void joinChannelToConsole(final SshExtendedChannel<?, ?> channel) throws IOException, SshException {
 		AtomicBoolean fin = new AtomicBoolean();
 		AtomicBoolean closed = new AtomicBoolean();
@@ -140,8 +218,8 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 		Thread readInThread = new Thread() {
 			public void run() {
 				/*
-				 * Wrapping in a channel allows this thread to be interrupted
-				 * (on Linux at least, other OS's .. YMMV
+				 * Wrapping in a channel allows this thread to be interrupted (on Linux at
+				 * least, other OS's .. YMMV
 				 */
 				try (InputStream in = Channels.newInputStream((new FileInputStream(FileDescriptor.in)).getChannel())) {
 					Util.joinStreams(in, channel.getOutputStream());
@@ -160,15 +238,18 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 			}
 		};
 		readInThread.start();
-		Util.joinStreams(channel.getInputStream(), System.out);
-		fin.set(true);
-		readInThread.interrupt();
-		readErrThread.interrupt();
-		if (!closed.get()) {
-			closed.set(true);
-			try {
-				channel.close();
-			} catch (IOException e) {
+		try {
+			Util.joinStreams(channel.getInputStream(), System.out);
+		} finally {
+			fin.set(true);
+			readInThread.interrupt();
+			readErrThread.interrupt();
+			if (!closed.get()) {
+				closed.set(true);
+				try {
+					channel.close();
+				} catch (IOException e) {
+				}
 			}
 		}
 	}

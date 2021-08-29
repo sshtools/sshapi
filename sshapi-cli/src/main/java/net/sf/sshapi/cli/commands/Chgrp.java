@@ -19,74 +19,34 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package net.sf.sshapi.cli;
+package net.sf.sshapi.cli.commands;
 
-import java.io.File;
+import java.util.concurrent.Callable;
 
-import org.jline.reader.LineReader;
-import org.jline.terminal.Terminal;
-
-import net.sf.sshapi.sftp.SftpClient;
-import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 /**
- * The Interface SftpContainer.
+ * Chgrp command.
  */
-public interface SftpContainer {
-	
-	/**
-	 * Gets the client.
-	 *
-	 * @return the client
-	 */
-	SftpClient getClient();
+@Command(name = "chrp", mixinStandardHelpOptions = false, description = "Change group of file path to grp.")
+public class Chgrp extends SftpCommand implements Callable<Integer> {
 
-	/**
-	 * Gets the cwd.
-	 *
-	 * @return the cwd
-	 */
-	String getCwd();
+	@Option(names = { "-h" }, description = "Do not follow symlinks.")
+	private boolean dontFollowSymlinks;
 
-	/**
-	 * Sets the cwd.
-	 *
-	 * @param path the new cwd
-	 */
-	void setCwd(String path);
-	
-	/**
-	 * Gets the terminal.
-	 *
-	 * @return the terminal
-	 */
-	Terminal getTerminal();
-	
-	/**
-	 * Gets the line reader.
-	 *
-	 * @return the line reader
-	 */
-	LineReader getLineReader();
+	@Parameters(index = "0", description = "The GID of the grup.")
+	private int gid;
 
-	/**
-	 * Sets the lcwd.
-	 *
-	 * @param lcwd the new lcwd
-	 */
-	void setLcwd(File lcwd);
+	@Parameters(index = "1", arity = "1", description = "Path to change group of.")
+	private String path;
 
-	/**
-	 * Gets the lcwd.
-	 *
-	 * @return the lcwd
-	 */
-	File getLcwd();
-
-	/**
-	 * Gets the command line spec.
-	 *
-	 * @return the spec
-	 */
-	CommandSpec getSpec();
+	@Override
+	public Integer call() throws Exception {
+		expand(translatePath(getContainer().getCwd(), path), (fp) -> {
+			getContainer().getClient().chgrp(fp, gid);
+		}, false);
+		return 0;
+	}
 }

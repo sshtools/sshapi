@@ -65,7 +65,7 @@ public abstract class AbstractSshCommand implements Logger {
 	protected Level level;
 	protected boolean traces;
 
-	@Option(names = { "--provider" }, description = "Provider class name.")
+	@Option(names = { "-S", "--provider" }, description = "Provider class name.")
 	private String providerClass;
 
 	@Option(names = { "-C", "--compress" }, description = "Enabled compression.")
@@ -74,8 +74,8 @@ public abstract class AbstractSshCommand implements Logger {
 	@Option(names = { "-c", "--cipher" }, description = "Cipher.")
 	private String cipher;
 
-	@Option(names = { "-v", "--verbosity" }, description = "Log verbosity.")
-	private int verbosity;
+	@Option(names = { "-v", "--verbosity" }, description = "Log verbosity. Multiple -v options increase the verbosity.  The  maximum is 3.")
+	private boolean[] verbosity;
 
 	@Option(names = { "-1", "--ssh-1" }, description = "Force use of SSH1.")
 	private boolean v1;
@@ -107,8 +107,8 @@ public abstract class AbstractSshCommand implements Logger {
 			reader = LineReaderBuilder.builder().terminal(terminal).build();
 			// terminal.beforeReadLine(reader, "", (char)0);
 		} catch (Exception e) {
-			if(verbosity > 1)
-				e.printStackTrace();
+			if(verbosity != null && verbosity.length > 1)
+				error("Failed.", e);
 			terminal = null;
 		}
 
@@ -121,7 +121,7 @@ public abstract class AbstractSshCommand implements Logger {
 	 * @throws IOException
 	 */
 	public final void start() throws SshException, IOException {
-		switch (verbosity) {
+		switch (verbosity == null ? 0 : verbosity.length) {
 		case 0:
 			level = quiet ? Level.ERROR : Level.WARN;
 			break;

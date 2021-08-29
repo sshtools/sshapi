@@ -32,12 +32,12 @@ import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.synergy.ssh.Connection;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
-import net.sf.sshapi.SshStreamChannelListener;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshDataListener;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.SshShell;
+import net.sf.sshapi.SshStreamChannelListener;
 
 class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshStreamChannelListener<SshShell>, SshShell> implements SshShell {
 	private SessionChannelNG session;
@@ -83,6 +83,18 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshStreamChanne
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return outputStream;
+	}
+
+	@Override
+	public void sendSignal(Signal signal) throws SshException {
+		try {
+			/* TODO. Currently Hotfixes only. Call this directly when signal support appears in
+			 * open source version
+			 */
+			session.getClass().getMethod("signal", String.class).invoke(session, signal.name());
+		} catch (Exception e) {
+			throw new SshException(SshException.GENERAL, e);
+		}
 	}
 
 	@Override

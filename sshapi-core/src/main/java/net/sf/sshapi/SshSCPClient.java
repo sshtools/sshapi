@@ -51,4 +51,22 @@ import java.io.File;
 	 * @throws SshException
 	 */
 	void get(String remoteFilePath, File destinationFile, boolean recursive) throws SshException;
+	
+	/**
+	 * Set whether mode, last access and last modified times will be preserved during transfers.
+	 * 
+	 * @param preserveTimes preserve times
+	 */
+	default void setPreserveAttributes(boolean preserveTimes) {
+		throw new UnsupportedOperationException();
+	}
+	
+	/**
+	 * Set whether mode, last access and last modified times will be preserved during transfers.
+	 * 
+	 * @param preserveTimes preserve times
+	 */
+	default boolean isPreserveAttributes() {
+		throw new UnsupportedOperationException();
+	}
 }

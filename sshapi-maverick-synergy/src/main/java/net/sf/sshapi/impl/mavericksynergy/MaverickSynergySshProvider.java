@@ -70,7 +70,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			Capability.TUNNELED_SOCKET_FACTORY, Capability.SFTP_LSTAT, Capability.SFTP_RESUME, Capability.SFTP_OFFSET,
 			Capability.SCP, Capability.RECURSIVE_SCP_GET, Capability.CHANNEL_DATA_EVENTS, Capability.PORT_FORWARD_EVENTS,
 			Capability.X11_FORWARDING, Capability.X11_FORWARDING_UNIX_SOCKET, Capability.SFTP_HARD_LINK,
-			Capability.FORCE_KEY_EXCHANGE };
+			Capability.FORCE_KEY_EXCHANGE, Capability.SCP_CAN_PRESERVE_ATTRIBUTES, Capability.SIGNALS };
  
 			/**
 			 * SFTP mode, can be one of SFTP_ALL_MODES, SFTP_OVER_SCP or SFTP_SUBSYSTEM

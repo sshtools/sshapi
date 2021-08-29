@@ -28,15 +28,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import net.sf.sshapi.util.Util;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 
 /**
  * A default SCP implementation that can be used for providers that don't implement SCP themselves.
+ * 
+ * https://web.archive.org/web/20170215184048/https://blogs.oracle.com/janp/entry/how_the_scp_protocol_works
  */
 public class DefaultSCPClient extends AbstractSCPClient {
 	private static final Logger LOG = SshConfiguration.getLogger();
 	private final SshClient sshClient;
+	private boolean preserveTimes;
 
 	/**
 	 * Constructor.
@@ -57,11 +62,21 @@ public class DefaultSCPClient extends AbstractSCPClient {
 	}
 
 	@Override
+	public void setPreserveAttributes(boolean preserveTimes) {
+		this.preserveTimes = preserveTimes;
+	}
+
+	@Override
+	public boolean isPreserveAttributes() {
+		return preserveTimes;
+	}
+
+	@Override
 	protected void doPut(String remotePath, String mode, File localfile, boolean recursive) throws SshException {
 		boolean verbose = false;
 		try {
-			String command = "scp -p " + (localfile.isDirectory() ? "-d " : "") + "-t " + (recursive ? "-r " : "")
-					+ (verbose ? "-v " : "") + remotePath;
+			String command = "scp -p -t " + (localfile.isDirectory() ? "-d " : "") + (recursive ? "-r " : "")
+					+ (verbose ? "-v " : "") + "\"" + remotePath + "\"";
 			LOG.debug("Executing command '{0}'", command);
 			SshCommand cmd = sshClient.createCommand(command);
 			try {
@@ -70,28 +85,7 @@ public class DefaultSCPClient extends AbstractSCPClient {
 				InputStream in = cmd.getInputStream();
 				checkAck(in);
 				LOG.debug("First acknowledge SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
-				if (localfile.isDirectory()) {
-					File[] f = localfile.listFiles();
-					if (f == null) {
-						throw new IOException("Could not list local directory " + localfile + ".");
-					}
-					// Do the files
-					for (int i = 0; i < f.length; i++) {
-						if (f[i].isFile()) {
-							doFile(remotePath, mode, f[i], out, in);
-						}
-					}
-					LOG.debug("Completed files SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
-					// Now, if recursive, do the directories
-					for (int i = 0; i < f.length; i++) {
-						if (f[i].isDirectory()) {
-							doPut(remotePath + "/" + f[i].getName(), mode, f[i], recursive);
-						}
-					}
-					LOG.debug("Completed folders SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
-				} else {
-					doFile(remotePath, mode, localfile, out, in);
-				}
+				doPut(localfile.getName(), mode, localfile, recursive, out, in);
 			} finally {
 				LOG.debug("Closing command for SCP {0} (mode {1}) from {2}", remotePath, mode, localfile);
 				cmd.close();
@@ -102,33 +96,77 @@ public class DefaultSCPClient extends AbstractSCPClient {
 		}
 	}
 
-	private void doFile(String remotePath, String mode, File sourceFile, OutputStream out, InputStream in) throws IOException {
-		LOG.debug("Transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
-		String basename = Util.basename(remotePath);
-		String command = "C" + (mode == null ? "0644" : mode) + " " + sourceFile.length() + " " + basename;
-		command += "\n";
-		out.write(command.getBytes());
-		out.flush();
+	private void doPut(String remotePath, String mode, File localfile, boolean recursive, OutputStream out,
+			InputStream in) throws IOException, SshException {
+
+		if(preserveTimes) {
+			Path file = localfile.toPath();
+			BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
+			FileTime time = attrs.lastAccessTime();
+			sendCommand("T" + localfile.lastModified() + " 0 " + time.toMillis() + " 0", out);
+			checkAck(in);
+		}
+		
+		if (localfile.isDirectory()) {
+			LOG.debug("Starting directory SCP (mode {0}) from {1}", mode, localfile);
+			sendCommand("D", (mode == null ? "0755" : mode), 0, out, remotePath);
+			checkAck(in);
+			File[] f = localfile.listFiles();
+			if (f == null) {
+				throw new IOException("Could not list local directory " + localfile + ".");
+			}
+			// Do the files
+			for (int i = 0; i < f.length; i++) {
+				if (f[i].isFile()) {
+					doFile(mode, f[i], out, in);
+				}
+			}
+			LOG.debug("Completed files SCP (mode {0}) from {1}", mode, localfile);
+			// Now, if recursive, do the directories
+			for (int i = 0; i < f.length; i++) {
+				if (f[i].isDirectory()) {
+					doPut(f[i].getName(), mode, f[i], recursive, out, in);
+				}
+			}
+			LOG.debug("Completed folders SCP (mode {0}) from {1}", mode, localfile);
+			sendCommand("E", out);
+		} else {
+			doFile(mode, localfile, out, in);
+		}
+	}
+
+	private void doFile(String mode, File sourceFile, OutputStream out, InputStream in) throws IOException {
+		LOG.debug("Transferring file (mode {0}) from {1}", mode, sourceFile);
+		sendCommand("C", (mode == null ? "0644" : mode), sourceFile.length(), out, sourceFile.getName());
 		checkAck(in);
 		byte[] buf = new byte[sshClient.getConfiguration().getStreamBufferSize() == 0 ? 32768 :(int)sshClient.getConfiguration().getStreamBufferSize()];
 		try (InputStream content = new FileInputStream(sourceFile)) {
-			fireFileTransferStarted(sourceFile.getPath(), remotePath, sourceFile.length());
+			fireFileTransferStarted(sourceFile.getPath(), "", sourceFile.length());
 			while (true) {
 				int len = content.read(buf, 0, buf.length);
 				if (len <= 0)
 					break;
 				out.write(buf, 0, len); // out.flush();
-				fireFileTransferProgressed(sourceFile.getPath(), remotePath, len);
+				fireFileTransferProgressed(sourceFile.getPath(), "", len);
 			}
 			buf[0] = 0;
 			out.write(buf, 0, 1);
 			out.flush();
-			LOG.debug("Finished transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
+			LOG.debug("Finished transferring file (mode {0}) from {1}", mode, sourceFile);
 			checkAck(in);
-			LOG.debug("Acknowledge transferring file {0} (mode {1}) from {2}", remotePath, mode, sourceFile);
+			LOG.debug("Acknowledge transferring file (mode {0}) from {1}", mode, sourceFile);
 		} finally {
-			fireFileTransferFinished(sourceFile.getPath(), remotePath);
+			fireFileTransferFinished(sourceFile.getPath(), "");
 		}
+	}
+
+	private void sendCommand(String cmd, String mode, long length, OutputStream out, String basename) throws IOException {
+		sendCommand(cmd + mode + " " + length + " " + basename, out);
+	}
+
+	private void sendCommand(String cmd, OutputStream out) throws IOException {
+		out.write((cmd + "\n").getBytes());
+		out.flush();
 	}
 
 	@Override

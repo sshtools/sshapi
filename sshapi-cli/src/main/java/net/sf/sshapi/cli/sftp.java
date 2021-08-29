@@ -33,27 +33,17 @@ import java.util.concurrent.Callable;
 
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
+import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.cli.commands.Cd;
-import net.sf.sshapi.cli.commands.Get;
-import net.sf.sshapi.cli.commands.Lcd;
-import net.sf.sshapi.cli.commands.Lpwd;
-import net.sf.sshapi.cli.commands.Ls;
-import net.sf.sshapi.cli.commands.Mkdir;
-import net.sf.sshapi.cli.commands.Put;
-import net.sf.sshapi.cli.commands.Pwd;
-import net.sf.sshapi.cli.commands.Rm;
-import net.sf.sshapi.cli.commands.Rmdir;
 import net.sf.sshapi.sftp.SftpClient;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
@@ -61,52 +51,7 @@ import picocli.CommandLine.Spec;
  * Java clone of the de-facto standard OpenSSH sftp command.
  */
 @Command(name = "sftp", mixinStandardHelpOptions = true, description = "Secure file transfer.")
-public class sftp extends AbstractSshCommand implements Logger, Callable<Integer>, SftpContainer {
-
-	@Command(name = "sftp-interactive", mixinStandardHelpOptions = true, description = "Interactive shell.", subcommands = {
-			Ls.class, Cd.class, Pwd.class, Lcd.class, Lpwd.class, Mkdir.class, Rmdir.class, Rm.class,
-			Get.class, Put.class })
-	class InteractiveConsole implements Runnable, SftpContainer {
-		@Override
-		public SftpClient getClient() {
-			return sftp.this.sftp;
-		}
-
-		@Override
-		public String getCwd() {
-			return sftp.this.cwd;
-		}
-
-		@Override
-		public File getLcwd() {
-			return lcwd;
-		}
-
-		@Override
-		public LineReader getLineReader() {
-			return sftp.this.getLineReader();
-		}
-
-		@Override
-		public Terminal getTerminal() {
-			return sftp.this.getTerminal();
-		}
-
-		@Override
-		public void run() {
-			throw new ParameterException(spec.commandLine(), "Missing required subcommand");
-		}
-
-		@Override
-		public void setCwd(String cwd) {
-			sftp.this.cwd = cwd;
-		}
-
-		@Override
-		public void setLcwd(File lcwd) {
-			sftp.this.setLcwd(lcwd);
-		}
-	}
+public class sftp extends AbstractSshFilesCommand implements Logger, Callable<Integer>, SftpContainer {
 
 	/**
 	 * Entry point.
@@ -163,7 +108,7 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 	@Parameters(index = "0", description = "Destination.")
 	private String destination;
 
-	@Spec
+	@Spec 
 	private CommandSpec spec;
 
 	private SftpClient sftp;
@@ -184,11 +129,12 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 		try {
 			start();
 		} catch (SshException sshe) {
-			sshe.printStackTrace();
 			if (sshe.getCode().equals(SshException.HOST_KEY_REJECTED)) {
 				// Already displayed a message, just exit
 			} else {
 				System.err.println("ssh: " + sshe.getMessage());
+				if(!isQuiet())
+					error("Failed to connect to sftp server.", sshe);
 			}
 			return 1;
 		} catch (Exception e) {
@@ -247,8 +193,9 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 
 		SshClient client = connect(destination);
 		sftp = client.sftp();
-		cwd = sftp.getDefaultPath();
 		try {
+			cwd = sftp.getDefaultPath();
+			sftp.addFileTransferListener(this);
 			PrintWriter err = terminal.writer();
 			err.println(String.format("Connected to %s", client.getHostname()));
 			do {
@@ -297,7 +244,7 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 								}
 							}
 							else {
-								CommandLine cl = new CommandLine(new InteractiveConsole());
+								CommandLine cl = new CommandLine(new InteractiveConsole(this));
 								cl.setTrimQuotes(true);
 								cl.setUnmatchedArgumentsAllowed(true);
 								cl.setUnmatchedOptionsAllowedAsOptionParameters(true);
@@ -307,19 +254,25 @@ public class sftp extends AbstractSshCommand implements Logger, Callable<Integer
 						}
 					}
 
-				} catch(EndOfFileException ee) {
+				} catch(UserInterruptException | EndOfFileException ee) {
 					exitWhenDone = true;
 				} catch(Exception e) {
-					e.printStackTrace(err);
+					if(!isQuiet())
+						error("Operation failed.", e);
 					err.println(String.format("%s", e.getMessage()));
 				} 
 			} while (!exitWhenDone);
 		} catch (Exception e1) {
-			e1.printStackTrace();
+			if(!isQuiet())
+				error("Failed.", e1);
 			throw new IllegalStateException("Failed to open console.", e1);
 		} finally {
 			sftp.close();
 		}
 
+	}
+
+	public CommandSpec getSpec() {
+		return spec;
 	}
 }
