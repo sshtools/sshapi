@@ -129,7 +129,6 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 								}
 							}
 						}, 500, 500, TimeUnit.MILLISECONDS);
-						terminal.echo(false);
 					}
 					Runnable ctrlC = () -> {
 						try {
