@@ -65,11 +65,6 @@ public class SftpFileSystem extends AbstractFileSystem {
 				sftp.close();
 				sftp = null;
 			}
-
-			if (ssh != null) {
-				ssh.close();
-				ssh = null;
-			}
 		} catch (Exception ex) {
 			// #ifdef DEBUG
 			log.debug("Failed to close communication link.", ex);
