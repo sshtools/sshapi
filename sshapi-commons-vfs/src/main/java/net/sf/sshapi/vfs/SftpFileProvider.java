@@ -21,6 +21,7 @@
  */
 package net.sf.sshapi.vfs;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,15 +66,28 @@ public class SftpFileProvider extends AbstractOriginatingFileProvider {
 		// Create the file system
 		final GenericFileName rootName = (GenericFileName) name;
 
-		SshClient ssh;
-		try {
-			ssh = SshClientFactory.createConnection(rootName.getHostName(), rootName.getPort(), rootName.getUserName(),
-					rootName.getPassword(), fileSystemOptions);
-		} catch (final Exception e) {
-			throw new FileSystemException("vfs.provider.sftp/connect.error", name, e);
+		SshClient ssh = SftpFileSystemConfigBuilder.getInstance().getSshClient(fileSystemOptions);
+		if(ssh == null) {
+			try {
+				ssh = SshClientFactory.createConnection(rootName.getHostName(), rootName.getPort(), rootName.getUserName(),
+						rootName.getPassword(), fileSystemOptions);
+			} catch (final Exception e) {
+				throw new FileSystemException("vfs.provider.sftp/connect.error", name, e);
+			}
+			return new SftpFileSystem(rootName, ssh, fileSystemOptions) {
+				@Override
+				protected void doCloseCommunicationLink() {
+					super.doCloseCommunicationLink();
+					try {
+						getSsh().close();
+					} catch (Exception e) {
+					}
+				}
+				
+			};
 		}
-
-		return new SftpFileSystem(rootName, ssh, fileSystemOptions);
+		else
+			return new SftpFileSystem(rootName, ssh, fileSystemOptions);
 	}
 
 	public void init() throws FileSystemException {

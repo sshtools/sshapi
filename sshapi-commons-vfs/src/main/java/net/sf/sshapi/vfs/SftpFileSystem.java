@@ -54,6 +54,10 @@ public class SftpFileSystem extends AbstractFileSystem {
 		super(rootName, null, fileSystemOptions);
 		this.ssh = ssh;
 	}
+	
+	protected SshClient getSsh() {
+		return ssh;
+	}
 
 	protected void doCloseCommunicationLink() {
 		try {
