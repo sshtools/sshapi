@@ -32,7 +32,7 @@ import net.sf.sshapi.Logger;
  * Simple console logger
  */
 public class ConsoleLogger implements Logger {
-	private Level level = Level.valueOf(System.getProperty("sshapi.logLevel", Level.ERROR.name()));
+	private Level level = Level.valueOf(System.getProperty("`", Level.ERROR.name()));
 	
 	/**
 	 * Set the default level.

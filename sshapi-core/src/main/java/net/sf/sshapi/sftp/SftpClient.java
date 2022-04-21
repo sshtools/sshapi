@@ -25,8 +25,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshClient;
@@ -133,7 +137,9 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 		/** sftp trunc. */
 		SFTP_TRUNC,
 		/** sftp excl. */
-		SFTP_EXCL;
+		SFTP_EXCL,
+		/** sftp text. */
+		SFTP_TEXT;
 		
 		/**
 		 * To POSIX.
@@ -146,6 +152,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 				return 00;
 			case SFTP_WRITE:
 				return 01;
+			case SFTP_TEXT:
+				return 010;
 			case SFTP_APPEND:
 				return 02000;
 			case SFTP_CREAT:
@@ -178,6 +186,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 				return 16;
 			case SFTP_EXCL:
 				return 32;
+			case SFTP_TEXT:
+				return 64;
 			default:
 				return 0;
 			}
@@ -272,9 +282,76 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 */
 	SftpHandle file(String path, OpenMode... modes) throws SshException;
 
+
+	/**
+	 * Open a directory for reading as a stream. The provider may override the
+	 * default implementation (which uses {@link #ls(String)}), for a more efficient
+	 * algorithm that doesn't load all entries into memory before returning them.
+	 * Remember to {@link DirectoryStream#close()} the stream when done. The
+	 * unchecked {@link SftpError} will be thrown if errors occur during iteration
+	 * or creation of iterators.
+	 * 
+	 * @param path path of directory to open
+	 * @return closable stream
+	 * @throws SshException on error
+	 * @throws UnsupportedOperationException if not supported
+	 * @see #directory(String, java.nio.file.DirectoryStream.Filter)
+	 */
+	default DirectoryStream<SftpFile> directory(String path) throws SftpException {
+		return directory(path, f -> true);
+	}
+
+	/**
+	 * Open a directory for reading as a stream. The provider may override the
+	 * default implementation (which uses {@link #ls(String)}), for a more efficient
+	 * algorithm that doesn't load all entries into memory before returning them.
+	 * Remember to {@link DirectoryStream#close()} the stream when done. The
+	 * unchecked {@link SftpError} will be thrown if errors occur during iteration
+	 * or creation of iterators.
+	 * 
+	 * @param path   path of directory to open
+	 * @param filter filter
+	 * @return closable stream
+	 * @throws SshException                  on error
+	 * @throws UnsupportedOperationException if not supported
+	 * @see #directory(String)
+	 * 
+	 */
+	default DirectoryStream<SftpFile> directory(String path, DirectoryStream.Filter<SftpFile> filter) throws SftpException {
+		return new DirectoryStream<SftpFile>() {
+			
+			boolean closed = false;
+			
+			@Override
+			public void close() throws IOException {
+				closed = true;
+			}
+
+			@Override
+			public Iterator<SftpFile> iterator() {
+				if(closed)
+					throw new SftpError("Closed.");
+				try {
+					return Arrays.asList(ls(path)).stream().filter(f -> {
+						try {
+							return filter == null || filter.accept(f);
+						} catch (IOException e) {
+							throw new SftpError("Failed to filter.", e);
+						}
+					}).collect(Collectors.toList()).iterator();
+				} catch (SftpException e) {
+					throw new IllegalStateException(e);
+				} catch (SshException e) {
+					throw new IllegalStateException(e);
+				}
+			}
+			
+		};
+	}
+
 	/**
 	 * List a directory. Note, this method does not match wildcards (either for the path to list of the
-	 * files contained within). To match on wildcards use the {@link #match(String)} method.
+	 * files contained within). 
 	 * 
 	 * @param path directory to list
 	 * @return files contained in directory
@@ -295,7 +372,8 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 
 	/**
 	 * Visit all the files starting at a path. This can recursively (or not) scan the 
-	 * entire file tree and perform operations on those files as it goes.  
+	 * entire file tree and perform operations on those files as it goes. Vistors should
+	 * throw the unchecked {@link SftpError} if errors occur visitor handling. 
 	 * 
 	 * @param path directory to visit
 	 * @param visitor visitor
@@ -491,6 +569,13 @@ public interface SftpClient extends SshFileTransferClient<SshLifecycleListener<S
 	 * @return sftp protocol version or zero
 	 */
 	int getSftpVersion();
+	
+	/**
+	 * Get the parent {@link SshClient} that owns this SFTP client.
+	 * 
+	 *  @return parent client
+	 */
+	SshClient getSshClient();
 
 	/**
 	 * Retrieve the contents of a remote file, presenting it as an input stream.

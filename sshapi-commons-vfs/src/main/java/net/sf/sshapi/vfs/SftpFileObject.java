@@ -30,9 +30,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.sshapi.Capability;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.SftpClient;
+import net.sf.sshapi.sftp.SftpClient.OpenMode;
 import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 
 import org.apache.commons.vfs2.FileObject;
@@ -209,17 +212,14 @@ public class SftpFileObject extends AbstractFileObject<SftpFileSystem> {
 					Util.getPermissionsString(attrs.getType(),
 							attrs.getPermissions()));
 			attributes.put("uid", Integer.valueOf(attrs.getUID()));
-			attributes.put("block",
-					Boolean.valueOf(attrs.getType() == SftpFile.TYPE_BLOCK));
-			attributes
-					.put("character",
-							Boolean.valueOf(attrs.getType() == SftpFile.TYPE_CHARACTER));
-			attributes.put("fifo",
-					Boolean.valueOf(attrs.getType() == SftpFile.TYPE_FIFO));
-			attributes.put("link",
-					Boolean.valueOf(attrs.getType() == SftpFile.TYPE_LINK));
-			attributes.put("socket",
-					Boolean.valueOf(attrs.getType() == SftpFile.TYPE_SOCKET));
+			attributes.put("block", attrs.isBlock());
+			attributes.put("character", attrs.isCharacter());
+			attributes.put("fifo", attrs.isFIFO());
+			attributes.put("link", attrs.isLink());
+			attributes.put("socket", attrs.isSocket());
+			attributes.put("directory", attrs.isDirectory());
+			attributes.put("file", attrs.isFile());
+			attributes.put("type", attrs.getType().name());
 		}
 		return attributes;
 	}
@@ -237,7 +237,43 @@ public class SftpFileObject extends AbstractFileObject<SftpFileSystem> {
 
 	protected RandomAccessContent doGetRandomAccessContent(
 			final RandomAccessMode mode) throws Exception {
-		return new SftpRandomAccessContent(this, mode);
+		if(fs.getClient().getSshClient().getProvider().getCapabilities().contains(Capability.RAW_SFTP)) {
+			final SftpClient sftp = fs.getClient();
+			try {
+				final SftpHandle handle = mode == RandomAccessMode.READWRITE ? sftp.file(getName().getPathDecoded(), OpenMode.SFTP_READ, OpenMode.SFTP_WRITE) :   sftp.file(getName().getPathDecoded(), OpenMode.SFTP_READ);
+				return new SftpRawContent(handle, mode, sftp, fs);
+			}
+			catch(Exception e) {
+				fs.putClient(sftp);
+				throw e;
+			}
+//			try {
+//				final InputStream get = sftp.file(getName().getPathDecoded(), filePointer);
+//				return new FilterInputStream(get) {
+//					public void close() throws IOException {
+//						try {
+//							super.close();
+//						} finally {
+//							fs.putClient(sftp);
+//						}
+//					}
+//				};
+//			} catch (Exception e) {
+//				fs.putClient(sftp);
+//				if(e instanceof IOException) {
+//					throw (IOException)e;
+//				}
+//				else {
+//					IOException ioe = new IOException();
+//					ioe.initCause(e);
+//					throw ioe;
+//				}
+//			}
+//			
+//			SftpHandle handle = client
+		}
+		else
+			return new SftpRandomAccessContent(this, mode);
 	}
 
 	/**

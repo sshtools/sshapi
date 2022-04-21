@@ -132,11 +132,10 @@ class MaverickSynergySshCommand extends AbstractSshExtendedChannel<SshStreamChan
 			throw new IllegalStateException("Couldb not open session channel");
 		}
 		try {
-			session.executeCommand(command).waitForever();
-//			if (!session.executeCommand(command).waitFor(30000).isSuccess()) {
-//				throw new IllegalStateException("Could not execute command.");
-//			}
-		} catch (com.sshtools.common.ssh.SshException e) {
+			if (!session.executeCommand(command).waitForever().isSuccess()) {
+				throw new IllegalStateException("Could not execute command.");
+			}
+		} catch (Exception e) {
 			throw new SshException("Failed to execute command.", e);
 		}
 		inputStream = new EventFiringInputStream(session.getInputStream(), SshDataListener.RECEIVED);

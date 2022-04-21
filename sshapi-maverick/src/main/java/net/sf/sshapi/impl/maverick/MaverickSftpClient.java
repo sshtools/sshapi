@@ -358,21 +358,23 @@ class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 		return 0;
 	}
 
-	int convertType(SftpFileAttributes attrs) {
+	SftpFile.Type convertType(SftpFileAttributes attrs) {
 		if (attrs.isDirectory()) {
-			return SftpFile.TYPE_DIRECTORY;
+			return SftpFile.Type.DIRECTORY;
 		} else if (attrs.isLink()) {
-			return SftpFile.TYPE_LINK;
+			return SftpFile.Type.SYMLINK;
 		} else if (attrs.isFile()) {
-			return SftpFile.TYPE_FILE;
+			return SftpFile.Type.FILE;
 		} else if (attrs.isFifo()) {
-			return SftpFile.TYPE_FIFO;
+			return SftpFile.Type.FIFO;
 		} else if (attrs.isCharacter()) {
-			return SftpFile.TYPE_CHARACTER;
+			return SftpFile.Type.CHARACTER;
 		} else if (attrs.isBlock()) {
-			return SftpFile.TYPE_BLOCK;
+			return SftpFile.Type.BLOCK;
+		} else if (attrs.isSocket()) {
+			return SftpFile.Type.SOCKET;
 		} else {
-			return SftpFile.TYPE_UNKNOWN;
+			return SftpFile.Type.UNKNOWN;
 		}
 	}
 

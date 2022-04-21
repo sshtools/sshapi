@@ -437,6 +437,7 @@
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>
 		<module>sshapi-j2ssh</module>
+		<module>sshapi-fuse</module>
 		<module>sshapi-openssh</module>
 		<module>sshapi-trilead</module>
 		<module>sshapi-sshj</module>

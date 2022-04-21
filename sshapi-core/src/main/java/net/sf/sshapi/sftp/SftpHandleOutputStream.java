@@ -42,7 +42,7 @@ public class SftpHandleOutputStream extends OutputStream {
 	 * @param buf buffer
 	 * @param h handle
 	 */
-	public SftpHandleOutputStream(AbstractSftpClient abstractSftpClient, ByteBuffer buf, SftpHandle h) {
+	public SftpHandleOutputStream(AbstractSftpClient<?> abstractSftpClient, ByteBuffer buf, SftpHandle h) {
 		this.buf = buf;
 		this.h = h;
 	}

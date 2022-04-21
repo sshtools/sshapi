@@ -57,6 +57,92 @@ import net.sf.sshapi.sftp.SftpOutputStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
+	protected final class MaverickSftpHandle implements SftpHandle {
+		private final com.maverick.sftp.SftpFile nativeHandle;
+		private long position;
+		private byte[] readBuffer;
+		private byte[] writeBuffer;
+
+		protected MaverickSftpHandle(com.maverick.sftp.SftpFile nativeHandle) {
+			this.nativeHandle = nativeHandle;
+		}
+
+		@Override
+		public void close() throws IOException {
+			try {
+				try {
+					nativeHandle.close();
+				} catch (SftpStatusException e) {
+					throw new IOException("Failed to close.", e);
+				} catch (com.maverick.ssh.SshException e) {
+					throw new IOException("Failed to close.", e);
+				}
+			} finally {
+				writeBuffer = null;
+				readBuffer = null;
+			}
+		}
+
+		@Override
+		public long position() {
+			return position;
+		}
+
+		@Override
+		public SftpHandle position(long position) {
+			this.position = position;
+			return this;
+		}
+
+		@Override
+		public int read(ByteBuffer buffer) throws SftpException {
+			int len = buffer.limit() - buffer.position();
+			if (len < 1)
+				throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE,
+						"Run out of buffer space reading a file.");
+			if (readBuffer == null || readBuffer.length != len) {
+				readBuffer = new byte[len];
+			}
+			try {
+				try {
+					int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(),
+							new UnsignedInteger64(position), readBuffer, 0, len);
+					if (read != -1) {
+						buffer.put(readBuffer, 0, read);
+						position += read;
+					}
+					return read;
+				} catch (SftpStatusException sftpE) {
+					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+				} catch (com.maverick.ssh.SshException ioe) {
+					throw new SftpException(SftpException.IO_ERROR, String.format("Failed to write to file."), ioe);
+				}
+			} catch (IOException e) {
+				throw new SftpException(SftpException.IO_ERROR, e);
+			}
+		}
+
+		@Override
+		public SftpHandle write(ByteBuffer buffer) throws SftpException {
+			int len = buffer.limit() - buffer.position();
+			if (writeBuffer == null || writeBuffer.length != len) {
+				writeBuffer = new byte[len];
+			}
+			buffer.get(writeBuffer);
+			try {
+				nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
+						writeBuffer, 0, len);
+			} catch (SftpStatusException sftpE) {
+				throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
+			} catch (com.maverick.ssh.SshException ioe) {
+				throw new SftpException(SftpException.IO_ERROR,
+						String.format("Failed to write to file %s.", nativeHandle.getAbsolutePath()), ioe);
+			}
+			position += len;
+			return this;
+		}
+	}
+
 	protected final class MaverickSftpOperation implements SftpOperation {
 		private final List<String> deleted;
 		private final DirectoryOperation op;
@@ -232,7 +318,7 @@ class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 	@Override
 	public SftpHandle file(String path, OpenMode... modes) throws SshException {
 		try {
-			return createHandle(sftpClient.getSubsystemChannel().openFile(path, OpenMode.toFlags(modes)));
+			return new MaverickSftpHandle(sftpClient.getSubsystemChannel().openFile(path, OpenMode.toFlags(modes)));
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (com.maverick.ssh.SshException ioe) {
@@ -614,21 +700,23 @@ class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 		return date == null ? 0 : date.intValue() * 1000l;
 	}
 
-	int convertType(SftpFileAttributes attrs) {
+	SftpFile.Type convertType(SftpFileAttributes attrs) {
 		if (attrs.isDirectory()) {
-			return SftpFile.TYPE_DIRECTORY;
+			return SftpFile.Type.DIRECTORY;
 		} else if (attrs.isLink()) {
-			return SftpFile.TYPE_LINK;
+			return SftpFile.Type.SYMLINK;
 		} else if (attrs.isFile()) {
-			return SftpFile.TYPE_FILE;
+			return SftpFile.Type.FILE;
 		} else if (attrs.isFifo()) {
-			return SftpFile.TYPE_FIFO;
+			return SftpFile.Type.FIFO;
 		} else if (attrs.isCharacter()) {
-			return SftpFile.TYPE_CHARACTER;
+			return SftpFile.Type.CHARACTER;
+		}  else if (attrs.isSocket()) {
+			return SftpFile.Type.SOCKET;
 		} else if (attrs.isBlock()) {
-			return SftpFile.TYPE_BLOCK;
+			return SftpFile.Type.BLOCK;
 		} else {
-			return SftpFile.TYPE_UNKNOWN;
+			return SftpFile.Type.UNKNOWN;
 		}
 	}
 
@@ -638,89 +726,6 @@ class MaverickSftpClient extends AbstractSftpClient<MaverickSshClient> {
 		} catch (Exception e) {
 		}
 		return 0;
-	}
-
-	private SftpHandle createHandle(com.maverick.sftp.SftpFile nativeHandle) {
-		return new SftpHandle() {
-			private long position;
-			private byte[] readBuffer;
-			private byte[] writeBuffer;
-
-			@Override
-			public void close() throws IOException {
-				try {
-					try {
-						nativeHandle.close();
-					} catch (SftpStatusException e) {
-						throw new IOException("Failed to close.", e);
-					} catch (com.maverick.ssh.SshException e) {
-						throw new IOException("Failed to close.", e);
-					}
-				} finally {
-					writeBuffer = null;
-					readBuffer = null;
-				}
-			}
-
-			@Override
-			public long position() {
-				return position;
-			}
-
-			@Override
-			public SftpHandle position(long position) {
-				this.position = position;
-				return this;
-			}
-
-			@Override
-			public int read(ByteBuffer buffer) throws SftpException {
-				int len = buffer.limit() - buffer.position();
-				if (len < 1)
-					throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE,
-							"Run out of buffer space reading a file.");
-				if (readBuffer == null || readBuffer.length != len) {
-					readBuffer = new byte[len];
-				}
-				try {
-					try {
-						int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(),
-								new UnsignedInteger64(position), readBuffer, 0, len);
-						if (read != -1) {
-							buffer.put(readBuffer, 0, read);
-							position += read;
-						}
-						return read;
-					} catch (SftpStatusException sftpE) {
-						throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-					} catch (com.maverick.ssh.SshException ioe) {
-						throw new SftpException(SftpException.IO_ERROR, String.format("Failed to write to file."), ioe);
-					}
-				} catch (IOException e) {
-					throw new SftpException(SftpException.IO_ERROR, e);
-				}
-			}
-
-			@Override
-			public SftpHandle write(ByteBuffer buffer) throws SftpException {
-				int len = buffer.limit() - buffer.position();
-				if (writeBuffer == null || writeBuffer.length != len) {
-					writeBuffer = new byte[len];
-				}
-				buffer.get(writeBuffer);
-				try {
-					nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
-							writeBuffer, 0, len);
-				} catch (SftpStatusException sftpE) {
-					throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
-				} catch (com.maverick.ssh.SshException ioe) {
-					throw new SftpException(SftpException.IO_ERROR,
-							String.format("Failed to write to file %s.", nativeHandle.getAbsolutePath()), ioe);
-				}
-				position += len;
-				return this;
-			}
-		};
 	}
 
 	private SftpFile entryToFile(String path, com.maverick.sftp.SftpFile entry)

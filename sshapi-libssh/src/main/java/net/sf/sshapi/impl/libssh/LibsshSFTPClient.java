@@ -325,7 +325,7 @@ class LibsshSFTPClient extends AbstractSftpClient<LibsshClient> {
 
 	private SftpFile attributesToFile(String path, sftp_attributes_struct attr) {
 		String fullPath = attr.name == null ? path : Util.concatenatePaths(path, attr.name.getString(0));
-		SftpFile file = new SftpFile(attr.type, fullPath, attr.size, attr.mtime * 1000l, attr.createtime * 1000l,
+		SftpFile file = new SftpFile(SftpFile.Type.fromMask(attr.type), fullPath, attr.size, attr.mtime * 1000l, attr.createtime * 1000l,
 				attr.atime * 1000l, attr.gid, attr.uid, attr.permissions);
 		library.sftp_attributes_free(attr);
 		return file;

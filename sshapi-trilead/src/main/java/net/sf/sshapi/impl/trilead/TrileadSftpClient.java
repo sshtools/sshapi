@@ -313,18 +313,18 @@ class TrileadSftpClient extends AbstractSftpClient<TrileadSshClient> {
 				convertToMs(entry.atime), toInt(entry.gid), toInt(entry.uid), toInt(entry.permissions));
 	}
 
-	int convertType(SFTPv3FileAttributes attrs) {
+	SftpFile.Type convertType(SFTPv3FileAttributes attrs) {
 		/* BUG: For some reason I am seeing files getting reported as regular files AND links if they
 		 * are regular files! So isRegularFile() needs to come before isSymlink() for best behaviour. 
 		 */
 		if (attrs.isDirectory()) {
-			return SftpFile.TYPE_DIRECTORY;
+			return SftpFile.Type.DIRECTORY;
 		} else if (attrs.isRegularFile()) {
-			return SftpFile.TYPE_FILE;
+			return SftpFile.Type.FILE;
 		} else if (attrs.isSymlink()) {
-			return SftpFile.TYPE_LINK;
+			return SftpFile.Type.SYMLINK;
 		}  else {
-			return SftpFile.TYPE_UNKNOWN;
+			return SftpFile.Type.UNKNOWN;
 		}
 	}
 	/*

@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -76,6 +77,11 @@ public abstract class AbstractSftpClient<C extends SshClient> extends AbstractFi
 		super(client.getProvider());
 		this.client = client;
 		this.configuration = client.getConfiguration();
+	}
+
+	@Override
+	public final SshClient getSshClient() {
+		return client;
 	}
 
 	@Override
@@ -617,36 +623,37 @@ public abstract class AbstractSftpClient<C extends SshClient> extends AbstractFi
 	//
 	@Override
 	public FileVisitResult visit(String path, FileVisitor<SftpFile> visitor) throws SshException {
+		/* Providers probably don't need to override this, it uses the {@link #directory()} methods,
+		 * which are optimised when possible anyway. */
 		SftpFile attrs = stat(path);
 		try {
 			if (attrs.isDirectory()) {
-				SftpFile file;
 				FileVisitResult preVisitResult = visitor.preVisitDirectory(attrs, fileToBasicAttributes(attrs));
-				if (preVisitResult != FileVisitResult.CONTINUE)
-					return preVisitResult;
-				SftpFile[] list = ls(path);
 				try {
-					for (int i = 0; i < list.length; i++) {
-						file = list[i];
-						if (file.isLink() || file.isFile()) {
-							FileVisitResult fileVisitResult = visitor.visitFile(file, fileToBasicAttributes(attrs));
-							if (fileVisitResult != FileVisitResult.CONTINUE && fileVisitResult != FileVisitResult.SKIP_SUBTREE)
-								return fileVisitResult;
-						} else if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
-							switch (visit(file.getPath(), visitor)) {
-							case SKIP_SIBLINGS:
-								break;
-							case TERMINATE:
-								return FileVisitResult.TERMINATE;
-							default:
-								continue;
+					if (preVisitResult != FileVisitResult.CONTINUE)
+						return preVisitResult;
+					try(DirectoryStream<SftpFile> stream = directory(path)) {
+						for(SftpFile file : stream) {
+							if (file.isLink() || file.isFile()) {
+								FileVisitResult fileVisitResult = visitor.visitFile(file, fileToBasicAttributes(attrs));
+								if (fileVisitResult != FileVisitResult.CONTINUE && fileVisitResult != FileVisitResult.SKIP_SUBTREE)
+									return fileVisitResult;
+							} else if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
+								switch (visit(file.getPath(), visitor)) {
+								case SKIP_SIBLINGS:
+									break;
+								case TERMINATE:
+									return FileVisitResult.TERMINATE;
+								default:
+									continue;
+								}
 							}
 						}
 					}
 					FileVisitResult postVisitResult = visitor.postVisitDirectory(attrs, null);
 					if (postVisitResult != FileVisitResult.CONTINUE && postVisitResult != FileVisitResult.SKIP_SUBTREE)
 						return postVisitResult;
-				} catch (IOException ioe) {
+				} catch (SftpException ioe) {
 					FileVisitResult postVisitResult = visitor.postVisitDirectory(attrs, ioe);
 					if (postVisitResult != FileVisitResult.CONTINUE && postVisitResult != FileVisitResult.SKIP_SUBTREE)
 						return postVisitResult;

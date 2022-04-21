@@ -50,73 +50,81 @@ public class SftpFile {
 		}
 		return true;
 	}
+	
+	public enum Type {
+		/**
+		 * File is a of <i>block special device</i> type
+		 */
+		BLOCK(0060000, 'b'),
+		/**
+		 * File is a of <i>character special device</i> type
+		 */
+		CHARACTER(0020000, 'c'),
+		/**
+		 * File is a of <i>FIFO</i> type
+		 */
+		FIFO(0010000, 'p'),
 
-	/**
-	 * Type mnemonics (match those returned by 'ls' command)
-	 */
-	public static char[] TYPES = { ' ', '-', 'd', 'l', 'p', '?', 's', 'c', 'b' };
+		/**
+		 * File is a of <i>socket</i> type
+		 */
+		SOCKET(0140000, 'S'),
+		/**
+		 * File is a of <i>Symbolic Link</i> type
+		 */
+		SYMLINK(0120000, 'l'),
 
-	/**
-	 * File is a of <i>File</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_FILE = 1;
+		/**
+		 * File is a of <i>Directory</i> type
+		 */
+		DIRECTORY(0040000, 'd'),
+		/**
+		 * File is a of <i>File</i> type
+		 */
+		FILE(0100000, ' '),
+		/**
+		 * Unknown
+		 */
+		UNKNOWN(0, '?');
+		
+		private char character;
+		private int mask;
+		
+		Type(int value, char character) {
+			this.mask = value;
+			this.character = character;
+		}
+		
+		public int toMask() {
+			return mask;
+		}
+		
+		public char toCharacter() {
+			return character;
+		}
 
-	/**
-	 * File is a of <i>Directory</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_DIRECTORY = 2;
+		public static Type fromCharacter(char character) {
+			for(Type t : values()) {
+				if(t.mask == character)
+					return t;
+			}
+			return Type.UNKNOWN;
+		}
 
-	/**
-	 * File is a of <i>Symbolic Link</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_LINK = 3;
-
-	/**
-	 * File is a of <i>FIFO</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_FIFO = 4;
-
-	/**
-	 * File is a of an unknown type.
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_UNKNOWN = 5;
-
-	/**
-	 * File is a of <i>socket</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_SOCKET = 6;
-
-	/**
-	 * File is a of <i>character special device</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_CHARACTER = 7;
-
-	/**
-	 * File is a of <i>block special device</i> type
-	 * 
-	 * @see #getType
-	 */
-	public final static int TYPE_BLOCK = 8;
-
+		public static Type fromMask(int mask) {
+			for(Type t : values()) {
+				if(t.mask == mask)
+					return t;
+			}
+			return Type.UNKNOWN;
+		}
+	}
+	
 	private final String path;
 	private final long size;
 	private final long lastModified;
 	private final String name;
-	private final int type;
+	private final Type type;
 	private final int gid;
 	private final int uid;
 	private final long created;
@@ -173,7 +181,7 @@ public class SftpFile {
 	 * @param uid the user ID
 	 * @param permissions permissions
 	 */
-	public SftpFile(int type, String path, long size, long lastModified, long created, long accessed, int gid, int uid,
+	public SftpFile(Type type, String path, long size, long lastModified, long created, long accessed, int gid, int uid,
 			int permissions) {
 		this.path = path;
 		this.size = size;
@@ -194,7 +202,7 @@ public class SftpFile {
 	 * @return directory
 	 */
 	public boolean isDirectory() {
-		return type == TYPE_DIRECTORY;
+		return type == Type.DIRECTORY;
 	}
 
 	/**
@@ -203,16 +211,52 @@ public class SftpFile {
 	 * @return regular file
 	 */
 	public boolean isFile() {
-		return type == TYPE_FILE;
+		return type == Type.FILE;
 	}
 
 	/**
 	 * Convenience method to determine if the file is a symbolic link.
 	 * 
-	 * @return regular file
+	 * @return link
 	 */
 	public boolean isLink() {
-		return type == TYPE_LINK;
+		return type == Type.SYMLINK;
+	}
+
+	/**
+	 * Convenience method to determine if the file is a socket.
+	 * 
+	 * @return socket
+	 */
+	public boolean isSocket() {
+		return type == Type.SOCKET;
+	}
+
+	/**
+	 * Convenience method to determine if the file is a block device.
+	 * 
+	 * @return block device file
+	 */
+	public boolean isBlock() {
+		return type == Type.BLOCK;
+	}
+
+	/**
+	 * Convenience method to determine if the file is a character device.
+	 * 
+	 * @return character device file
+	 */
+	public boolean isCharacter() {
+		return type == Type.CHARACTER;
+	}
+
+	/**
+	 * Convenience method to determine if the file is a FIFO pipe.
+	 * 
+	 * @return FIFO pipe file
+	 */
+	public boolean isFIFO() {
+		return type == Type.FIFO;
 	}
 
 	/**
@@ -224,7 +268,7 @@ public class SftpFile {
 	 * 
 	 * @return type
 	 */
-	public int getType() {
+	public Type getType() {
 		return type;
 	}
 

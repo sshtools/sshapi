@@ -21,7 +21,6 @@
  */
 package net.sf.sshapi.vfs;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;

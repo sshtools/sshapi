@@ -255,6 +255,12 @@ public class Capability {
 	 * resuming of uploads and downloads.
 	 */
 	public final static Capability SFTP_RESUME = new Capability("sftpResume");
+	/**
+	 * The provider supports an optimised version of {@link SftpClient#directory(String, java.nio.file.DirectoryStream.Filter)}
+	 * and / or {@link SftpClient#visit(String, java.nio.file.FileVisitor)}. This is preferred when handling
+	 * large directories or directory trees.
+	 */
+	public final static Capability SFTP_ITERABLE = new Capability("sftpIterable");
 
 	/**
 	 * The provider supports a agent for key authentication. One of the other

@@ -56,7 +56,7 @@ public interface SftpHandle extends Closeable {
 	/**
 	 * Write the provided buffer to the current position.
 	 * @param buffer 
-	 * @return bytes read
+	 * @return bytes read. -1 will be returned for EOF
 	 * @throws SftpException 
 	 */
 	int read(ByteBuffer buffer) throws SftpException;

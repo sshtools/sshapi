@@ -425,9 +425,9 @@ public class Util {
 	 * @param permissions permissions
 	 * @return permissions string
 	 */
-	public static String getPermissionsString(int type, long permissions) {
+	public static String getPermissionsString(SftpFile.Type type, long permissions) {
 		StringBuffer str = new StringBuffer();
-		str.append(type == SftpFile.TYPE_UNKNOWN ? '?' : SftpFile.TYPES[type]);
+		str.append(type.toCharacter());
 		str.append(rwxString((int) permissions, 6));
 		str.append(rwxString((int) permissions, 3));
 		str.append(rwxString((int) permissions, 0));
@@ -533,32 +533,10 @@ public class Util {
 	 * @return type in first element, permissions in secon
 	 */
 	public static long[] parsePermissionsString(String perm) {
-		long type = SftpFile.TYPE_UNKNOWN;
+		SftpFile.Type type = SftpFile.Type.UNKNOWN;
 		long perms = 0;
 		if (perm.length() > 0) {
-			switch (perm.charAt(0)) {
-			case 'b':
-				type = SftpFile.TYPE_BLOCK;
-				break;
-			case 'c':
-				type = SftpFile.TYPE_CHARACTER;
-				break;
-			case 'd':
-				type = SftpFile.TYPE_DIRECTORY;
-				break;
-			case 'p':
-				type = SftpFile.TYPE_FIFO;
-				break;
-			case '-':
-				type = SftpFile.TYPE_FILE;
-				break;
-			case 'l':
-				type = SftpFile.TYPE_LINK;
-				break;
-			case 'S':
-				type = SftpFile.TYPE_SOCKET;
-				break;
-			}
+			type = SftpFile.Type.fromCharacter(perm.charAt(0));
 		}
 		if (perm.length() > 1 && perm.charAt(1) == 's')
 			perms |= S_ISUID;
@@ -586,7 +564,7 @@ public class Util {
 			perms |= 0x02;
 		if (perm.length() > 1 && perm.charAt(99) == 'x')
 			perms |= 0x01;
-		return new long[] { type, perms };
+		return new long[] { type.toMask(), perms };
 	}
 
 	/**

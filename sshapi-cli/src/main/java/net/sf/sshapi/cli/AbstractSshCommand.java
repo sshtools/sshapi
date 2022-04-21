@@ -89,7 +89,7 @@ public abstract class AbstractSshCommand implements Logger {
 	@Option(names = { "--ssh-auth-sock" }, description = "Identifies the path of a UNIX-domain socket used to communicate with the agent.")
 	private File sshAuthSock;
 
-	@Option(names = { "-i", "--identity-file" }, description = "elects the file from which the identity (private key) for public key authentication is read.")
+	@Option(names = { "-i", "--identity-file" }, description = "Selects the file from which the identity (private key) for public key authentication is read.")
 	private File identityFile;
 	
 	private SshAgent agent;
@@ -240,15 +240,6 @@ public abstract class AbstractSshCommand implements Logger {
 		}
 		SshPasswordAuthenticator pwAuth = null;
 
-		// Create the non-batch authenticators
-		if (!isBatchMode()) {
-			if (terminal == null) {
-				pwAuth = new ConsolePasswordAuthenticator();
-			} else {
-				pwAuth = new JLinePasswordAuthenticator(reader);
-			}
-		}
-
 		// Key authentication
 		File identityFile = this.identityFile;
 		if(identityFile == null) {
@@ -270,6 +261,7 @@ public abstract class AbstractSshCommand implements Logger {
 					File pkFile = new File(new File(System.getProperty("user.home"), ".ssh"), name);
 					if(pkFile.exists()) {
 						identityFile = pkFile;
+						break;
 					}
 				}
 			}
@@ -281,6 +273,15 @@ public abstract class AbstractSshCommand implements Logger {
 			}
 			else
 				throw new FileNotFoundException(String.format("No such file %s", identityFile));
+		}
+
+		// Create the non-batch authenticators
+		if (!isBatchMode()) {
+			if (terminal == null) {
+				pwAuth = new ConsolePasswordAuthenticator();
+			} else {
+				pwAuth = new JLinePasswordAuthenticator(reader);
+			}
 		}
 
 		// Add the non-batch authenticators

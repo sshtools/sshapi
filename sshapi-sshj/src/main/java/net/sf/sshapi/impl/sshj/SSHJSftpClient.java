@@ -24,13 +24,17 @@ package net.sf.sshapi.impl.sshj;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.FileMode.Type;
+import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
@@ -42,6 +46,7 @@ import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.AbstractSftpClient;
 import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
+import net.sf.sshapi.sftp.SftpHandle;
 import net.sf.sshapi.util.Util;
 
 /**
@@ -100,6 +105,17 @@ public class SSHJSftpClient extends AbstractSftpClient<SSHJSshClient> {
 					String.format("Failed to change file owner of %s to %d.", path, uid), e);
 		}
 
+	}
+
+	@Override
+	public SftpHandle file(String path, OpenMode... modes) throws SshException {
+		try {
+			return new SSHJSftpHandle(sftp.open(path, convertFlags(modes)));
+		} catch (SFTPException sftpe) {
+			throw translateException(sftpe);
+		} catch (IOException ioe) {
+			throw new SftpException(SftpException.IO_ERROR, String.format("Failed to open file."), ioe);
+		}
 	}
 
 	@Override
@@ -331,28 +347,101 @@ public class SSHJSftpClient extends AbstractSftpClient<SSHJSshClient> {
 				fileAttributes.getUID(), FilePermission.toMask(fileAttributes.getPermissions()));
 	}
 
-	private int toType(Type type) {
-		switch (type) {
-		case BLOCK_SPECIAL:
-			return SftpFile.TYPE_BLOCK;
-		case CHAR_SPECIAL:
-			return SftpFile.TYPE_CHARACTER;
-		case DIRECTORY:
-			return SftpFile.TYPE_DIRECTORY;
-		case FIFO_SPECIAL:
-			return SftpFile.TYPE_FIFO;
-		case REGULAR:
-			return SftpFile.TYPE_FILE;
-		case SOCKET_SPECIAL:
-			return SftpFile.TYPE_SOCKET;
-		case SYMLINK:
-			return SftpFile.TYPE_LINK;
-		default:
-			return SftpFile.TYPE_UNKNOWN;
-		}
+	private SftpFile.Type toType(Type type) {
+		return SftpFile.Type.fromMask(type.toMask());
 	}
 
 	private SftpException translateException(SFTPException sftpe) {
 		return new SftpException(sftpe.getStatusCode().getCode());
+	}
+
+	private Set<net.schmizz.sshj.sftp.OpenMode> convertFlags(OpenMode[] modes) {
+		Set<net.schmizz.sshj.sftp.OpenMode> l = new LinkedHashSet<>();
+		for(OpenMode m : modes) {
+			l.add(net.schmizz.sshj.sftp.OpenMode.valueOf(m.name().substring(5)));
+		}
+		return l;
+	}
+	
+	protected final class SSHJSftpHandle implements SftpHandle {
+		private final RemoteFile nativeHandle;
+		private long position;
+		private byte[] readBuffer;
+		private byte[] writeBuffer;
+
+		protected SSHJSftpHandle(RemoteFile nativeHandle) {
+			this.nativeHandle = nativeHandle;
+		}
+
+		@Override
+		public void close() throws IOException {
+			try {
+				try {
+					nativeHandle.close();
+				} catch (SFTPException e) {
+					throw new IOException("Failed to close.", e);
+				} 
+			} finally {
+				writeBuffer = null;
+				readBuffer = null;
+			}
+		}
+
+		@Override
+		public long position() {
+			return position;
+		}
+
+		@Override
+		public SftpHandle position(long position) {
+			this.position = position;
+			return this;
+		}
+
+		@Override
+		public int read(ByteBuffer buffer) throws SftpException {
+			int len = buffer.limit() - buffer.position();
+			if (len < 1)
+				throw new SftpException(SftpException.OUT_OF_BUFFER_SPACE,
+						"Run out of buffer space reading a file.");
+			if (readBuffer == null || readBuffer.length != len) {
+				readBuffer = new byte[len];
+			}
+			try {
+				try {
+					int read = nativeHandle.read(position, readBuffer, 0, len);
+					if (read != -1) {
+						buffer.put(readBuffer, 0, read);
+						position += read;
+					}
+					return read;
+				} catch (SFTPException sftpE) {
+					throw translateException(sftpE);
+				} catch (IOException ioe) {
+					throw new SftpException(SftpException.IO_ERROR, String.format("Failed to read from file %s.", nativeHandle.getPath()), ioe);
+				}
+			} catch (IOException e) {
+				throw new SftpException(SftpException.IO_ERROR, e);
+			}
+		}
+
+		@Override
+		public SftpHandle write(ByteBuffer buffer) throws SftpException {
+			int len = buffer.limit() - buffer.position();
+			if (writeBuffer == null || writeBuffer.length != len) {
+				writeBuffer = new byte[len];
+			}
+			buffer.get(writeBuffer);
+			try {
+				nativeHandle.write(position, writeBuffer, 0, len);
+			} catch (SFTPException sftpE) {
+				throw translateException(sftpE);
+			} catch (IOException ioe) {
+				throw new SftpException(SftpException.IO_ERROR,
+						String.format("Failed to write to file %s.", nativeHandle.getPath()), ioe);
+			}
+			position += len;
+			return this;
+		}
 	}
 }

@@ -171,6 +171,13 @@ ssh-keygen - (TODO)  Generate identities</description>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>sshapi-fuse</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>info.picocli</groupId>
 			<artifactId>picocli</artifactId>
 			<version>4.6.1</version>
@@ -195,6 +202,19 @@ ssh-keygen - (TODO)  Generate identities</description>
 		<!-- Enable / Disable these profiles to chose between different provider 
 			configurations, for example switching from Maverick Synergy Open Source to 
 			Synergy Hotfixes -->
+            
+        <profile>
+            <id>jsch</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sshtools</groupId>
+                    <artifactId>sshapi-jsch</artifactId>
+                    <version>${project.version}</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
 
 		<profile>
 			<id>maverick-synergy-opensource</id>

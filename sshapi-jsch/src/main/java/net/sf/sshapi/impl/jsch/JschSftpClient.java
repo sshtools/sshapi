@@ -335,13 +335,21 @@ class JschSftpClient extends AbstractSftpClient<JschSshClient> {
 		return Integer.toUnsignedLong(date) * 1000l;
 	}
 
-	int convertType(SftpATTRS attrs) {
+	SftpFile.Type convertType(SftpATTRS attrs) {
 		if (attrs.isDir()) {
-			return SftpFile.TYPE_DIRECTORY;
+			return SftpFile.Type.DIRECTORY;
 		} else if (attrs.isLink()) {
-			return SftpFile.TYPE_LINK;
+			return SftpFile.Type.SYMLINK;
+		} else if (attrs.isBlk()) {
+			return SftpFile.Type.BLOCK;
+		} else if (attrs.isChr()) {
+			return SftpFile.Type.CHARACTER;
+		} else if (attrs.isFifo()) {
+			return SftpFile.Type.FIFO;
+		} else if (attrs.isSock()) {
+			return SftpFile.Type.SOCKET;
 		} else {
-			return SftpFile.TYPE_FILE;
+			return SftpFile.Type.FILE;
 		}
 	}
 

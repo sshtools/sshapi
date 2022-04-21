@@ -322,15 +322,15 @@ class GanymedSftpClient extends AbstractSftpClient<GanymedSshClient> {
 				0, convertIntDate(entry.atime), toInt(entry.gid), toInt(entry.uid), toInt(entry.permissions));
 	}
 
-	int convertType(SFTPv3FileAttributes attrs) {
+	SftpFile.Type convertType(SFTPv3FileAttributes attrs) {
 		if (attrs.isDirectory()) {
-			return SftpFile.TYPE_DIRECTORY;
+			return SftpFile.Type.DIRECTORY;
 		} else if (attrs.isSymlink()) {
-			return SftpFile.TYPE_LINK;
+			return SftpFile.Type.SYMLINK;
 		} else if (attrs.isRegularFile()) {
-			return SftpFile.TYPE_FILE;
+			return SftpFile.Type.FILE;
 		} else {
-			return SftpFile.TYPE_UNKNOWN;
+			return SftpFile.Type.UNKNOWN;
 		}
 	}
 	/*

@@ -32,7 +32,7 @@ import net.sf.sshapi.SshException;
  */
 public class SftpOutputStream extends OutputStream {
 	private final OutputStream out;
-	private final AbstractSftpClient client;
+	private final AbstractSftpClient<?> client;
 	private final String path;
 	private final String target;
 	private boolean started;
@@ -48,7 +48,7 @@ public class SftpOutputStream extends OutputStream {
 	 * @param path path
 	 * @param target target
 	 */
-	public SftpOutputStream(OutputStream out, AbstractSftpClient client, String path, String target) {
+	public SftpOutputStream(OutputStream out, AbstractSftpClient<?> client, String path, String target) {
 		this(out, client, path, target, -1);
 	}
 
@@ -61,7 +61,7 @@ public class SftpOutputStream extends OutputStream {
 	 * @param target target
 	 * @param length
 	 */
-	public SftpOutputStream(OutputStream out, AbstractSftpClient client, String path, String target, long length) {
+	public SftpOutputStream(OutputStream out, AbstractSftpClient<?> client, String path, String target, long length) {
 		this.out = out;
 		this.client = client;
 		this.path = path;

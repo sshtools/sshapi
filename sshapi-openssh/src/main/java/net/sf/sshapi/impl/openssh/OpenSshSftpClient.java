@@ -60,66 +60,6 @@ public class OpenSshSftpClient extends AbstractSftpClient<OpenSshClient> impleme
 	private static final String SFTP_PROMPT = "sftp> ";
 
 	/**
-	 * The Enum Type.
-	 */
-	public enum Type {
-
-		/** The block. */
-		BLOCK,
-		/** The character. */
-		CHARACTER,
-		/** The directory. */
-		DIRECTORY,
-		/** The file. */
-		FILE,
-		/** The link. */
-		LINK,
-		/** The special. */
-		SPECIAL;
-
-		/**
-		 * Parses the.
-		 *
-		 * @param p the p
-		 * @return the type
-		 */
-		public static Type parse(char p) {
-			switch (p) {
-			case 'd':
-				return DIRECTORY;
-			case 'c':
-				return CHARACTER;
-			case 'b':
-				return BLOCK;
-			case 'l':
-				return LINK;
-			default:
-				return FILE;
-			}
-		}
-
-		/**
-		 * To SSHAPI type.
-		 *
-		 * @return the int
-		 */
-		public int toSSHAPIType() {
-			switch (this) {
-			case DIRECTORY:
-				return SftpFile.TYPE_DIRECTORY;
-			case CHARACTER:
-				return SftpFile.TYPE_CHARACTER;
-			case BLOCK:
-				return SftpFile.TYPE_BLOCK;
-			case LINK:
-				return SftpFile.TYPE_LINK;
-			default:
-				return SftpFile.TYPE_FILE;
-			}
-		}
-	}
-
-	/**
 	 * Parses the permissions.
 	 *
 	 * @param perm the perm
@@ -800,7 +740,7 @@ public class OpenSshSftpClient extends AbstractSftpClient<OpenSshClient> impleme
 		int p = 0;
 		int uid = 0, gid = 0, permissions = 0;
 		long size = 0;
-		Type type = Type.FILE;
+		SftpFile.Type type = SftpFile.Type.FILE;
 		for (int i = 0; i < r.length(); i++) {
 			char c = r.charAt(i);
 			if (c == ' ' && p < 8) {
@@ -808,7 +748,7 @@ public class OpenSshSftpClient extends AbstractSftpClient<OpenSshClient> impleme
 					String s = bui.toString();
 					switch (p) {
 					case 0:
-						type = Type.parse(s.charAt(0));
+						type = SftpFile.Type.fromCharacter(s.charAt(0));
 						permissions = (int) parsePermissions(s.substring(1));
 						p++;
 						break;
@@ -897,7 +837,7 @@ public class OpenSshSftpClient extends AbstractSftpClient<OpenSshClient> impleme
 		c.set(Calendar.SECOND, 0);
 		c.set(Calendar.MILLISECOND, 0);
 		long lastModified = c.getTimeInMillis();
-		return new SftpFile(type.toSSHAPIType(), path, size, lastModified, 0, 0, gid, uid, permissions);
+		return new SftpFile(type, path, size, lastModified, 0, 0, gid, uid, permissions);
 	}
 
 	/**

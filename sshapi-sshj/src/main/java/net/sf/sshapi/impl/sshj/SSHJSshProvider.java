@@ -112,7 +112,7 @@ public class SSHJSshProvider extends AbstractProvider {
 		return Arrays.asList(new Capability[] { Capability.SSH2, Capability.PASSWORD_AUTHENTICATION, Capability.SHELL,
 				Capability.SET_LAST_MODIFIED, Capability.SFTP, Capability.SFTP_LSTAT, Capability.SFTP_READ_LINK,
 				Capability.SCP, Capability.FILTERS_SFTP_DOT_DIRECTORIES, Capability.LOCAL_PORT_FORWARD, Capability.REMOTE_PORT_FORWARD,
-				Capability.RECURSIVE_SCP_GET, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION });
+				Capability.RECURSIVE_SCP_GET, Capability.KEYBOARD_INTERACTIVE_AUTHENTICATION, Capability.RAW_SFTP });
 	}
 
 	@Override

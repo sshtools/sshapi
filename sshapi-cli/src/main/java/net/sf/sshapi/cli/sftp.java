@@ -106,15 +106,15 @@ public class sftp extends AbstractSshFilesCommand implements Logger, Callable<In
 	private int port = 22;
 
 	@Parameters(index = "0", description = "Destination.")
-	private String destination;
+	protected String destination;
 
 	@Spec 
 	private CommandSpec spec;
 
-	private SftpClient sftp;
 	private String cwd;
 	private boolean exitWhenDone;
 	private File lcwd = new File(System.getProperty("user.dir"));
+	protected SftpClient sftp;
 
 	/**
 	 * Constructor.
