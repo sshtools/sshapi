@@ -29,7 +29,10 @@ import java.net.ServerSocket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.SSHClient;
@@ -276,11 +279,12 @@ class SSHJSshClient extends AbstractClient {
 			if (val != null)
 				ssh.addHostKeyVerifier(new HostKeyVerifier() {
 
+					Map<String, List<String>> algos = new HashMap<>();
+					
 					@Override
 					public boolean verify(String hostname, int port, PublicKey key) {
 						try {
-							return val.verifyHost(new SshHostKey() {
-
+							boolean ok = val.verifyHost(new SshHostKey() {
 								@Override
 								public String getType() {
 									return KeyType.fromKey(key).toString();
@@ -301,9 +305,25 @@ class SSHJSshClient extends AbstractClient {
 									return SecurityUtils.getFingerprint(key);
 								}
 							}) == SshHostKeyValidator.STATUS_HOST_KEY_VALID;
+							if(ok) {
+								String k = hostname + ":" + port;
+								List<String> l = algos.get(k);
+								if(l == null) {
+									l = new ArrayList<>();
+									algos.put(k, l);
+								}
+								l.add(KeyType.fromKey(key).toString());
+							}
+							return ok;
 						} catch (SshException sshe) {
 							throw new IllegalStateException("Failed to verify host.", sshe);
 						}
+					}
+
+					@Override
+					public List<String> findExistingAlgorithms(String hostname, int port) {
+						String k = hostname + ":" + port;
+						return algos.containsKey(k) ? algos.get(k) : Collections.emptyList();
 					}
 
 				});
@@ -420,7 +440,7 @@ class SSHJSshClient extends AbstractClient {
 					}
 					
 					@Override
-					public void init(Resource resource, String name, String instruction) {
+					public void init(@SuppressWarnings("rawtypes") Resource resource, String name, String instruction) {
 						this.name = name;
 						this.instruction = instruction;						
 					}

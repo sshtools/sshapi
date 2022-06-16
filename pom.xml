@@ -26,9 +26,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
-		<sourceRelease>1.8</sourceRelease>
-		<targetRelease>1.8</targetRelease>
-		<reportTargetRelease>1.7</reportTargetRelease>
+		<sourceRelease>11</sourceRelease>
+		<targetRelease>11</targetRelease>
+		<reportTargetRelease>11</reportTargetRelease>
 		<!-- Distribution properties. -->
 		<sfUser>SOMEUSER</sfUser>
 		<releasesRepositoryDeploymentLocation>file:///${basedir}/../sshapi-mvn/releases</releasesRepositoryDeploymentLocation>
@@ -39,7 +39,7 @@
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick Legacy bridge (New public 1.6+) -->
-		<maverickVersion>1.7.39</maverickVersion>
+		<maverickVersion>1.7.43</maverickVersion>
 		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickStableVersion>1.5.19</maverickStableVersion>

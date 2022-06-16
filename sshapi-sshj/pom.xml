@@ -56,6 +56,19 @@ This library is the provider bridge for SSHAPI.</description>
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>com.sshtools.sshapi.sshj</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -68,7 +81,7 @@ This library is the provider bridge for SSHAPI.</description>
 		<dependency>
 			<groupId>com.hierynomus</groupId>
 			<artifactId>sshj</artifactId>
-			<version>0.31.0</version>
+			<version>0.33.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>

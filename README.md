@@ -26,6 +26,11 @@ However, it is now a viable complete SSH api with other advantages :-
  * Get near native SSH performance using the libssh provider (work in progress).
  * If the provider supports non-blocking usage, it will be used, otherwise SSHAPI will simulate non-blocking usage.
  
+## Requirements
+
+ * Java. As of version 2.0.0, SSHAPI requires Java 11
+ * Maven if building from source.
+
 ## Installation
 
 Installation of SSHAPI is no harder than any other SSH library for Java. Using your chosen build tool (below we use Maven), add the appropriate *Provider Bridge* library to your project, and all of the appropriate dependencies will be pulled in.
@@ -42,13 +47,14 @@ Installation of SSHAPI is no harder than any other SSH library for Java. Using y
 
 Providers include :-
 
- * sshapi-maverick-synergy
- * sshapi-maverick16
- * sshapi-jsch
- * sshapi-trilead
- * sshapi-ganymed
- * sshapi-sshj
- * sshapi-j2ssh (more or less obsolete as uses old ciphers and key exchange)
+ * sshapi-maverick-synergy (Modern, open source JAdaptive [Maverick Synergy](https://jadaptive.com/en/products/open-source-java-ssh) API)
+ * sshapi-maverick-synergy-hotfixes ([Commercially supported](https://jadaptive.com/en/products/maverick-synergy/pricing) version of [Maverick Synergy](https://jadaptive.com/en/products/open-source-java-ssh))
+ * sshapi-maverick16  (Commercial, Legacy JAdaptive [Maverick](https://jadaptive.com/en/products/java-ssh-client) API)
+ * sshapi-sshj (Currently well maintained open source [SSHJ](https://github.com/hierynomus/sshj) API)
+ * sshapi-jsch (Now uses an [updated fork](https://github.com/mwiede/jsch) of this well established API)
+ * sshapi-trilead (A fork of Ganymed, itself now apparently unmaintained)
+ * sshapi-ganymed (Now apparently unmaintained)
+ * sshapi-j2ssh (Ancient JAdaptive API, more or less obsolete as uses old ciphers and key exchange)
  * sshapi-libssh (experimental)
  * sshapi-openssh (incomplete experimental)
 
@@ -72,10 +78,10 @@ For full usage, see the examples.
 ### Connecting, Authenticating and Creating A Shell
 
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SshShell shell = client.shell()) {
-		InputStream in = shell.getInputStream();
-		OutputStream out = shell.getOutputStream();
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var shell = client.shell()) {
+		var in = shell.getInputStream();
+		var out = shell.getOutputStream();
 		
 		// Do something with I/O streams
 	}
@@ -86,10 +92,10 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Connecting, Authenticating and Creating A Shell with a Pseudo Tty
 
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SshShell shell = client.shell("xterm", 80, 24, 0, 0, null)) {
-		InputStream in = shell.getInputStream();
-		OutputStream out = shell.getOutputStream();
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var shell = client.shell("xterm", 80, 24, 0, 0, null)) {
+		var in = shell.getInputStream();
+		var out = shell.getOutputStream();
 		
 		// Do something with I/O streams
 	}
@@ -100,8 +106,8 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Getting A Remote File using SFTP
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SftpClient sftp = client.sftp()) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var sftp = client.sftp()) {
 		sftp.get("/home/myhome/stuff.txt", new File("stuff.txt"));
 	}
 }
@@ -110,8 +116,8 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Uploading A File using SCP
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(ScpClient scp = client.scp()) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var scp = client.scp()) {
 		scp.put("remote-name", null, new File("stuff.txt"), false);
 	}
 }
@@ -126,9 +132,9 @@ There are a few ways of doing this.
 All files will be loaded into memory at once. 
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SftpClient sftp = client.sftp()) {
-		for(SftpFile file : sftp.ls("/home/myhome/stuff.txt")) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var sftp = client.sftp()) {
+		for(var file : sftp.ls("/home/myhome/stuff.txt")) {
 			System.out.println(file.getName());
 		}
 	}
@@ -140,10 +146,10 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 For iterating over large directories.
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SftpClient sftp = client.sftp()) {
-		try(Directory<Stream> stream = client.directory("/home/myhome")) {
-			for(SftpFile file : stream) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var sftp = client.sftp()) {
+		try(var stream = client.directory("/home/myhome")) {
+			for(var file : stream) {
 				System.out.println(file.getName());
 			}				
 		}
@@ -156,8 +162,8 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 Use a `FileVisitor` to recursively process an entire tree of files.
 
 ```
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SftpClient sftp = client.sftp()) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var sftp = client.sftp()) {
 		sftp.visit("/home/myhome", new SftpFileVisitor() {
 			@Override
 			public FileVisitResult visitFile(SftpFile file, BasicFileAttributes attrs) throws IOException {
@@ -172,11 +178,11 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Random Access Read And Write
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SftpClient sftp = client.sftp()) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var sftp = client.sftp()) {
 	
 		// Write test file
-		try (SftpHandle handle = sftp.file("test-file.txt", Mode.SFTP_WRITE, Mode.SFTP_CREAT)) {
+		try (var handle = sftp.file("test-file.txt", Mode.SFTP_WRITE, Mode.SFTP_CREAT)) {
 			ByteBuffer buf = ByteBuffer.allocate(16);
 			buf.putInt(1);
 			buf.putInt(2);
@@ -187,7 +193,7 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 		}
 			
 		// Read 4 bytes from test file from 4th byte, which is the 2nd 'int' written above
-		try (SftpHandle handle = sftp.file("test-file.txt", Mode.SFTP_READ)) {
+		try (var handle = sftp.file("test-file.txt", Mode.SFTP_READ)) {
 			ByteBuffer buf = ByteBuffer.allocate(4);
 			handle.position(4).readFrom(buf);
 			if(buf.getInt(0) != 2)
@@ -200,8 +206,8 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Run A Remote Command And Get The Output
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SshCommand command = client.command("ls /etc")) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var command = client.command("ls /etc")) {
 		Util.joinStreams(command.getOutputStream(), System.out);
 		System.out.println("Exited with code: " + command.exitCode());
 	}
@@ -211,8 +217,8 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
 ### Start A Local Port Forward, Giving You Access To Remote TCP Service (e.g. web server)
  
 ```java
-try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
-	try(SshPortForward command = client.localForward("0.0.0.0", 8443, "someremoteaddress", 443)) {
+try (var client = Ssh.open("me@localhost", new ConsolePasswordAuthenticator())) {
+	try(var command = client.localForward("0.0.0.0", 8443, "someremoteaddress", 443)) {
 		// Simply sleep to keep the tunnel open. 
 		Thread.sleep(600000);
 	}
@@ -223,10 +229,10 @@ try (SshClient client = Ssh.open("me@localhost", new ConsolePasswordAuthenticato
  
 ```java
 // Prompt for location of private key
-File pemFile = new File(Util.prompt("Private key file",
+var pemFile = new File(Util.prompt("Private key file",
 		System.getProperty("user.home") + File.separator + ".ssh" + File.separator + "id_rsa"));
 			
-try (SshClient client = Ssh.open("me@localhost", 
+try (var client = Ssh.open("me@localhost", 
 		new DefaultPublicKeyAuthenticator(new ConsolePasswordAuthenticator(), pemFile))) {
 	// Do SSH stuff
 }
@@ -235,14 +241,14 @@ try (SshClient client = Ssh.open("me@localhost",
 ### Custom Configuration
 
 ```java
-SshConfiguration config = new SshConfiguration();
+var config = new SshConfiguration();
 config.addRequiredCapability(Capability.SFTP);
 config.setPreferredServerToClientMAC("hmac-sha1");
 config.setHostKeyValidator(new ConsoleHostKeyValidator());
 config.setBannerHandler(new ConsoleBannerHandler());
 
 // Create the client using that configuration and connect and authenticate
-try (SshClient client = config.open("me@localhost", new ConsolePasswordAuthenticator()) {
+try (var client = config.open("me@localhost", new ConsolePasswordAuthenticator()) {
 	// Do SSH stuff
 }
 ```
@@ -251,16 +257,16 @@ try (SshClient client = config.open("me@localhost", new ConsolePasswordAuthentic
 
 ```java
 // List all of the providers and allow the user to select one
-SshProvider[] providers = DefaultProviderFactory.getAllProviders();
+var providers = DefaultProviderFactory.getAllProviders();
 System.out.println("Providers :-");
 for (int i = 0; i < providers.length; i++) {
 	System.out.println("  " + (i + 1) + ": " + providers[i].getClass().getName());
 }
-SshProvider provider = providers[Integer.parseInt(Util.prompt("\nEnter the number for the provider you wish to use (1-"
+var provider = providers[Integer.parseInt(Util.prompt("\nEnter the number for the provider you wish to use (1-"
 	+ providers.length + ")")) - 1];
 	
 // Create a client using that provider
-try (SshClient client = provider.open(new SshConfiguration(), "me@localhost", new ConsolePasswordAuthenticator()) {
+try (var client = provider.open(new SshConfiguration(), "me@localhost", new ConsolePasswordAuthenticator()) {
 	// Do SSH stuff
 }
 ```
@@ -270,21 +276,21 @@ try (SshClient client = provider.open(new SshConfiguration(), "me@localhost", ne
 ```java
 
 // Need a provider that does IDENTITY_MANAGEMENT
-SshConfiguration config = new SshConfiguration();
+var config = new SshConfiguration();
 config.addRequiredCapability(Capability.IDENTITY_MANAGEMENT);
 
 // Create the provider, then identity manager using that configuration
-SshProvider provider = DefaultProviderFactory.getInstance().getProvider(config);
+var provider = DefaultProviderFactory.getInstance().getProvider(config);
 System.out.println("Got provider " + provider.getClass());
-SshIdentityManager mgr = provider.createIdentityManager(config);
+var mgr = provider.createIdentityManager(config);
 
 // Read and (optionally) decrypt key	
 SshPrivateKeyFile pk;
-File keyFile = new File("/home/myhome/.ssh/id_rsa");
-try(FileInputStream in = new FileInputStream(keyFile)) {
+var keyFile = new File("/home/myhome/.ssh/id_rsa");
+try(var in = new FileInputStream(keyFile)) {
 	pk = mgr.createPrivateKeyFromStream(in);			
 	if (pk.isEncrypted()) {
-		String pw = Util.prompt("Old passphrase");
+		var pw = Util.prompt("Old passphrase");
 		pk.decrypt(pw.toCharArray());
 	}
 }
@@ -293,7 +299,7 @@ try(FileInputStream in = new FileInputStream(keyFile)) {
 pk.changePassphrase(newpw.toCharArray());
 
 // Write the key back out
-try(FileOutputStream fout = new FileOutputStream(keyFile)) {
+try(var fout = new FileOutputStream(keyFile)) {
 	fout.write(pk.getFormattedKey());
 }
 	
@@ -302,13 +308,13 @@ try(FileOutputStream fout = new FileOutputStream(keyFile)) {
 ### Create A Socket Factory That Is Tunneled To a Remote Host
 
 ```java
-SshConfiguration config = new SshConfiguration();
+var config = new SshConfiguration();
 config.addRequiredCapability(Capability.TUNNELED_SOCKET_FACTORY);
 
 // Connect, authenticate
-try (SshClient client = config.open("me@localhost", new ConsolePasswordAuthenticator())) {
+try (var client = config.open("me@localhost", new ConsolePasswordAuthenticator())) {
 
-	SocketFactory sf = client.createTunneledSocketFactory();
+	var sf = client.createTunneledSocketFactory();
 
 	/*
 	 * Make a connection back to the SSH server we are connecting from and read the
@@ -316,8 +322,8 @@ try (SshClient client = config.open("me@localhost", new ConsolePasswordAuthentic
 	 * remote SSH server, localhost:22 is just used as we know something will be
 	 * running there!
 	 */
-	try(Socket socket = sf.createSocket("localhost", 22)) {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+	try(var socket = sf.createSocket("localhost", 22)) {
+		var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		System.out.println("SSH ident: " + reader.readLine());
 	}
 }
@@ -326,10 +332,10 @@ try (SshClient client = config.open("me@localhost", new ConsolePasswordAuthentic
 ### Authenticating Using A Local SSH Agent
 
 ```java
-SshConfiguration config = new SshConfiguration();
+var config = new SshConfiguration();
 config.addRequiredCapability(Capability.AGENT);
 
-try (SshClient client = config.open("me@localhost", new DefaultAgentAuthenticator())) {
+try (var client = config.open("me@localhost", new DefaultAgentAuthenticator())) {
 	// Do SSH stuff
 }
 ```
@@ -341,14 +347,14 @@ SSHAPI can use a non-blocking pattern if you prefer that. For most methods, ther
 #### Non-blocking Shell
 
 ```java
-Future<SshClient> future = Ssh.openLater("me@localhost", new ConsolePasswordAuthenticator())
+var future = Ssh.openLater("me@localhost", new ConsolePasswordAuthenticator())
 
 // At some point after this you can attempt to retrieve the SshClient instance from the future. This will block until it's available. You can request a timeout too
-SshClient client = future.get(10, TimeUnit.SECONDS);
+var client = future.get(10, TimeUnit.SECONDS);
 
 // Shells act in the same way
-Future<SftpClient> shellFuture = client.shellLater();
-SshShell shell = shellFuture.get(); 
+var shellFuture = client.shellLater();
+var shell = shellFuture.get(); 
 
 // To handle data coming from the remote server, set the input handler
 shell.setInput((buffer) -> {
@@ -357,14 +363,14 @@ shell.setInput((buffer) -> {
 
 // To send data to the shell simple use writeLater(). You use the future to 
 // wait for when this actually happens.
-Future<Void> writeFuture = shell.writeLater(ByteBuffer.wrap("Test!".getBytes()));
+var writeFuture = shell.writeLater(ByteBuffer.wrap("Test!".getBytes()));
 writeFuture.get();
 
 // Now you can close, and of course, wait for the close to complete if you want
-Future<Void> closeShellFuture = shell.closeLater();
+var closeShellFuture = shell.closeLater();
 closeShellFuture.get();
 
 // And finally close the client too
-Future<Void> closeFuture = client.closeLater();
+var closeFuture = client.closeLater();
 closeFuture.get();
 ```

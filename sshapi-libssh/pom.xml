@@ -78,6 +78,17 @@ This library is deployed to SSHTools own Maven repository.</description>
 				<artifactId>maven-jnaerator-plugin</artifactId>
 				<version>0.12</version>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>com.sshtools.sshapi.libssh</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
 		</plugins>
 
 	</build>
