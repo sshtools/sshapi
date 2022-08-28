@@ -22,11 +22,24 @@
 package com.maverick.ssh.tests.server.synergysshd;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-import com.sshtools.common.command.ExecutableCommand;
+import com.sshtools.common.command.AbstractExecutableCommand;
 
-public class CommandWithOutput extends ExecutableCommand {
+public class CommandWithOutput extends AbstractExecutableCommand {
+	
+	public static class CommandWithOutputFactory implements ExecutableCommandFactory<CommandWithOutput> {
+		@Override
+		public CommandWithOutput create() throws NoSuchAlgorithmException, IOException {
+			return new CommandWithOutput();
+		}
+
+		@Override
+		public String[] getKeys() {
+			return new String[] { "commandWithOutput" };
+		}
+	}
 
 	public CommandWithOutput() {
 		super();

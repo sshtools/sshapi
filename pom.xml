@@ -42,7 +42,6 @@
 		<maverickVersion>1.7.43</maverickVersion>
 		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
-		<maverickStableVersion>1.5.19</maverickStableVersion>
 		<maverickNGVersion>2.0.4</maverickNGVersion>
 		
 		<common.version>2.0.4</common.version>
@@ -191,30 +190,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
-					module and any provider dependencies when an MRJAR is in use. See child modules 
-					that use the variable to adjust the module path for MRJAR compilation -->
-				<groupId>org.codehaus.gmaven</groupId>
-				<artifactId>gmaven-plugin</artifactId>
-				<version>1.4</version>
-				<executions>
-					<execution>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>execute</goal>
-						</goals>
-						<configuration>
-							<source>
-								def file = new
-								File(project.properties.mrJarClasspathFile)
-								project.properties.mrJarClasspath = file.getText()
-							</source>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -430,13 +405,12 @@
 	<modules>
 		<module>sshapi-core</module>
 		<module>sshapi-examples</module>
+		<module>sshapi-nassh</module>
 		<module>sshapi-maverick-synergy</module>
-		<module>sshapi-maverick</module>
 		<module>sshapi-maverick-16</module>
 		<module>sshapi-ganymed</module>
 		<module>sshapi-jsch</module>
 		<module>sshapi-libssh</module>
-		<module>sshapi-j2ssh</module>
 		<module>sshapi-fuse</module>
 		<module>sshapi-openssh</module>
 		<module>sshapi-trilead</module>

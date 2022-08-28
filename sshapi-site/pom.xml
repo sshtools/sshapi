@@ -75,12 +75,6 @@
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
 		<!-- 
 		<dependency>
 			<groupId>com.sshtools</groupId>

@@ -21,9 +21,7 @@
      THE SOFTWARE.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
 		<applicationVersion>${project.version}</applicationVersion>
 		<projectDescription>${project.description}</projectDescription>
@@ -98,9 +96,16 @@
 			<version>4.6.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.serceman</groupId>
-			<artifactId>jnr-fuse</artifactId>
-			<version>0.5.7</version>
+			<groupId>com.github.jnr</groupId>
+			<artifactId>jnr-ffi</artifactId>
+			<version>2.2.12</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.jnr</groupId>
+			<artifactId>jnr-posix</artifactId>
+			<version>3.1.15</version>
+		</dependency>
+
+
 	</dependencies>
 </project>

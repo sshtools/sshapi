@@ -36,6 +36,9 @@ import org.apache.commons.io.IOUtils;
 import com.maverick.ssh.tests.AbstractServer;
 import com.maverick.ssh.tests.ServerCapability;
 import com.maverick.ssh.tests.SshTestConfiguration;
+import com.maverick.ssh.tests.server.synergysshd.BasicCommand.BasicCommandFactory;
+import com.maverick.ssh.tests.server.synergysshd.CommandWithInput.CommandWithInputFactory;
+import com.maverick.ssh.tests.server.synergysshd.CommandWithOutput.CommandWithOutputFactory;
 import com.sshtools.common.auth.AuthorizedKeysPublicKeyAuthenticationProvider;
 import com.sshtools.common.auth.DefaultAuthenticationMechanismFactory;
 import com.sshtools.common.files.direct.DirectFileFactory;
@@ -43,7 +46,7 @@ import com.sshtools.common.files.vfs.VirtualFileFactory;
 import com.sshtools.common.files.vfs.VirtualMountTemplate;
 import com.sshtools.common.permissions.PermissionDeniedException;
 import com.sshtools.common.publickey.SshKeyUtils;
-import com.sshtools.common.scp.ScpCommand;
+import com.sshtools.common.scp.ScpCommand.ScpCommandFactory;
 import com.sshtools.server.DefaultServerChannelFactory;
 import com.sshtools.server.InMemoryPasswordAuthenticator;
 import com.sshtools.server.SshServer;
@@ -99,10 +102,10 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 				DefaultServerChannelFactory channelFactory = new DefaultServerChannelFactory() {
 					{
 						/* These are not using the shell */
-						commands.add("scp", ScpCommand.class);
-						commands.add("commandWithOutput", CommandWithOutput.class);
-						commands.add("commandWithInput", CommandWithInput.class);
-						commands.add("basicCommand", BasicCommand.class);
+						commands.add(new ScpCommandFactory());
+						commands.add(new CommandWithOutputFactory());
+						commands.add(new CommandWithInputFactory());
+						commands.add(new BasicCommandFactory());
 					}
 				};
 				

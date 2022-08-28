@@ -1,0 +1,46 @@
+<!--
+
+    Copyright (c) 2020 The JavaSSH Project
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+     of this software and associated documentation files (the "Software"), to deal
+     in the Software without restriction, including without limitation the rights
+     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     copies of the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be included in
+     all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+-->
+<html>
+<body>
+<p>Ganymed SSH-2 for Java is a library which implements the SSH-2 protocol in pure Java (tested on J2SE 1.4.2 and 5.0). 
+It allows one to connect to SSH servers from within Java programs. It supports SSH sessions (remote command execution 
+and shell access), local and remote port forwarding, local stream forwarding, X11 forwarding, SCP and SFTP. There are 
+no dependencies on any JCE provider, as all crypto functionality is included.</p>
+<p>Originally, Ganymed SSH-2 for Java was developed for the Ganymed replication project at ETH Zurich (Switzerland).</p>
+<p>Downloads and more information about JSch may be found at <a href="http://www.cleondris.ch/opensource/ssh2/">http://www.cleondris.ch/opensource/ssh2/</a>.</p>
+<h2>Known Issues</h2>
+<ul>
+	<li>Only allows access to the banner message <i>after</i>
+	authentication, so the SshBannerHandler.banner() will be invoked then
+	instead of before as with other providers.</li>
+	<li>The remote server identification string is not available
+	through the Ganymed API, so any called to
+	SshClient.getRemoteIdentification() will result in the value <i>Unknown</i></li>
+	<li>A number of operations rely on reflection, so you will require
+	the appropriate permissions if a security manager is installed. This is
+	due to Ganymed having information required by the API, but not exposing
+	it through public members.</li>
+</ul>
+</body>
+</html>

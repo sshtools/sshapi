@@ -213,6 +213,26 @@
 					<type>test-jar</type>
 					<scope>test</scope>
 				</dependency>
+				
+				<!-- TODO hrm... why needed!? -->
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-synergy-server</artifactId>
+					<version>3.1.0-SNAPSHOT</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-virtual-filesystem</artifactId>
+					<version>3.1.0-SNAPSHOT</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.sshtools.hotfixes</groupId>
+					<artifactId>maverick-virtual-session</artifactId>
+					<version>3.1.0-SNAPSHOT</version>
+					<scope>test</scope>
+				</dependency>
 			</dependencies>
 		</profile>
 		
@@ -301,20 +321,6 @@
 				<dependency>
 					<groupId>com.sshtools</groupId>
 					<artifactId>sshapi-sshj</artifactId>
-					<version>${project.version}</version>
-					<type>jar</type>
-					<scope>compile</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-		
-		<!-- J2SSH -->
-		<profile>
-			<id>client-j2ssh</id>
-			<dependencies>
-				<dependency>
-					<groupId>com.sshtools</groupId>
-					<artifactId>sshapi-j2ssh</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>

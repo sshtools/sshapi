@@ -30,7 +30,7 @@
 		
 		<!-- Version of Synergy to use. When updating, also consider
 		updating the same property in sshapi-maverick-synergy and sshapi-tests-server-maverick-synergy -->
-		<maverickSynergyVersion>3.0.7</maverickSynergyVersion>
+		<maverickSynergyVersion>3.1.0-SNAPSHOT</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-performance-tests</artifactId>
@@ -97,13 +97,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-openssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
@@ -126,17 +119,17 @@
 		
 		<!-- Server -->
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-synergy-server</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-virtual-filesystem</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-virtual-session</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
@@ -161,6 +154,23 @@
 			</releases>
 			<snapshots />
 		</repository>
+		
+        <repository>
+            <id>public-releases</id>
+            <url>https://artifactory.jadaptive.com/public-releases</url>
+            <releases />
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>public-snapshots</id>
+            <url>https://artifactory.jadaptive.com/public-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots />
+        </repository>
 	</repositories>
 	
 	<profiles>

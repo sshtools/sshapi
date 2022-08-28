@@ -54,7 +54,6 @@ Providers include :-
  * sshapi-jsch (Now uses an [updated fork](https://github.com/mwiede/jsch) of this well established API)
  * sshapi-trilead (A fork of Ganymed, itself now apparently unmaintained)
  * sshapi-ganymed (Now apparently unmaintained)
- * sshapi-j2ssh (Ancient JAdaptive API, more or less obsolete as uses old ciphers and key exchange)
  * sshapi-libssh (experimental)
  * sshapi-openssh (incomplete experimental)
 

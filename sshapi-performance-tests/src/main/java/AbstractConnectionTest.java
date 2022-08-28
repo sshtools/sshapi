@@ -237,8 +237,8 @@ abstract class AbstractConnectionTest {
 					long contime = connectionTime.get(provider);
 					formatter.format(
 							"%20s Total: %6d  Avg per run: %6d    Data Only: %6d  Data Only Avg per run: %6d    Connection time: %6d   Connection Avg: %6d",
-							new Object[] { provider.getName(), new Long(total), new Long(avg),
-									new Long(total - contime), new Long(total - contime) / providerTimes.size(),
+							new Object[] { provider.getName(), Long.valueOf(total), Long.valueOf(avg),
+									Long.valueOf(total - contime), Long.valueOf(total - contime) / providerTimes.size(),
 									contime, contime / repeats });
 				}
 			}
@@ -259,7 +259,7 @@ abstract class AbstractConnectionTest {
 					providerTimes = new ArrayList<>();
 					times.put(provider.getName(), providerTimes);
 				}
-				providerTimes.add(new Long(finished - started));
+				providerTimes.add(Long.valueOf(finished - started));
 			} catch (Exception e) {
 				log.error(String.format("Provider %s failed.", provider.getName()), e);
 				exceptions.put(provider.getName(), e);
@@ -289,7 +289,7 @@ abstract class AbstractConnectionTest {
 			providerTimes = new ArrayList<>();
 			times.put(provider.getName(), providerTimes);
 		}
-		providerTimes.add(new Long(finished - started));
+		providerTimes.add(Long.valueOf(finished - started));
 	}
 
 	protected void doProvider(SshProvider provider) throws Exception {
@@ -351,7 +351,7 @@ abstract class AbstractConnectionTest {
 				DefaultServerChannelFactory channelFactory = new DefaultServerChannelFactory() {
 					{
 						/* These are not using the shell */
-						commands.add("scp", ScpCommand.class);
+						commands.add(new ScpCommand.ScpCommandFactory());
 					}
 				};
 
@@ -360,7 +360,7 @@ abstract class AbstractConnectionTest {
 				DefaultAuthenticationMechanismFactory<SshServerContext> authFactory = new DefaultAuthenticationMechanismFactory<>();
 				authFactory
 						.addProvider(new InMemoryPasswordAuthenticator().addUser("testuser", "testuser".toCharArray()));
-				authFactory.addRequiredAuthentication("PASSWORD");
+				authFactory.addRequiredAuthentication("password");
 				sshContext.setAuthenicationMechanismFactory(authFactory);
 
 				return sshContext;

@@ -123,13 +123,6 @@ $ mvn exec:java -DE02ShellWithConsolePrompts</description>
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-j2ssh</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sshtools</groupId>
 			<artifactId>sshapi-openssh</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>

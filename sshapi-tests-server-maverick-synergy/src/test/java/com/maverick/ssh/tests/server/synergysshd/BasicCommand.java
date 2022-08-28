@@ -21,11 +21,26 @@
  */
 package com.maverick.ssh.tests.server.synergysshd;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-import com.sshtools.common.command.ExecutableCommand;
+import com.sshtools.common.command.AbstractExecutableCommand;
 
-public class BasicCommand extends ExecutableCommand {
+public class BasicCommand extends AbstractExecutableCommand {
+	
+	public static class BasicCommandFactory implements ExecutableCommandFactory<BasicCommand> {
+		@Override
+		public BasicCommand create() throws NoSuchAlgorithmException, IOException {
+			return new BasicCommand();
+		}
+
+		@Override
+		public String[] getKeys() {
+			return new String[] { "basicCommand" };
+		}
+	}
+	
 
 	public BasicCommand() {
 		super();

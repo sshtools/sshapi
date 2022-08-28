@@ -207,7 +207,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 			try {
 				engine.startup();
 			} catch (IOException e) {
-				throw new IllegalStateException("I/O error starting Maverick NG SSH Engine");
+				throw new IllegalStateException("I/O error starting Maverick NG SSH Engine", e);
 			}
 		}
 	}

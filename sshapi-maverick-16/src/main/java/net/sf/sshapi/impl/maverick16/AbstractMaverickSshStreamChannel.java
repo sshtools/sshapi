@@ -56,7 +56,7 @@ abstract class AbstractMaverickSshStreamChannel<L extends SshStreamChannelListen
 		if (session instanceof Ssh2Session) {
 			try {
 				((Ssh2Session) session).signal(signal.name());
-			} catch (com.maverick.ssh.SshException e) {
+			} catch (Exception e) {
 				throw new SshException(SshException.GENERAL, e);
 			}
 		} else

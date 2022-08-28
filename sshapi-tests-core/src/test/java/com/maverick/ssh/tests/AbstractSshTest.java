@@ -171,7 +171,7 @@ public class AbstractSshTest {
 			for (Map.Entry<String, String> e : System.getenv().entrySet()) {
 				LOG.info("   " + e.getKey() + "=" + e.getValue());
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			SshConfiguration.getLogger().error("Failed to setup.", e);
 		}
 	}

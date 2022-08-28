@@ -30,7 +30,7 @@
 		
 		<!-- Version of Synergy to use. When updating, also consider
 		updating the same property in sshapi-maverick-synergy and sshapi-performance-tests -->
-		<maverickSynergyVersion>3.0.7</maverickSynergyVersion>
+		<maverickSynergyVersion>3.1.0-SNAPSHOT</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-tests-server-maverick-synergy</artifactId>
@@ -79,19 +79,19 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-synergy-server</artifactId>
 			<version>${maverickSynergyVersion}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-virtual-filesystem</artifactId>
 			<version>${maverickSynergyVersion}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools</groupId>
+			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-virtual-session</artifactId>
 			<version>${maverickSynergyVersion}</version>
 			<scope>test</scope>
@@ -102,16 +102,16 @@
 		<!-- The following two repository are for sshapi-private modules. Authentication is 
 			require for this repository -->
 		<repository>
-			<id>libs-releases</id>
-			<url>https://artifactory.jadaptive.com/libs-releases-local</url>
+			<id>public-releases</id>
+			<url>https://artifactory.jadaptive.com/public-releases</url>
 			<releases />
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 		<repository>
-			<id>libs-snapshots</id>
-			<url>https://artifactory.jadaptive.com/libs-snapshots-local</url>
+			<id>public-snapshots</id>
+			<url>https://artifactory.jadaptive.com/public-snapshots</url>
 			<releases>
 				<enabled>false</enabled>
 			</releases>

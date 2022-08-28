@@ -103,7 +103,7 @@ public class sftpmount extends sftp implements Logger, Callable<Integer> {
 			sftp = client.sftp();
 			try {
 				SshConfiguration.getLogger().info("Starting at {0}", sftp.getDefaultPath());
-				try (FuseSFTP fuseFs = new FuseSFTP(sftp)) {
+				try (var fuseFs = new FuseSFTP(sftp)) {
 					fuseFs.mount(mount, true, true, new String[0]
 					/*
 					 * new String[] { "-o", "volname=" + ( driveName == null ? "DRV1" : driveName )
