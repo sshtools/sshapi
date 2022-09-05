@@ -356,6 +356,6 @@ public class SftpFileObject extends AbstractFileObject<SftpFileSystem> {
 
 	private String getSftpPath() throws FileSystemException {
 		/* TODO: Temporary DEBUG */
-		return "/home/tanktarta" +  getName().getPathDecoded();
+		return getName().getPathDecoded();
 	}
 }

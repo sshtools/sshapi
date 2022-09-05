@@ -19,7 +19,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-module net.sf.sshapi.vfs {
+open module net.sf.sshapi.vfs {
 	requires transitive net.sf.sshapi.core;
 	requires commons.vfs2;
 	requires commons.logging;

@@ -19,7 +19,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-module net.sf.sshapi.cli {
+open module net.sf.sshapi.cli {
 	requires transitive net.sf.sshapi.core;
 	requires info.picocli;
 	requires org.jline;
