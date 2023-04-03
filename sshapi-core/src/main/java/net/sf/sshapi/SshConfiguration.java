@@ -118,6 +118,8 @@ public class SshConfiguration {
 	public static final String PUBLIC_KEY_ECDSA_384 = "ecdsa-sha2-nistp384";
 	/** SSH2 ECDSA **/
 	public static final String PUBLIC_KEY_ECDSA_521 = "ecdsa-sha2-nistp521";
+	/** SSH2 ED448 **/
+	public static final String PUBLIC_KEY_ED448 = "draft-ietf-curdle-ssh-ed25519-ed448-10";
 	/** SSH2 ED25519 Key **/
 	public static final String PUBLIC_KEY_ED25519 = "ssh-ed25519";
 	/** SSH1 RSA Public Key **/

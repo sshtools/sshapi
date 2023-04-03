@@ -290,18 +290,31 @@ public class SSHJSftpClient extends AbstractSftpClient<SSHJSshClient> {
 	}
 
 	@Override
-	protected void doDownload(String path, OutputStream out) throws SshException {try {
-		sftp.get(path, new InMemoryDestFile() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return out;
-			}
-		});
-	} catch (SFTPException sftpe) {
-		throw translateException(sftpe);
-	} catch (IOException e) {
-		throw new SshException(SshException.IO_ERROR, String.format("Failed to read link %s.", path), e);
-	}
+	protected void doDownload(String path, OutputStream out) throws SshException {
+		try {
+			sftp.get(path, new InMemoryDestFile() {
+				@Override
+				public OutputStream getOutputStream() throws IOException {
+					return out;
+				}
+
+				@Override
+				public long getLength() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public OutputStream getOutputStream(boolean append) throws IOException {
+					if(append)
+						throw new UnsupportedOperationException();
+					return out;
+				}
+			});
+		} catch (SFTPException sftpe) {
+			throw translateException(sftpe);
+		} catch (IOException e) {
+			throw new SshException(SshException.IO_ERROR, String.format("Failed to read link %s.", path), e);
+		}
 	}
 
 	@Override

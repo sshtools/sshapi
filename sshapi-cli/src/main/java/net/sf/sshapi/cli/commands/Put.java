@@ -21,14 +21,9 @@
  */
 package net.sf.sshapi.cli.commands;
 
-import java.io.File;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.SftpContainer;
-import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -47,14 +42,14 @@ public class Put extends SftpCommand implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
-		SftpContainer container = getContainer();
-		SftpClient sftp = container.getClient();
+		var container = getContainer();
+		var sftp = container.getClient();
 		
-		try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(
+		try (var dirStream = Files.newDirectoryStream(
 	            container.getLcwd().toPath(), file)) {
-			for(Path path : dirStream) {
-        		File targetFile = path.toFile();
-        		String  target = translatePath(container.getCwd(), Util.basename(targetFile.getName()));
+			for(var path : dirStream) {
+        		var targetFile = path.toFile();
+        		var target = translatePath(container.getCwd(), Util.basename(targetFile.getName()));
     			sftp.put(path.toFile(), target);
     			container.getTerminal().writer().println(String.format("Uploaded %s to %s", file, target));
 	        };

@@ -67,8 +67,8 @@ public abstract class AbstractSshFilesCommand extends AbstractSshCommand  implem
 	}
 
 	private String formatSize(long bytes) {
-		String sizeSoFar = String.valueOf(bytes);
-		long size = bytes;
+		var sizeSoFar = String.valueOf(bytes);
+		var size = bytes;
 		if (size > 9999) {
 			size = size / 1024;
 			sizeSoFar = size + "KB";
@@ -85,7 +85,7 @@ public abstract class AbstractSshFilesCommand extends AbstractSshCommand  implem
 	}
 
 	private String formatSpeed(long bytesPerSecond) {
-		String speedText = String.valueOf(bytesPerSecond) + "B/s";
+		var speedText = String.valueOf(bytesPerSecond) + "B/s";
 		if (bytesPerSecond > 9999) {
 			bytesPerSecond = bytesPerSecond / 1024;
 			speedText = bytesPerSecond + "KB/s";
@@ -121,8 +121,8 @@ public abstract class AbstractSshFilesCommand extends AbstractSshCommand  implem
 	}
 
 	private void updateBlock(boolean newline) {
-		long now = System.currentTimeMillis();
-		long taken = now - this.transferLastUpdate;
+		var now = System.currentTimeMillis();
+		var taken = now - this.transferLastUpdate;
 		this.transferLastUpdate = now;
 		this.transferSpeed = (int) ((taken / 1000.0) * transferBlock);
 		transferProgressed += transferBlock;
@@ -131,13 +131,13 @@ public abstract class AbstractSshFilesCommand extends AbstractSshCommand  implem
 	}
 
 	private void updateProgress(boolean newline) {
-		int pc = (int) (((double) transferProgressed / (double) transferLength) * 100.0);
-		String sizeSoFar = formatSize(transferProgressed);
+		var pc = (int) (((double) transferProgressed / (double) transferLength) * 100.0);
+		var sizeSoFar = formatSize(transferProgressed);
 		// width - ( 5+ 10 + 8 + 3 + 1 + 1 + 1 + 1 )
-		int w = reader == null ? 80 : terminal.getWidth();
-		int filenameWidth = Math.max(10, w - 38);
-		long msRemain = ( transferLength - transferProgressed ) / Math.max(1, transferSpeed / 1000);
-		String result = String.format("%-" + filenameWidth + "s %3d%% %-8s %10s %5s",
+		var w = reader == null ? 80 : terminal.getWidth();
+		var filenameWidth = Math.max(10, w - 38);
+		var msRemain = ( transferLength - transferProgressed ) / Math.max(1, transferSpeed / 1000);
+		var result = String.format("%-" + filenameWidth + "s %3d%% %-8s %10s %5s",
 				new Object[] { transferPath, Integer.valueOf(pc), sizeSoFar, formatSpeed(transferSpeed), formatTime(msRemain) });
 		if (terminal == null) {
 			System.out.print(result + "\r");

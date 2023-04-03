@@ -43,7 +43,6 @@ import net.sf.sshapi.SshProvider;
 import net.sf.sshapi.agent.SshAgent;
 import net.sf.sshapi.auth.SshAuthenticator;
 import net.sf.sshapi.auth.SshPasswordAuthenticator;
-import net.sf.sshapi.hostkeys.SshHostKeyManager;
 import net.sf.sshapi.hostkeys.SshHostKeyValidator;
 import net.sf.sshapi.util.BatchHostKeyValidator;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
@@ -167,7 +166,7 @@ public abstract class AbstractSshCommand implements Logger {
 			configuration.setPreferredServerToClientCipher(cipher);
 		}
 
-		SshHostKeyManager keyManager = provider.createHostKeyManager(configuration);
+		var keyManager = provider.createHostKeyManager(configuration);
 		SshHostKeyValidator validator = null;
 		if (isBatchMode()) {
 			if (keyManager == null) {
@@ -204,10 +203,10 @@ public abstract class AbstractSshCommand implements Logger {
 	protected SshClient connect(String connectionDetails) throws SshException, IOException {
 			
 
-		File auth = this.sshAuthSock;
+		var auth = this.sshAuthSock;
 		if (provider.getCapabilities().contains(Capability.AGENT) && agent == null) {
 			if(auth == null) {
-				String authStr = System.getenv("SSH_AUTH_SOCK");
+				var authStr = System.getenv("SSH_AUTH_SOCK");
 				if(authStr != null && authStr.length() > 0)
 					auth = new File(authStr);
 			}
@@ -215,7 +214,7 @@ public abstract class AbstractSshCommand implements Logger {
 			if(auth != null) {
 				info("Using {0} for agent socket", auth);
 				try {
-					int type = SshAgent.AUTO_AGENT_SOCKET_TYPE;
+					var type = SshAgent.AUTO_AGENT_SOCKET_TYPE;
 					info("Starting agent");
 					agent = provider.connectToLocalAgent(getClass().getSimpleName(), auth.getAbsolutePath(), type, SshAgent.AUTO_PROTOCOL);
 					info("Started agent");
@@ -231,9 +230,9 @@ public abstract class AbstractSshCommand implements Logger {
 		}
 		
 		// Connect
-		SshClient client = provider.createClient(configuration);
+		var client = provider.createClient(configuration);
 		client.connect(extractUsername(connectionDetails), extractHostname(connectionDetails), getPort());
-		List<SshAuthenticator> authenticators = new ArrayList<>();
+		var authenticators = new ArrayList<SshAuthenticator>();
 		if(auth != null && agent != null) {
 			client.addChannelHandler(agent);
 			authenticators.add(new DefaultAgentAuthenticator(agent));
@@ -241,9 +240,9 @@ public abstract class AbstractSshCommand implements Logger {
 		SshPasswordAuthenticator pwAuth = null;
 
 		// Key authentication
-		File identityFile = this.identityFile;
+		var identityFile = this.identityFile;
 		if(identityFile == null) {
-			for(String pk : provider.getSupportedPublicKey()) {
+			for(var pk : provider.getSupportedPublicKey()) {
 				String name = null;
 				if(pk.equals(SshConfiguration.PUBLIC_KEY_SSHDSA)) {
 					name = "id_dsa";
@@ -304,7 +303,7 @@ public abstract class AbstractSshCommand implements Logger {
 	protected abstract int getPort();
 
 	String extractUsername(String connectionDetails) {
-		int idx = connectionDetails.indexOf('@');
+		var idx = connectionDetails.indexOf('@');
 		if (idx == -1) {
 			throw new IllegalArgumentException("User name for remote path not provided.");
 		}
@@ -312,12 +311,12 @@ public abstract class AbstractSshCommand implements Logger {
 	}
 
 	String extractHostname(String connectionDetails) {
-		int idx = connectionDetails.indexOf('@');
+		var idx = connectionDetails.indexOf('@');
 		return idx == -1 ? connectionDetails : connectionDetails.substring(idx + 1);
 	}
 
 	String getConnectionDetails(String path) {
-		int idx = path.indexOf(":");
+		var idx = path.indexOf(":");
 		if (idx == -1) {
 			return null;
 		}
@@ -325,7 +324,7 @@ public abstract class AbstractSshCommand implements Logger {
 	}
 
 	String getPath(String path) {
-		int idx = path.indexOf(":");
+		var idx = path.indexOf(":");
 		if (idx == -1) {
 			return null;
 		}
@@ -333,8 +332,8 @@ public abstract class AbstractSshCommand implements Logger {
 	}
 
 	boolean isRemotePath(String path) {
-		int idx = path.indexOf("@");
-		int idx2 = path.indexOf(":");
+		var idx = path.indexOf("@");
+		var idx2 = path.indexOf(":");
 		return idx > -1 && idx2 > -1 && idx2 > idx;
 	}
 
@@ -362,14 +361,14 @@ public abstract class AbstractSshCommand implements Logger {
 
 	private File authSockWorkaround(File auth) {
 		if (auth == null) {
-			File f = new File(System.getProperty("user.home") + File.separator + ".desktop-ssh-agent" + File.separator + "agent.sock");
+			var f = new File(System.getProperty("user.home") + File.separator + ".desktop-ssh-agent" + File.separator + "agent.sock");
 			if (f.exists()) {
 				try {
 					/*
 					 * Should point to a link, check that exists before using
 					 * the link path
 					 */
-					File canon = f.getCanonicalFile();
+					var canon = f.getCanonicalFile();
 					if (canon.exists())
 						auth = f;
 				} catch (IOException ioe) {

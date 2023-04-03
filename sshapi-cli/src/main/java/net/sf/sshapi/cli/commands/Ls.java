@@ -21,13 +21,10 @@
  */
 package net.sf.sshapi.cli.commands;
 
-import java.nio.file.DirectoryStream;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.SftpContainer;
-import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 
@@ -39,13 +36,16 @@ public class Ls extends SftpCommand implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
-		SftpContainer container = getContainer();
-		try(DirectoryStream<SftpFile> stream = container.getClient().directory(container.getCwd()) ) {
-			for(SftpFile file : stream) {
+		var container = getContainer();
+		try(var stream = container.getClient().directory(container.getCwd()) ) {
+			for(var file : stream) {
 				container.getTerminal().writer().println(String.format("%10s %-30s %8d %15s",
-						new Object[] { Util.getPermissionsString(file.getType(), file.getPermissions()),
-								file.getName(), Long.valueOf(file.getSize()),
-								DateFormat.getDateTimeInstance().format(new Date(file.getLastModified())) }));		
+						new Object[] { 
+								Util.getPermissionsString(file.getType(), file.getPermissions()),
+								file.getName(), 
+								Long.valueOf(file.getSize()),
+								DateFormat.getDateTimeInstance().format(new Date(file.getLastModified())) 
+						}));		
 			}
 		}
 		return 0;

@@ -39,7 +39,7 @@
 		<assemblyDownloadLocation>http://localhost/maven-assembly/files/${project.version}</assemblyDownloadLocation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- To compile Maverick Legacy bridge (New public 1.6+) -->
-		<maverickVersion>1.7.43</maverickVersion>
+		<maverickVersion>1.7.47</maverickVersion>
 		<!-- To compile Maverick Obsolete bridge (stable 1.5.19 version) -->
 		<maverickHome>${user.home}/maverick</maverickHome>
 		<maverickNGVersion>2.0.4</maverickNGVersion>

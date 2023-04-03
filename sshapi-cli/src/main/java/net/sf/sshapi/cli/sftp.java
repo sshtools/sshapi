@@ -23,9 +23,6 @@ package net.sf.sshapi.cli;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +34,6 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 
 import net.sf.sshapi.Logger;
-import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.sftp.SftpClient;
 import picocli.CommandLine;
@@ -60,7 +56,7 @@ public class sftp extends AbstractSshFilesCommand implements Logger, Callable<In
 	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
-		sftp client = new sftp();
+		var client = new sftp();
 		System.exit(new CommandLine(client).execute(args));
 	}
 
@@ -73,10 +69,10 @@ public class sftp extends AbstractSshFilesCommand implements Logger, Callable<In
 	 * @return parsed command
 	 */
 	public static List<String> parseQuotedString(String command) {
-		List<String> args = new ArrayList<String>();
-		boolean escaped = false;
-		boolean quoted = false;
-		StringBuilder word = new StringBuilder();
+		var args = new ArrayList<String>();
+		var escaped = false;
+		var quoted = false;
+		var word = new StringBuilder();
 		for (int i = 0; i < command.length(); i++) {
 			char c = command.charAt(i);
 			if (c == '"' && !escaped) {
@@ -191,33 +187,33 @@ public class sftp extends AbstractSshFilesCommand implements Logger, Callable<In
 
 	protected void onStart() throws SshException, IOException {
 
-		SshClient client = connect(destination);
+		var client = connect(destination);
 		sftp = client.sftp();
 		try {
 			cwd = sftp.getDefaultPath();
 			sftp.addFileTransferListener(this);
-			PrintWriter err = terminal.writer();
+			var err = terminal.writer();
 			err.println(String.format("Connected to %s", client.getHostname()));
 			do {
 				try {
-					String cmd = reader.readLine("sftp> ");
+					var cmd = reader.readLine("sftp> ");
 					if (cmd != null && cmd.length() > 0) {
-						List<String> newargs = parseQuotedString(cmd);
+						var newargs = parseQuotedString(cmd);
 						newargs.removeIf(item -> item == null || "".equals(item));
-						String[] args = newargs.toArray(new String[0]);
+						var args = newargs.toArray(new String[0]);
 						if (args.length > 0) {
 							if(args[0].startsWith("!")) {
 								args[0] = args[0].substring(1);
-								ProcessBuilder pb = new ProcessBuilder(Arrays.asList(args));
+								var pb = new ProcessBuilder(Arrays.asList(args));
 								pb.directory(getLcwd());
 								pb.redirectErrorStream(true);
 								Process p = pb.start();
 								try {
-									Thread thread = new Thread() {
+									var thread = new Thread() {
 										public void run() {
-											byte[] b = new byte[256];
-											InputStream in = terminal.input();
-											OutputStream out = p.getOutputStream();
+											var b = new byte[256];
+											var in = terminal.input();
+											var out = p.getOutputStream();
 											int r;
 											try {
 												while( ( r = in.read(b)) != -1) {
@@ -244,7 +240,7 @@ public class sftp extends AbstractSshFilesCommand implements Logger, Callable<In
 								}
 							}
 							else {
-								CommandLine cl = new CommandLine(new InteractiveConsole(this));
+								var cl = new CommandLine(new InteractiveConsole(this));
 								cl.setTrimQuotes(true);
 								cl.setUnmatchedArgumentsAllowed(true);
 								cl.setUnmatchedOptionsAllowedAsOptionParameters(true);

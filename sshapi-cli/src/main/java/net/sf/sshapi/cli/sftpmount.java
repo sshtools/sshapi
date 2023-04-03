@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 import net.sf.sshapi.Logger;
-import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.fuse.fs.FuseSFTP;
@@ -54,7 +53,7 @@ public class sftpmount extends sftp implements Logger, Callable<Integer> {
 	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
-		sftpmount client = new sftpmount();
+		var client = new sftpmount();
 		System.exit(new CommandLine(client).execute(args));
 	}
 
@@ -99,7 +98,7 @@ public class sftpmount extends sftp implements Logger, Callable<Integer> {
 			setCwd(destination.substring(idx + 1));
 			destination = destination.substring(0, idx);
 		}
-		try (SshClient client = connect(destination)) {
+		try (var client = connect(destination)) {
 			sftp = client.sftp();
 			try {
 				SshConfiguration.getLogger().info("Starting at {0}", sftp.getDefaultPath());

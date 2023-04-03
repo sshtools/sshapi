@@ -157,8 +157,8 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 					throw new IOException("Failed to create virtual file factory.", e);
 			}
 		});
-		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_rsa_key"), null));
-		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_dsa_key"), null));
+		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_rsa_key"), (String)null));
+		sshd.addHostKey(SshKeyUtils.getPrivateKey(new File("ssh_host_dsa_key"), (String)null));
 		// sshd.useThisAuthorizedKeysFile("authorized_keys_folder/authorized_keys");
 		// Copy some keys for authentication
 		try {

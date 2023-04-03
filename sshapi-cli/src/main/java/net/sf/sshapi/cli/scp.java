@@ -28,9 +28,7 @@ import java.util.concurrent.Callable;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger;
-import net.sf.sshapi.SshClient;
 import net.sf.sshapi.SshException;
-import net.sf.sshapi.SshSCPClient;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -167,7 +165,7 @@ public class scp extends AbstractSshFilesCommand implements Logger, Callable<Int
 	}
 
 	File checkPath(String path) throws FileNotFoundException {
-		File file = new File(path);
+		var file = new File(path);
 		if (!file.exists()) {
 			throw new FileNotFoundException(path);
 		}
@@ -176,7 +174,7 @@ public class scp extends AbstractSshFilesCommand implements Logger, Callable<Int
 
 	@Override
 	String getPath(String path) {
-		int idx = path.indexOf(":");
+		var idx = path.indexOf(":");
 		if (idx == -1) {
 			return null;
 		}
@@ -185,15 +183,15 @@ public class scp extends AbstractSshFilesCommand implements Logger, Callable<Int
 
 	@Override
 	boolean isRemotePath(String path) {
-		int idx = path.indexOf("@");
-		int idx2 = path.indexOf(":");
+		var idx = path.indexOf("@");
+		var idx2 = path.indexOf(":");
 		return idx > -1 && idx2 > -1 && idx2 > idx;
 	}
 
 	void localToRemote() throws SshException, IOException {
-		String targetPath = getPath(target);
-		try (SshClient client = connect(getConnectionDetails(target))) {
-			SshSCPClient scp = client.createSCP();
+		var targetPath = getPath(target);
+		try (var client = connect(getConnectionDetails(target))) {
+			var scp = client.createSCP();
 			if(provider.getCapabilities().contains(Capability.SCP_CAN_PRESERVE_ATTRIBUTES))
 				scp.setPreserveAttributes(preserveAttributes);
 			scp.addFileTransferListener(this);

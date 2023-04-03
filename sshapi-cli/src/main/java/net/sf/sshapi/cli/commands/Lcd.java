@@ -24,7 +24,6 @@ package net.sf.sshapi.cli.commands;
 import java.io.File;
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.SftpContainer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
@@ -39,9 +38,11 @@ public class Lcd extends SftpCommand implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
-		SftpContainer container = getContainer();
+		var container = getContainer();
+		
 		if (!directory.isAbsolute())
 			directory = new File(container.getLcwd(), directory.getPath());
+		
 		if (directory.isDirectory())
 			container.setLcwd(directory.getCanonicalFile());
 		else

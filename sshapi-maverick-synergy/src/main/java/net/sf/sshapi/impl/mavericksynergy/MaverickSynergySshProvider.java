@@ -89,7 +89,12 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
         
-		ComponentManager.enableCBCCiphers();
+		try {
+			ComponentManager.enableCBCCiphers();
+		}
+		catch(Throwable e) {
+			SshConfiguration.getLogger().error("Failed to enable CBC Ciphers, maybe newer version of Synergy in use.", e);
+		}
 		Log.setDefaultContext(new RootLoggerContext() {
 			@Override
 			public void raw(com.sshtools.common.logger.Log.Level level, String msg) {

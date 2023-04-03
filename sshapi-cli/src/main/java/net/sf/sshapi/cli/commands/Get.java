@@ -24,8 +24,6 @@ package net.sf.sshapi.cli.commands;
 import java.io.File;
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.SftpContainer;
-import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -41,11 +39,11 @@ public class Get extends SftpCommand implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
-		SftpContainer container = getContainer();
-		SftpClient sftp = container.getClient();
+		var container = getContainer();
+		var sftp = container.getClient();
 		file = translatePath(container.getCwd(), file);
-		String base = Util.basename(file);
-		File localFile = new File(container.getLcwd(), base);
+		var base = Util.basename(file);
+		var localFile = new File(container.getLcwd(), base);
 		sftp.get(file, localFile);
 		System.out.println("Downloaded " + file + " to " + localFile);
 		return 0;

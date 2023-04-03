@@ -44,7 +44,7 @@ public class JLinePasswordAuthenticator implements SshPasswordAuthenticator {
 	}
 
 	public char[] promptForPassword(SshClient session, String message) {
-		String password = reader.readLine(message + (message.endsWith(":") ? " " : ": "), Character.valueOf('*'));
+		var password = reader.readLine(message + (message.endsWith(":") ? " " : ": "), Character.valueOf('*'));
 		return password.equals("") ? null : password.toCharArray();
 	}
 }

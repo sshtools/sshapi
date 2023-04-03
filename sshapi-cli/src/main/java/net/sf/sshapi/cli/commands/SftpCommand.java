@@ -24,7 +24,6 @@ package net.sf.sshapi.cli.commands;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -55,7 +54,7 @@ public abstract class SftpCommand implements IVersionProvider {
 	}
 	
 	protected void expand(String path, FileOp op, boolean recurse) throws SshException {
-		PathMatcher matcher =
+		var matcher =
 			    FileSystems.getDefault().getPathMatcher("glob:" + path);
 		
 		getContainer().getClient().visit(path, new SftpFileVisitor() {
@@ -69,7 +68,7 @@ public abstract class SftpCommand implements IVersionProvider {
 
 			@Override
 			public FileVisitResult visitFile(SftpFile file, BasicFileAttributes attrs) throws IOException {
-				String filePath = file.getPath();
+				var filePath = file.getPath();
 				if(matcher.matches(Paths.get(filePath))) {
 					try {
 						op.op(filePath);

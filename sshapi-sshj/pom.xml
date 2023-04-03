@@ -81,18 +81,18 @@ This library is the provider bridge for SSHAPI.</description>
 		<dependency>
 			<groupId>com.hierynomus</groupId>
 			<artifactId>sshj</artifactId>
-			<version>0.33.0</version>
+			<version>0.35.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.68</version>
+			<version>1.70</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.68</version>
+			<version>1.70</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

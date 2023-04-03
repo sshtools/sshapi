@@ -23,7 +23,6 @@ package net.sf.sshapi.cli.commands;
 
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.InteractiveConsole;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -34,8 +33,7 @@ import picocli.CommandLine.Command;
 public class Help extends SftpCommand implements Callable<Integer> {
 	@Override
 	public Integer call() throws Exception {
-		InteractiveConsole container = getContainer();
-		CommandLine.usage(container, System.out);
+		CommandLine.usage(getContainer(), System.out);
 		return 0;
 	}
 }

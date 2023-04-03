@@ -23,10 +23,7 @@ package net.sf.sshapi.cli.commands;
 
 import java.util.concurrent.Callable;
 
-import net.sf.sshapi.cli.SftpContainer;
-import net.sf.sshapi.sftp.SftpClient;
 import net.sf.sshapi.sftp.SftpException;
-import net.sf.sshapi.sftp.SftpFile;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
@@ -41,13 +38,13 @@ public class Cd extends SftpCommand implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
-		SftpContainer container = getContainer();
-		SftpClient sftp = container.getClient();
+		var container = getContainer();
+		var sftp = container.getClient();
 
 		if (directory != null && directory.length() > 0) {
 			directory = translatePath(container.getCwd(), directory);
 			try {
-				SftpFile file = sftp.stat(directory);
+				var file = sftp.stat(directory);
 				if (file.isDirectory()) {
 					container.setCwd(directory);
 				} else {

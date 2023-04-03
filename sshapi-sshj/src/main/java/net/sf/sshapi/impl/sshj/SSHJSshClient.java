@@ -50,7 +50,6 @@ import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.HostKeyVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
-import net.schmizz.sshj.userauth.keyprovider.PKCS5KeyFile.DecryptException;
 import net.schmizz.sshj.userauth.method.AuthKeyboardInteractive;
 import net.schmizz.sshj.userauth.method.AuthMethod;
 import net.schmizz.sshj.userauth.method.AuthPassword;
@@ -360,7 +359,7 @@ class SSHJSshClient extends AbstractClient {
 		} catch (UserAuthException uae) {
 			if (uae.getCause() instanceof UserAuthException) {
 				uae = (UserAuthException) uae.getCause();
-				if (!(uae.getCause() instanceof DecryptException) && uae.getMessage() != null
+				if (/* !(uae.getCause() instanceof DecryptException) && */uae.getMessage() != null
 						&& uae.getMessage().indexOf("Problem getting public key") != -1) {
 					throw new SshException(SshException.PRIVATE_KEY_FORMAT_NOT_SUPPORTED, uae.getMessage(), uae);
 				}

@@ -24,7 +24,6 @@ package net.sf.sshapi.cli;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -37,11 +36,9 @@ import org.jline.utils.Signals;
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.Logger;
 import net.sf.sshapi.SshClient;
-import net.sf.sshapi.SshCommand;
 import net.sf.sshapi.SshException;
 import net.sf.sshapi.SshExtendedChannel;
 import net.sf.sshapi.SshExtendedChannel.Signal;
-import net.sf.sshapi.SshShell;
 import net.sf.sshapi.util.Util;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -98,14 +95,14 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	}
 
 	protected void onStart() throws SshException, IOException {
-		String term = System.getenv("TERM");
+		var term = System.getenv("TERM");
 		if (term == null || term.equals("")) {
 			term = "dumb";
 		}
 		calcWidthAndHeight();
 		try (SshClient client = connect(destination)) {
 			if (localForwards != null) {
-				for (String localForward : localForwards) {
+				for (var localForward : localForwards) {
 					String[] spec = localForward.split(":");
 					if (spec.length == 4) {
 						client.localForward(spec[0], Integer.parseInt(spec[1]), spec[2], Integer.parseInt(spec[3]));
@@ -117,7 +114,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 				}
 			}
 			if (command == null) {
-				try (SshShell shell = client.shell(term, width, height, 0, 0, null)) {
+				try (var shell = client.shell(term, width, height, 0, 0, null)) {
 					if (terminal != null) {
 						terminalDimensionsMonitor = Executors.newSingleThreadScheduledExecutor();
 						terminalDimensionsMonitor.scheduleAtFixedRate(() -> {
@@ -155,7 +152,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 						terminalDimensionsMonitor.shutdown();
 				}
 			} else {
-				try (SshCommand cmd = client.command(command, term, 80, 24, 0, 0, null)) {
+				try (var cmd = client.command(command, term, 80, 24, 0, 0, null)) {
 					joinChannelToConsole(cmd);
 				}
 			}
@@ -169,7 +166,7 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	 * @throws Exception on error
 	 */
 	public static void main(String[] args) throws Exception {
-		ssh client = new ssh();
+		var client = new ssh();
 		System.exit(new CommandLine(client).execute(args));
 	}
 
@@ -202,10 +199,10 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 	}
 
 	static void joinChannelToConsole(final SshExtendedChannel<?, ?> channel) throws IOException, SshException {
-		AtomicBoolean fin = new AtomicBoolean();
-		AtomicBoolean closed = new AtomicBoolean();
-		Thread mainThread = Thread.currentThread();
-		Thread readErrThread = new Thread() {
+		var fin = new AtomicBoolean();
+		var closed = new AtomicBoolean();
+		var mainThread = Thread.currentThread();
+		var readErrThread = new Thread() {
 			public void run() {
 				try {
 					Util.joinStreams(channel.getExtendedInputStream(), channel.getOutputStream());
@@ -214,13 +211,13 @@ public class ssh extends AbstractSshCommand implements Logger, Callable<Integer>
 			}
 		};
 		readErrThread.start();
-		Thread readInThread = new Thread() {
+		var readInThread = new Thread() {
 			public void run() {
 				/*
 				 * Wrapping in a channel allows this thread to be interrupted (on Linux at
 				 * least, other OS's .. YMMV
 				 */
-				try (InputStream in = Channels.newInputStream((new FileInputStream(FileDescriptor.in)).getChannel())) {
+				try (var in = Channels.newInputStream((new FileInputStream(FileDescriptor.in)).getChannel())) {
 					Util.joinStreams(in, channel.getOutputStream());
 					channel.getInputStream().close();
 				} catch (Exception e) {
