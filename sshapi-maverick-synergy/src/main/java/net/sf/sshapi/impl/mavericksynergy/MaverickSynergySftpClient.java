@@ -27,25 +27,26 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.DirectoryStream;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sshtools.client.SshClient;
 import com.sshtools.client.sftp.DirectoryOperation;
 import com.sshtools.client.sftp.SftpClient;
 import com.sshtools.client.tasks.FileTransferProgress;
 import com.sshtools.common.files.AbstractFile;
 import com.sshtools.common.permissions.PermissionDeniedException;
+import com.sshtools.common.sftp.PosixPermissions.PosixPermissionsBuilder;
 import com.sshtools.common.sftp.SftpFileAttributes;
+import com.sshtools.common.sftp.SftpFileAttributes.SftpFileAttributesBuilder;
 import com.sshtools.common.sftp.SftpStatusException;
 import com.sshtools.common.util.EOLProcessor;
-import com.sshtools.common.util.UnsignedInteger64;
 
 import net.sf.sshapi.SshConfiguration;
 import net.sf.sshapi.SshException;
@@ -60,7 +61,6 @@ import net.sf.sshapi.util.SftpDirectoryStream;
 import net.sf.sshapi.util.Util;
 
 class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshClient> {
-	private final SshClient nativeClient;
 	private int defaultLocalEOL;
 	private int defaultRemoteEOL;
 	private String home;
@@ -69,7 +69,6 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	MaverickSynergySftpClient(MaverickSynergySshClient client) {
 		super(client);
 		defaultLocalEOL = EOLProcessor.TEXT_SYSTEM;
-		this.nativeClient = client.getNativeClient();
 	}
 
 	@Override
@@ -86,7 +85,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	@Override
 	public void chmod(final String path, final int permissions) throws SshException {
 		try {
-			sftpClient.chmod(permissions, path);
+			sftpClient.chmod(PosixPermissionsBuilder.create().fromBitmask(Integer.toUnsignedLong(permissions)).build(), path);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (com.sshtools.common.ssh.SshException e) {
@@ -216,8 +215,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	@Override
 	public void onOpen() throws SshException {
 		try {
-			sftpClient = new SftpClient(nativeClient);
-			sftpClient.cd("");
+			sftpClient = new SftpClient.SftpClientBuilder().build();
 			if(client.getConfiguration().getSftpBlockSize() != 0) {
 				sftpClient.setBlockSize((int)client.getConfiguration().getSftpBlockSize());
 			}
@@ -298,8 +296,11 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	public void setLastModified(String path, long modtime) throws SshException {
 		try {
 			SftpFileAttributes stat = sftpClient.stat(path);
-			UnsignedInteger64 a = stat.getAccessedTime();
-			stat.setTimes(a, new UnsignedInteger64(modtime));
+			SftpFileAttributes newStat = SftpFileAttributesBuilder.create().
+					withFileAttributes(stat).
+					withLastModifiedTime(modtime).
+					build();
+			sftpClient.setAttributes(path, newStat);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -445,7 +446,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	@Override
 	protected void doPut(String path, InputStream in, long offset) throws SshException {
 		try {
-			sftpClient.put(in, path, createProgress(in.toString(), offset, 0), offset);
+			sftpClient.put(in, path, createProgress(in.toString(), offset, 0), offset, -1);
 		} catch (SftpStatusException sftpE) {
 			throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 		} catch (Exception e) {
@@ -599,26 +600,17 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 
 	private SftpFile entryToFile(String path, com.sshtools.client.sftp.SftpFile entry)
 			throws SftpStatusException, com.sshtools.common.ssh.SshException {
-		String fullPath = Util.concatenatePaths(path, entry.getFilename());
-		SftpFileAttributes attr = entry.getAttributes();
-		// Bug in Maverick <= 1.6.6
-		Date accessedDateTime;
-		try {
-			accessedDateTime = attr.getAccessedDateTime();
-		} catch (NullPointerException npe) {
-			accessedDateTime = new Date(attr.getAccessedTime().longValue() * 1000);
-		}
-		SftpFile file = new SftpFile(convertType(attr), fullPath, attr.getSize().longValue(),
-				attr.getModifiedDateTime().getTime(), attr.getCreationDateTime().getTime(), accessedDateTime.getTime(),
-				toInt(attr.getGID()), toInt(attr.getUID()), attr.getPermissions().intValue());
-		return file;
+		return entryToFile(Util.concatenatePaths(path, entry.getFilename()), entry.attributes());
 	}
 
-	private SftpFile entryToFile(String path, SftpFileAttributes entry) {
-		return new SftpFile(convertType(entry), path, entry.getSize().longValue(),
-				entry.getModifiedDateTime().getTime(), entry.getCreationTime().longValue(),
-				entry.getAccessedTime().longValue(), toInt(entry.getGID()), toInt(entry.getUID()),
-				entry.getPermissions().intValue());
+	private SftpFile entryToFile(String fullPath, SftpFileAttributes attr) {
+
+		return new SftpFile(convertType(attr), fullPath, attr.size().longValue(),
+				attr.lastModifiedTimeOr().map(FileTime::toInstant).map(Instant::toEpochMilli).orElse(0l), 
+				attr.createTimeOr().map(FileTime::toInstant).map(Instant::toEpochMilli).orElse(0l),  
+				attr.lastAccessTimeOr().map(FileTime::toInstant).map(Instant::toEpochMilli).orElse(0l),
+				attr.gidOr().orElse(0), attr.uidOr().orElse(0),
+				attr.permissions().asInt());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -678,25 +670,19 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 	}
 	
 	protected final class MavericySynergySftpHandle implements SftpHandle {
-		private final com.sshtools.client.sftp.SftpFile nativeHandle;
+		private final com.sshtools.client.sftp.SftpHandle nativeHandle;
 		private long position;
 		private byte[] readBuffer;
 		private byte[] writeBuffer;
 
-		protected MavericySynergySftpHandle(com.sshtools.client.sftp.SftpFile nativeHandle) {
+		protected MavericySynergySftpHandle(com.sshtools.client.sftp.SftpHandle nativeHandle) {
 			this.nativeHandle = nativeHandle;
 		}
 
 		@Override
 		public void close() throws IOException {
 			try {
-				try {
-					nativeHandle.close();
-				} catch (SftpStatusException e) {
-					throw new IOException("Failed to close.", e);
-				} catch (com.sshtools.common.ssh.SshException e) {
-					throw new IOException("Failed to close.", e);
-				}
+				nativeHandle.close();
 			} finally {
 				writeBuffer = null;
 				readBuffer = null;
@@ -725,8 +711,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 			}
 			try {
 				try {
-					int read = nativeHandle.getSFTPChannel().readFile(nativeHandle.getHandle(),
-							new UnsignedInteger64(position), readBuffer, 0, len);
+					int read = nativeHandle.read(position, readBuffer, 0, len);
 					if (read != -1) {
 						buffer.put(readBuffer, 0, read);
 						position += read;
@@ -750,8 +735,7 @@ class MaverickSynergySftpClient extends AbstractSftpClient<MaverickSynergySshCli
 			}
 			buffer.get(writeBuffer);
 			try {
-				nativeHandle.getSFTPChannel().writeFile(nativeHandle.getHandle(), new UnsignedInteger64(position),
-						writeBuffer, 0, len);
+				nativeHandle.write(position, writeBuffer, 0, len);
 			} catch (SftpStatusException sftpE) {
 				throw new SftpException(sftpE.getStatus(), sftpE.getLocalizedMessage());
 			} catch (com.sshtools.common.ssh.SshException ioe) {

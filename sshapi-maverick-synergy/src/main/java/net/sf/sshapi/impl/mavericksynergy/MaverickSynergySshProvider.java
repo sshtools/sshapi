@@ -37,14 +37,9 @@ import com.sshtools.common.logger.Log.Level;
 import com.sshtools.common.logger.RootLoggerContext;
 import com.sshtools.common.ssh.SecurityLevel;
 import com.sshtools.common.ssh.SshException;
-import com.sshtools.common.ssh.components.ComponentFactory;
 import com.sshtools.common.ssh.components.ComponentManager;
-import com.sshtools.common.ssh.components.jce.JCEComponentManager;
 import com.sshtools.common.ssh.components.jce.JCEProvider;
-import com.sshtools.common.ssh.compression.NoneCompression;
-import com.sshtools.common.ssh.compression.SshCompression;
 import com.sshtools.synergy.nio.SshEngine;
-import com.sshtools.synergy.ssh.SshContext;
 
 import net.sf.sshapi.AbstractProvider;
 import net.sf.sshapi.Capability;
@@ -89,18 +84,16 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 					"If you experience slow startup of the Maverick API on Linux or Solaris, try setting the system property java.security.egd=file:/dev/urandom");
 		}
         
-		try {
-			ComponentManager.enableCBCCiphers();
-		}
-		catch(Throwable e) {
-			SshConfiguration.getLogger().error("Failed to enable CBC Ciphers, maybe newer version of Synergy in use.", e);
-		}
 		Log.setDefaultContext(new RootLoggerContext() {
 			@Override
 			public void raw(com.sshtools.common.logger.Log.Level level, String msg) {
 				SshConfiguration.getLogger().raw(toLevel(level), msg);
 			}
 			
+			@Override
+			public void reset() {
+			}
+
 			@Override
 			public void newline() {
 				SshConfiguration.getLogger().newline();
@@ -307,10 +300,7 @@ public class MaverickSynergySshProvider extends AbstractProvider {
 
 	public List<String> getSupportedCompression() {
 		checkEngine();
-		ComponentFactory<SshCompression> compressionsCS = new ComponentFactory<SshCompression>(componentManager);
-		compressionsCS.add(SshContext.COMPRESSION_NONE, NoneCompression.class);
-		JCEComponentManager.getDefaultInstance().loadExternalComponents("zip.properties", compressionsCS);
-		return Arrays.asList(compressionsCS.list("").split(","));
+		return Arrays.asList("zlib", "zlib@openssh.com");
 	}
 
 	public List<String> getSupportedMAC() {

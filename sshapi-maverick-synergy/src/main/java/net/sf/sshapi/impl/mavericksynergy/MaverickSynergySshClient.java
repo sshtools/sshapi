@@ -48,12 +48,13 @@ import com.sshtools.client.BannerDisplay;
 import com.sshtools.client.ClientAuthenticator;
 import com.sshtools.client.ConnectionProtocolClient;
 import com.sshtools.client.ExternalKeyAuthenticator;
+import com.sshtools.client.KeyPairAuthenticator;
 import com.sshtools.client.KeyboardInteractiveAuthenticator;
 import com.sshtools.client.KeyboardInteractivePrompt;
 import com.sshtools.client.KeyboardInteractivePromptCompletor;
 import com.sshtools.client.PasswordAuthenticator;
-import com.sshtools.client.PublicKeyAuthenticator;
 import com.sshtools.client.SshClient;
+import com.sshtools.client.SshClient.SshClientBuilder;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.common.command.ExecutableCommand;
 import com.sshtools.common.forwarding.ForwardingPolicy;
@@ -76,12 +77,11 @@ import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
 import com.sshtools.common.ssh.components.jce.Ssh2RsaPrivateKey;
 import com.sshtools.common.ssh.x509.SshX509RsaSha1PublicKey;
+import com.sshtools.common.util.UnsignedInteger32;
 import com.sshtools.synergy.ssh.ChannelFactory;
 import com.sshtools.synergy.ssh.ChannelNG;
 import com.sshtools.synergy.ssh.ChannelOutputStream;
-import com.sshtools.synergy.ssh.ForwardingFactory;
-import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager;
-import com.sshtools.synergy.ssh.SocketListeningForwardingFactoryImpl.ActiveTunnelManager.TunnelListener;
+import com.sshtools.synergy.ssh.SocketListeningForwardingChannelFactoryImpl.ActiveTunnelManager.TunnelListener;
 
 import net.sf.sshapi.AbstractClient;
 import net.sf.sshapi.AbstractDataProducingComponent;
@@ -119,7 +119,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 
 		protected MaverickSynergySshChannel(String channelType, int maximumPacketSize,
 				int initialWindowSize, int maximumWindowSpace, int minimumWindowSpace, ChannelData channelData) {
-			super(channelType, maximumPacketSize, initialWindowSize, maximumWindowSpace, minimumWindowSpace);
+			super(channelType, maximumPacketSize, new UnsignedInteger32(initialWindowSize), 
+					new UnsignedInteger32(maximumWindowSpace), new UnsignedInteger32(minimumWindowSpace), null, false);
 			this.channelData = channelData;
 		}
 
@@ -654,9 +655,11 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			throws net.sf.sshapi.SshException {
 		this.username = username;
 		try {
-			sshClient = new SshClient(hostname, port, username) {
-				@Override
-				protected void configure(SshClientContext sshContext) throws SshException, IOException {
+			sshClient = SshClientBuilder.create().
+				withHostname(hostname).
+				withPort(port).
+				withUsername(username).
+				onConfigure(cfg -> {
 					MaverickSynergySshClient.this.sshContext = sshContext;
 					sshContext.getComponentManager().enableAlgorithm(SshConfiguration.PUBLIC_KEY_SSHDSA);
 					if (timeout != -1)
@@ -694,19 +697,19 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					}
 					ShellPolicy shellPolicy = new ShellPolicy();
 					if (configuration.getShellWindowSizeMax() > 0)
-						shellPolicy.setSessionMaxWindowSize((int) configuration.getShellWindowSizeMax());
+						shellPolicy.setSessionMaxWindowSize(new UnsignedInteger32((int) configuration.getShellWindowSizeMax()));
 					if (configuration.getShellPacketSize() > 0)
 						shellPolicy.setSessionMaxPacketSize((int) configuration.getShellPacketSize());
 					if (configuration.getShellPacketSize() > 0)
-						shellPolicy.setSessionMinWindowSize((int) configuration.getShellWindowSize());
+						shellPolicy.setSessionMinWindowSize(new UnsignedInteger32((int) configuration.getShellWindowSize()));
 					sshContext.setPolicy(ShellPolicy.class, shellPolicy);
 					FileSystemPolicy fsPolicy = new FileSystemPolicy();
 					if (configuration.getSftpWindowSizeMax() > 0)
-						fsPolicy.setSftpMaxWindowSize((int) configuration.getSftpWindowSizeMax());
+						fsPolicy.setSftpMaxWindowSize(new UnsignedInteger32((int) configuration.getSftpWindowSizeMax()));
 					if (configuration.getSftpPacketSize() > 0)
 						fsPolicy.setSftpMaxPacketSize((int) configuration.getSftpPacketSize());
 					if (configuration.getSftpWindowSize() > 0)
-						fsPolicy.setSftpMinWindowSize((int) configuration.getSftpWindowSize());
+						fsPolicy.setSftpMinWindowSize(new UnsignedInteger32((int) configuration.getSftpWindowSize()));
 					sshContext.setPolicy(FileSystemPolicy.class, fsPolicy);
 					sshContext.setIdleConnectionTimeoutSeconds(Util.msToSeconds(timeout));
 					sshContext.setIdleAuthenticationTimeoutSeconds(Util.msToSeconds(timeout));
@@ -715,8 +718,9 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 					forwardingPolicy.allowForwarding();
 					forwardingPolicy.allowGatewayForwarding();
 					sshContext.setPolicy(ForwardingPolicy.class, forwardingPolicy);
-				}
-			};
+				}).
+				build();
+			
 		} catch (IOException sshe) {
 			throw new net.sf.sshapi.SshException(net.sf.sshapi.SshException.IO_ERROR, sshe);
 		} catch (SshException e) {
@@ -759,9 +763,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			protected void onOpen() throws net.sf.sshapi.SshException {
 				try {
 					boundPort = client.startLocalForwarding(fLocalAddress, localPort, remoteHost, remotePort);
-					ForwardingFactory<SshClientContext> factory = client.getContext().getForwardingManager()
-							.getFactory(fLocalAddress, boundPort);
-					ActiveTunnelManager<SshClientContext> mgr = factory.getActiveTunnelManager();
+					var factory = client.getContext().getForwardingManager().getFactory(fLocalAddress, boundPort);
+					var mgr = factory.getActiveTunnelManager();
 					mgr.addListener(new TunnelListener<SshClientContext>() {
 
 						@SuppressWarnings("resource")
@@ -811,9 +814,8 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				try {
 					int boundPort = client.startRemoteForwarding(fRemoteHost, remotePort, localAddress, localPort);
 					
-					ForwardingFactory<SshClientContext> factory = client.getContext().getForwardingManager()
-							.getFactory(fRemoteHost, boundPort);
-					ActiveTunnelManager<SshClientContext> mgr = factory.getActiveTunnelManager();
+					var factory = client.getContext().getForwardingManager().getFactory(fRemoteHost, boundPort);
+					var mgr = factory.getActiveTunnelManager();
 					mgr.addListener(new TunnelListener<SshClientContext>() {
 
 						@SuppressWarnings("resource")
@@ -892,7 +894,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 	}
 
 	private ClientAuthenticator createAuthentication(final SshAuthenticator authenticator, String type)
-			throws net.sf.sshapi.SshException, SshException {
+			throws SshException, IOException {
 		// PrivateKeyFileAuthenticator pfa;
 		if (authenticator instanceof SshAgentAuthenticator) {
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
@@ -965,7 +967,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 				SshKeyPair kp = new SshKeyPair();
 				kp.setPrivateKey(privkey);
 				kp.setPublicKey(pubkey);
-				return new PublicKeyAuthenticator(kp);
+				return new KeyPairAuthenticator(kp);
 			} catch (net.sf.sshapi.SshException sshe) {
 				throw sshe;
 			} catch (IOException ioe) {
@@ -1007,7 +1009,7 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 						}
 					}
 				}
-				return new PublicKeyAuthenticator(pair);
+				return new KeyPairAuthenticator(pair);
 			} catch (net.sf.sshapi.SshException sshe) {
 				throw sshe;
 			} catch (IOException ioe) {

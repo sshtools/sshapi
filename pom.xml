@@ -405,7 +405,6 @@
 	<modules>
 		<module>sshapi-core</module>
 		<module>sshapi-examples</module>
-		<module>sshapi-nassh</module>
 		<module>sshapi-maverick-synergy</module>
 		<module>sshapi-maverick-16</module>
 		<module>sshapi-ganymed</module>

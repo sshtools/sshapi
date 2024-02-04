@@ -145,11 +145,11 @@ public class MaverickSynergyHostKeyManager extends AbstractHostKeyManager {
 				@Override
 				public boolean verifySignature(byte[] signature, byte[] data)
 						throws com.sshtools.common.ssh.SshException {
-					return false;
+					return hostKey.;
 				}
 
 				@Override
-				public void init(byte[] blob, int start, int len) throws com.sshtools.common.ssh.SshException {
+				public SshPublicKey init(byte[] blob, int start, int len) throws com.sshtools.common.ssh.SshException {
 				}
 
 				@Override

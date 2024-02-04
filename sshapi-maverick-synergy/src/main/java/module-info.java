@@ -21,11 +21,10 @@
  */
 open module net.sf.sshapi.impl.synergy {
 	requires transitive net.sf.sshapi.core;
-	requires maverick.base;
-	requires transitive maverick.synergy.client;
-	requires transitive maverick.utils;
-	requires maverick.x509;
-	requires transitive maverick.synergy.common;
-	requires maverick.logging;
-	requires maverick.sshagent;
+	requires transitive com.sshtools.synergy.client;
+	requires com.sshtools.common.util;
+	requires com.sshtools.common.ssh.x509;
+	requires com.sshtools.synergy.common;
+	requires com.sshtools.common.logger;
+	requires com.sshtools.agent;
 }

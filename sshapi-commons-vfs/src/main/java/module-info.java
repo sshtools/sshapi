@@ -23,4 +23,5 @@ open module net.sf.sshapi.vfs {
 	requires transitive net.sf.sshapi.core;
 	requires commons.vfs2;
 	requires commons.logging;
+	exports net.sf.sshapi.vfs;
 }

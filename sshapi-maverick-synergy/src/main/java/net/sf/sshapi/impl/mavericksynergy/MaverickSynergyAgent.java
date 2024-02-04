@@ -152,7 +152,7 @@ public class MaverickSynergyAgent implements SshAgent {
 	public void channelCreated(SshCustomChannel channel) throws IOException {
 
 		try {
-			final Socket socket = SshAgentClient.connectAgentSocket(location, agentSocketType);
+			final Socket socket =  sshAgent. SshAgentClient.connectAgentSocket(location, agentSocketType);
 			channel.addListener(new SshCustomChannelListener() {
 
 				@Override
