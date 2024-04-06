@@ -344,6 +344,7 @@
 						<email>support@sshtools.com</email>
 					</properties>
 					<excludes>
+						<exclude>**/*.build.properties</exclude>
 						<exclude>**/README</exclude>
 						<exclude>src/test/resources/**</exclude>
 						<exclude>src/main/resources/**</exclude>
