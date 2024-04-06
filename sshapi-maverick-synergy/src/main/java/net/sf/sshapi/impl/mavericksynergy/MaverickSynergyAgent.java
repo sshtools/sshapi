@@ -151,49 +151,48 @@ public class MaverickSynergyAgent implements SshAgent {
 	@Override
 	public void channelCreated(SshCustomChannel channel) throws IOException {
 
-		try {
-			final Socket socket =  sshAgent. SshAgentClient.connectAgentSocket(location, agentSocketType);
-			channel.addListener(new SshCustomChannelListener() {
-
-				@Override
-				public void opened(SshCustomChannel ch) {
-					final SshCustomChannel channel = ch;
-					Thread t = new Thread() {
-						@Override
-						public void run() {
-							try {
-								IOUtils.copy(socket.getInputStream(), channel.getOutputStream());
-							} catch (IOException e) {
-								SshConfiguration.getLogger().error("I/O error during socket transfer", e);
-								try {
-									channel.close();
-								} catch (IOException e1) {
-								}
-							}
-						}
-					};
-
-					t.start();
-				}
-			});
-			channel.addDataListener(new SshDataListener<SshCustomChannel>() {
-
-				@Override
-				public void data(SshCustomChannel ch, int direction, byte[] buf, int off, int len) {
-					try {
-						socket.getOutputStream().write(buf, off, len);
-					} catch (IOException e) {
-						SshConfiguration.getLogger().error("I/O error during socket transfer", e);
-						try {
-							ch.close();
-						} catch (IOException e1) {
-						}
-					}
-				}
-			});
-		} catch (AgentNotAvailableException anae) {
-			throw new IOException("Failed to create agent channel.", anae);
-		}
+//		try {
+//			channel.addListener(new SshCustomChannelListener() {
+//
+//				@Override
+//				public void opened(SshCustomChannel ch) {
+//					final SshCustomChannel channel = ch;
+//					Thread t = new Thread() {
+//						@Override
+//						public void run() {
+//							try {
+//								IOUtils.copy(socket.getInputStream(), channel.getOutputStream());
+//							} catch (IOException e) {
+//								SshConfiguration.getLogger().error("I/O error during socket transfer", e);
+//								try {
+//									channel.close();
+//								} catch (IOException e1) {
+//								}
+//							}
+//						}
+//					};
+//
+//					t.start();
+//				}
+//			});
+//			channel.addDataListener(new SshDataListener<SshCustomChannel>() {
+//
+//				@Override
+//				public void data(SshCustomChannel ch, int direction, byte[] buf, int off, int len) {
+//					try {
+//						socket.getOutputStream().write(buf, off, len);
+//					} catch (IOException e) {
+//						SshConfiguration.getLogger().error("I/O error during socket transfer", e);
+//						try {
+//							ch.close();
+//						} catch (IOException e1) {
+//						}
+//					}
+//				}
+//			});
+//		} catch (AgentNotAvailableException anae) {
+//			throw new IOException("Failed to create agent channel.", anae);
+//		}
 	}
 
 	@Override

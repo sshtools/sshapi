@@ -21,8 +21,20 @@
  */
 package net.sf.sshapi.maven.wagon;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.maven.wagon.ConnectionException;
+import org.apache.maven.wagon.InputData;
+import org.apache.maven.wagon.OutputData;
+import org.apache.maven.wagon.ResourceDoesNotExistException;
+import org.apache.maven.wagon.StreamWagon;
+import org.apache.maven.wagon.TransferFailedException;
+import org.apache.maven.wagon.authentication.AuthenticationException;
+import org.apache.maven.wagon.authorization.AuthorizationException;
+import org.apache.maven.wagon.proxy.ProxyInfo;
+import org.apache.maven.wagon.resource.Resource;
 
 import net.sf.sshapi.Capability;
 import net.sf.sshapi.DefaultProviderFactory;
@@ -38,17 +50,6 @@ import net.sf.sshapi.sftp.SftpException;
 import net.sf.sshapi.sftp.SftpFile;
 import net.sf.sshapi.util.ConsoleHostKeyValidator;
 import net.sf.sshapi.util.SimplePasswordAuthenticator;
-
-import org.apache.maven.wagon.ConnectionException;
-import org.apache.maven.wagon.InputData;
-import org.apache.maven.wagon.OutputData;
-import org.apache.maven.wagon.ResourceDoesNotExistException;
-import org.apache.maven.wagon.StreamWagon;
-import org.apache.maven.wagon.TransferFailedException;
-import org.apache.maven.wagon.authentication.AuthenticationException;
-import org.apache.maven.wagon.authorization.AuthorizationException;
-import org.apache.maven.wagon.proxy.ProxyInfo;
-import org.apache.maven.wagon.resource.Resource;
 
 public class SftpWagon extends StreamWagon {
 
@@ -74,9 +75,9 @@ public class SftpWagon extends StreamWagon {
 				}
 			} finally {
 				fireSessionLoggedOff();
-				client.disconnect();
+				client.close();
 			}
-		} catch (SshException e) {
+		} catch (IOException e) {
 			throw new ConnectionException("Failed to disconnect.", e);
 		}
 	}

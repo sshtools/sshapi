@@ -30,7 +30,7 @@
 		
 		<!-- Version of Synergy to use. When updating, also consider
 		updating the same property in sshapi-maverick-synergy and sshapi-tests-server-maverick-synergy -->
-		<maverickSynergyVersion>3.1.0-SNAPSHOT</maverickSynergyVersion>
+		<maverickSynergyVersion>3.1.1</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-performance-tests</artifactId>
@@ -119,17 +119,17 @@
 		
 		<!-- Server -->
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-synergy-server</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-virtual-filesystem</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-virtual-session</artifactId>
 			<version>${maverickSynergyVersion}</version>
 		</dependency>

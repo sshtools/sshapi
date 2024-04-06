@@ -51,7 +51,6 @@ public class MaverickSynergySshPublicKey implements com.sshtools.common.ssh.comp
 
 	@Override
 	public com.sshtools.common.ssh.components.SshPublicKey init(byte[] blob, int start, int len) throws com.sshtools.common.ssh.SshException {
-		key.ini
 		return this;
 	}
 
