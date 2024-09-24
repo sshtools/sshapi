@@ -29,7 +29,7 @@
 		
 		<!-- Version of Synergy to use. When updating, also consider
 		updating the same property in sshapi-performance-tests and sshapi-tests-server-maverick-synergy -->
-		<maverickSynergyVersion>3.1.1</maverickSynergyVersion>
+		<maverickSynergyVersion>3.1.2</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-maverick-synergy</artifactId>
