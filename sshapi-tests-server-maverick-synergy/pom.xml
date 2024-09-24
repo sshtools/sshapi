@@ -88,7 +88,7 @@
 			<groupId>com.sshtools.hotfixes</groupId>
 			<artifactId>maverick-virtual-filesystem</artifactId>
 			<version>${maverickSynergyVersion}</version>
-			<scope>test</scope>
+			<scope>test</scope> 
 		</dependency>
 		<dependency>
 			<groupId>com.sshtools.hotfixes</groupId>
