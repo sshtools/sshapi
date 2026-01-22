@@ -52,6 +52,10 @@
 			support this, and the child modules that use the variable to adjust the module 
 			path for MRJAR compilation -->
 		<mrJarClasspathFile>${project.basedir}/target/classpath</mrJarClasspathFile>
+		
+		<build.projectProperties>${basedir}/jadaptive.build.properties</build.projectProperties>
+		<build.userProperties>${user.home}/.jadaptive.build.properties</build.userProperties>
+		<build.quietProperties>true</build.quietProperties>
 	</properties>
 	<groupId>com.sshtools</groupId>
 	<artifactId>sshapi-group</artifactId>
@@ -68,14 +72,6 @@
 		</license>
 	</licenses>
 	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh-sshtools</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh-sshtools</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
 		<site>
 			<id>sshapi-site</id>
 			<url>${siteDeploymentLocation}/${project.artifactId}/</url>
@@ -109,6 +105,17 @@
 		</extensions>
 		<pluginManagement>
 			<plugins>
+                <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>0.10.0</version> 
+                    <extensions>true</extensions>
+	                <configuration>
+	                    <autoPublish>true</autoPublish>
+	                    <waitUntil>published</waitUntil>
+	                    <publishingServerId>central-sshtools</publishingServerId>
+	                </configuration>
+                </plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
@@ -129,17 +136,12 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-gpg-plugin</artifactId>
-					<version>1.6</version>
+					<version>3.2.8</version>
 				</plugin>
 				<plugin>
 					<groupId>com.mycila</groupId>
 					<artifactId>license-maven-plugin</artifactId>
 					<version>3.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.sonatype.plugins</groupId>
-					<artifactId>nexus-staging-maven-plugin</artifactId>
-					<version>1.6.8</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -166,10 +168,33 @@
 					<artifactId>maven-ant-plugin</artifactId>
 					<version>2.3</version>
 				</plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                </plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
-
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <quiet>${build.quietProperties}</quiet>
+                            <files>
+                                <file>${build.projectProperties}</file>
+                                <file>${build.userProperties}</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
 				<!-- HACK! This is so that child JPMS modules can find the com.sshtools.sshpapi.core 
 					module and any provider dependencies when an MRJAR is in use. See child modules 
@@ -208,16 +233,10 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<serverId>ossrh-sshtools</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>true</autoReleaseAfterClose>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
@@ -257,6 +276,11 @@
 					<source>${sourceRelease}</source>
 					<target>${targetRelease}</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.1.4</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -317,8 +341,10 @@
 					</properties>
 					<excludes>
 						<exclude>**/README</exclude>
+						<exclude>**/site/*.html</exclude>
 						<exclude>src/test/resources/**</exclude>
 						<exclude>src/main/resources/**</exclude>
+						<exclude>*build.properties</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -393,14 +419,17 @@
 		</plugins>
 	</reporting>
 	<repositories>
-		<repository>
-			<id>oss-snapshots</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots />
-		</repository>
+         <repository>
+		    <name>Central Portal Snapshots</name>
+		    <id>central-portal-snapshots</id>
+		    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+		    <releases>
+		      <enabled>false</enabled>
+		    </releases>
+		    <snapshots>
+		      <enabled>true</enabled>
+		    </snapshots>
+		  </repository>
 	</repositories>
 	<modules>
 		<module>sshapi-core</module>
@@ -475,19 +504,13 @@
 								<goals>
 									<goal>sign</goal>
 								</goals>
-								<configuration>
-									<gpgArguments>
-										<arg>--pinentry-mode</arg>
-										<arg>loopback</arg>
-									</gpgArguments>
-								</configuration>
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-					</plugin>
+		            <plugin>
+		                <groupId>org.sonatype.central</groupId>
+		                <artifactId>central-publishing-maven-plugin</artifactId>
+		            </plugin>
 				</plugins>
 			</build>
 		</profile>

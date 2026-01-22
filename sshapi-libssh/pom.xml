@@ -42,7 +42,7 @@ This library is deployed to SSHTools own Maven repository.</description>
 		<artifactId>sshapi-group</artifactId>
 		<groupId>com.sshtools</groupId>
 		<version>2.0.0-SNAPSHOT</version>
-		<relativePath>..</relativePath>
+		<relativePath>../</relativePath>
 	</parent>
 	<url>${scmWebRoot}/${project.artifactId}/</url>
 	<distributionManagement>

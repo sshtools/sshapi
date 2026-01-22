@@ -25,11 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.sshtools.client.PseudoTerminalModes;
 import com.sshtools.client.SessionChannelNG;
 import com.sshtools.client.SshClientContext;
 import com.sshtools.common.shell.ShellPolicy;
 import com.sshtools.synergy.ssh.Connection;
+import com.sshtools.synergy.ssh.TerminalModes.TerminalModesBuilder;
 
 import net.sf.sshapi.AbstractSshExtendedChannel;
 import net.sf.sshapi.SshConfiguration;
@@ -143,17 +143,17 @@ class MaverickSynergySshShell extends AbstractSshExtendedChannel<SshStreamChanne
 			throw new IllegalStateException("Could not open session channel");
 		}
 		if (termType != null) {
-			PseudoTerminalModes ptm = new PseudoTerminalModes();
+			TerminalModesBuilder ptm = new TerminalModesBuilder();
 			if (terminalModes != null) {
 				try {
 					for (int i = 0; i < terminalModes.length; i++) {
-						ptm.setTerminalMode(terminalModes[i], true);
+						ptm.withMode(terminalModes[i], true);
 					}
-				} catch (com.sshtools.common.ssh.SshException e) {
+				} catch (IllegalArgumentException e) {
 					throw new SshException("Failed to set terminal modes.", e);
 				}
 			}
-			session.allocatePseudoTerminal(termType, cols, rows, pixWidth, pixHeight, ptm);
+			session.allocatePseudoTerminal(termType, cols, rows, pixWidth, pixHeight, ptm.build());
 		}
 		if (!session.startShell().waitFor(30000).isSuccess()) {
 			throw new IllegalStateException("Could not start shell.");

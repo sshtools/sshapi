@@ -900,14 +900,11 @@ class MaverickSynergySshClient extends AbstractClient implements ChannelFactory<
 			SshAgentAuthenticator aa = (SshAgentAuthenticator) authenticator;
 			return new ExternalKeyAuthenticator(((MaverickSynergyAgent) aa.getAgent(getConfiguration())).getAgent());
 		} else if (authenticator instanceof SshPasswordAuthenticator) {
-			return new PasswordAuthenticator() {
-				@Override
-				public String getPassword() {
-					char[] answer = ((SshPasswordAuthenticator) authenticator)
-							.promptForPassword(MaverickSynergySshClient.this, "Password");
-					return answer == null ? null : new String(answer);
-				}
-			};
+			return PasswordAuthenticator.of(() -> {
+				char[] answer = ((SshPasswordAuthenticator) authenticator)
+						.promptForPassword(MaverickSynergySshClient.this, "Password");
+				return answer == null ? null : new String(answer);
+			});
 //			/* We don't use Synergy's PasswordAuthenticator because it pre-empts
 //			 * retrieval of the password. We want to provide it when it is 
 //			 * required, no sooner. This also addresses some blocking issues

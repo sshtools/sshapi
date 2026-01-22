@@ -21,6 +21,7 @@
  */
 package net.sf.sshapi.maven.wagon;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,9 +75,11 @@ public class SftpWagon extends StreamWagon {
 				}
 			} finally {
 				fireSessionLoggedOff();
-				client.disconnect();
+				client.close();
 			}
 		} catch (SshException e) {
+			throw new ConnectionException("Failed to disconnect.", e);
+		} catch (IOException e) {
 			throw new ConnectionException("Failed to disconnect.", e);
 		}
 	}
