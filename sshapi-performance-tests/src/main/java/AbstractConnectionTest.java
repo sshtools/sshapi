@@ -38,7 +38,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.slf4j.LoggerFactory;
 
 import com.sshtools.common.auth.DefaultAuthenticationMechanismFactory;
-import com.sshtools.common.files.direct.DirectFileFactory;
+import com.sshtools.common.files.direct.NioFileFactory.NioFileFactoryBuilder;
 import com.sshtools.common.files.vfs.VirtualFileFactory;
 import com.sshtools.common.files.vfs.VirtualMountTemplate;
 import com.sshtools.common.permissions.PermissionDeniedException;
@@ -375,7 +375,8 @@ abstract class AbstractConnectionTest {
 			try {
 				File home = new File(homeRoot, con.getUsername());
 				return new VirtualFileFactory(
-						new VirtualMountTemplate("/", home.getAbsolutePath(), new DirectFileFactory(home), true));
+						new VirtualMountTemplate("/", home.getAbsolutePath(), 
+						NioFileFactoryBuilder.create().withHome(home).build(), true));
 			} catch (IOException | PermissionDeniedException e) {
 				if (e instanceof IOException)
 					throw (IOException) e;

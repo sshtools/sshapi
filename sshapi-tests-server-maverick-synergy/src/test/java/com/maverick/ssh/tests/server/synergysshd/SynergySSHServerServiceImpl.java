@@ -41,7 +41,7 @@ import com.maverick.ssh.tests.server.synergysshd.CommandWithInput.CommandWithInp
 import com.maverick.ssh.tests.server.synergysshd.CommandWithOutput.CommandWithOutputFactory;
 import com.sshtools.common.auth.AuthorizedKeysPublicKeyAuthenticationProvider;
 import com.sshtools.common.auth.DefaultAuthenticationMechanismFactory;
-import com.sshtools.common.files.direct.DirectFileFactory;
+import com.sshtools.common.files.direct.NioFileFactory.NioFileFactoryBuilder;
 import com.sshtools.common.files.vfs.VirtualFileFactory;
 import com.sshtools.common.files.vfs.VirtualMountTemplate;
 import com.sshtools.common.permissions.PermissionDeniedException;
@@ -149,7 +149,7 @@ public class SynergySSHServerServiceImpl extends AbstractServer {
 		sshd.setFileFactory((con) -> {
 			try {
 				File home = new File(homeRoot, con.getUsername());
-				return new VirtualFileFactory(new VirtualMountTemplate("/", home.getAbsolutePath(), new DirectFileFactory(home), true));
+				return new VirtualFileFactory(new VirtualMountTemplate("/", home.getAbsolutePath(), NioFileFactoryBuilder.create().withHome(home).build(), true));
 			} catch (IOException | PermissionDeniedException e) {
 				if(e instanceof IOException)
 					throw (IOException)e;

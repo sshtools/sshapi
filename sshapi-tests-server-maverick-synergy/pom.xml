@@ -30,7 +30,7 @@
 		
 		<!-- Version of Synergy to use. When updating, also consider
 		updating the same property in sshapi-maverick-synergy and sshapi-performance-tests -->
-		<maverickSynergyVersion>3.1.0-SNAPSHOT</maverickSynergyVersion>
+		<maverickSynergyVersion>3.1.4</maverickSynergyVersion>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sshapi-tests-server-maverick-synergy</artifactId>
@@ -65,36 +65,30 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.sshtools</groupId>
-			<artifactId>sshapi-tests-core</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>com.sshtools</groupId>
+            <artifactId>sshapi-tests-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-synergy-server</artifactId>
 			<version>${maverickSynergyVersion}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-virtual-filesystem</artifactId>
 			<version>${maverickSynergyVersion}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.sshtools.hotfixes</groupId>
+			<groupId>com.sshtools</groupId>
 			<artifactId>maverick-virtual-session</artifactId>
 			<version>${maverickSynergyVersion}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
